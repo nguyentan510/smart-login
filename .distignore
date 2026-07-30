@@ -1,0 +1,21 @@
+# Files excluded from the distributable plugin archive.
+# Format follows `wp dist-archive`.
+#
+# bin/ is deliberately KEPT: build-address-data.php is a documented,
+# user-facing tool for regenerating the administrative-unit dataset.
+
+/.git
+/.github
+/.gitignore
+/.distignore
+/docs
+/scripts
+/tests
+/vendor
+/composer.json
+/composer.lock
+/phpcs.xml
+/README.md
+/.phpcs-cache
+/build
+/dist

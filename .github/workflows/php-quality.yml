@@ -1,0 +1,34 @@
+name: PHP quality
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # 8.0 is the floor declared in smart-login.php; 8.3 catches deprecations early.
+        php: ['8.0', '8.3']
+
+    name: PHP ${{ matrix.php }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: none
+
+      # Runs the required suites (regression + lint) and reports the identity
+      # spec suites without blocking. The spec is intentionally red until
+      # Phase 7 — see docs/refactor-plan.md.
+      - name: Run test suites
+        run: php tests/run-all.php

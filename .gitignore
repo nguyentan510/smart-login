@@ -1,0 +1,24 @@
+# Dev-only tooling. Nothing under vendor/ ever ships in the plugin zip.
+/vendor/
+
+# Build output
+/build/
+/dist/
+*.zip
+
+# Editor / OS noise
+.idea/
+.vscode/
+*.code-workspace
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local logs and scratch files
+*.log
+/.phpunit.result.cache
+/.phpcs-cache
+
+# NOTE: data/ is deliberately TRACKED. The administrative-unit dataset is a
+# deterministic build artefact of bin/build-address-data.php, and the plugin is
+# unusable without it. See docs/identity-model.md for what counts as generated.

@@ -1,0 +1,78 @@
+<?php
+/**
+ * Wards of Tỉnh Cà Mau.
+ *
+ * GENERATED FILE — do not edit by hand.
+ * Regenerate with: php bin/build-address-data.php <source.json>
+ *
+ * @package SmartLogin
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+return array(
+	'00275' => array( 'name' => 'Xã U Minh', 'type' => 'xa' ),
+	'00531' => array( 'name' => 'Xã Tân Hưng', 'type' => 'xa' ),
+	'00787' => array( 'name' => 'Xã Tạ An Khương', 'type' => 'xa' ),
+	'01043' => array( 'name' => 'Xã Phan Ngọc Hiển', 'type' => 'xa' ),
+	'01299' => array( 'name' => 'Xã Đất Mũi', 'type' => 'xa' ),
+	'01555' => array( 'name' => 'Xã Sông Đốc', 'type' => 'xa' ),
+	'01811' => array( 'name' => 'Xã Đất Mới', 'type' => 'xa' ),
+	'02067' => array( 'name' => 'Xã Năm Căn', 'type' => 'xa' ),
+	'02323' => array( 'name' => 'Xã Đầm Dơi', 'type' => 'xa' ),
+	'02579' => array( 'name' => 'Xã Cái Nước', 'type' => 'xa' ),
+	'02835' => array( 'name' => 'Xã Hưng Mỹ', 'type' => 'xa' ),
+	'03091' => array( 'name' => 'Xã Lương Thế Trân', 'type' => 'xa' ),
+	'03347' => array( 'name' => 'Xã Phú Mỹ', 'type' => 'xa' ),
+	'03603' => array( 'name' => 'Xã Hồ Thị Kỷ', 'type' => 'xa' ),
+	'03859' => array( 'name' => 'Xã Trần Văn Thời', 'type' => 'xa' ),
+	'04115' => array( 'name' => 'Xã Nguyễn Phích', 'type' => 'xa' ),
+	'04371' => array( 'name' => 'Xã Khánh An', 'type' => 'xa' ),
+	'04627' => array( 'name' => 'Xã Khánh Lâm', 'type' => 'xa' ),
+	'04883' => array( 'name' => 'Phường Lý Văn Lâm', 'type' => 'phuong' ),
+	'05139' => array( 'name' => 'Phường Hòa Thành', 'type' => 'phuong' ),
+	'05395' => array( 'name' => 'Phường Tân Thành', 'type' => 'phuong' ),
+	'05651' => array( 'name' => 'Xã Đá Bạc', 'type' => 'xa' ),
+	'05907' => array( 'name' => 'Phường Bạc Liêu', 'type' => 'phuong' ),
+	'06163' => array( 'name' => 'Phường Vĩnh Trạch', 'type' => 'phuong' ),
+	'06419' => array( 'name' => 'Phường Hiệp Thành', 'type' => 'phuong' ),
+	'06675' => array( 'name' => 'Phường Giá Rai', 'type' => 'phuong' ),
+	'06931' => array( 'name' => 'Phường Láng Tròn', 'type' => 'phuong' ),
+	'07187' => array( 'name' => 'Xã Phong Thạnh', 'type' => 'xa' ),
+	'07443' => array( 'name' => 'Xã Hồng Dân', 'type' => 'xa' ),
+	'07699' => array( 'name' => 'Xã Vĩnh Lộc', 'type' => 'xa' ),
+	'07955' => array( 'name' => 'Xã Ninh Thạnh Lợi', 'type' => 'xa' ),
+	'08211' => array( 'name' => 'Xã Ninh Quới', 'type' => 'xa' ),
+	'08467' => array( 'name' => 'Xã Gành Hào', 'type' => 'xa' ),
+	'08723' => array( 'name' => 'Xã Định Thành', 'type' => 'xa' ),
+	'08979' => array( 'name' => 'Xã An Trạch', 'type' => 'xa' ),
+	'09235' => array( 'name' => 'Xã Long Điền', 'type' => 'xa' ),
+	'09491' => array( 'name' => 'Xã Đông Hải', 'type' => 'xa' ),
+	'09747' => array( 'name' => 'Xã Hòa Bình', 'type' => 'xa' ),
+	'10003' => array( 'name' => 'Xã Vĩnh Mỹ', 'type' => 'xa' ),
+	'10259' => array( 'name' => 'Xã Vĩnh Hậu', 'type' => 'xa' ),
+	'10515' => array( 'name' => 'Xã Phước Long', 'type' => 'xa' ),
+	'10771' => array( 'name' => 'Xã Vĩnh Phước', 'type' => 'xa' ),
+	'11027' => array( 'name' => 'Xã Phong Hiệp', 'type' => 'xa' ),
+	'11283' => array( 'name' => 'Xã Vĩnh Thanh', 'type' => 'xa' ),
+	'11539' => array( 'name' => 'Xã Vĩnh Lợi', 'type' => 'xa' ),
+	'11795' => array( 'name' => 'Xã Hưng Hội', 'type' => 'xa' ),
+	'12051' => array( 'name' => 'Xã Châu Thới', 'type' => 'xa' ),
+	'12307' => array( 'name' => 'Phường An Xuyên', 'type' => 'phuong' ),
+	'12563' => array( 'name' => 'Xã Tân Thuận', 'type' => 'xa' ),
+	'12819' => array( 'name' => 'Xã Tân Tiến', 'type' => 'xa' ),
+	'13075' => array( 'name' => 'Xã Trần Phán', 'type' => 'xa' ),
+	'13331' => array( 'name' => 'Xã Thanh Tùng', 'type' => 'xa' ),
+	'13587' => array( 'name' => 'Xã Quách Phẩm', 'type' => 'xa' ),
+	'13843' => array( 'name' => 'Xã Tân Ân', 'type' => 'xa' ),
+	'14099' => array( 'name' => 'Xã Khánh Bình', 'type' => 'xa' ),
+	'14355' => array( 'name' => 'Xã Khánh Hưng', 'type' => 'xa' ),
+	'14611' => array( 'name' => 'Xã Thới Bình', 'type' => 'xa' ),
+	'14867' => array( 'name' => 'Xã Trí Phải', 'type' => 'xa' ),
+	'15123' => array( 'name' => 'Xã Tân Lộc', 'type' => 'xa' ),
+	'15379' => array( 'name' => 'Xã Biển Bạch', 'type' => 'xa' ),
+	'15635' => array( 'name' => 'Xã Tam Giang', 'type' => 'xa' ),
+	'15891' => array( 'name' => 'Xã Cái Đôi Vàm', 'type' => 'xa' ),
+	'16147' => array( 'name' => 'Xã Nguyễn Việt Khái', 'type' => 'xa' ),
+	'16403' => array( 'name' => 'Xã Phú Tân', 'type' => 'xa' ),
+);

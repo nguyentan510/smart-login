@@ -1,0 +1,720 @@
+/**
+ * Smart Login — front-end styles.
+ * Scoped under .smart-login so nothing leaks into the theme.
+ */
+
+.smart-login {
+	--sl-accent: #e30613;
+	--sl-accent-dark: #c00410;
+	--sl-text: #1f2430;
+	--sl-muted: #6b7280;
+	--sl-border: #d9dde5;
+	--sl-radius: 6px;
+
+	box-sizing: border-box;
+	max-width: 460px;
+	margin: 0 auto;
+	padding: 8px 0 32px;
+	color: var(--sl-text);
+	font-size: 15px;
+	line-height: 1.5;
+}
+
+.smart-login *,
+.smart-login *::before,
+.smart-login *::after {
+	box-sizing: inherit;
+}
+
+/* ---------- Typography ---------- */
+
+.sl-title {
+	margin: 0 0 20px;
+	font-size: 20px;
+	font-weight: 600;
+	text-align: center;
+}
+
+.smart-login--register .sl-title,
+.smart-login--otp .sl-title {
+	text-align: left;
+}
+
+.sl-title__accent {
+	color: var(--sl-accent);
+}
+
+.smart-login--auth {
+	max-width: 560px;
+}
+
+.sl-auth-tabs {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	margin-bottom: 24px;
+	overflow: hidden;
+	border-radius: var(--sl-radius);
+	background: #f1f2f4;
+}
+
+.sl-auth-tab {
+	padding: 14px 18px;
+	color: var(--sl-text);
+	font-size: 16px;
+	font-weight: 600;
+	text-align: center;
+	text-decoration: none;
+	transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sl-auth-tab:hover {
+	color: var(--sl-text);
+}
+
+.sl-auth-tab:focus-visible {
+	position: relative;
+	z-index: 1;
+	outline: 3px solid rgba(227, 6, 19, 0.28);
+	outline-offset: -3px;
+}
+
+.sl-auth-tab.is-active {
+	background: var(--sl-accent);
+	color: #fff;
+}
+
+.sl-auth-panel[hidden] {
+	display: none;
+}
+
+.sl-login-options {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+	margin-bottom: 16px;
+	font-size: 13px;
+}
+
+.sl-login-options .sl-remember {
+	margin-bottom: 0;
+}
+
+.sl-lead {
+	margin: 0 0 24px;
+	color: var(--sl-text);
+}
+
+.sl-dest {
+	color: var(--sl-accent);
+	white-space: nowrap;
+}
+
+.sl-hint,
+.sl-muted {
+	color: var(--sl-muted);
+	font-size: 13px;
+}
+
+/* ---------- Fields ---------- */
+
+.sl-field {
+	position: relative;
+	margin-bottom: 16px;
+	border: 0;
+	padding: 0;
+}
+
+.sl-label {
+	display: block;
+	margin-bottom: 6px;
+	font-size: 13px;
+	color: var(--sl-muted);
+}
+
+.sl-required {
+	color: var(--sl-accent);
+}
+
+.sl-input {
+	width: 100%;
+	padding: 12px 14px;
+	border: 1px solid var(--sl-border);
+	border-radius: var(--sl-radius);
+	background: #fff;
+	font-size: 15px;
+	line-height: 1.4;
+	color: var(--sl-text);
+}
+
+.sl-input:focus {
+	outline: 2px solid rgba(227, 6, 19, 0.35);
+	outline-offset: 1px;
+	border-color: var(--sl-accent);
+}
+
+.sl-input-wrap {
+	position: relative;
+}
+
+.sl-field--password .sl-input {
+	padding-right: 46px;
+}
+
+.sl-toggle-password {
+	position: absolute;
+	top: 50%;
+	right: 8px;
+	transform: translateY(-50%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--sl-muted);
+	cursor: pointer;
+}
+
+.sl-toggle-password:hover {
+	color: var(--sl-text);
+}
+
+.sl-field--radio {
+	display: flex;
+	gap: 24px;
+	margin-bottom: 16px;
+}
+
+.sl-radio,
+.sl-remember,
+.sl-terms {
+	display: flex;
+	align-items: flex-start;
+	gap: 8px;
+	cursor: pointer;
+}
+
+.sl-remember,
+.sl-terms {
+	margin-bottom: 16px;
+	font-size: 13px;
+	color: var(--sl-muted);
+}
+
+.sl-terms span {
+	text-align: center;
+}
+
+.smart-login--auth .sl-terms span {
+	text-align: left;
+}
+
+.sl-password-guidance {
+	margin: -10px 0 16px;
+}
+
+.sl-password-block {
+	margin: 4px 0 20px;
+	padding: 14px 16px 12px;
+	border: 1px solid var(--sl-border);
+	border-radius: 10px;
+	background: #fbfcfe;
+}
+
+.sl-password-block__title {
+	padding: 0 6px;
+	color: var(--sl-text);
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.sl-password-block .sl-field {
+	margin-bottom: 12px;
+}
+
+.sl-password-block .sl-password-guidance {
+	margin: -4px 0 12px;
+}
+
+.sl-password-match {
+	min-height: 20px;
+	margin: -4px 0 12px;
+	font-size: 13px;
+}
+
+.sl-password-match.is-error {
+	color: #b42318;
+}
+
+.sl-password-match.is-success {
+	color: #15803d;
+}
+
+.sl-input[aria-invalid="true"] {
+	border-color: #b42318;
+}
+
+.sl-input[aria-invalid="true"]:focus {
+	outline-color: rgba(180, 35, 24, 0.28);
+}
+
+.sl-password-security {
+	display: flex;
+	align-items: flex-start;
+	gap: 7px;
+	margin: 4px 0 0;
+	padding-top: 10px;
+	border-top: 1px solid #e7eaf0;
+	color: var(--sl-muted);
+	font-size: 12px;
+	line-height: 1.45;
+}
+
+.sl-password-security svg {
+	flex: 0 0 auto;
+	margin-top: 1px;
+	color: #15803d;
+}
+
+/* Honeypot: off-screen but not display:none, which some bots skip. */
+.smart-login .smart-login-hp {
+	position: absolute !important;
+	left: -9999px !important;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+}
+
+/* ---------- Buttons ---------- */
+
+.sl-btn {
+	display: block;
+	width: 100%;
+	margin-bottom: 12px;
+	padding: 13px 16px;
+	border: 1px solid transparent;
+	border-radius: var(--sl-radius);
+	font-size: 15px;
+	font-weight: 600;
+	text-align: center;
+	text-decoration: none;
+	cursor: pointer;
+	transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sl-btn--primary {
+	background: var(--sl-accent);
+	color: #fff;
+}
+
+.sl-btn--primary:hover:not(:disabled) {
+	background: var(--sl-accent-dark);
+	color: #fff;
+}
+
+.sl-btn--primary:disabled {
+	background: #e5e7eb;
+	color: #9ca3af;
+	cursor: not-allowed;
+}
+
+.sl-btn--outline {
+	background: #fff;
+	border-color: var(--sl-accent);
+	color: var(--sl-accent);
+}
+
+.sl-btn--outline:hover {
+	background: rgba(227, 6, 19, 0.06);
+	color: var(--sl-accent);
+}
+
+.sl-links {
+	margin: 0 0 16px;
+	text-align: center;
+}
+
+.sl-link {
+	color: var(--sl-accent);
+	text-decoration: none;
+}
+
+.sl-link:hover {
+	text-decoration: underline;
+}
+
+.sl-link--button {
+	border: 0;
+	padding: 0;
+	background: none;
+	font: inherit;
+	cursor: pointer;
+}
+
+.sl-link--button:disabled {
+	color: var(--sl-muted);
+	cursor: default;
+	text-decoration: none;
+}
+
+/* ---------- Divider ---------- */
+
+.sl-divider {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin: 20px 0;
+	color: var(--sl-muted);
+	font-size: 13px;
+}
+
+.sl-divider::before,
+.sl-divider::after {
+	content: "";
+	flex: 1;
+	height: 1px;
+	background: var(--sl-border);
+}
+
+.sl-provider-buttons {
+	display: grid;
+	gap: 10px;
+	margin-bottom: 18px;
+}
+
+.smart-login--auth .sl-provider-buttons {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.sl-btn--provider {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	margin-bottom: 0;
+	border-color: var(--sl-border);
+	background: #fff;
+	color: var(--sl-text);
+}
+
+.sl-btn--provider:hover {
+	border-color: #aeb4bf;
+	background: #f8f9fa;
+	color: var(--sl-text);
+}
+
+.sl-btn--zalo {
+	border-color: #0b74e5;
+	color: #075eb8;
+}
+
+.sl-btn--zalo:hover {
+	border-color: #075eb8;
+	background: #f1f7fe;
+	color: #075eb8;
+}
+
+.sl-provider-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	border: 1px solid currentColor;
+	border-radius: 50%;
+	font-size: 12px;
+	font-weight: 700;
+	line-height: 1;
+}
+
+.sl-contact-grid {
+	display: grid;
+	gap: 16px;
+	margin: 16px 0 24px;
+}
+
+.sl-contact-verification {
+	padding: 14px;
+	border: 1px solid var(--sl-border);
+	border-radius: var(--sl-radius);
+	background: #fafafa;
+}
+
+.sl-contact-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: 10px;
+	align-items: center;
+}
+
+.sl-contact-row .sl-btn {
+	width: auto;
+	min-width: 112px;
+	margin: 0;
+}
+
+.sl-contact-confirm {
+	margin-top: 12px;
+}
+
+.sl-contact-status {
+	min-height: 20px;
+	margin: 8px 0 0;
+	font-size: 13px;
+}
+
+.sl-contact-status.is-error {
+	color: var(--sl-accent);
+}
+
+.sl-contact-status.is-success {
+	color: #15803d;
+}
+
+@media (max-width: 520px) {
+	.sl-contact-row {
+		grid-template-columns: 1fr;
+	}
+
+	.sl-contact-row .sl-btn {
+		width: 100%;
+	}
+}
+
+/* ---------- OTP ---------- */
+
+.sl-otp-boxes {
+	display: flex;
+	gap: 10px;
+	margin: 28px 0 18px;
+}
+
+.sl-otp-digit {
+	flex: 1;
+	min-width: 0;
+	padding: 8px 0;
+	border: 0;
+	border-bottom: 2px solid var(--sl-text);
+	background: none;
+	font-size: 22px;
+	text-align: center;
+	color: var(--sl-text);
+	border-radius: 0;
+}
+
+.sl-otp-digit:focus {
+	outline: none;
+	border-bottom-color: var(--sl-accent);
+}
+
+.sl-countdown {
+	margin: 0 0 24px;
+	font-size: 14px;
+}
+
+.sl-countdown__value {
+	color: var(--sl-accent);
+	font-weight: 600;
+}
+
+.sl-countdown__value.is-expired {
+	color: var(--sl-muted);
+}
+
+.sl-resend {
+	margin-top: 4px;
+	font-size: 13px;
+	text-align: center;
+	color: var(--sl-muted);
+}
+
+/* ---------- Address picker ---------- */
+
+.sl-combo {
+	position: relative;
+}
+
+/* The native select stays in the form so it is still what gets submitted. */
+.sl-combo__native {
+	display: none;
+}
+
+.sl-combo__input {
+	width: 100%;
+}
+
+.sl-combo__input:disabled {
+	background: #f3f4f6;
+	color: var(--sl-muted);
+	cursor: not-allowed;
+}
+
+.sl-combo__list {
+	position: absolute;
+	z-index: 50;
+	top: calc(100% + 2px);
+	left: 0;
+	right: 0;
+	max-height: 260px;
+	margin: 0;
+	padding: 4px 0;
+	overflow-y: auto;
+	list-style: none;
+	background: #fff;
+	border: 1px solid var(--sl-border);
+	border-radius: var(--sl-radius);
+	box-shadow: 0 6px 20px rgba(16, 24, 40, 0.12);
+}
+
+.sl-combo__option {
+	padding: 9px 14px;
+	margin: 0;
+	cursor: pointer;
+	font-size: 14px;
+	line-height: 1.4;
+}
+
+.sl-combo__option:hover,
+.sl-combo__option.is-active {
+	background: rgba(227, 6, 19, 0.08);
+}
+
+.sl-combo__primary {
+	font-weight: 500;
+}
+
+.sl-combo__secondary {
+	color: var(--sl-muted);
+	font-size: 13px;
+}
+
+.sl-combo__empty {
+	padding: 10px 14px;
+	color: var(--sl-muted);
+	font-size: 14px;
+}
+
+.sl-address__quick .sl-hint {
+	margin: 6px 0 0;
+}
+
+.sl-separator {
+	margin: 24px 0;
+	border: 0;
+	border-top: 1px solid var(--sl-border);
+}
+
+/* WooCommerce renders its own field wrappers; keep the dropdown on top. */
+.woocommerce form .form-row .sl-combo__list {
+	z-index: 100;
+}
+
+/* ---------- Notices ---------- */
+
+.sl-notices {
+	margin-bottom: 16px;
+}
+
+.sl-notice {
+	margin-bottom: 10px;
+	padding: 10px 14px;
+	border-left: 3px solid var(--sl-border);
+	border-radius: 4px;
+	background: #f6f7f9;
+	font-size: 14px;
+}
+
+.sl-notice p {
+	margin: 6px 0;
+}
+
+.sl-notice--error {
+	border-left-color: var(--sl-accent);
+	background: #fdeced;
+	color: #8c1119;
+}
+
+.sl-notice--success {
+	border-left-color: #128a4c;
+	background: #e8f6ee;
+	color: #0f6b3c;
+}
+
+.sl-notice--warning {
+	border-left-color: #d98613;
+	background: #fdf3e3;
+	color: #8a5a0c;
+}
+
+.sl-notice--info {
+	border-left-color: #2563eb;
+	background: #eaf1fe;
+	color: #1c4bb8;
+}
+
+/* ---------- Success screen ---------- */
+
+.smart-login--done {
+	text-align: center;
+}
+
+.sl-congrats-label {
+	margin: 12px 0 8px;
+	color: #128a4c;
+	font-size: 13px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+}
+
+.sl-congrats-title {
+	margin: 0 0 28px;
+	color: #128a4c;
+	font-size: 20px;
+	font-weight: 600;
+}
+
+/* ---------- Profile ---------- */
+
+.sl-profile-list {
+	margin: 0 0 20px;
+	padding: 0;
+}
+
+.sl-profile-list dt {
+	margin-top: 12px;
+	color: var(--sl-muted);
+	font-size: 13px;
+}
+
+.sl-profile-list dd {
+	margin: 2px 0 0;
+	font-weight: 500;
+}
+
+/* ---------- Small screens ---------- */
+
+@media (max-width: 480px) {
+	.smart-login {
+		padding-left: 16px;
+		padding-right: 16px;
+	}
+
+	.sl-otp-boxes {
+		gap: 6px;
+	}
+
+	.sl-otp-digit {
+		font-size: 18px;
+	}
+
+	.smart-login--auth .sl-provider-buttons {
+		grid-template-columns: 1fr;
+	}
+
+	.sl-login-options {
+		align-items: center;
+	}
+}
