@@ -29,6 +29,7 @@ final class IdentityRecord {
 	private string $verified_at;
 	private string $linked_by;
 	private array $meta;
+	private string $created_at;
 
 	private function __construct( array $data ) {
 		$this->id          = (int) ( $data['id'] ?? 0 );
@@ -39,6 +40,9 @@ final class IdentityRecord {
 		$this->verified_at = (string) ( $data['verified_at'] ?? '' );
 		$this->linked_by   = sanitize_key( (string) ( $data['linked_by'] ?? '' ) );
 		$this->meta        = is_array( $data['meta'] ?? null ) ? $data['meta'] : array();
+		$this->created_at  = '' !== (string) ( $data['created_at'] ?? '' )
+			? (string) $data['created_at']
+			: gmdate( 'Y-m-d H:i:s' );
 	}
 
 	/**
@@ -64,6 +68,7 @@ final class IdentityRecord {
 				'verified_at' => $row['verified_at'] ?? '',
 				'linked_by'   => $row['linked_by'] ?? '',
 				'meta'        => $meta,
+				'created_at'  => $row['created_at'] ?? '',
 			)
 		);
 	}
@@ -117,6 +122,10 @@ final class IdentityRecord {
 		return $this->meta;
 	}
 
+	public function created_at(): string {
+		return $this->created_at;
+	}
+
 	public function claim(): Claim {
 		return Claim::canonical( $this->channel, $this->subject );
 	}
@@ -124,6 +133,8 @@ final class IdentityRecord {
 	/**
 	 * Column map for $wpdb->insert(). `id` is omitted so the caller cannot
 	 * accidentally overwrite an existing row through the insert path.
+	 *
+	 * Key order matches IdentityRepository::FORMATS — keep the two in step.
 	 *
 	 * @return array<string,mixed>
 	 */
@@ -136,6 +147,7 @@ final class IdentityRecord {
 			'verified_at' => $this->verified_at,
 			'linked_by'   => $this->linked_by,
 			'meta_json'   => $this->meta ? wp_json_encode( $this->meta ) : null,
+			'created_at'  => $this->created_at,
 		);
 	}
 }

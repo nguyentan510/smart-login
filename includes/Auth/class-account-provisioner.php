@@ -8,8 +8,12 @@
 namespace SmartLogin\Auth;
 
 use SmartLogin\Auth\Providers\ProviderIdentity;
+use SmartLogin\Identity\Claim;
+use SmartLogin\Identity\IdentityRecord;
+use SmartLogin\Identity\IdentityRepository;
 use SmartLogin\Identity\Phone;
 use SmartLogin\Identity\UserManager;
+use SmartLogin\Identity\VerifiedClaim;
 use SmartLogin\Security\AuditLog;
 use SmartLogin\Settings;
 use WP_Error;
@@ -18,10 +22,17 @@ defined( 'ABSPATH' ) || exit;
 
 final class AccountProvisioner {
 
-	private ExternalIdentityRepository $identities;
+	private IdentityRepository $identities;
 
-	public function __construct( ?ExternalIdentityRepository $identities = null ) {
-		$this->identities = $identities ?? new ExternalIdentityRepository();
+	public function __construct( ?IdentityRepository $identities = null ) {
+		$this->identities = $identities ?? new IdentityRepository();
+	}
+
+	/**
+	 * A federated provider is just another identity channel now.
+	 */
+	private function claim_for( ProviderIdentity $identity ): Claim {
+		return Claim::canonical( $identity->provider, $identity->subject );
 	}
 
 	/** @return array{user:\WP_User,context:AuthContext}|WP_Error */
@@ -30,9 +41,9 @@ final class AccountProvisioner {
 			return new WP_Error( 'smart_login_provider_identity', __( 'Nhà cung cấp không trả về định danh hợp lệ.', 'smart-login' ) );
 		}
 
-		$existing = $this->identities->find( $identity->provider, $identity->subject );
+		$existing = $this->identities->find( $this->claim_for( $identity ) );
 		if ( $existing ) {
-			$user = get_userdata( (int) $existing['user_id'] );
+			$user = get_userdata( $existing->user_id() );
 			if ( ! $user ) {
 				return new WP_Error( 'smart_login_provider_orphan', __( 'Liên kết tài khoản không còn hợp lệ.', 'smart-login' ) );
 			}
@@ -58,7 +69,7 @@ final class AccountProvisioner {
 					return new WP_Error( 'smart_login_provider_conflict', __( 'Email của nhà cung cấp đã thuộc về tài khoản khác.', 'smart-login' ) );
 				}
 			}
-			if ( ! $this->link( $identity, (int) $user->ID, 'explicit' ) ) {
+			if ( ! $this->link( $identity, (int) $user->ID, IdentityRecord::BY_OAUTH ) ) {
 				return new WP_Error( 'smart_login_provider_link', __( 'Không thể liên kết tài khoản nhà cung cấp.', 'smart-login' ) );
 			}
 			return array( 'user' => $user, 'context' => $this->context( $identity, (int) $user->ID, false, true ) );
@@ -77,7 +88,7 @@ final class AccountProvisioner {
 			}
 			$user = 1 === count( $ids ) ? get_userdata( (int) $ids[0] ) : null;
 			if ( $user && ! UserManager::is_synthetic_email( (string) $user->user_email ) ) {
-				if ( ! $this->link( $identity, (int) $user->ID, 'auto_verified_email' ) ) {
+				if ( ! $this->link( $identity, (int) $user->ID, IdentityRecord::BY_AUTO_EMAIL ) ) {
 					return new WP_Error( 'smart_login_provider_link', __( 'Không thể tự động liên kết tài khoản hiện có.', 'smart-login' ) );
 				}
 				return array( 'user' => $user, 'context' => $this->context( $identity, (int) $user->ID, false, false ) );
@@ -88,14 +99,14 @@ final class AccountProvisioner {
 		if ( is_wp_error( $user ) ) {
 			return $user;
 		}
-		if ( ! $this->link( $identity, (int) $user->ID, 'provisioned' ) ) {
+		if ( ! $this->link( $identity, (int) $user->ID, IdentityRecord::BY_REGISTRATION ) ) {
 			if ( ! function_exists( 'wp_delete_user' ) ) {
 				require_once ABSPATH . 'wp-admin/includes/user.php';
 			}
 			wp_delete_user( (int) $user->ID );
-			$race = $this->identities->find( $identity->provider, $identity->subject );
+			$race = $this->identities->find( $this->claim_for( $identity ) );
 			if ( $race ) {
-				$race_user = get_userdata( (int) $race['user_id'] );
+				$race_user = get_userdata( $race->user_id() );
 				if ( $race_user ) {
 					return array( 'user' => $race_user, 'context' => $this->context( $identity, (int) $race_user->ID, false, false ) );
 				}
@@ -147,11 +158,33 @@ final class AccountProvisioner {
 		return $user ?: new WP_Error( 'smart_login_provider_user', __( 'Không thể tải tài khoản vừa tạo.', 'smart-login' ) );
 	}
 
+	/**
+	 * Take ownership of the provider subject.
+	 *
+	 * The OAuth exchange already proved control, so the claim is verified before
+	 * it reaches the repository — an unproven subject has no route into the
+	 * identities table.
+	 *
+	 * Note what is NOT recorded here: the provider's email. An email address is
+	 * an identity in the 'email' channel, not an attribute of a federated one.
+	 * Phase 3 decides when a verified provider email earns its own row; until
+	 * then it stays in meta_json as forensic context only.
+	 */
 	private function link( ProviderIdentity $identity, int $user_id, string $linked_by ): bool {
-		$ok = $this->identities->link( $identity->provider, $identity->subject, $user_id, $identity->email, $identity->email_verified, $identity->claims, $linked_by );
+		$record = IdentityRecord::create(
+			$user_id,
+			VerifiedClaim::from( $this->claim_for( $identity ), VerifiedClaim::PROOF_OAUTH ),
+			$linked_by,
+			false,
+			$identity->claims
+		);
+
+		$ok = $this->identities->claim( $record );
+
 		if ( $ok ) {
 			AuditLog::record( AuditLog::PROVIDER_LINKED, '', array( 'provider' => $identity->provider, 'linked_by' => $linked_by ), $user_id );
 		}
+
 		return $ok;
 	}
 

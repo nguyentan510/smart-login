@@ -94,10 +94,14 @@ sl_assert(
 	'Add Installer::identity_history_table().'
 );
 
+// Two allowlisted references remain, both of which exist only to remove the
+// table: Installer::drop_legacy_tables() and the uninstall routine. They are the
+// migration itself, not a dependency on it. Both should be deleted once no
+// installation can still be carrying the table.
 sl_forbid_pattern(
-	'the external_identities table is gone (folded into identities)',
+	'the external_identities table is only ever dropped, never used',
 	'/external_identities/',
-	array(),
+	array( 'includes/class-installer.php', 'uninstall.php' ),
 	'Federated providers stop being a special case; one table serves every channel.'
 );
 

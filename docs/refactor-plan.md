@@ -15,7 +15,7 @@ Phases are units of **review and test gating**, not of migration safety.
 
 - [x] **Phase 0 — Foundation and contract**
 - [x] **Phase 1 — Identity core (pure, no DB)**
-- [ ] **Phase 2 — Persistence**
+- [x] **Phase 2 — Persistence**
 - [ ] **Phase 3 — Directory and state machine**
 - [ ] **Phase 4 — Proof layer: OTP**
 - [ ] **Phase 5 — Profile boundary**
@@ -99,24 +99,68 @@ contract suite green, regression suite still 163, zero DB access. Confirmed.
 
 ---
 
-## Phase 2 — Persistence
+## Phase 2 — Persistence ✅
 
-**Build**
+**Delivered**
 
-- Both tables via `dbDelta()`; `SMART_LOGIN_DB_VERSION` → `3`
-- Drop `wp_smart_login_external_identities`
-- `IdentityRepository` — claim / link / retire / resolve, atomic
-- `IdentityHistory` — append-only
-- Delete `ExternalIdentityRepository`
-- `uninstall.php`: new tables, plus the `smartlogin_ward_code` and
-  `smartlogin_shipping_ward_code` meta keys currently missed
+- `smartlogin_identities` + `smartlogin_identity_history` via `dbDelta()`;
+  `SMART_LOGIN_DB_VERSION` → `3`
+- `IdentityRepository` — find / for_user / claim / retire / relink / set_primary /
+  count_for_user, all atomic at the storage layer
+- `IdentityHistory` — append-only, closed event vocabulary
+- `Installer::pending_schema_changes()` — dbDelta dry run
+- `wp_smart_login_external_identities` dropped; `ExternalIdentityRepository`
+  deleted
+- `uninstall.php`: both new tables plus the two ward-code meta keys
+- Both integration suites ported to the new tables
 
-**Acceptance** (integration gate, needs WordPress + MySQL)
+**Notes from doing the work**
 
-- `UNIQUE KEY subject_owner` rejects a second owner
-- Retiring an identity writes exactly one history row
-- Two concurrent claims for one subject: exactly one wins
-- Running `install_tables()` twice issues no `ALTER TABLE`
+- **`AccountProvisioner` had to be ported in this phase, not Phase 3.** Deleting
+  `ExternalIdentityRepository` while a caller still referenced it would leave the
+  tree fatalling on any provider login. Only its persistence dependency moved;
+  the resolve logic is untouched and still awaits the Phase 3 state machine.
+- **A Phase 1 bug surfaced here.** The schema has `created_at DATETIME NOT NULL`
+  with no default, but `IdentityRecord::to_row()` did not emit it, so every
+  insert would have failed. Fixed, and `run-core-tests.php` now asserts both the
+  presence of the column and that `to_row()` key count matches
+  `IdentityRepository::FORMATS`.
+- **No `email` column on `identities`.** The superseded table had `email` and
+  `email_verified`; carrying them forward would recreate the
+  multiple-representations problem. An email address is an identity in the
+  `email` channel, not an attribute of a federated one. Provider claims stay in
+  `meta_json` as forensic context. Phase 3 decides when a verified provider email
+  earns its own row.
+- **The repository owns history rather than callers.** Retiring without a trace
+  would make `Resolution::RETIRED` unreachable, and RETIRED is what keeps the
+  takeover defect unrepresentable. Pairing them means no caller can forget.
+- **Two allowlisted `external_identities` references remain**, in
+  `Installer::drop_legacy_tables()` and `uninstall.php`. They are the migration
+  itself, not a dependency on it. Delete both once no install can carry the table.
+- **The gate script had an environment gap.** It set `OPENSSL_CONF` only for
+  Local's lightning-services PHP; on any other build `openssl_pkey_new()` failed
+  and the provider gate reported a blocker for an avoidable reason. It now probes
+  several locations for any binary, and runs `tests/run-all.php` rather than only
+  the regression suite.
+
+**Acceptance — measured on WordPress 7.0.2 + MySQL, not assumed**
+
+```text
+SMART_LOGIN_AUTH_INTEGRATION_OK        db_version=3
+SMART_LOGIN_GOOGLE_STAGING_SMOKE_OK
+SMART_LOGIN_PROVIDER_LINKING_OK
+SMART_LOGIN_ZALO_STAGING_SMOKE_OK
+```
+
+- `subject_owner` verified to be a real UNIQUE index over two columns
+- a second user claiming an owned subject loses, and the owner is unchanged
+- retire reports the previous owner, ends ownership, writes exactly one history
+  row, and `last_retired_owner()` still recovers the prior owner for policy
+- a retired subject can then be claimed by a different user
+- `meta_json` and `is_primary` round-trip
+- the superseded table is gone
+- `pending_schema_changes()` is empty, so `dbDelta` issues no `ALTER TABLE` on a
+  healthy install
 
 ---
 

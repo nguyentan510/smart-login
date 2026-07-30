@@ -31,10 +31,12 @@ $cleanup      = static function () use ( &$cleanup_ids, &$cleanup_rows ): void {
 	if ( ! function_exists( 'wp_delete_user' ) && defined( 'ABSPATH' ) && is_file( ABSPATH . 'wp-admin/includes/user.php' ) ) {
 		require_once ABSPATH . 'wp-admin/includes/user.php';
 	}
-	if ( class_exists( 'SmartLogin\\Auth\\ExternalIdentityRepository' ) ) {
-		$repository = new \SmartLogin\Auth\ExternalIdentityRepository();
+	if ( class_exists( 'SmartLogin\\Identity\\IdentityRepository' ) ) {
+		$repository = new \SmartLogin\Identity\IdentityRepository();
 		foreach ( $cleanup_rows as $row ) {
-			$repository->delete( $row['provider'], $row['subject'], (int) $row['user_id'] );
+			$claim = \SmartLogin\Identity\Claim::canonical( (string) $row['provider'], (string) $row['subject'] );
+			$repository->retire( $claim, 'provider_gate_cleanup', 'system' );
+			$repository->history()->forget_user( (int) $row['user_id'] );
 		}
 	}
 	foreach ( $cleanup_ids as $user_id ) {
@@ -249,8 +251,10 @@ try {
 		$failed( 'verified-email auto-link did not resolve to the existing user' );
 	}
 	$cleanup_rows[] = array( 'provider' => 'google', 'subject' => $auto_identity->subject, 'user_id' => (int) $existing_id );
-	$linked = ( new \SmartLogin\Auth\ExternalIdentityRepository() )->find( 'google', $auto_identity->subject );
-	if ( ! is_array( $linked ) || 'auto_verified_email' !== $linked['linked_by'] ) {
+	$linked = ( new \SmartLogin\Identity\IdentityRepository() )->find(
+		\SmartLogin\Identity\Claim::canonical( 'google', $auto_identity->subject )
+	);
+	if ( ! $linked || \SmartLogin\Identity\IdentityRecord::BY_AUTO_EMAIL !== $linked->linked_by() ) {
 		$failed( 'auto-link identity was not persisted with the expected audit reason' );
 	}
 
@@ -395,8 +399,10 @@ try {
 	if ( ! in_array( 'email', $required_keys, true ) ) {
 		$failed( 'Zalo provider-only account did not enter required email onboarding' );
 	}
-	$zalo_row = ( new \SmartLogin\Auth\ExternalIdentityRepository() )->find( 'zalo', $zalo_identity->subject );
-	if ( ! is_array( $zalo_row ) || false !== strpos( (string) $zalo_row['profile_json'], 'zalo-fixture-access' ) ) {
+	$zalo_row = ( new \SmartLogin\Identity\IdentityRepository() )->find(
+		\SmartLogin\Identity\Claim::canonical( 'zalo', $zalo_identity->subject )
+	);
+	if ( ! $zalo_row || false !== strpos( (string) wp_json_encode( $zalo_row->meta() ), 'zalo-fixture-access' ) ) {
 		$failed( 'Zalo identity persistence is missing or contains an access token' );
 	}
 

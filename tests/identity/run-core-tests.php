@@ -115,6 +115,20 @@ sl_check( 'create() records the primary flag', true, $record->is_primary() );
 
 $row = $record->to_row();
 sl_check( 'to_row() omits the id so insert cannot overwrite', false, array_key_exists( 'id', $row ) );
+
+// created_at is NOT NULL with no default in the schema, so to_row() must supply
+// it or every insert fails. Caught while wiring Phase 2 persistence.
+sl_check( 'to_row() supplies created_at for the NOT NULL column', true, array_key_exists( 'created_at', $row ) );
+sl_assert(
+	'a defaulted created_at is UTC in MySQL DATETIME format',
+	1 === preg_match( '/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', (string) $row['created_at'] )
+);
+sl_check( 'from_row() preserves a stored created_at', '2026-01-02 03:04:05', IdentityRecord::from_row( array( 'created_at' => '2026-01-02 03:04:05' ) )->created_at() );
+sl_check(
+	'to_row() key order matches IdentityRepository::FORMATS',
+	count( \SmartLogin\Identity\IdentityRepository::FORMATS ),
+	count( $row )
+);
 sl_check( 'to_row() casts the primary flag for the column', 1, $row['is_primary'] );
 sl_check( 'to_row() encodes meta as JSON', '{"hd":"example.com"}', $row['meta_json'] );
 sl_check( 'to_row() writes NULL rather than an empty JSON object', null, IdentityRecord::create( 42, $verified, 'otp' )->to_row()['meta_json'] );

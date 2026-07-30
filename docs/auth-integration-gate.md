@@ -7,9 +7,12 @@ migration. When a local WordPress site and MySQL instance are available, run:
 .\scripts\run-auth-integration-gate.ps1
 ```
 
-The gate runs the regression suite first, then bootstraps WordPress and checks
-the DB version, `external_identities` schema, repository round-trip, and
-profile completeness contract. A successful run ends with:
+The gate runs `tests/run-all.php` first (regression, lint and the identity
+suites — spec suites report without blocking), then bootstraps WordPress and
+checks the DB version, the `smartlogin_identities` and
+`smartlogin_identity_history` schema, the `UNIQUE KEY subject_owner` constraint,
+`dbDelta` idempotency, a claim/retire/re-claim round trip, and the profile
+completeness contract. A successful run ends with:
 
 ```text
 SMART_LOGIN_AUTH_INTEGRATION_OK
@@ -27,6 +30,10 @@ SMART_LOGIN_ZALO_STAGING_SMOKE_OK
 If the runtime is unavailable, the gate exits non-zero and emits
 `SMART_LOGIN_AUTH_INTEGRATION_BLOCKED`. That is an environment blocker, not a
 production-readiness claim.
+
+The script locates `openssl.cnf` itself for whichever PHP binary it picks. If
+your build stores it somewhere unusual, set `OPENSSL_CONF` before running —
+without it `openssl_pkey_new()` fails and the Google fixture cannot be built.
 
 Override the defaults with:
 

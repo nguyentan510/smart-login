@@ -43,18 +43,34 @@ $env:SMART_LOGIN_DB_USER = $DbUser
 $env:SMART_LOGIN_DB_PASSWORD = $DbPassword
 $env:SMART_LOGIN_DB_PREFIX = $DbPrefix
 
-& $purePhp 'tests/run-tests.php'
+# The aggregate runner, so the identity suites report alongside the regression
+# suite. Spec suites are non-blocking until Phase 7 promotes them.
+& $purePhp 'tests/run-all.php'
 if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
 $phpArgs = @()
 $extensionDirectory = Split-Path -Parent $integrationPhp
-if ($extensionDirectory -like '*lightning-services*') {
-    $opensslConfig = Join-Path $extensionDirectory 'extras\ssl\openssl.cnf'
-    if (Test-Path -LiteralPath $opensslConfig) {
-        $env:OPENSSL_CONF = $opensslConfig
+
+# OPENSSL_CONF must be located for ANY php build, not just Local's. Without it
+# openssl_pkey_new() fails with "configuration file routines::no such file" and
+# the provider gate reports a blocker for an entirely avoidable reason.
+if (-not $env:OPENSSL_CONF) {
+    foreach ($candidate in @(
+        (Join-Path $extensionDirectory 'extras\ssl\openssl.cnf'),
+        (Join-Path $extensionDirectory 'extras\openssl\openssl.cnf'),
+        'C:\xampp\php\extras\ssl\openssl.cnf',
+        'C:\xampp\apache\conf\openssl.cnf'
+    )) {
+        if (Test-Path -LiteralPath $candidate) {
+            $env:OPENSSL_CONF = $candidate
+            break
+        }
     }
+}
+
+if ($extensionDirectory -like '*lightning-services*') {
     $phpArgs += @(
         '-d', "extension_dir=$extensionDirectory\ext",
         '-d', 'extension=php_mysqli.dll',

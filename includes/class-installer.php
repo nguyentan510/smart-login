@@ -58,20 +58,32 @@ class Installer {
 		return $wpdb->prefix . 'smartlogin_audit';
 	}
 
-	public static function external_identities_table(): string {
+	public static function identities_table(): string {
 		global $wpdb;
-		return $wpdb->prefix . 'smart_login_external_identities';
+		return $wpdb->prefix . 'smartlogin_identities';
 	}
 
-	private static function install_tables(): void {
+	public static function identity_history_table(): string {
+		global $wpdb;
+		return $wpdb->prefix . 'smartlogin_identity_history';
+	}
+
+	/**
+	 * Every table definition, keyed by table name.
+	 *
+	 * Split out of install_tables() so the same SQL can be handed to dbDelta in
+	 * dry-run mode by pending_schema_changes().
+	 *
+	 * @return array<string,string>
+	 */
+	public static function schema(): array {
 		global $wpdb;
 
-		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-
-		$charset = $wpdb->get_charset_collate();
-		$otp     = self::otp_table();
-		$audit   = self::audit_table();
-		$external = self::external_identities_table();
+		$charset  = $wpdb->get_charset_collate();
+		$otp      = self::otp_table();
+		$audit    = self::audit_table();
+		$identity = self::identities_table();
+		$history  = self::identity_history_table();
 
 		$sql_otp = "CREATE TABLE {$otp} (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -109,26 +121,100 @@ class Installer {
 			KEY created_at (created_at)
 		) {$charset};";
 
-		$sql_external = "CREATE TABLE {$external} (
+		// The authorization index. One row per subject that currently has an
+		// owner; UNIQUE KEY subject_owner is what makes ownership single-valued.
+		// No email column: an email is an identity in its own right (channel
+		// 'email'), not an attribute of another identity. Duplicating it here
+		// would recreate the multiple-representations problem this table exists
+		// to remove. Provider claims live in meta_json for forensics only.
+		$sql_identities = "CREATE TABLE {$identity} (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-			provider VARCHAR(32) NOT NULL,
-			provider_subject VARCHAR(191) NOT NULL,
 			user_id BIGINT UNSIGNED NOT NULL,
-			email VARCHAR(191) NULL,
-			email_verified TINYINT UNSIGNED NOT NULL DEFAULT 0,
-			profile_json LONGTEXT NULL,
+			channel VARCHAR(32) NOT NULL,
+			subject VARCHAR(191) NOT NULL,
+			is_primary TINYINT UNSIGNED NOT NULL DEFAULT 0,
+			verified_at DATETIME NOT NULL,
 			linked_by VARCHAR(32) NOT NULL,
+			meta_json LONGTEXT NULL,
 			created_at DATETIME NOT NULL,
-			updated_at DATETIME NOT NULL,
 			PRIMARY KEY  (id),
-			UNIQUE KEY provider_subject (provider, provider_subject),
-			KEY user_id (user_id),
-			KEY email (email)
+			UNIQUE KEY subject_owner (channel, subject),
+			KEY user_channel (user_id, channel)
 		) {$charset};";
 
-		dbDelta( $sql_otp );
-		dbDelta( $sql_audit );
-		dbDelta( $sql_external );
+		// The old frame: append-only, never consulted for authentication.
+		$sql_identity_history = "CREATE TABLE {$history} (
+			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+			user_id BIGINT UNSIGNED NOT NULL,
+			channel VARCHAR(32) NOT NULL,
+			subject VARCHAR(191) NOT NULL,
+			event VARCHAR(20) NOT NULL,
+			reason VARCHAR(64) NULL,
+			actor VARCHAR(32) NOT NULL,
+			occurred_at DATETIME NOT NULL,
+			PRIMARY KEY  (id),
+			KEY subject_lookup (channel, subject),
+			KEY user_id (user_id),
+			KEY event_occurred (event, occurred_at)
+		) {$charset};";
+
+		return array(
+			$otp      => $sql_otp,
+			$audit    => $sql_audit,
+			$identity => $sql_identities,
+			$history  => $sql_identity_history,
+		);
+	}
+
+	private static function install_tables(): void {
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
+		foreach ( self::schema() as $sql ) {
+			dbDelta( $sql );
+		}
+
+		self::drop_legacy_tables();
+	}
+
+	/**
+	 * What dbDelta would still change, without changing it.
+	 *
+	 * A healthy installed schema returns an empty array. The integration gate
+	 * asserts that, which turns "dbDelta is idempotent" from an assumption into a
+	 * measurement — the failure mode being guarded against is a definition
+	 * dbDelta cannot match, causing an ALTER TABLE on every single request.
+	 *
+	 * @return array<string,string>
+	 */
+	public static function pending_schema_changes(): array {
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
+		$pending = array();
+
+		foreach ( self::schema() as $sql ) {
+			$pending = array_merge( $pending, (array) dbDelta( $sql, false ) );
+		}
+
+		return $pending;
+	}
+
+	/**
+	 * Remove tables from superseded designs.
+	 *
+	 * `smart_login_external_identities` held federated identities before they
+	 * stopped being a special case. DROP IF EXISTS makes this safe to run on
+	 * every activation, and safe on installs that never had the table.
+	 *
+	 * This method is the one legitimate reference to that name anywhere in the
+	 * plugin, which is why tests/identity/run-fitness-tests.php allowlists this
+	 * file. Delete both once no installation can still be carrying the table.
+	 */
+	private static function drop_legacy_tables(): void {
+		global $wpdb;
+
+		$legacy = $wpdb->prefix . 'smart_login_external_identities';
+
+		$wpdb->query( "DROP TABLE IF EXISTS {$legacy}" ); // phpcs:ignore WordPress.DB
 	}
 
 	/**

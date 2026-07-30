@@ -90,16 +90,48 @@ if ( '' !== (string) $wpdb->last_error ) {
 
 try {
 	\SmartLogin\Installer::maybe_upgrade();
-	$table = \SmartLogin\Installer::external_identities_table();
-	$columns = $wpdb->get_col( "SHOW COLUMNS FROM {$table}", 0 ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
-	if ( ! is_array( $columns ) || ! in_array( 'provider', $columns, true ) || ! in_array( 'provider_subject', $columns, true ) ) {
-		$failed( 'external identity table is missing required columns' );
+
+	$identities = \SmartLogin\Installer::identities_table();
+	$history    = \SmartLogin\Installer::identity_history_table();
+
+	$columns = $wpdb->get_col( "SHOW COLUMNS FROM {$identities}", 0 ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	foreach ( array( 'user_id', 'channel', 'subject', 'is_primary', 'verified_at', 'linked_by', 'created_at' ) as $column ) {
+		if ( ! is_array( $columns ) || ! in_array( $column, $columns, true ) ) {
+			$failed( 'identities table is missing the ' . $column . ' column' );
+		}
+	}
+
+	$history_columns = $wpdb->get_col( "SHOW COLUMNS FROM {$history}", 0 ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+	foreach ( array( 'user_id', 'channel', 'subject', 'event', 'actor', 'occurred_at' ) as $column ) {
+		if ( ! is_array( $history_columns ) || ! in_array( $column, $history_columns, true ) ) {
+			$failed( 'identity history table is missing the ' . $column . ' column' );
+		}
+	}
+
+	// Ownership must be single-valued at the storage layer, not merely by
+	// convention in PHP.
+	$indexes = $wpdb->get_results( "SHOW INDEX FROM {$identities} WHERE Key_name = 'subject_owner'", ARRAY_A ); // phpcs:ignore WordPress.DB
+	if ( ! is_array( $indexes ) || 2 !== count( $indexes ) || '0' !== (string) $indexes[0]['Non_unique'] ) {
+		$failed( 'subject_owner must be a UNIQUE index over (channel, subject)' );
+	}
+
+	// The superseded table must be gone, not merely unused.
+	$legacy = $wpdb->prefix . 'smart_login_external_identities';
+	if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $legacy ) ) ) { // phpcs:ignore WordPress.DB
+		$failed( 'the superseded external identities table still exists' );
 	}
 
 	// A second call proves the upgrade path is idempotent for the installed schema.
 	\SmartLogin\Installer::maybe_upgrade();
 	if ( (string) get_option( \SmartLogin\Installer::DB_VERSION_OPTION, '' ) !== (string) SMART_LOGIN_DB_VERSION ) {
 		$failed( 'database version option does not match SMART_LOGIN_DB_VERSION' );
+	}
+
+	// Measured, not assumed: a definition dbDelta cannot match would issue an
+	// ALTER TABLE on every request.
+	$pending = \SmartLogin\Installer::pending_schema_changes();
+	if ( $pending ) {
+		$failed( 'dbDelta is not idempotent; pending changes: ' . implode( ' | ', $pending ) );
 	}
 
 	$login = 'sl_gate_' . strtolower( wp_generate_password( 10, false, false ) );
@@ -117,17 +149,59 @@ try {
 		$failed( 'temporary WordPress user could not be created: ' . $user_id->get_error_message() );
 	}
 
-	$repository = new \SmartLogin\Auth\ExternalIdentityRepository();
-	$subject = 'gate-' . wp_generate_uuid4();
-	if ( ! $repository->insert( 'google', $subject, (int) $user_id, $email, true, array( 'source' => 'integration-gate' ), 'integration_gate' ) ) {
-		$failed( 'external identity insert failed' );
+	$repository = new \SmartLogin\Identity\IdentityRepository();
+	$history_log = $repository->history();
+	$subject     = 'gate-' . wp_generate_uuid4();
+	$claim       = \SmartLogin\Identity\Claim::canonical( 'google', $subject );
+
+	$record = \SmartLogin\Identity\IdentityRecord::create(
+		(int) $user_id,
+		\SmartLogin\Identity\VerifiedClaim::from( $claim, \SmartLogin\Identity\VerifiedClaim::PROOF_OAUTH ),
+		\SmartLogin\Identity\IdentityRecord::BY_OAUTH,
+		true,
+		array( 'source' => 'integration-gate' )
+	);
+
+	if ( ! $repository->claim( $record ) ) {
+		$failed( 'claiming a fresh subject failed: ' . $wpdb->last_error );
 	}
-	$identity = $repository->find( 'google', $subject );
-	if ( ! is_array( $identity ) || (int) $identity['user_id'] !== (int) $user_id ) {
-		$failed( 'external identity lookup returned the wrong user' );
+
+	$found = $repository->find( $claim );
+	if ( ! $found || $found->user_id() !== (int) $user_id ) {
+		$failed( 'identity lookup returned the wrong user' );
 	}
-	if ( 1 !== count( $repository->find_by_verified_email( $email ) ) ) {
-		$failed( 'verified email lookup did not return the inserted identity' );
+	if ( 'integration-gate' !== ( $found->meta()['source'] ?? '' ) ) {
+		$failed( 'meta_json did not round-trip through the database' );
+	}
+	if ( ! $found->is_primary() ) {
+		$failed( 'the primary flag did not round-trip' );
+	}
+
+	// The database, not PHP, must refuse a second owner. A different user
+	// claiming the same subject has to lose.
+	$rival_id = wp_insert_user(
+		array(
+			'user_login'   => $login . '_rival',
+			'user_pass'    => wp_generate_password( 32, true, true ),
+			'user_email'   => $login . '_rival@example.test',
+			'display_name' => $login . '_rival',
+			'role'         => 'subscriber',
+		)
+	);
+	if ( is_wp_error( $rival_id ) ) {
+		$failed( 'rival user could not be created: ' . $rival_id->get_error_message() );
+	}
+
+	$rival_record = \SmartLogin\Identity\IdentityRecord::create(
+		(int) $rival_id,
+		\SmartLogin\Identity\VerifiedClaim::from( $claim, \SmartLogin\Identity\VerifiedClaim::PROOF_OAUTH ),
+		\SmartLogin\Identity\IdentityRecord::BY_OAUTH
+	);
+	if ( $repository->claim( $rival_record ) ) {
+		$failed( 'UNIQUE KEY subject_owner allowed a second owner for one subject' );
+	}
+	if ( $repository->find( $claim )->user_id() !== (int) $user_id ) {
+		$failed( 'a losing claim changed the existing owner' );
 	}
 
 	$status = ( new \SmartLogin\Auth\ProfileCompletionService() )->status( (int) $user_id );
@@ -135,17 +209,51 @@ try {
 		$failed( 'profile completion service returned an invalid status contract' );
 	}
 
-	$repository->delete( 'google', $subject, (int) $user_id );
+	// Retiring must end ownership and leave exactly one trace.
+	if ( $repository->retire( $claim, 'integration_gate' ) !== (int) $user_id ) {
+		$failed( 'retire did not report the previous owner' );
+	}
+	if ( null !== $repository->find( $claim ) ) {
+		$failed( 'a retired subject still has an owner' );
+	}
+	if ( 1 !== $history_log->count_events( $claim, \SmartLogin\Identity\IdentityHistory::RETIRED ) ) {
+		$failed( 'retiring an identity did not write exactly one history row' );
+	}
+
+	// This is the takeover fix at the storage layer: the previous owner is
+	// recoverable for policy, but the subject has no current owner.
+	if ( $history_log->last_retired_owner( $claim ) !== (int) $user_id ) {
+		$failed( 'history did not preserve the previous owner for policy use' );
+	}
+
+	// A recycled subject may be claimed by someone else afterwards.
+	if ( ! $repository->claim( $rival_record ) ) {
+		$failed( 'a retired subject could not be claimed by a new owner' );
+	}
+	if ( $repository->find( $claim )->user_id() !== (int) $rival_id ) {
+		$failed( 'the recycled subject did not transfer to the new owner' );
+	}
+
+	$repository->retire_all_for_user( (int) $rival_id, 'integration_gate' );
+	$history_log->forget_user( (int) $rival_id );
+	$history_log->forget_user( (int) $user_id );
+
 	require_once ABSPATH . 'wp-admin/includes/user.php';
+	wp_delete_user( (int) $rival_id );
 	wp_delete_user( (int) $user_id );
 } catch ( Throwable $exception ) {
-	if ( isset( $user_id ) && function_exists( 'wp_delete_user' ) ) {
-		@wp_delete_user( (int) $user_id );
+	if ( function_exists( 'wp_delete_user' ) ) {
+		foreach ( array( $user_id ?? 0, $rival_id ?? 0 ) as $orphan ) {
+			if ( $orphan > 0 && ! is_wp_error( $orphan ) ) {
+				@wp_delete_user( (int) $orphan );
+			}
+		}
 	}
 	$failed( 'integration assertion raised an exception: ' . $exception->getMessage() );
 }
 
 echo "SMART_LOGIN_AUTH_INTEGRATION_OK\n";
 echo 'wordpress=' . get_bloginfo( 'version' ) . "\n";
-echo 'external_identities_table=' . \SmartLogin\Installer::external_identities_table() . "\n";
+echo 'identities_table=' . \SmartLogin\Installer::identities_table() . "\n";
+echo 'identity_history_table=' . \SmartLogin\Installer::identity_history_table() . "\n";
 echo 'db_version=' . get_option( \SmartLogin\Installer::DB_VERSION_OPTION ) . "\n";
