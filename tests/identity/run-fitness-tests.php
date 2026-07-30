@@ -174,4 +174,28 @@ sl_assert(
 );
 
 // ---------------------------------------------------------------------
+sl_section( 'Identity lifecycle (Phase 6)' );
+
+// Retiring an identity is how an account loses a way in. Every caller outside the
+// repository and the directory must go through the service that carries the
+// orphan guard, so a future feature cannot detach the last identity by accident.
+sl_forbid_pattern(
+	'identities are retired only through the directory or the link service',
+	'/->retire\(/',
+	array(
+		'includes/Identity/class-identity-repository.php',
+		'includes/Identity/class-identity-directory.php',
+		'includes/Auth/class-identity-link-service.php',
+	),
+	'IdentityLinkService::unlink() is the only user-facing path, and it refuses to remove the last identity.'
+);
+
+sl_require_companion(
+	'unlink checks the orphan guard and re-authenticates',
+	'/function unlink\(/',
+	'/can_unlink\(.*\R?.*|wp_check_password\(/',
+	'Removing the last identity would lock the owner out with no recovery path, because user_login is opaque.'
+);
+
+// ---------------------------------------------------------------------
 sl_summary( 'Identity fitness' );

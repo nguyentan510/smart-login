@@ -11,6 +11,7 @@ namespace SmartLogin\Frontend;
 
 use SmartLogin\Auth\LoginHandler;
 use SmartLogin\Auth\ContactVerificationService;
+use SmartLogin\Auth\IdentityLinkService;
 use SmartLogin\Auth\AuthContext;
 use SmartLogin\Auth\AuthProof;
 use SmartLogin\Auth\PostAuthRedirector;
@@ -76,7 +77,15 @@ class RestController {
 			);
 		}
 
-		foreach ( array( 'contact/start' => 'handle_contact_start', 'contact/verify' => 'handle_contact_verify', 'contact/resend' => 'handle_contact_resend' ) as $route => $callback ) {
+		$authenticated = array(
+			'contact/start'     => 'handle_contact_start',
+			'contact/verify'    => 'handle_contact_verify',
+			'contact/resend'    => 'handle_contact_resend',
+			'identities'        => 'handle_identities',
+			'identities/unlink' => 'handle_identity_unlink',
+		);
+
+		foreach ( $authenticated as $route => $callback ) {
 			register_rest_route(
 				self::REST_NAMESPACE,
 				'/' . $route,
@@ -325,6 +334,48 @@ class RestController {
 		$type = sanitize_key( (string) $request->get_param( 'type' ) );
 		$result = ( new ContactVerificationService( $this->otp() ) )->verify( get_current_user_id(), (string) $request->get_param( 'token' ), (string) $request->get_param( 'code' ), $type );
 		return is_wp_error( $result ) ? $this->error( $result ) : $this->success( $result );
+	}
+
+	/**
+	 * What is linked to the signed-in account.
+	 */
+	public function handle_identities( WP_REST_Request $request ) {
+		$service = new IdentityLinkService();
+		$user_id = get_current_user_id();
+
+		return $this->success(
+			array(
+				'identities'  => $service->linked( $user_id ),
+				'can_unlink'  => $service->can_unlink( $user_id ),
+			)
+		);
+	}
+
+	/**
+	 * Detach one identity. Requires the account password, and refuses to remove
+	 * the last way in.
+	 */
+	public function handle_identity_unlink( WP_REST_Request $request ) {
+		$result = ( new IdentityLinkService() )->unlink(
+			get_current_user_id(),
+			sanitize_key( (string) $request->get_param( 'channel' ) ),
+			(string) $request->get_param( 'subject' ),
+			(string) $request->get_param( 'password' )
+		);
+
+		if ( is_wp_error( $result ) ) {
+			return $this->error( $result );
+		}
+
+		$service = new IdentityLinkService();
+
+		return $this->success(
+			array(
+				'unlinked'   => true,
+				'identities' => $service->linked( get_current_user_id() ),
+				'can_unlink' => $service->can_unlink( get_current_user_id() ),
+			)
+		);
 	}
 
 	public function handle_contact_resend( WP_REST_Request $request ) {

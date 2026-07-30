@@ -19,7 +19,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 3 — Directory and state machine**
 - [x] **Phase 4 — Proof layer: OTP**
 - [x] **Phase 5 — Profile boundary**
-- [ ] **Phase 6 — Provider lifecycle**
+- [x] **Phase 6 — Provider lifecycle**
 - [ ] **Phase 7 — Release preparation**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
@@ -357,18 +357,53 @@ they remain genuinely outstanding.
 
 ---
 
-## Phase 6 — Provider lifecycle
+## Phase 6 — Provider lifecycle ✅
 
-**Build**
+**Delivered**
 
-- List linked providers (`find_by_user` exists but was never called)
-- Unlink, requiring re-authentication
-- **Guard: refuse to unlink the last identity that can still sign the user in**
-- Show linked state in the UI instead of unconditional "link" buttons
+- `Auth\IdentityLinkService` — `linked()`, `can_unlink()`, `unlink()`,
+  `unlinked_providers()`, `history()`
+- **Orphan guard**: an account must keep at least one identity, with an
+  explicit `smart_login_allow_orphan_unlink` filter as the only way past it
+- Re-authentication by account password, checked *after* the guard
+- REST: `POST identities` and `POST identities/unlink`
+- Non-JS path: `unlink_identity` form action in `FormController`
+- `templates/partials/linked-identities.php` — shows what is linked, masked, with
+  an inline password confirmation
+- The profile screen now offers only providers that are **not** linked yet
+- `AuditLog::PROVIDER_UNLINKED` and `IDENTITY_RETIRED` added
 
-**Acceptance**
+**Notes from doing the work**
 
-- No sequence of unlink operations can orphan an account
+- **A password alone is not a way back in.** `user_login` is opaque, so an account
+  with zero identities has no identifier left to type and no recovery path. That
+  is why the guard refuses rather than confirms, and why the escape-hatch filter
+  defaults to false.
+- **The guard runs before the password check**, deliberately: prompting for a
+  password on an action that cannot succeed wastes the user's time and teaches
+  them to type it in response to any prompt.
+- **One corner case fails closed and is documented in the code**: an account
+  holding two federated identities and no contact channel cannot re-authenticate,
+  because its owner never set a password. They must add a password or a contact
+  first. An OTP challenge would be the natural alternative, but it would need a
+  fifth intent that the decision table does not define, so the closed failure is
+  the honest option for now.
+- **`IdentityDirectory` and `IdentityRepository` are `final`**, which blocked the
+  subclass mock the tests first reached for. Rather than weaken the design for
+  testability, `tests/stubs.php` gained a minimal `$wpdb` so the real code path is
+  exercised instead of a mock of it. That stub is now available to every future
+  repository test.
+- A new fitness rule confines `->retire()` to the repository, the directory and
+  the link service, so a future feature cannot detach an identity while bypassing
+  the guard.
+
+**Acceptance — proven on WordPress 7.0.2 + MySQL, not just in unit tests**
+
+The integration gate creates an account with two identities and then asserts:
+a wrong password removes nothing; another account's identity cannot be detached
+through your session; the first unlink succeeds; the second is refused with
+`smart_login_last_identity`; `can_unlink()` agrees with `unlink()`; and three
+further attempts do not wear the guard down. The count never reaches zero.
 
 ---
 

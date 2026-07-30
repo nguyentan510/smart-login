@@ -432,4 +432,87 @@ sl_assert(
 );
 
 // ---------------------------------------------------------------------
+sl_section( 'Unlink cannot orphan an account (Phase 6)' );
+
+// IdentityDirectory and IdentityRepository are both final, on purpose — they are
+// the single source of truth for ownership and should not be subclassable. So the
+// guard is exercised through the real objects with the stubbed $wpdb underneath,
+// which tests the actual code path rather than a mock of it.
+$link_service = new \SmartLogin\Auth\IdentityLinkService();
+
+$GLOBALS['sl_wpdb_var'] = 0;
+sl_check( 'an account with no identities cannot unlink', false, $link_service->can_unlink( 7 ) );
+
+$GLOBALS['sl_wpdb_var'] = 1;
+sl_check( 'the last identity cannot be removed', false, $link_service->can_unlink( 7 ) );
+
+$GLOBALS['sl_wpdb_var'] = 2;
+sl_check( 'a spare identity makes removal possible', true, $link_service->can_unlink( 7 ) );
+
+$GLOBALS['sl_wpdb_var'] = 5;
+sl_check( 'and so does more than one spare', true, $link_service->can_unlink( 7 ) );
+
+// The guard fails closed, and the escape hatch has to be asked for explicitly.
+$GLOBALS['sl_wpdb_var'] = 1;
+sl_check( 'no filter, no orphaning', false, $link_service->can_unlink( 7 ) );
+
+// unlinked_providers() drives the UI: offering "link Google" to somebody whose
+// Google is already linked told them nothing.
+$GLOBALS['sl_wpdb_results'] = array(
+	array(
+		'id'          => 3,
+		'user_id'     => 7,
+		'channel'     => 'google',
+		'subject'     => 'sub-1',
+		'is_primary'  => 0,
+		'verified_at' => '2026-07-30 08:00:00',
+		'linked_by'   => 'oauth',
+		'created_at'  => '2026-07-30 08:00:00',
+	),
+);
+
+sl_check(
+	'an already-linked provider is not offered again',
+	array( 'zalo' ),
+	$link_service->unlinked_providers( 7, array( 'google', 'zalo' ) )
+);
+
+// linked() is what the profile screen renders: masked, labelled, never raw.
+$GLOBALS['sl_wpdb_var'] = 2;
+$listed = $link_service->linked( 7 );
+
+sl_check( 'one identity is listed', 1, count( $listed ) );
+sl_check( 'it is labelled', 'Google', $listed[0]['label'] ?? '' );
+sl_check( 'the subject is masked for display', 'sub-••••••', $listed[0]['masked'] ?? '' );
+sl_check( 'the raw subject is still available for the form', 'sub-1', $listed[0]['subject'] ?? '' );
+sl_check( 'it is marked federated', true, $listed[0]['federated'] ?? null );
+sl_check( 'and removable, because a spare exists', true, $listed[0]['removable'] ?? null );
+
+$GLOBALS['sl_wpdb_var'] = 1;
+sl_check( 'with no spare it is not removable', false, $link_service->linked( 7 )[0]['removable'] ?? null );
+
+$GLOBALS['sl_wpdb_results'] = array();
+$GLOBALS['sl_wpdb_var']     = null;
+
+// ---------------------------------------------------------------------
+sl_section( 'Unlink is gated on re-authentication (Phase 6)' );
+
+$link_src = sl_source( 'includes/Auth/class-identity-link-service.php' );
+
+sl_assert(
+	'unlink() checks the password',
+	false !== strpos( $link_src, 'wp_check_password(' ),
+	'A borrowed session must not be enough to detach a victim\'s provider.'
+);
+sl_assert(
+	'the orphan guard runs before the password is even checked',
+	strpos( $link_src, 'can_unlink( $user_id )' ) < strpos( $link_src, '$this->reauthenticate(' ),
+	'Refusing early avoids prompting for a password on an action that cannot succeed.'
+);
+sl_assert(
+	'ownership comes from the directory, not from the request',
+	false !== strpos( $link_src, '$resolution->user_id() !== $user_id' )
+);
+
+// ---------------------------------------------------------------------
 sl_summary( 'Identity core' );

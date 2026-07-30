@@ -13,6 +13,7 @@ namespace SmartLogin\Frontend;
 use SmartLogin\Auth\LoginHandler;
 use SmartLogin\Auth\AuthContext;
 use SmartLogin\Auth\AuthProof;
+use SmartLogin\Auth\IdentityLinkService;
 use SmartLogin\Auth\PostAuthRedirector;
 use SmartLogin\Auth\SessionIssuer;
 use SmartLogin\Auth\PasswordResetHandler;
@@ -94,7 +95,46 @@ class FormController {
 			case 'reset_password':
 				$this->handle_reset_password( $post );
 				break;
+
+			case 'unlink_identity':
+				$this->handle_unlink_identity( $post );
+				break;
 		}
+	}
+
+	/**
+	 * Detach an identity from the signed-in account, without JavaScript.
+	 *
+	 * Redirects back to the same page either way so the notice renders in place
+	 * rather than on a bare POST response.
+	 */
+	private function handle_unlink_identity( array $post ): void {
+		if ( ! is_user_logged_in() ) {
+			Notices::add( __( 'Bạn cần đăng nhập để thực hiện việc này.', 'smart-login' ) );
+			return;
+		}
+
+		if ( ! isset( $post['_wpnonce'] ) || ! wp_verify_nonce( $post['_wpnonce'], 'smart_login_unlink_identity' ) ) {
+			Notices::add( __( 'Phiên làm việc đã hết hạn. Vui lòng tải lại trang.', 'smart-login' ) );
+			return;
+		}
+
+		$result = ( new IdentityLinkService() )->unlink(
+			get_current_user_id(),
+			sanitize_key( (string) ( $post['channel'] ?? '' ) ),
+			(string) ( $post['subject'] ?? '' ),
+			(string) ( $post['password'] ?? '' )
+		);
+
+		// flash(), not add(): the redirect below discards anything not persisted.
+		if ( is_wp_error( $result ) ) {
+			Notices::flash( $result->get_error_message(), 'error' );
+		} else {
+			Notices::flash( __( 'Đã bỏ liên kết.', 'smart-login' ), 'success' );
+		}
+
+		$redirect = (string) ( $post['_redirect'] ?? '' );
+		$this->redirect( '' !== $redirect ? $redirect : home_url( '/' ) );
 	}
 
 	// -----------------------------------------------------------------

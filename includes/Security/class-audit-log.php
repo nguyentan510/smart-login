@@ -31,6 +31,8 @@ class AuditLog {
 	const PROVIDER_LOGIN    = 'provider_login';
 	const PROVIDER_FAILED   = 'provider_failed';
 	const PROVIDER_LINKED   = 'provider_linked';
+	const PROVIDER_UNLINKED = 'provider_unlinked';
+	const IDENTITY_RETIRED  = 'identity_retired';
 	const CONTACT_PENDING   = 'contact_pending';
 	const CONTACT_VERIFIED  = 'contact_verified';
 

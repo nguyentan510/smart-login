@@ -234,16 +234,104 @@ try {
 		$failed( 'the recycled subject did not transfer to the new owner' );
 	}
 
+	// ---------------------------------------------------------------
+	// Phase 6: no sequence of unlinks can leave an account with nothing.
+	// ---------------------------------------------------------------
+	$guard_pass  = wp_generate_password( 24, true, true );
+	$guard_login = 'sl_gate_guard_' . strtolower( wp_generate_password( 8, false, false ) );
+	$guard_id    = wp_insert_user(
+		array(
+			'user_login'   => $guard_login,
+			'user_pass'    => $guard_pass,
+			'user_email'   => $guard_login . '@example.test',
+			'display_name' => $guard_login,
+			'role'         => 'subscriber',
+		)
+	);
+	if ( is_wp_error( $guard_id ) ) {
+		$failed( 'guard user could not be created: ' . $guard_id->get_error_message() );
+	}
+
+	$guard_service = new \SmartLogin\Auth\IdentityLinkService();
+	$guard_claims  = array(
+		\SmartLogin\Identity\Claim::canonical( 'google', 'guard-' . wp_generate_uuid4() ),
+		\SmartLogin\Identity\Claim::canonical( 'zalo', 'guard-' . wp_generate_uuid4() ),
+	);
+
+	foreach ( $guard_claims as $guard_claim ) {
+		$ok = $repository->claim(
+			\SmartLogin\Identity\IdentityRecord::create(
+				(int) $guard_id,
+				\SmartLogin\Identity\VerifiedClaim::from( $guard_claim, \SmartLogin\Identity\VerifiedClaim::PROOF_OAUTH ),
+				\SmartLogin\Identity\IdentityRecord::BY_OAUTH
+			)
+		);
+		if ( ! $ok ) {
+			$failed( 'guard identity could not be claimed: ' . $wpdb->last_error );
+		}
+	}
+
+	if ( 2 !== $repository->count_for_user( (int) $guard_id ) ) {
+		$failed( 'guard user should hold exactly two identities' );
+	}
+
+	// A wrong password must not detach anything, even with a spare identity.
+	$wrong = $guard_service->unlink( (int) $guard_id, 'google', $guard_claims[0]->subject(), 'not-the-password' );
+	if ( ! is_wp_error( $wrong ) || 'smart_login_bad_password' !== $wrong->get_error_code() ) {
+		$failed( 'unlink accepted a wrong password' );
+	}
+	if ( 2 !== $repository->count_for_user( (int) $guard_id ) ) {
+		$failed( 'a failed re-authentication still removed an identity' );
+	}
+
+	// Someone else's identity must not be detachable through your own session.
+	$foreign = $guard_service->unlink( (int) $guard_id, 'google', $subject, $guard_pass );
+	if ( ! is_wp_error( $foreign ) || 'smart_login_not_linked' !== $foreign->get_error_code() ) {
+		$failed( 'unlink accepted an identity belonging to another account' );
+	}
+
+	// The first removal succeeds: a spare remains.
+	$first = $guard_service->unlink( (int) $guard_id, 'google', $guard_claims[0]->subject(), $guard_pass );
+	if ( is_wp_error( $first ) ) {
+		$failed( 'the first unlink failed: ' . $first->get_error_message() );
+	}
+	if ( 1 !== $repository->count_for_user( (int) $guard_id ) ) {
+		$failed( 'the first unlink did not remove exactly one identity' );
+	}
+
+	// The second must be refused, whatever the caller does.
+	$second = $guard_service->unlink( (int) $guard_id, 'zalo', $guard_claims[1]->subject(), $guard_pass );
+	if ( ! is_wp_error( $second ) || 'smart_login_last_identity' !== $second->get_error_code() ) {
+		$failed( 'unlink removed the last identity and orphaned the account' );
+	}
+	if ( 1 !== $repository->count_for_user( (int) $guard_id ) ) {
+		$failed( 'the account was left with no way to sign in' );
+	}
+	if ( $guard_service->can_unlink( (int) $guard_id ) ) {
+		$failed( 'can_unlink() disagrees with unlink() about the last identity' );
+	}
+
+	// Retrying does not wear the guard down.
+	for ( $attempt = 0; $attempt < 3; $attempt++ ) {
+		$guard_service->unlink( (int) $guard_id, 'zalo', $guard_claims[1]->subject(), $guard_pass );
+	}
+	if ( 1 !== $repository->count_for_user( (int) $guard_id ) ) {
+		$failed( 'repeated unlink attempts eventually orphaned the account' );
+	}
+
+	$repository->retire_all_for_user( (int) $guard_id, 'integration_gate' );
 	$repository->retire_all_for_user( (int) $rival_id, 'integration_gate' );
+	$history_log->forget_user( (int) $guard_id );
 	$history_log->forget_user( (int) $rival_id );
 	$history_log->forget_user( (int) $user_id );
 
 	require_once ABSPATH . 'wp-admin/includes/user.php';
+	wp_delete_user( (int) $guard_id );
 	wp_delete_user( (int) $rival_id );
 	wp_delete_user( (int) $user_id );
 } catch ( Throwable $exception ) {
 	if ( function_exists( 'wp_delete_user' ) ) {
-		foreach ( array( $user_id ?? 0, $rival_id ?? 0 ) as $orphan ) {
+		foreach ( array( $user_id ?? 0, $rival_id ?? 0, $guard_id ?? 0 ) as $orphan ) {
 			if ( $orphan > 0 && ! is_wp_error( $orphan ) ) {
 				@wp_delete_user( (int) $orphan );
 			}
