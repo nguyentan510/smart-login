@@ -12,6 +12,7 @@ namespace SmartLogin\Address;
 
 use SmartLogin\Frontend\Assets;
 use SmartLogin\Frontend\TemplateLoader;
+use SmartLogin\Identity\ProfileSeeder;
 use SmartLogin\Settings;
 use WP_Error;
 
@@ -164,13 +165,25 @@ class AddressFields {
 
 		// billing_state / billing_city are WooCommerce-native, so shipping
 		// zones, order emails and invoices keep working untouched.
-		update_user_meta( $user_id, 'billing_state', $clean['province_code'] );
-		update_user_meta( $user_id, 'billing_city', $clean['ward_name'] );
+		//
+		// set_from_user_input(), not seed_if_empty(): the customer just picked
+		// these on their own address form, so their choice overwrites whatever was
+		// there. That is the other half of Invariant 2 — profile data belongs to
+		// the customer, and identity never gets a veto over it.
+		ProfileSeeder::set_many_from_user_input(
+			$user_id,
+			array(
+				'billing_state'   => $clean['province_code'],
+				'billing_city'    => $clean['ward_name'],
+				'billing_country' => 'VN',
+			)
+		);
+
+		// The ward code is identity-adjacent bookkeeping, not a Woo profile field.
 		update_user_meta( $user_id, self::META_WARD_CODE, $clean['ward_code'] );
-		update_user_meta( $user_id, 'billing_country', 'VN' );
 
 		if ( '' !== $clean['street'] ) {
-			update_user_meta( $user_id, 'billing_address_1', $clean['street'] );
+			ProfileSeeder::set_from_user_input( $user_id, 'billing_address_1', $clean['street'] );
 		}
 
 		/**

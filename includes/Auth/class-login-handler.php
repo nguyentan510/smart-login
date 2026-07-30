@@ -11,6 +11,7 @@
 namespace SmartLogin\Auth;
 
 use SmartLogin\Identity\IdentityDirectory;
+use SmartLogin\Identity\ProfileSeeder;
 use SmartLogin\Identity\UserManager;
 use SmartLogin\Security\AuditLog;
 use SmartLogin\Security\Client;
@@ -251,12 +252,10 @@ class LoginHandler {
 			return;
 		}
 
-		$billing = (string) get_user_meta( $user_id, 'billing_phone', true );
-		if ( \SmartLogin\Identity\Phone::normalize( $billing ) === $canonical ) {
-			return;
-		}
-
-		update_user_meta( $user_id, 'billing_phone', \SmartLogin\Identity\Phone::to_local( $canonical ) );
+		// Seed only. The old code short-circuited when billing already matched the
+		// login phone and otherwise overwrote it — so any deliberately different
+		// delivery contact was reset on the next profile save.
+		ProfileSeeder::seed_if_empty( (int) $user_id, 'billing_phone', \SmartLogin\Identity\Phone::to_local( $canonical ) );
 	}
 
 	// -----------------------------------------------------------------

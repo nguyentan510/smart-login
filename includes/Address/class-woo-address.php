@@ -38,6 +38,13 @@ class WooAddress {
 		add_filter( 'woocommerce_my_account_edit_address_field_value', array( $this, 'address_field_value' ), 10, 3 );
 		add_filter( 'woocommerce_checkout_get_value', array( $this, 'checkout_field_value' ), 10, 2 );
 
+		// The substitution has to happen on a filter with a return value.
+		// woocommerce_after_checkout_validation is fired with do_action(), which
+		// passes the array BY VALUE, so the assignment there was discarded and the
+		// order stored the raw ward code (00076) instead of the name. And it runs
+		// after get_posted_data() has already produced the array create_order()
+		// uses, so mutating $_POST that late changes nothing either.
+		add_filter( 'woocommerce_checkout_posted_data', array( $this, 'normalise_posted_data' ) );
 		add_action( 'woocommerce_after_checkout_validation', array( $this, 'validate_checkout' ), 10, 2 );
 		add_action( 'woocommerce_checkout_create_order', array( $this, 'store_order_ward' ), 10, 2 );
 		add_action( 'woocommerce_customer_save_address', array( $this, 'store_customer_ward' ), 5, 2 );
@@ -267,63 +274,86 @@ class WooAddress {
 	// -----------------------------------------------------------------
 
 	/**
-	 * Reject a ward that does not belong to the chosen province, then replace
-	 * the posted code with the official ward name so the order stores something
-	 * a human can read.
+	 * Replace each posted ward code with the official ward name.
 	 *
-	 * @param array     $data
-	 * @param \WP_Error $errors
+	 * Runs on woocommerce_checkout_posted_data, inside get_posted_data(), so the
+	 * returned array is the one create_order() goes on to use. The ward code is
+	 * remembered for store_order_ward(), and a code that does not belong to the
+	 * chosen province is recorded for validate_checkout() to report — this filter
+	 * has no WP_Error to add to, and failing silently here would let a mismatched
+	 * pair through.
+	 *
+	 * @param array $data
+	 * @return array
 	 */
-	public function validate_checkout( $data, $errors ): void {
-		if ( ! AddressRepository::is_dataset_installed() ) {
-			return;
+	public function normalise_posted_data( $data ) {
+		if ( ! is_array( $data ) || ! AddressRepository::is_dataset_installed() ) {
+			return $data;
 		}
 
+		$this->posted_wards = array();
+		$this->ward_errors  = array();
+
 		foreach ( array( 'billing', 'shipping' ) as $prefix ) {
-			// phpcs:disable WordPress.Security.NonceVerification -- WooCommerce verified its own checkout nonce.
-			if ( ! isset( $_POST[ $prefix . '_city' ] ) ) {
+			$city = (string) ( $data[ $prefix . '_city' ] ?? '' );
+
+			if ( '' === $city ) {
 				continue;
 			}
 
-			$province = AddressRepository::province_code( sanitize_text_field( wp_unslash( $_POST[ $prefix . '_state' ] ?? '' ) ) );
-			$ward     = AddressRepository::ward_code( sanitize_text_field( wp_unslash( $_POST[ $prefix . '_city' ] ) ) );
-			// phpcs:enable WordPress.Security.NonceVerification
+			$province = AddressRepository::province_code( (string) ( $data[ $prefix . '_state' ] ?? '' ) );
+			$ward     = AddressRepository::ward_code( $city );
 
 			if ( 'shipping' === $prefix && '' === $ward && '' === $province ) {
 				continue;
 			}
 
 			if ( '' === $ward ) {
-				continue; // Woo's own "required" check already covers this.
+				// Not a ward code at all. Woo's own "required" check covers a blank,
+				// and a free-text city is none of our business.
+				continue;
 			}
 
 			$found = AddressRepository::find_ward( $ward, $province );
 
 			if ( ! $found ) {
-				$errors->add(
-					'smart_login_ward_mismatch',
-					__( 'Phường/Xã không thuộc Tỉnh/Thành phố đã chọn. Vui lòng chọn lại.', 'smart-login' )
-				);
+				$this->ward_errors[ $prefix ] = true;
 				continue;
 			}
 
-			// Hand WooCommerce the readable name from here on.
-			$_POST[ $prefix . '_city' ] = $found['name'];
+			$data[ $prefix . '_city' ] = $found['name'];
 
-			if ( isset( $data[ $prefix . '_city' ] ) ) {
-				$data[ $prefix . '_city' ] = $found['name'];
-			}
+			// Kept in sync for any third-party code still reading the raw request.
+			$_POST[ $prefix . '_city' ] = $found['name']; // phpcs:ignore WordPress.Security.NonceVerification
 
-			$this->remember_posted_ward( $prefix, $ward );
+			$this->posted_wards[ $prefix ] = $ward;
 		}
+
+		return $data;
 	}
 
-	/** @var array<string,string> Ward codes captured during validation. */
+	/**
+	 * Surface a ward/province mismatch detected while normalising.
+	 *
+	 * @param array     $data
+	 * @param \WP_Error $errors
+	 */
+	public function validate_checkout( $data, $errors ): void {
+		if ( ! $this->ward_errors ) {
+			return;
+		}
+
+		$errors->add(
+			'smart_login_ward_mismatch',
+			__( 'Phường/Xã không thuộc Tỉnh/Thành phố đã chọn. Vui lòng chọn lại.', 'smart-login' )
+		);
+	}
+
+	/** @var array<string,string> Ward codes captured while normalising posted data. */
 	private $posted_wards = array();
 
-	private function remember_posted_ward( string $prefix, string $ward_code ): void {
-		$this->posted_wards[ $prefix ] = $ward_code;
-	}
+	/** @var array<string,bool> Prefixes whose ward did not match their province. */
+	private $ward_errors = array();
 
 	/**
 	 * Persist the exact ward code on the order.

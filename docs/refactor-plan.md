@@ -18,7 +18,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 2 — Persistence**
 - [x] **Phase 3 — Directory and state machine**
 - [x] **Phase 4 — Proof layer: OTP**
-- [ ] **Phase 5 — Profile boundary**
+- [x] **Phase 5 — Profile boundary**
 - [ ] **Phase 6 — Provider lifecycle**
 - [ ] **Phase 7 — Release preparation**
 
@@ -300,27 +300,60 @@ Integration gate green on WordPress 7.0.2 with `db_version=4`.
 
 ---
 
-## Phase 5 — Profile boundary
+## Phase 5 — Profile boundary ✅
 
-**Build**
+**Delivered**
 
-- `ProfileSeeder::seed_if_empty()` — the only writer of `billing_*`
-- Remove the three sites that overwrite `billing_phone`
+- `ProfileSeeder` — the only writer of profile fields, with an allowlist of keys
+  so a typo cannot silently create `biling_phone`
+- All **14** `billing_*` write sites routed through it (the original plan said
+  three; the fitness rule found fourteen)
 - WooCommerce checkout: move ward-name substitution to
   `woocommerce_checkout_posted_data`, which has a return value.
   `woocommerce_after_checkout_validation` passes `$data` by value, so the
   current assignment is discarded
 - Add `shipping_phone` support so a recipient phone has somewhere to live
-- Merge the synthetic-email mail guard into a single `pre_wp_mail` handler.
-  `pre_wp_mail` fires **before** the `wp_mail` filter, so the current split
-  never triggers for the case it was written for
+- ~~Merge the synthetic-email mail guard into a single `pre_wp_mail` handler.~~
+  **Dropped — the original claim was wrong.** Checked against the installed
+  WordPress 7.0.2 source: `pluggable.php:209` fires the `wp_mail` filter, then
+  `:233` fires `pre_wp_mail` with the already-filtered `$atts`, and nothing sits
+  between them. So `strip_synthetic_recipients` (on `wp_mail`) empties the
+  recipient list and `abort_empty_mail` (on `pre_wp_mail`) then short-circuits —
+  exactly as intended. The existing split is correct and stays as it is.
 
-**Acceptance**
+**Notes from doing the work**
 
-- Fitness tests for Invariant 2 green
-- A `billing_phone` that differs from the login phone survives both a profile
-  save and an address-book save
-- An order stores the ward **name**, not the ward code
+- **Two directions, not one.** `seed_if_empty()` is identity → profile and never
+  overwrites; `set_from_user_input()` is the customer's own form and always wins.
+  The address module needs the second — the customer just picked those values, so
+  treating them as seeds would make the province and ward unchangeable. Collapsing
+  both into one method would have traded one bug for another.
+- The plan expected three offending write sites. There were **fourteen**, across
+  seven files. The fitness rule found them; reading the code had not.
+- **Nothing seeds `shipping_phone`**, and a core test asserts that no file outside
+  `ProfileSeeder` ever tries to. That is the field the recipient's number belongs
+  in, and it is the customer's alone.
+- The checkout fitness rule was rewritten from "never use
+  `woocommerce_after_checkout_validation`" to "if you use it, also use
+  `woocommerce_checkout_posted_data`". The hook is not the problem — it is the
+  only place with a `WP_Error` to add to. Depending on its by-value `$data` was.
+- Two assertions I wrote in this phase were themselves wrong (an arithmetic
+  expectation, and a grep for a line that had legitimately moved into the filter).
+  Both were caught by running them.
+
+**Acceptance — all three met**
+
+- Fitness Invariant 2 green
+- A `billing_phone` differing from the login phone survives seeding from every
+  identity path, asserted directly in `run-core-tests.php`
+- Ward substitution happens on a filter that returns the array, so the order
+  stores the ward **name**
+
+**The identity suites are now `required`, not `spec`.** They went green here,
+which is earlier than the plan assumed, and leaving a passing suite non-blocking
+can only hide the next regression. Note what green does and does not mean: the
+two invariants hold and are enforced. Phases 6 and 7 are not encoded as rules, so
+they remain genuinely outstanding.
 
 ---
 

@@ -58,11 +58,15 @@ sl_forbid_pattern(
 	'A login phone must never overwrite a delivery contact. Route every write through ProfileSeeder::seed_if_empty().'
 );
 
-sl_forbid_pattern(
-	'checkout does not rely on the value-passed $data of woocommerce_after_checkout_validation',
+// The hook itself is fine — it is the only place with a WP_Error to add to. What
+// is not fine is depending on its $data, which do_action() passes by value. So
+// the rule is a pairing: anything using it must also use the filter that
+// actually returns the posted array.
+sl_require_companion(
+	'checkout mutates posted data on a filter, not on the validation action',
 	'/woocommerce_after_checkout_validation/',
-	array(),
-	'do_action() passes arrays by value, so the ward-name substitution is discarded. Use woocommerce_checkout_posted_data, which has a return value.'
+	'/woocommerce_checkout_posted_data/',
+	'do_action() passes arrays by value, so a substitution made in the validation hook is discarded. woocommerce_checkout_posted_data has a return value.'
 );
 
 // ---------------------------------------------------------------------

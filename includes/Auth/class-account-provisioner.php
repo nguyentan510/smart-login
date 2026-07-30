@@ -13,6 +13,7 @@ use SmartLogin\Identity\IdentityRecord;
 use SmartLogin\Identity\IdentityRepository;
 use SmartLogin\Identity\OpaqueLogin;
 use SmartLogin\Identity\Phone;
+use SmartLogin\Identity\ProfileSeeder;
 use SmartLogin\Identity\UserManager;
 use SmartLogin\Identity\VerifiedClaim;
 use SmartLogin\Security\AuditLog;
@@ -153,7 +154,7 @@ final class AccountProvisioner {
 		$now = current_time( 'mysql', true );
 		if ( $identity->email_verified && '' !== $identity->email ) {
 			update_user_meta( $user_id, UserManager::META_EMAIL_VERIFIED, $now );
-			update_user_meta( $user_id, 'billing_email', $identity->email );
+			ProfileSeeder::seed_if_empty( (int) $user_id, 'billing_email', $identity->email );
 		} else {
 			update_user_meta( $user_id, UserManager::META_SYNTHETIC, 1 );
 		}

@@ -163,7 +163,7 @@ class UserManager {
 			update_user_meta( $user_id, self::META_PHONE_VERIFIED, $now );
 
 			if ( Settings::is_on( 'woo_sync_billing_phone' ) ) {
-				update_user_meta( $user_id, 'billing_phone', Phone::to_local( $subject ) );
+				ProfileSeeder::seed_if_empty( (int) $user_id, 'billing_phone', Phone::to_local( $subject ) );
 			}
 		}
 
@@ -171,7 +171,7 @@ class UserManager {
 			update_user_meta( $user_id, self::META_SYNTHETIC, 1 );
 		} elseif ( $is_email ) {
 			update_user_meta( $user_id, self::META_EMAIL_VERIFIED, $now );
-			update_user_meta( $user_id, 'billing_email', $mail );
+			ProfileSeeder::seed_if_empty( (int) $user_id, 'billing_email', $mail );
 		}
 
 		if ( ! empty( $data['dob'] ) ) {
@@ -187,8 +187,13 @@ class UserManager {
 		}
 
 		if ( '' !== $names['first'] ) {
-			update_user_meta( $user_id, 'billing_first_name', $names['first'] );
-			update_user_meta( $user_id, 'billing_last_name', $names['last'] );
+			ProfileSeeder::seed_many(
+				(int) $user_id,
+				array(
+					'billing_first_name' => $names['first'],
+					'billing_last_name'  => $names['last'],
+				)
+			);
 		}
 
 		return (int) $user_id;

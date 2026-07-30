@@ -12,6 +12,7 @@ use SmartLogin\Identity\Channels\PhoneChannel;
 use SmartLogin\Identity\IdentityDirectory;
 use SmartLogin\Identity\IdentityRecord;
 use SmartLogin\Identity\Phone;
+use SmartLogin\Identity\ProfileSeeder;
 use SmartLogin\Identity\UserManager;
 use SmartLogin\Identity\VerifiedClaim;
 use SmartLogin\OTP\OtpService;
@@ -153,7 +154,9 @@ final class ContactVerificationService {
 			update_user_meta( $user_id, UserManager::META_PHONE, $destination );
 			update_user_meta( $user_id, UserManager::META_PHONE_VERIFIED, $now );
 			if ( Settings::is_on( 'woo_sync_billing_phone' ) ) {
-				update_user_meta( $user_id, 'billing_phone', Phone::to_local( $destination ) );
+				// Seed, not overwrite: changing the login phone must not silently
+				// change where the customer's orders get delivered.
+				ProfileSeeder::seed_if_empty( $user_id, 'billing_phone', Phone::to_local( $destination ) );
 			}
 		} else {
 			$updated = wp_update_user( array( 'ID' => $user_id, 'user_email' => $destination ) );
@@ -161,7 +164,7 @@ final class ContactVerificationService {
 				return $updated;
 			}
 			update_user_meta( $user_id, UserManager::META_EMAIL_VERIFIED, $now );
-			update_user_meta( $user_id, 'billing_email', $destination );
+			ProfileSeeder::seed_if_empty( $user_id, 'billing_email', $destination );
 			delete_user_meta( $user_id, UserManager::META_SYNTHETIC );
 		}
 

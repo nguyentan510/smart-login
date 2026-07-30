@@ -21,6 +21,7 @@ use SmartLogin\Identity\ChannelRegistry;
 use SmartLogin\Identity\Claim;
 use SmartLogin\Identity\IdentityRecord;
 use SmartLogin\Identity\OpaqueLogin;
+use SmartLogin\Identity\ProfileSeeder;
 use SmartLogin\Identity\Resolution;
 use SmartLogin\Identity\VerifiedClaim;
 use SmartLogin\OTP\OtpService;
@@ -342,6 +343,92 @@ sl_assert(
 sl_assert(
 	'there is exactly one return path through the filter',
 	1 === substr_count( $phone_src, "apply_filters( 'smart_login_phone_is_valid'" )
+);
+
+// ---------------------------------------------------------------------
+sl_section( 'Invariant 2 — identity seeds profile, never overwrites it (Phase 5)' );
+
+$GLOBALS['sl_user_meta'] = array();
+
+sl_check( 'seeding a blank field writes it', true, ProfileSeeder::seed_if_empty( 7, 'billing_phone', '0969789475' ) );
+sl_check( 'the value landed', '0969789475', (string) get_user_meta( 7, 'billing_phone', true ) );
+
+// The case the pre-refactor code got wrong. A customer whose parcels should
+// reach a family member sets a different delivery number; changing their login
+// phone, saving their profile, or saving the address book must all leave it be.
+sl_check( 'seeding a customer-set field is refused', false, ProfileSeeder::seed_if_empty( 7, 'billing_phone', '0912345678' ) );
+sl_check( 'the customer value survives', '0969789475', (string) get_user_meta( 7, 'billing_phone', true ) );
+
+sl_check( 'a whitespace-only value counts as empty', true, ProfileSeeder::seed_if_empty( 8, 'billing_email', 'a@b.test' ) );
+sl_check( 'an empty seed value is a no-op', false, ProfileSeeder::seed_if_empty( 9, 'billing_phone', '' ) );
+sl_check( 'an unlisted key is refused', false, ProfileSeeder::seed_if_empty( 7, 'biling_phone', '0912345678' ) );
+sl_check( 'a non-profile key is refused', false, ProfileSeeder::seed_if_empty( 7, 'user_pass', 'nope' ) );
+sl_check( 'a bad user id is refused', false, ProfileSeeder::seed_if_empty( 0, 'billing_phone', '0969789475' ) );
+
+// The other direction: the customer's own form wins, including over itself.
+sl_check( 'user input overwrites', true, ProfileSeeder::set_from_user_input( 7, 'billing_phone', '0912345678' ) );
+sl_check( 'and the new value is theirs', '0912345678', (string) get_user_meta( 7, 'billing_phone', true ) );
+sl_check( 'user input can clear a field', true, ProfileSeeder::set_from_user_input( 7, 'billing_phone', '' ) );
+sl_check( 'clearing really clears', '', (string) get_user_meta( 7, 'billing_phone', true ) );
+sl_check( 'an unlisted key is still refused', false, ProfileSeeder::set_from_user_input( 7, 'billing_nonsense', 'x' ) );
+
+sl_check(
+	'seed_many writes every blank field',
+	2,
+	ProfileSeeder::seed_many( 7, array( 'billing_first_name' => 'Như', 'billing_email' => 'kept@example.test' ) )
+);
+sl_check(
+	'seed_many writes nothing a second time',
+	0,
+	ProfileSeeder::seed_many( 7, array( 'billing_first_name' => 'Khác', 'billing_email' => 'other@example.test' ) )
+);
+sl_check( 'and the first values stand', 'kept@example.test', (string) get_user_meta( 7, 'billing_email', true ) );
+
+// shipping_phone exists so a recipient number has somewhere to live, and nothing
+// in the identity layer is allowed to fill it in.
+sl_check( 'shipping_phone is a writable profile field', true, in_array( 'shipping_phone', ProfileSeeder::WRITABLE, true ) );
+
+$identity_sources = sl_plugin_sources();
+$seeds_shipping   = false;
+
+foreach ( $identity_sources as $relative => $contents ) {
+	if ( 'includes/Identity/class-profile-seeder.php' === $relative ) {
+		continue;
+	}
+	if ( preg_match( "/seed_if_empty\([^;]*'shipping_phone'/", $contents ) ) {
+		$seeds_shipping = true;
+	}
+}
+
+sl_check( 'no identity ever seeds shipping_phone', false, $seeds_shipping );
+
+// ---------------------------------------------------------------------
+sl_section( 'Checkout uses a hook with a return value (Phase 5)' );
+
+$woo_address = sl_source( 'includes/Address/class-woo-address.php' );
+
+sl_assert(
+	'ward substitution runs on woocommerce_checkout_posted_data',
+	false !== strpos( $woo_address, "add_filter( 'woocommerce_checkout_posted_data'" ),
+	'do_action() passes arrays by value, so assigning to $data in the validation hook is discarded.'
+);
+sl_assert(
+	'normalise_posted_data returns the array',
+	(bool) preg_match( '/function normalise_posted_data\([^)]*\)\s*\{.*return \$data;/s', $woo_address )
+);
+// The substitution line still exists — it has simply moved into the filter that
+// returns the array. What must be gone is any assignment to $data inside
+// validate_checkout(), whose $data is a by-value copy.
+preg_match( '/function validate_checkout\(.*?\n\t\}/s', $woo_address, $validate_body );
+
+sl_assert(
+	'validate_checkout() no longer assigns to $data',
+	isset( $validate_body[0] ) && false === strpos( $validate_body[0], '$data[' ),
+	'do_action() hands it a copy, so any assignment there is silently thrown away.'
+);
+sl_assert(
+	'validate_checkout() only reports errors',
+	isset( $validate_body[0] ) && false !== strpos( $validate_body[0], '$errors->add(' )
 );
 
 // ---------------------------------------------------------------------

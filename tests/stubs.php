@@ -57,6 +57,26 @@ function apply_filters( $hook, $value ) {
 	return $value;
 }
 
+$GLOBALS['sl_user_meta'] = array();
+
+function get_user_meta( $user_id, $key = '', $single = false ) {
+	$value = $GLOBALS['sl_user_meta'][ (int) $user_id ][ $key ] ?? '';
+
+	return $single ? $value : ( '' === $value ? array() : array( $value ) );
+}
+
+function update_user_meta( $user_id, $key, $value ) {
+	$GLOBALS['sl_user_meta'][ (int) $user_id ][ $key ] = $value;
+
+	return true;
+}
+
+function delete_user_meta( $user_id, $key ) {
+	unset( $GLOBALS['sl_user_meta'][ (int) $user_id ][ $key ] );
+
+	return true;
+}
+
 function do_action( $hook ) {}
 
 function __( $text, $domain = null ) {
