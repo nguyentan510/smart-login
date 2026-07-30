@@ -50,8 +50,8 @@ class Flow {
 	/**
 	 * @return mixed
 	 */
-	public static function data( string $key, $default = null ) {
-		return self::$data[ $key ] ?? $default;
+	public static function data( string $key, $fallback = null ) {
+		return self::$data[ $key ] ?? $fallback;
 	}
 
 	public static function all_data(): array {
@@ -72,8 +72,8 @@ class Flow {
 		}
 	}
 
-	public static function old( string $key, string $default = '' ): string {
-		return self::$old[ $key ] ?? $default;
+	public static function old( string $key, string $fallback = '' ): string {
+		return self::$old[ $key ] ?? $fallback;
 	}
 
 	/**

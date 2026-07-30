@@ -45,12 +45,12 @@ final class Plugin {
 		add_action( 'init', array( Installer::class, 'maybe_upgrade' ), 1 );
 		add_action( Installer::CLEANUP_HOOK, array( Installer::class, 'cleanup' ) );
 
-		$this->services['login']  = new LoginHandler();
+		$this->services['login']     = new LoginHandler();
 		$this->services['providers'] = new ProviderAuthController();
-		$this->services['forms']  = new FormController();
-		$this->services['rest']   = new RestController();
-		$this->services['assets'] = new Assets();
-		$this->services['codes']  = new Shortcodes();
+		$this->services['forms']     = new FormController();
+		$this->services['rest']      = new RestController();
+		$this->services['assets']    = new Assets();
+		$this->services['codes']     = new Shortcodes();
 
 		if ( Settings::is_on( 'address_enabled' ) ) {
 			$this->services['address_rest'] = new AddressRest();

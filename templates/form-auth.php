@@ -21,13 +21,13 @@ use SmartLogin\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
-$sl_active_tab = Flow::STEP_REGISTER === ( $active_tab ?? Flow::STEP_LOGIN )
+$sl_active_tab        = Flow::STEP_REGISTER === ( $active_tab ?? Flow::STEP_LOGIN )
 	? Flow::STEP_REGISTER
 	: Flow::STEP_LOGIN;
-$sl_redirect   = isset( $_GET['redirect_to'] ) ? esc_url_raw( wp_unslash( $_GET['redirect_to'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
-$sl_providers  = ( new ProviderRegistry() )->available();
-$sl_min_length = max( 6, Settings::get_int( 'min_password_length', 8 ) );
-$sl_login_disabled = Flow::STEP_LOGIN !== $sl_active_tab;
+$sl_redirect          = isset( $_GET['redirect_to'] ) ? esc_url_raw( wp_unslash( $_GET['redirect_to'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+$sl_providers         = ( new ProviderRegistry() )->available();
+$sl_min_length        = max( 6, Settings::get_int( 'min_password_length', 8 ) );
+$sl_login_disabled    = Flow::STEP_LOGIN !== $sl_active_tab;
 $sl_register_disabled = Flow::STEP_REGISTER !== $sl_active_tab;
 ?>
 <div class="smart-login smart-login--auth" data-sl-auth data-active-tab="<?php echo esc_attr( $sl_active_tab ); ?>">
@@ -171,11 +171,11 @@ $sl_register_disabled = Flow::STEP_REGISTER !== $sl_active_tab;
 						'name'         => 'register_password',
 						'label'        => __( 'Mật khẩu', 'smart-login' ),
 						'id'           => 'sl-reg-password',
-					'autocomplete' => 'new-password',
-					'minlength'    => $sl_min_length,
-					'describedby'  => 'sl-password-guidance',
-					'disabled'     => $sl_register_disabled,
-				)
+						'autocomplete' => 'new-password',
+						'minlength'    => $sl_min_length,
+						'describedby'  => 'sl-password-guidance',
+						'disabled'     => $sl_register_disabled,
+					)
 				);
 				?>
 				<p
@@ -201,11 +201,11 @@ $sl_register_disabled = Flow::STEP_REGISTER !== $sl_active_tab;
 						'name'         => 'register_password_confirm',
 						'label'        => __( 'Nhập lại mật khẩu', 'smart-login' ),
 						'id'           => 'sl-reg-password-confirm',
-					'autocomplete' => 'new-password',
-					'minlength'    => $sl_min_length,
-					'describedby'  => 'sl-password-match',
-					'disabled'     => $sl_register_disabled,
-				)
+						'autocomplete' => 'new-password',
+						'minlength'    => $sl_min_length,
+						'describedby'  => 'sl-password-match',
+						'disabled'     => $sl_register_disabled,
+					)
 				);
 				?>
 				<p class="sl-password-match" id="sl-password-match" role="status" aria-live="polite" hidden></p>

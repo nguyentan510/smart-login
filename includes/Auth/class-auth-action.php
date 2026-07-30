@@ -26,10 +26,10 @@ defined( 'ABSPATH' ) || exit;
 final class AuthAction {
 
 	// Intents.
-	const REGISTER      = 'register';
-	const LOGIN         = 'login';
-	const RECOVER       = 'recover';
-	const ADD_IDENTITY  = 'add_identity';
+	const REGISTER     = 'register';
+	const LOGIN        = 'login';
+	const RECOVER      = 'recover';
+	const ADD_IDENTITY = 'add_identity';
 
 	// Outcomes.
 	const CREATE_USER        = 'create_user';

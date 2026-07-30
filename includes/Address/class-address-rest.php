@@ -109,17 +109,40 @@ class AddressRest {
 	}
 
 	/**
-	 * Attach long-lived cache headers and a version-stamped ETag.
+	 * Attach long-lived cache headers and a dataset-stamped ETag.
 	 *
-	 * The ETag includes the plugin version, so shipping a new dataset
-	 * invalidates every cached response automatically.
+	 * Stamped with the dataset's own modification time, not the plugin version.
+	 * The README tells operators to regenerate the administrative units after a
+	 * boundary change, and that happens without touching the plugin version — so
+	 * a version-based ETag left every client serving stale ward names for up to
+	 * CACHE_SECONDS, which is exactly the case the header exists to handle.
 	 */
 	private function cacheable( array $data, string $key ): WP_REST_Response {
 		$response = new WP_REST_Response( $data, 200 );
 
 		$response->header( 'Cache-Control', 'public, max-age=' . self::CACHE_SECONDS );
-		$response->header( 'ETag', '"' . md5( SMART_LOGIN_VERSION . '|' . $key ) . '"' );
+		$response->header( 'ETag', '"' . md5( self::dataset_stamp() . '|' . $key ) . '"' );
 
 		return $response;
+	}
+
+	/**
+	 * A value that changes whenever the dataset is rebuilt.
+	 *
+	 * Falls back to the plugin version when the file cannot be read, so a missing
+	 * dataset still produces a stable, valid ETag rather than an empty one.
+	 */
+	private static function dataset_stamp(): string {
+		static $stamp = null;
+
+		if ( null !== $stamp ) {
+			return $stamp;
+		}
+
+		$file  = SMART_LOGIN_DIR . 'data/provinces.php';
+		$mtime = is_readable( $file ) ? (int) filemtime( $file ) : 0;
+		$stamp = $mtime > 0 ? (string) $mtime : SMART_LOGIN_VERSION;
+
+		return $stamp;
 	}
 }

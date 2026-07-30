@@ -149,14 +149,14 @@ class Settings {
 	}
 
 	/**
-	 * @param string $key     Setting key.
-	 * @param mixed  $default Fallback when the key is unknown.
+	 * @param string $key      Setting key.
+	 * @param mixed  $fallback Value to use when the key is unknown.
 	 * @return mixed
 	 */
-	public static function get( string $key, $default = null ) {
+	public static function get( string $key, $fallback = null ) {
 		$all = self::all();
 
-		$value = array_key_exists( $key, $all ) ? $all[ $key ] : $default;
+		$value = array_key_exists( $key, $all ) ? $all[ $key ] : $fallback;
 
 		/**
 		 * Filter a single setting value at read time.
@@ -167,8 +167,12 @@ class Settings {
 		return apply_filters( 'smart_login_setting', $value, $key );
 	}
 
-	public static function get_int( string $key, int $default = 0 ): int {
-		return (int) self::get( $key, $default );
+	/**
+	 * @param string $key      Setting key.
+	 * @param int    $fallback Value to use when the key is unknown.
+	 */
+	public static function get_int( string $key, int $fallback = 0 ): int {
+		return (int) self::get( $key, $fallback );
 	}
 
 	public static function is_on( string $key ): bool {
@@ -205,8 +209,14 @@ class Settings {
 	public static function sanitize( array $input ): array {
 		foreach (
 			array(
-				'google' => array( 'secret' => 'google_client_secret', 'clear' => 'google_clear_secret' ),
-				'zalo'   => array( 'secret' => 'zalo_app_secret', 'clear' => 'zalo_clear_secret' ),
+				'google' => array(
+					'secret' => 'google_client_secret',
+					'clear'  => 'google_clear_secret',
+				),
+				'zalo'   => array(
+					'secret' => 'zalo_app_secret',
+					'clear'  => 'zalo_clear_secret',
+				),
 			) as $provider => $fields
 		) {
 			if ( ! empty( $input[ $fields['clear'] ] ) ) {

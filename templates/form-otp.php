@@ -84,13 +84,15 @@ $sl_back = OtpService::INTENT_REGISTER === $intent ? Flow::STEP_REGISTER : Flow:
 						pattern="[0-9]*"
 						maxlength="1"
 						autocomplete="<?php echo 0 === $sl_i ? 'one-time-code' : 'off'; ?>"
-						aria-label="<?php
+						aria-label="
+						<?php
 							printf(
 								/* translators: %d: digit position. */
 								esc_attr__( 'Ký tự thứ %d của mã OTP', 'smart-login' ),
-								$sl_i + 1
+								(int) $sl_i + 1
 							);
-						?>"
+						?>
+						"
 						<?php echo 0 === $sl_i ? 'autofocus' : ''; ?>
 					/>
 				<?php endfor; ?>

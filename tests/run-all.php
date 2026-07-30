@@ -39,6 +39,14 @@ $suites = array(
 		'kind' => 'required',
 	),
 	array(
+		// Skips itself when phpcs is not installed, so it never blocks a plain
+		// checkout. Marked `spec` because the documentation sniffs are a known,
+		// documented deferral — see the comment block in phpcs.xml.
+		'name' => 'Coding standards',
+		'file' => 'run-phpcs.php',
+		'kind' => 'spec',
+	),
+	array(
 		'name' => 'Identity core',
 		'file' => 'identity/run-core-tests.php',
 		'kind' => 'required',
@@ -94,8 +102,9 @@ foreach ( $results as $result ) {
 $spec_count = count( array_filter( $results, static fn( array $r ): bool => 'spec' === $r['kind'] ) );
 
 if ( $spec_count > 0 && ! $strict ) {
-	printf( "\n  %d spec suite(s) track docs/identity-model.md ahead of the code.\n", $spec_count );
-	printf( "  Progress: docs/refactor-plan.md    Strict gate: php tests/run-all.php --strict\n" );
+	printf( "\n  %d spec suite(s) hold a standard the code has not fully met yet.\n", $spec_count );
+	printf( "  Each deferral is written down where it is configured.\n" );
+	printf( "  Strict gate: php tests/run-all.php --strict\n" );
 }
 
 printf( "\n" );

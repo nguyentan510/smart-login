@@ -338,7 +338,7 @@ class WooAddress {
 	 * @param array     $data
 	 * @param \WP_Error $errors
 	 */
-	public function validate_checkout( $data, $errors ): void {
+	public function validate_checkout( $data, $errors ): void { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- $data is by-value and deliberately unused; see normalise_posted_data().
 		if ( ! $this->ward_errors ) {
 			return;
 		}

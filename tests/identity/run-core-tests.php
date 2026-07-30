@@ -515,4 +515,24 @@ sl_assert(
 );
 
 // ---------------------------------------------------------------------
+sl_section( 'Settings and Flow fallbacks actually fall back' );
+
+// Regression test for a bug introduced during the Phase 7 phpcs cleanup: a
+// mechanical rename of the $default parameter left two function bodies reading a
+// variable their own signature no longer declared. PHP treats that as null, so
+// php -l passed and every default silently became null. Nothing existing covered
+// the fallback path, which is why it got through.
+Settings::update( array( 'otp_length' => 6 ) );
+
+sl_check( 'a known key returns its value', 6, Settings::get( 'otp_length' ) );
+sl_check( 'an unknown key returns the fallback', 'fallback-value', Settings::get( 'no_such_key', 'fallback-value' ) );
+sl_check( 'an unknown key with no fallback returns null', null, Settings::get( 'no_such_key' ) );
+sl_check( 'get_int falls back too', 42, Settings::get_int( 'no_such_key', 42 ) );
+sl_check( 'get_int defaults to zero', 0, Settings::get_int( 'no_such_key' ) );
+
+sl_check( 'Flow::data falls back', 'none', \SmartLogin\Frontend\Flow::data( 'no_such_key', 'none' ) );
+sl_check( 'Flow::old falls back', 'empty', \SmartLogin\Frontend\Flow::old( 'no_such_key', 'empty' ) );
+sl_check( 'Flow::step falls back', 'register', \SmartLogin\Frontend\Flow::step( 'register' ) );
+
+// ---------------------------------------------------------------------
 sl_summary( 'Identity core' );

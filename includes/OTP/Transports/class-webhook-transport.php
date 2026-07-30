@@ -56,10 +56,10 @@ class WebhookTransport implements TransportInterface {
 		$delivery_id        = bin2hex( random_bytes( 16 ) );
 		$ctx['delivery_id'] = $delivery_id;
 		$map                = Placeholders::build( $destination, $code, $ctx );
-		$method       = strtoupper( (string) Settings::get( 'webhook_method', 'POST' ) );
-		$content_type = (string) Settings::get( 'webhook_content_type', 'application/json' );
-		$timeout      = Settings::get_int( 'webhook_timeout', 10 );
-		$is_json      = ( 'application/json' === $content_type );
+		$method             = strtoupper( (string) Settings::get( 'webhook_method', 'POST' ) );
+		$content_type       = (string) Settings::get( 'webhook_content_type', 'application/json' );
+		$timeout            = Settings::get_int( 'webhook_timeout', 10 );
+		$is_json            = ( 'application/json' === $content_type );
 
 		// The URL itself may contain placeholders (common for GET-based gateways).
 		$url = Placeholders::render( (string) Settings::get( 'webhook_url', '' ), $map, 'rawurlencode' );
@@ -125,9 +125,9 @@ class WebhookTransport implements TransportInterface {
 
 		$has_idempotency = '' !== $idempotency_header
 			&& ! empty( $args['headers'][ $idempotency_header ] );
-		$attempts = Settings::is_on( 'webhook_retry' ) && $has_idempotency ? 2 : 1;
-		$started  = microtime( true );
-		$response = null;
+		$attempts        = Settings::is_on( 'webhook_retry' ) && $has_idempotency ? 2 : 1;
+		$started         = microtime( true );
+		$response        = null;
 
 		for ( $i = 0; $i < $attempts; $i++ ) {
 			if ( $i > 0 ) {

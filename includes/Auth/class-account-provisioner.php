@@ -52,10 +52,13 @@ final class AccountProvisioner {
 			if ( ! empty( $transaction['linking'] ) && (int) ( $transaction['user_id'] ?? 0 ) !== (int) $user->ID ) {
 				return new WP_Error( 'smart_login_provider_conflict', __( 'Tài khoản nhà cung cấp đã liên kết với người dùng khác.', 'smart-login' ) );
 			}
-			return array( 'user' => $user, 'context' => $this->context( $identity, (int) $user->ID, false, ! empty( $transaction['linking'] ) ) );
+			return array(
+				'user'    => $user,
+				'context' => $this->context( $identity, (int) $user->ID, false, ! empty( $transaction['linking'] ) ),
+			);
 		}
 
-		$linking = ! empty( $transaction['linking'] );
+		$linking      = ! empty( $transaction['linking'] );
 		$link_user_id = (int) ( $transaction['user_id'] ?? 0 );
 		if ( $linking ) {
 			if ( $link_user_id <= 0 || get_current_user_id() !== $link_user_id ) {
@@ -74,12 +77,15 @@ final class AccountProvisioner {
 			if ( ! $this->link( $identity, (int) $user->ID, IdentityRecord::BY_OAUTH ) ) {
 				return new WP_Error( 'smart_login_provider_link', __( 'Không thể liên kết tài khoản nhà cung cấp.', 'smart-login' ) );
 			}
-			return array( 'user' => $user, 'context' => $this->context( $identity, (int) $user->ID, false, true ) );
+			return array(
+				'user'    => $user,
+				'context' => $this->context( $identity, (int) $user->ID, false, true ),
+			);
 		}
 
 		if ( Settings::is_on( 'provider_auto_link_email' ) && $identity->email_verified && '' !== $identity->email ) {
 			global $wpdb;
-			$ids = $wpdb->get_col(
+			$ids = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- no core API matches an email across users case-insensitively, and the answer decides account linking so it must not be cached.
 				$wpdb->prepare(
 					"SELECT ID FROM {$wpdb->users} WHERE LOWER(user_email) = %s ORDER BY ID ASC",
 					strtolower( $identity->email )
@@ -96,7 +102,10 @@ final class AccountProvisioner {
 				if ( ! $this->link( $identity, (int) $user->ID, IdentityRecord::BY_AUTO_EMAIL ) ) {
 					return new WP_Error( 'smart_login_provider_link', __( 'Không thể tự động liên kết tài khoản hiện có.', 'smart-login' ) );
 				}
-				return array( 'user' => $user, 'context' => $this->context( $identity, (int) $user->ID, false, false ) );
+				return array(
+					'user'    => $user,
+					'context' => $this->context( $identity, (int) $user->ID, false, false ),
+				);
 			}
 		}
 
@@ -113,13 +122,19 @@ final class AccountProvisioner {
 			if ( $race ) {
 				$race_user = get_userdata( $race->user_id() );
 				if ( $race_user ) {
-					return array( 'user' => $race_user, 'context' => $this->context( $identity, (int) $race_user->ID, false, false ) );
+					return array(
+						'user'    => $race_user,
+						'context' => $this->context( $identity, (int) $race_user->ID, false, false ),
+					);
 				}
 			}
 			return new WP_Error( 'smart_login_provider_link', __( 'Không thể lưu liên kết tài khoản nhà cung cấp.', 'smart-login' ) );
 		}
 
-		return array( 'user' => $user, 'context' => $this->context( $identity, (int) $user->ID, true, false ) );
+		return array(
+			'user'    => $user,
+			'context' => $this->context( $identity, (int) $user->ID, true, false ),
+		);
 	}
 
 	private function create_provider_user( ProviderIdentity $identity ) {
@@ -134,8 +149,8 @@ final class AccountProvisioner {
 		if ( email_exists( $email ) ) {
 			return new WP_Error( 'smart_login_exists', __( 'Tài khoản đã tồn tại.', 'smart-login' ) );
 		}
-		$login = $opaque;
-		$names = UserManager::split_name( $identity->display_name );
+		$login   = $opaque;
+		$names   = UserManager::split_name( $identity->display_name );
 		$user_id = wp_insert_user(
 			array(
 				'user_login'   => $login,
@@ -194,7 +209,15 @@ final class AccountProvisioner {
 		$ok = $this->identities->claim( $record );
 
 		if ( $ok ) {
-			AuditLog::record( AuditLog::PROVIDER_LINKED, '', array( 'provider' => $identity->provider, 'linked_by' => $linked_by ), $user_id );
+			AuditLog::record(
+				AuditLog::PROVIDER_LINKED,
+				'',
+				array(
+					'provider'  => $identity->provider,
+					'linked_by' => $linked_by,
+				),
+				$user_id
+			);
 		}
 
 		return $ok;
@@ -216,5 +239,4 @@ final class AccountProvisioner {
 			)
 		);
 	}
-
 }

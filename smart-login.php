@@ -61,12 +61,12 @@ if ( version_compare( PHP_VERSION, '8.0', '<' ) ) {
  * Autoloader: SmartLogin\OTP\OtpService -> includes/OTP/class-otp-service.php
  */
 spl_autoload_register(
-	static function ( $class ) {
-		if ( 0 !== strpos( $class, 'SmartLogin\\' ) ) {
+	static function ( $class_name ) {
+		if ( 0 !== strpos( $class_name, 'SmartLogin\\' ) ) {
 			return;
 		}
 
-		$relative = substr( $class, strlen( 'SmartLogin\\' ) );
+		$relative = substr( $class_name, strlen( 'SmartLogin\\' ) );
 		$parts    = explode( '\\', $relative );
 		$short    = array_pop( $parts );
 

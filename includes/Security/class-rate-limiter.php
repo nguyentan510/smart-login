@@ -93,8 +93,8 @@ class RateLimiter {
 	 * touches the database here.
 	 */
 	private function login_key( string $identity ): string {
-		$identity = trim( wp_unslash( $identity ) );
-		$claim    = ( new ChannelRegistry() )->claim_any( $identity );
+		$identity  = trim( wp_unslash( $identity ) );
+		$claim     = ( new ChannelRegistry() )->claim_any( $identity );
 		$canonical = $claim->is_empty() ? strtolower( $identity ) : $claim->subject();
 
 		return 'smart_login_lock_' . md5( $canonical . '|' . Client::ip() );

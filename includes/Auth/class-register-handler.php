@@ -197,9 +197,9 @@ class RegisterHandler {
 			$user,
 			new AuthContext(
 				array(
-					'auth_method'   => 'otp',
-					'user_id'       => $user_id,
-					'is_new_user'   => true,
+					'auth_method'    => 'otp',
+					'user_id'        => $user_id,
+					'is_new_user'    => true,
 					'email_verified' => '' !== (string) get_user_meta( $user_id, UserManager::META_EMAIL_VERIFIED, true ),
 				)
 			)
@@ -210,7 +210,13 @@ class RegisterHandler {
 	 * Where to send the user once registration finishes.
 	 */
 	public static function post_register_redirect( int $user_id ): string {
-		$context = new AuthContext( array( 'auth_method' => 'otp', 'user_id' => $user_id, 'is_new_user' => true ) );
+		$context = new AuthContext(
+			array(
+				'auth_method' => 'otp',
+				'user_id'     => $user_id,
+				'is_new_user' => true,
+			)
+		);
 		$result  = new AuthResult( $user_id, $context, ( new ProfileCompletionService() )->status( $user_id ) );
 		return ( new PostAuthRedirector() )->redirect( $result );
 	}

@@ -18,7 +18,7 @@ final class OAuthTransactionStore {
 
 	public function create( string $provider, string $return_url = '', bool $linking = false, int $user_id = 0 ): array {
 		$state = $this->random();
-		$data = array(
+		$data  = array(
 			'provider'      => sanitize_key( $provider ),
 			'nonce'         => $this->random(),
 			'pkce_verifier' => $this->random( 64 ),
@@ -39,7 +39,7 @@ final class OAuthTransactionStore {
 			return new WP_Error( 'smart_login_oauth_state', __( 'Phiên đăng nhập nhà cung cấp không hợp lệ.', 'smart-login' ) );
 		}
 
-		$key = self::PREFIX . $state;
+		$key  = self::PREFIX . $state;
 		$data = get_transient( $key );
 		delete_transient( $key );
 

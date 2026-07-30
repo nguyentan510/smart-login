@@ -86,8 +86,8 @@ class Shortcodes {
 			return TemplateLoader::render(
 				'logged-in',
 				array(
-					'user'     => wp_get_current_user(),
-					'notices'  => Notices::all(),
+					'user'       => wp_get_current_user(),
+					'notices'    => Notices::all(),
 					'my_account' => \SmartLogin\Auth\LoginHandler::post_login_redirect(),
 				)
 			);

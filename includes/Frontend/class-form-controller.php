@@ -58,7 +58,7 @@ class FormController {
 	public function dispatch(): void {
 		Notices::absorb_flash();
 
-		if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) {
+		if ( 'POST' !== strtoupper( sanitize_key( wp_unslash( $_SERVER['REQUEST_METHOD'] ?? '' ) ) ) ) {
 			return;
 		}
 
@@ -275,9 +275,15 @@ class FormController {
 			return;
 		}
 
-		$context = new AuthContext( array( 'auth_method' => 'otp', 'user_id' => $user_id, 'intended_url' => (string) ( $row['payload']['redirect_to'] ?? '' ) ) );
+		$context = new AuthContext(
+			array(
+				'auth_method'  => 'otp',
+				'user_id'      => $user_id,
+				'intended_url' => (string) ( $row['payload']['redirect_to'] ?? '' ),
+			)
+		);
 		$proof   = AuthProof::from_otp( $this->otp()->verified_claim( $row ), $user_id );
-		$result = ( new SessionIssuer() )->issue( $proof, $user, $context, ! isset( $row['payload']['remember'] ) || ! empty( $row['payload']['remember'] ) );
+		$result  = ( new SessionIssuer() )->issue( $proof, $user, $context, ! isset( $row['payload']['remember'] ) || ! empty( $row['payload']['remember'] ) );
 
 		PendingSession::clear();
 
@@ -349,12 +355,18 @@ class FormController {
 		}
 
 		$handler = new LoginHandler();
-		$user    = $handler->attempt( $identity, $password, $remember );
+		$user    = $handler->attempt( $identity, $password );
 
 		if ( $user instanceof WP_User ) {
 			$redirect_to = (string) ( $post['redirect_to'] ?? '' );
-			$context = new AuthContext( array( 'auth_method' => 'password', 'user_id' => $user->ID, 'intended_url' => $redirect_to ) );
-			$result = ( new SessionIssuer() )->issue( AuthProof::from_password( $user ), $user, $context, $remember );
+			$context     = new AuthContext(
+				array(
+					'auth_method'  => 'password',
+					'user_id'      => $user->ID,
+					'intended_url' => $redirect_to,
+				)
+			);
+			$result      = ( new SessionIssuer() )->issue( AuthProof::from_password( $user ), $user, $context, $remember );
 			$this->redirect( is_wp_error( $result ) ? LoginHandler::post_login_redirect( $redirect_to ) : ( new PostAuthRedirector() )->redirect( $result, $redirect_to ) );
 			return;
 		}
@@ -415,7 +427,18 @@ class FormController {
 	}
 
 	private function complete_login( WP_User $user, string $redirect_to, bool $remember = true ): void {
-		$result = ( new SessionIssuer() )->issue( AuthProof::from_password( $user ), $user, new AuthContext( array( 'auth_method' => 'password', 'user_id' => $user->ID, 'intended_url' => $redirect_to ) ), $remember );
+		$result = ( new SessionIssuer() )->issue(
+			AuthProof::from_password( $user ),
+			$user,
+			new AuthContext(
+				array(
+					'auth_method'  => 'password',
+					'user_id'      => $user->ID,
+					'intended_url' => $redirect_to,
+				)
+			),
+			$remember
+		);
 		$this->redirect( is_wp_error( $result ) ? LoginHandler::post_login_redirect( $redirect_to ) : ( new PostAuthRedirector() )->redirect( $result, $redirect_to ) );
 	}
 

@@ -71,7 +71,7 @@ final class ContactVerificationService {
 		// conflict otherwise. RETIRED is claimable: whoever holds the number now
 		// gets to prove it.
 		$resolution = $this->directory->resolve( $claim );
-		$decision    = AuthAction::for_resolution( AuthAction::ADD_IDENTITY, $resolution );
+		$decision   = AuthAction::for_resolution( AuthAction::ADD_IDENTITY, $resolution );
 
 		if ( AuthAction::LINK_TO_CURRENT !== $decision && $resolution->user_id() !== $user_id ) {
 			return new WP_Error(
@@ -89,7 +89,10 @@ final class ContactVerificationService {
 		$result = $this->otp->issue(
 			$destination,
 			$intent,
-			array( 'user_id' => $user_id, 'contact_type' => $type ),
+			array(
+				'user_id'      => $user_id,
+				'contact_type' => $type,
+			),
 			array( 'user_name' => $user->display_name )
 		);
 		if ( ! is_wp_error( $result ) ) {
@@ -159,7 +162,12 @@ final class ContactVerificationService {
 				ProfileSeeder::seed_if_empty( $user_id, 'billing_phone', Phone::to_local( $destination ) );
 			}
 		} else {
-			$updated = wp_update_user( array( 'ID' => $user_id, 'user_email' => $destination ) );
+			$updated = wp_update_user(
+				array(
+					'ID'         => $user_id,
+					'user_email' => $destination,
+				)
+			);
 			if ( is_wp_error( $updated ) ) {
 				return $updated;
 			}
@@ -170,7 +178,10 @@ final class ContactVerificationService {
 
 		delete_user_meta( $user_id, self::META_PENDING );
 		AuditLog::record( AuditLog::CONTACT_VERIFIED, RateLimiter::mask_identity( $destination ), array( 'type' => $type ), $user_id );
-		return array( 'type' => $type, 'value' => $destination );
+		return array(
+			'type'  => $type,
+			'value' => $destination,
+		);
 	}
 
 	public function pending( int $user_id ): array {
@@ -185,5 +196,4 @@ final class ContactVerificationService {
 			'expires_at' => (int) $pending['expires_at'],
 		);
 	}
-
 }

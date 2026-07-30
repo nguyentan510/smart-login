@@ -87,11 +87,11 @@ $sl_edit = function_exists( 'wc_get_account_endpoint_url' )
 	// Only offer providers that are not linked yet — offering "link Google" to
 	// somebody whose Google is already linked was the old behaviour and it told
 	// them nothing.
-	$sl_available_ids = array_map(
+	$sl_available_ids  = array_map(
 		static fn( $sl_provider ): string => $sl_provider->id(),
 		( new ProviderRegistry() )->available()
 	);
-	$sl_offerable     = $sl_link_service->unlinked_providers( $sl_user_id, $sl_available_ids );
+	$sl_offerable      = $sl_link_service->unlinked_providers( $sl_user_id, $sl_available_ids );
 	$sl_link_providers = array_filter(
 		( new ProviderRegistry() )->available(),
 		static fn( $sl_provider ): bool => in_array( $sl_provider->id(), $sl_offerable, true )

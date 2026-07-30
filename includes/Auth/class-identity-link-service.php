@@ -60,15 +60,15 @@ final class IdentityLinkService {
 			$channel = $this->channels->get( $record->channel() );
 
 			$out[] = array(
-				'channel'      => $record->channel(),
-				'subject'      => $record->subject(),
-				'masked'       => $channel ? $channel->mask( $record->subject() ) : '•••',
-				'label'        => $channel ? $channel->label() : $record->channel(),
-				'federated'    => $channel ? ! $channel->is_self_asserted() : false,
-				'is_primary'   => $record->is_primary(),
-				'linked_by'    => $record->linked_by(),
-				'verified_at'  => $record->verified_at(),
-				'removable'    => $this->can_unlink( $user_id ),
+				'channel'     => $record->channel(),
+				'subject'     => $record->subject(),
+				'masked'      => $channel ? $channel->mask( $record->subject() ) : '•••',
+				'label'       => $channel ? $channel->label() : $record->channel(),
+				'federated'   => $channel ? ! $channel->is_self_asserted() : false,
+				'is_primary'  => $record->is_primary(),
+				'linked_by'   => $record->linked_by(),
+				'verified_at' => $record->verified_at(),
+				'removable'   => $this->can_unlink( $user_id ),
 			);
 		}
 

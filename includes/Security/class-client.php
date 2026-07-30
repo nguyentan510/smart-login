@@ -17,7 +17,13 @@ class Client {
 	 * REMOTE_ADDR is the only header a client cannot forge, so it is the
 	 * default. Proxy headers are opt-in because trusting them blindly lets an
 	 * attacker sidestep every rate limit by rotating X-Forwarded-For.
+	 *
+	 * These values are validated rather than sanitised: every path ends in
+	 * filter_var( …, FILTER_VALIDATE_IP ), which rejects anything that is not an
+	 * address outright. Running an IP through a text sanitiser first would only
+	 * risk turning invalid input into something that passes.
 	 */
+	// phpcs:disable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 	public static function ip(): string {
 		$ip = isset( $_SERVER['REMOTE_ADDR'] ) ? wp_unslash( $_SERVER['REMOTE_ADDR'] ) : '';
 
@@ -62,12 +68,16 @@ class Client {
 
 	/**
 	 * Short, non-reversible user-agent fingerprint.
+	 *
+	 * The raw string is never stored or echoed — sha1() is the sanitiser, and its
+	 * output is fixed-length hex whatever the input was.
 	 */
 	public static function user_agent_hash(): string {
 		$ua = isset( $_SERVER['HTTP_USER_AGENT'] ) ? wp_unslash( $_SERVER['HTTP_USER_AGENT'] ) : '';
 
 		return sha1( $ua );
 	}
+	// phpcs:enable WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
 	/**
 	 * Stable-ish device token used by the optional "OTP on new device" check.

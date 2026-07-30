@@ -37,7 +37,9 @@ final class VerifiedClaim {
 	}
 
 	/**
-	 * @param string $verified_at 'Y-m-d H:i:s' in UTC. Defaults to now.
+	 * @param Claim  $claim        The subject whose control was demonstrated.
+	 * @param string $proof_method VerifiedClaim::PROOF_OTP or PROOF_OAUTH.
+	 * @param string $verified_at  'Y-m-d H:i:s' in UTC. Defaults to now.
 	 */
 	public static function from( Claim $claim, string $proof_method, string $verified_at = '' ): self {
 		return new self(

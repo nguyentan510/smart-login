@@ -52,13 +52,18 @@ class LoginHandler {
 	}
 
 	/**
-	 * Sign in through the plugin's own form, with the device check enabled.
+	 * Verify credentials through the plugin's own form, with the device check on.
+	 *
+	 * Deliberately does NOT take a $remember flag. It used to, and ignored it:
+	 * the cookie lifetime is decided by SessionIssuer::issue(), which every caller
+	 * reaches separately. A parameter that looks like it controls something and
+	 * does not is worse than no parameter.
 	 *
 	 * @return WP_User|WP_Error
 	 */
-	public function attempt( string $identity, string $password, bool $remember = true ) {
+	public function attempt( string $identity, string $password ) {
 		self::$enforce_device_check = true;
-		$user = wp_authenticate( $identity, $password );
+		$user                       = wp_authenticate( $identity, $password );
 		self::$enforce_device_check = false;
 
 		return $user;
@@ -152,7 +157,7 @@ class LoginHandler {
 	 * @param WP_User|WP_Error|null $user
 	 * @return WP_User|WP_Error|null
 	 */
-	public function maybe_require_device_otp( $user, $username, $password ) {
+	public function maybe_require_device_otp( $user, $username, $password ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- the authenticate filter passes three arguments.
 		if ( ! ( $user instanceof WP_User ) ) {
 			return $user;
 		}
@@ -191,8 +196,8 @@ class LoginHandler {
 	// -----------------------------------------------------------------
 
 	/**
-	 * @param string             $username
-	 * @param WP_Error|null      $error
+	 * @param string        $username
+	 * @param WP_Error|null $error
 	 */
 	public function on_login_failed( $username, $error = null ): void {
 		$code = ( $error instanceof WP_Error ) ? $error->get_error_code() : '';

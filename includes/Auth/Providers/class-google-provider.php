@@ -21,8 +21,10 @@ final class GoogleProvider implements LoginProviderInterface {
 		$this->transactions = $transactions ?? new OAuthTransactionStore();
 	}
 
-	public function id(): string { return 'google'; }
-	public function label(): string { return __( 'Tiếp tục với Google', 'smart-login' ); }
+	public function id(): string {
+		return 'google'; }
+	public function label(): string {
+		return __( 'Tiếp tục với Google', 'smart-login' ); }
 
 	public function is_available(): bool {
 		return Settings::is_on( 'google_enabled' )
@@ -31,7 +33,7 @@ final class GoogleProvider implements LoginProviderInterface {
 
 	public function begin( string $return_url = '', bool $linking = false ): ProviderRedirect {
 		$transaction = $this->transactions->create( $this->id(), $return_url, $linking, get_current_user_id() );
-		$params = array(
+		$params      = array(
 			'client_id'             => ProviderCredentials::client_id( $this->id() ),
 			'redirect_uri'          => $this->callback_url(),
 			'response_type'         => 'code',
@@ -53,7 +55,7 @@ final class GoogleProvider implements LoginProviderInterface {
 		}
 
 		$transaction = $request['_transaction'] ?? null;
-		$code = trim( (string) ( $request['code'] ?? '' ) );
+		$code        = trim( (string) ( $request['code'] ?? '' ) );
 		if ( ! is_array( $transaction ) || '' === $code ) {
 			return new WP_Error( 'smart_login_google_callback', __( 'Google không trả về mã xác thực hợp lệ.', 'smart-login' ) );
 		}
@@ -88,10 +90,10 @@ final class GoogleProvider implements LoginProviderInterface {
 			return $claims;
 		}
 
-		$issuer = (string) ( $claims['iss'] ?? '' );
+		$issuer   = (string) ( $claims['iss'] ?? '' );
 		$audience = $claims['aud'] ?? '';
-		$expires = (int) ( $claims['exp'] ?? 0 );
-		$nonce = (string) ( $claims['nonce'] ?? '' );
+		$expires  = (int) ( $claims['exp'] ?? 0 );
+		$nonce    = (string) ( $claims['nonce'] ?? '' );
 		if (
 			! in_array( $issuer, array( 'https://accounts.google.com', 'accounts.google.com' ), true )
 			|| ! $this->audience_matches( $audience )
@@ -129,7 +131,7 @@ final class GoogleProvider implements LoginProviderInterface {
 			return new WP_Error( $code, __( 'Không thể kết nối tới Google. Vui lòng thử lại.', 'smart-login' ) );
 		}
 		$status = (int) wp_remote_retrieve_response_code( $response );
-		$data = json_decode( (string) wp_remote_retrieve_body( $response ), true );
+		$data   = json_decode( (string) wp_remote_retrieve_body( $response ), true );
 		if ( $status < 200 || $status >= 300 || ! is_array( $data ) ) {
 			return new WP_Error( $code, __( 'Google từ chối yêu cầu đăng nhập.', 'smart-login' ) );
 		}

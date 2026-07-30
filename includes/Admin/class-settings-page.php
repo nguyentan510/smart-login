@@ -130,12 +130,12 @@ class SettingsPage {
 
 	private function tabs(): array {
 		return array(
-			'general'  => __( 'Chung', 'smart-login' ),
-			'otp'      => __( 'OTP', 'smart-login' ),
-			'webhook'  => __( 'Push OTP', 'smart-login' ),
-			'email'    => __( 'Email', 'smart-login' ),
+			'general'   => __( 'Chung', 'smart-login' ),
+			'otp'       => __( 'OTP', 'smart-login' ),
+			'webhook'   => __( 'Push OTP', 'smart-login' ),
+			'email'     => __( 'Email', 'smart-login' ),
 			'providers' => __( 'Đăng nhập nhanh', 'smart-login' ),
-			'advanced' => __( 'Nâng cao', 'smart-login' ),
+			'advanced'  => __( 'Nâng cao', 'smart-login' ),
 		);
 	}
 
@@ -201,12 +201,12 @@ class SettingsPage {
 	 */
 	private function tab_fields(): array {
 		return array(
-			'general'  => array( 'id_mode', 'default_country_code', 'synthetic_email_domain', 'require_verification', 'min_password_length', 'field_dob', 'field_gender', 'field_referral', 'field_email_optional', 'redirect_after_register', 'redirect_after_login', 'terms_url', 'address_enabled', 'address_quick_search', 'address_hide_postcode', 'address_required_in_profile', 'woo_replace_login_form', 'woo_relax_billing_email', 'woo_block_synthetic_emails', 'woo_sync_billing_phone' ),
-			'otp'      => array( 'otp_length', 'otp_ttl', 'otp_max_attempts', 'otp_resend_cooldown', 'otp_max_per_destination_hour', 'otp_max_per_ip_hour', 'login_otp_new_device', 'login_max_attempts', 'login_lockout_minutes' ),
-			'webhook'  => array( 'webhook_enabled', 'webhook_url', 'webhook_method', 'webhook_content_type', 'webhook_headers', 'webhook_body', 'webhook_timeout', 'webhook_success_path', 'webhook_success_value', 'webhook_retry', 'webhook_idempotency_header' ),
-			'email'    => array( 'email_enabled', 'email_from_name', 'email_from_address', 'email_subject', 'email_body', 'email_is_html' ),
+			'general'   => array( 'id_mode', 'default_country_code', 'synthetic_email_domain', 'require_verification', 'min_password_length', 'field_dob', 'field_gender', 'field_referral', 'field_email_optional', 'redirect_after_register', 'redirect_after_login', 'terms_url', 'address_enabled', 'address_quick_search', 'address_hide_postcode', 'address_required_in_profile', 'woo_replace_login_form', 'woo_relax_billing_email', 'woo_block_synthetic_emails', 'woo_sync_billing_phone' ),
+			'otp'       => array( 'otp_length', 'otp_ttl', 'otp_max_attempts', 'otp_resend_cooldown', 'otp_max_per_destination_hour', 'otp_max_per_ip_hour', 'login_otp_new_device', 'login_max_attempts', 'login_lockout_minutes' ),
+			'webhook'   => array( 'webhook_enabled', 'webhook_url', 'webhook_method', 'webhook_content_type', 'webhook_headers', 'webhook_body', 'webhook_timeout', 'webhook_success_path', 'webhook_success_value', 'webhook_retry', 'webhook_idempotency_header' ),
+			'email'     => array( 'email_enabled', 'email_from_name', 'email_from_address', 'email_subject', 'email_body', 'email_is_html' ),
 			'providers' => array( 'google_enabled', 'google_client_id', 'zalo_enabled', 'zalo_app_id', 'provider_auto_link_email' ),
-			'advanced' => array( 'audit_enabled', 'audit_retention_days', 'otp_retention_days', 'delete_data_on_uninstall', 'dev_mode' ),
+			'advanced'  => array( 'audit_enabled', 'audit_retention_days', 'otp_retention_days', 'delete_data_on_uninstall', 'dev_mode' ),
 		);
 	}
 
@@ -373,7 +373,16 @@ class SettingsPage {
 		<h2><?php esc_html_e( 'Đăng ký và hồ sơ', 'smart-login' ); ?></h2>
 		<table class="form-table" role="presentation">
 			<?php
-			$this->text( 'min_password_length', __( 'Độ dài mật khẩu tối thiểu', 'smart-login' ), '', 'number', array( 'min' => 6, 'max' => 64 ) );
+			$this->text(
+				'min_password_length',
+				__( 'Độ dài mật khẩu tối thiểu', 'smart-login' ),
+				'',
+				'number',
+				array(
+					'min' => 6,
+					'max' => 64,
+				)
+			);
 			$this->checkbox( 'field_dob', __( 'Ngày sinh', 'smart-login' ), __( 'Hiển thị trong phần Thông tin bổ sung của hồ sơ; không hiển thị khi đăng ký.', 'smart-login' ) );
 			$this->checkbox( 'field_gender', __( 'Giới tính', 'smart-login' ), __( 'Hiển thị trong phần Thông tin bổ sung của hồ sơ; không hiển thị khi đăng ký.', 'smart-login' ) );
 			$this->checkbox( 'field_referral', __( 'Mã giới thiệu', 'smart-login' ), __( 'Hiển thị trong phần Thông tin bổ sung của hồ sơ; không hiển thị khi đăng ký.', 'smart-login' ) );
@@ -427,10 +436,46 @@ class SettingsPage {
 		<h2><?php esc_html_e( 'Mã xác thực', 'smart-login' ); ?></h2>
 		<table class="form-table" role="presentation">
 			<?php
-			$this->text( 'otp_length', __( 'Số ký tự', 'smart-login' ), __( 'Từ 4 đến 8.', 'smart-login' ), 'number', array( 'min' => 4, 'max' => 8 ) );
-			$this->text( 'otp_ttl', __( 'Hiệu lực (giây)', 'smart-login' ), __( 'Mặc định 300 giây (5 phút).', 'smart-login' ), 'number', array( 'min' => 60, 'max' => 3600 ) );
-			$this->text( 'otp_max_attempts', __( 'Số lần nhập sai tối đa', 'smart-login' ), __( 'Vượt quá thì mã bị huỷ và người dùng phải yêu cầu mã mới.', 'smart-login' ), 'number', array( 'min' => 1, 'max' => 10 ) );
-			$this->text( 'otp_resend_cooldown', __( 'Chờ giữa 2 lần gửi (giây)', 'smart-login' ), '', 'number', array( 'min' => 15, 'max' => 600 ) );
+			$this->text(
+				'otp_length',
+				__( 'Số ký tự', 'smart-login' ),
+				__( 'Từ 4 đến 8.', 'smart-login' ),
+				'number',
+				array(
+					'min' => 4,
+					'max' => 8,
+				)
+			);
+			$this->text(
+				'otp_ttl',
+				__( 'Hiệu lực (giây)', 'smart-login' ),
+				__( 'Mặc định 300 giây (5 phút).', 'smart-login' ),
+				'number',
+				array(
+					'min' => 60,
+					'max' => 3600,
+				)
+			);
+			$this->text(
+				'otp_max_attempts',
+				__( 'Số lần nhập sai tối đa', 'smart-login' ),
+				__( 'Vượt quá thì mã bị huỷ và người dùng phải yêu cầu mã mới.', 'smart-login' ),
+				'number',
+				array(
+					'min' => 1,
+					'max' => 10,
+				)
+			);
+			$this->text(
+				'otp_resend_cooldown',
+				__( 'Chờ giữa 2 lần gửi (giây)', 'smart-login' ),
+				'',
+				'number',
+				array(
+					'min' => 15,
+					'max' => 600,
+				)
+			);
 			?>
 		</table>
 
@@ -445,8 +490,26 @@ class SettingsPage {
 		<h2><?php esc_html_e( 'Đăng nhập', 'smart-login' ); ?></h2>
 		<table class="form-table" role="presentation">
 			<?php
-			$this->text( 'login_max_attempts', __( 'Số lần sai trước khi khoá', 'smart-login' ), '', 'number', array( 'min' => 0, 'max' => 20 ) );
-			$this->text( 'login_lockout_minutes', __( 'Thời gian khoá (phút)', 'smart-login' ), '', 'number', array( 'min' => 1, 'max' => 1440 ) );
+			$this->text(
+				'login_max_attempts',
+				__( 'Số lần sai trước khi khoá', 'smart-login' ),
+				'',
+				'number',
+				array(
+					'min' => 0,
+					'max' => 20,
+				)
+			);
+			$this->text(
+				'login_lockout_minutes',
+				__( 'Thời gian khoá (phút)', 'smart-login' ),
+				'',
+				'number',
+				array(
+					'min' => 1,
+					'max' => 1440,
+				)
+			);
 			$this->checkbox(
 				'login_otp_new_device',
 				__( 'OTP cho thiết bị lạ', 'smart-login' ),
@@ -487,7 +550,16 @@ class SettingsPage {
 				),
 				__( 'Với GET, phần Body bên dưới được dùng làm query string.', 'smart-login' )
 			);
-			$this->text( 'webhook_timeout', __( 'Timeout (giây)', 'smart-login' ), '', 'number', array( 'min' => 3, 'max' => 30 ) );
+			$this->text(
+				'webhook_timeout',
+				__( 'Timeout (giây)', 'smart-login' ),
+				'',
+				'number',
+				array(
+					'min' => 3,
+					'max' => 30,
+				)
+			);
 			$this->checkbox( 'webhook_retry', __( 'Thử lại', 'smart-login' ), __( 'Gọi lại 1 lần sau 2 giây. Chỉ hoạt động khi đã cấu hình header idempotency bên dưới.', 'smart-login' ) );
 			$this->text(
 				'webhook_idempotency_header',
@@ -660,16 +732,16 @@ class SettingsPage {
 		string $secret_key,
 		string $clear_secret_key
 	): void {
-		$configured  = ProviderCredentials::is_configured( $provider );
-		$has_secret = '' !== ProviderCredentials::secret( $provider );
-		$source     = ProviderCredentials::source( $provider );
+		$configured    = ProviderCredentials::is_configured( $provider );
+		$has_secret    = '' !== ProviderCredentials::secret( $provider );
+		$source        = ProviderCredentials::source( $provider );
 		$source_labels = array(
 			'environment' => __( 'wp-config.php / Environment', 'smart-login' ),
 			'settings'    => __( 'Settings đã mã hóa', 'smart-login' ),
 			'missing'     => __( 'Chưa cấu hình', 'smart-login' ),
 		);
-		$id_label = 'google' === $provider ? __( 'Google Client ID', 'smart-login' ) : __( 'Zalo App ID', 'smart-login' );
-		$secret_label = 'google' === $provider ? __( 'Google Client Secret', 'smart-login' ) : __( 'Zalo App Secret', 'smart-login' );
+		$id_label      = 'google' === $provider ? __( 'Google Client ID', 'smart-login' ) : __( 'Zalo App ID', 'smart-login' );
+		$secret_label  = 'google' === $provider ? __( 'Google Client Secret', 'smart-login' ) : __( 'Zalo App Secret', 'smart-login' );
 		?>
 		<section class="sl-provider-card" data-provider-card="<?php echo esc_attr( $provider ); ?>">
 			<header class="sl-provider-card__header">
@@ -781,7 +853,13 @@ class SettingsPage {
 						wp_kses(
 							/* translators: %s: Google Cloud Console URL. */
 							__( 'Mở <a href="%s" target="_blank" rel="noopener noreferrer">Google Cloud Console → Clients</a>, chọn đúng project.', 'smart-login' ),
-							array( 'a' => array( 'href' => array(), 'target' => array(), 'rel' => array() ) )
+							array(
+								'a' => array(
+									'href'   => array(),
+									'target' => array(),
+									'rel'    => array(),
+								),
+							)
 						),
 						esc_url( 'https://console.cloud.google.com/auth/clients' )
 					);
@@ -807,7 +885,13 @@ class SettingsPage {
 					wp_kses(
 						/* translators: %s: Zalo Developers URL. */
 						__( 'Mở <a href="%s" target="_blank" rel="noopener noreferrer">Zalo Developers</a>, tạo hoặc chọn ứng dụng.', 'smart-login' ),
-						array( 'a' => array( 'href' => array(), 'target' => array(), 'rel' => array() ) )
+						array(
+							'a' => array(
+								'href'   => array(),
+								'target' => array(),
+								'rel'    => array(),
+							),
+						)
 					),
 					esc_url( 'https://developers.zalo.me/' )
 				);
@@ -830,8 +914,26 @@ class SettingsPage {
 		<table class="form-table" role="presentation">
 			<?php
 			$this->checkbox( 'audit_enabled', __( 'Ghi nhật ký', 'smart-login' ), __( 'Lưu lại các sự kiện đăng nhập / xác thực', 'smart-login' ) );
-			$this->text( 'audit_retention_days', __( 'Giữ nhật ký (ngày)', 'smart-login' ), '', 'number', array( 'min' => 1, 'max' => 3650 ) );
-			$this->text( 'otp_retention_days', __( 'Giữ bản ghi OTP (ngày)', 'smart-login' ), __( 'Mã đã dùng hoặc hết hạn sẽ bị xoá sau khoảng thời gian này.', 'smart-login' ), 'number', array( 'min' => 1, 'max' => 365 ) );
+			$this->text(
+				'audit_retention_days',
+				__( 'Giữ nhật ký (ngày)', 'smart-login' ),
+				'',
+				'number',
+				array(
+					'min' => 1,
+					'max' => 3650,
+				)
+			);
+			$this->text(
+				'otp_retention_days',
+				__( 'Giữ bản ghi OTP (ngày)', 'smart-login' ),
+				__( 'Mã đã dùng hoặc hết hạn sẽ bị xoá sau khoảng thời gian này.', 'smart-login' ),
+				'number',
+				array(
+					'min' => 1,
+					'max' => 365,
+				)
+			);
 			?>
 		</table>
 
@@ -921,12 +1023,12 @@ class SettingsPage {
 		$audit_table = Installer::audit_table();
 
 		$rows = array(
-			__( 'Phiên bản plugin', 'smart-login' ) => SMART_LOGIN_VERSION,
-			__( 'WooCommerce', 'smart-login' )      => class_exists( 'WooCommerce' ) ? __( 'Đang hoạt động', 'smart-login' ) : __( 'Không có', 'smart-login' ),
-			__( 'Môi trường', 'smart-login' )       => wp_get_environment_type(),
-			__( 'WP_DEBUG', 'smart-login' )         => ( defined( 'WP_DEBUG' ) && WP_DEBUG ) ? __( 'Bật', 'smart-login' ) : __( 'Tắt', 'smart-login' ),
-			__( 'Bảng OTP', 'smart-login' )         => $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $otp_table ) ) ? $otp_table : __( 'CHƯA TẠO', 'smart-login' ), // phpcs:ignore WordPress.DB
-			__( 'Bảng nhật ký', 'smart-login' )     => $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $audit_table ) ) ? $audit_table : __( 'CHƯA TẠO', 'smart-login' ), // phpcs:ignore WordPress.DB
+			__( 'Phiên bản plugin', 'smart-login' )  => SMART_LOGIN_VERSION,
+			__( 'WooCommerce', 'smart-login' )       => class_exists( 'WooCommerce' ) ? __( 'Đang hoạt động', 'smart-login' ) : __( 'Không có', 'smart-login' ),
+			__( 'Môi trường', 'smart-login' )        => wp_get_environment_type(),
+			__( 'WP_DEBUG', 'smart-login' )          => ( defined( 'WP_DEBUG' ) && WP_DEBUG ) ? __( 'Bật', 'smart-login' ) : __( 'Tắt', 'smart-login' ),
+			__( 'Bảng OTP', 'smart-login' )          => $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $otp_table ) ) ? $otp_table : __( 'CHƯA TẠO', 'smart-login' ), // phpcs:ignore WordPress.DB
+			__( 'Bảng nhật ký', 'smart-login' )      => $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $audit_table ) ) ? $audit_table : __( 'CHƯA TẠO', 'smart-login' ), // phpcs:ignore WordPress.DB
 			__( 'Dọn dẹp tiếp theo', 'smart-login' ) => wp_next_scheduled( Installer::CLEANUP_HOOK )
 				? wp_date( 'H:i d/m/Y', wp_next_scheduled( Installer::CLEANUP_HOOK ) )
 				: __( 'Chưa lên lịch', 'smart-login' ),

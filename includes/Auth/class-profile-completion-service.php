@@ -15,19 +15,23 @@ defined( 'ABSPATH' ) || exit;
 
 final class ProfileCompletionService {
 
-	const META_SEEN   = '_smartlogin_onboarding_seen_at';
-	const META_SOURCE = '_smartlogin_onboarding_source';
-	const META_GATE   = '_smartlogin_profile_gate';
-	const META_NOTICE = '_smartlogin_profile_notice_version';
+	const META_SEEN      = '_smartlogin_onboarding_seen_at';
+	const META_SOURCE    = '_smartlogin_onboarding_source';
+	const META_GATE      = '_smartlogin_profile_gate';
+	const META_NOTICE    = '_smartlogin_profile_notice_version';
 	const NOTICE_VERSION = '1';
 
 	public function status( int $user_id ): array {
-		$user = get_userdata( $user_id );
-		$required = array();
+		$user        = get_userdata( $user_id );
+		$required    = array();
 		$recommended = array();
 
 		if ( ! $user ) {
-			return array( 'complete' => false, 'required_missing' => $required, 'recommended_missing' => $recommended );
+			return array(
+				'complete'            => false,
+				'required_missing'    => $required,
+				'recommended_missing' => $recommended,
+			);
 		}
 
 		if ( '' === trim( (string) $user->display_name ) || (string) $user->user_login === (string) $user->display_name ) {

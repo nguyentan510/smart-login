@@ -130,7 +130,7 @@ class WooIntegration {
 	 *  - The form collects one "Họ tên" field; Woo wants first/last/display.
 	 */
 	public function prepare_account_post(): void {
-		if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) {
+		if ( 'POST' !== strtoupper( sanitize_key( wp_unslash( $_SERVER['REQUEST_METHOD'] ?? '' ) ) ) ) {
 			return;
 		}
 
@@ -184,7 +184,9 @@ class WooIntegration {
 
 		// phpcs:disable WordPress.Security.NonceVerification -- WooCommerce verified its own nonce.
 		if ( isset( $_POST['smartlogin_dob'] ) ) {
-			$dob = \SmartLogin\Auth\RegisterHandler::parse_dob( (string) wp_unslash( $_POST['smartlogin_dob'] ) );
+			// parse_dob() is the sanitiser: it returns a Y-m-d string or nothing at
+			// all, so an unparseable value cannot reach the database.
+			$dob = \SmartLogin\Auth\RegisterHandler::parse_dob( (string) wp_unslash( $_POST['smartlogin_dob'] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
 			if ( '' !== $dob ) {
 				update_user_meta( $user_id, UserManager::META_DOB, $dob );
@@ -375,13 +377,13 @@ class WooIntegration {
 	/**
 	 * Nothing left to send to: report success without touching the mailer.
 	 *
-	 * @param null|bool $return
+	 * @param null|bool $is_returning
 	 * @param array     $atts
 	 * @return null|bool
 	 */
-	public function abort_empty_mail( $return, $atts ) {
-		if ( null !== $return ) {
-			return $return;
+	public function abort_empty_mail( $is_returning, $atts ) {
+		if ( null !== $is_returning ) {
+			return $is_returning;
 		}
 
 		$to = $atts['to'] ?? '';
@@ -390,7 +392,7 @@ class WooIntegration {
 			$to = implode( ',', $to );
 		}
 
-		return '' === trim( (string) $to ) ? true : $return;
+		return '' === trim( (string) $to ) ? true : $is_returning;
 	}
 
 	/**

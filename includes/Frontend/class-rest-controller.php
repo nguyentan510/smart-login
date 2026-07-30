@@ -205,9 +205,15 @@ class RestController {
 					return $this->error( new WP_Error( 'smart_login_no_user', __( 'Không tìm thấy tài khoản.', 'smart-login' ) ) );
 				}
 
-				$context = new AuthContext( array( 'auth_method' => 'otp', 'user_id' => $user_id, 'intended_url' => (string) ( $row['payload']['redirect_to'] ?? '' ) ) );
+				$context = new AuthContext(
+					array(
+						'auth_method'  => 'otp',
+						'user_id'      => $user_id,
+						'intended_url' => (string) ( $row['payload']['redirect_to'] ?? '' ),
+					)
+				);
 				$proof   = AuthProof::from_otp( $this->otp()->verified_claim( $row ), $user_id );
-				$result = ( new SessionIssuer() )->issue( $proof, $user, $context, ! isset( $row['payload']['remember'] ) || ! empty( $row['payload']['remember'] ) );
+				$result  = ( new SessionIssuer() )->issue( $proof, $user, $context, ! isset( $row['payload']['remember'] ) || ! empty( $row['payload']['remember'] ) );
 				if ( is_wp_error( $result ) ) {
 					return $this->error( $result );
 				}
@@ -251,12 +257,18 @@ class RestController {
 		}
 
 		$handler = new LoginHandler();
-		$user    = $handler->attempt( $identity, $password, true );
+		$user    = $handler->attempt( $identity, $password );
 
 		if ( $user instanceof WP_User ) {
 			$redirect_to = (string) $request->get_param( 'redirect_to' );
-			$context = new AuthContext( array( 'auth_method' => 'password', 'user_id' => $user->ID, 'intended_url' => $redirect_to ) );
-			$result = ( new SessionIssuer() )->issue( AuthProof::from_password( $user ), $user, $context, true );
+			$context     = new AuthContext(
+				array(
+					'auth_method'  => 'password',
+					'user_id'      => $user->ID,
+					'intended_url' => $redirect_to,
+				)
+			);
+			$result      = ( new SessionIssuer() )->issue( AuthProof::from_password( $user ), $user, $context, true );
 			if ( is_wp_error( $result ) ) {
 				return $this->error( $result );
 			}
@@ -325,13 +337,13 @@ class RestController {
 	}
 
 	public function handle_contact_start( WP_REST_Request $request ) {
-		$type = sanitize_key( (string) $request->get_param( 'type' ) );
+		$type   = sanitize_key( (string) $request->get_param( 'type' ) );
 		$result = ( new ContactVerificationService( $this->otp() ) )->start( get_current_user_id(), $type, (string) $request->get_param( 'value' ) );
 		return is_wp_error( $result ) ? $this->error( $result ) : $this->success( $this->public_otp_payload( $result, OtpService::INTENT_ADD_IDENTITY ) );
 	}
 
 	public function handle_contact_verify( WP_REST_Request $request ) {
-		$type = sanitize_key( (string) $request->get_param( 'type' ) );
+		$type   = sanitize_key( (string) $request->get_param( 'type' ) );
 		$result = ( new ContactVerificationService( $this->otp() ) )->verify( get_current_user_id(), (string) $request->get_param( 'token' ), (string) $request->get_param( 'code' ), $type );
 		return is_wp_error( $result ) ? $this->error( $result ) : $this->success( $result );
 	}
@@ -339,14 +351,14 @@ class RestController {
 	/**
 	 * What is linked to the signed-in account.
 	 */
-	public function handle_identities( WP_REST_Request $request ) {
+	public function handle_identities( WP_REST_Request $request ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- REST callbacks always receive the request.
 		$service = new IdentityLinkService();
 		$user_id = get_current_user_id();
 
 		return $this->success(
 			array(
-				'identities'  => $service->linked( $user_id ),
-				'can_unlink'  => $service->can_unlink( $user_id ),
+				'identities' => $service->linked( $user_id ),
+				'can_unlink' => $service->can_unlink( $user_id ),
 			)
 		);
 	}
@@ -379,8 +391,8 @@ class RestController {
 	}
 
 	public function handle_contact_resend( WP_REST_Request $request ) {
-		$token = (string) $request->get_param( 'token' );
-		$row = $this->otp()->peek( $token );
+		$token        = (string) $request->get_param( 'token' );
+		$row          = $this->otp()->peek( $token );
 		$valid_intent = $row && in_array( (string) $row['intent'], array( OtpService::INTENT_ADD_IDENTITY ), true );
 		if ( ! $valid_intent || (int) ( $row['payload']['user_id'] ?? 0 ) !== get_current_user_id() ) {
 			return $this->error( new WP_Error( 'smart_login_contact_session', __( 'Phiên xác thực thông tin liên hệ không hợp lệ.', 'smart-login' ) ) );
