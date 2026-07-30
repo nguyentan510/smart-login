@@ -77,19 +77,27 @@ login phone must not overwrite it on save.
 This is the one design decision that cannot be enforced by our own code, because
 the violation lives in WordPress core.
 
-The `authenticate` filter chain:
+The `authenticate` filter chain. Verified against the WordPress 7.0.2 source
+installed at `C:\Users\PC\Local Sites\wp\app\public`, not from memory —
+`wp-includes/default-filters.php:503-506`:
 
 | Priority | Handler | What it does |
 | --- | --- | --- |
 | 5 | `LoginHandler::gate_lockout` | plugin |
-| **20** | **`wp_authenticate_username_password`** (core) | **`get_user_by( 'login', $username )`** |
+| **20** | **`wp_authenticate_username_password`** (core) | **`get_user_by( 'login', $username )`** — `pluggable.php:833` |
 | 20 | `wp_authenticate_email_password` (core) | `get_user_by( 'email', $username )` |
+| 20 | `wp_authenticate_application_password` (core) | resolves the Basic-auth username, which may be a login |
 | 30 | `LoginHandler::authenticate_by_phone` | plugin |
+| 99 | `wp_authenticate_spam_check` (core) | multisite spam flag |
 
-Core resolves `user_login` at priority 20, **before** any plugin identity code
-runs at 30. If `user_login` holds a phone number, core authenticates that number
-directly and `IdentityDirectory` is never consulted. A fitness test cannot stop
-this; it is not our code path.
+**Three** core handlers resolve an identifier at priority 20, all of them before
+any plugin identity code at 30. If `user_login` holds a phone number, core
+authenticates that number directly and `IdentityDirectory` is never consulted.
+A fitness test cannot stop this; it is not our code path.
+
+Note that `wp_authenticate_application_password` widens the exposure beyond the
+interactive login form to the REST API, which makes the structural fix more
+valuable rather than less.
 
 WordPress also offers no supported way to change `user_login`, so it is
 permanently stale the moment a user changes their phone.
