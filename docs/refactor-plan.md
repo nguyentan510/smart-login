@@ -14,7 +14,7 @@ Phases are units of **review and test gating**, not of migration safety.
 ## Progress
 
 - [x] **Phase 0 — Foundation and contract**
-- [ ] **Phase 1 — Identity core (pure, no DB)**
+- [x] **Phase 1 — Identity core (pure, no DB)**
 - [ ] **Phase 2 — Persistence**
 - [ ] **Phase 3 — Directory and state machine**
 - [ ] **Phase 4 — Proof layer: OTP**
@@ -51,9 +51,9 @@ with an actionable per-item list. Confirmed.
 
 ---
 
-## Phase 1 — Identity core (pure, no DB)
+## Phase 1 — Identity core (pure, no DB) ✅
 
-**Build**
+**Delivered**
 
 | Class | File |
 | --- | --- |
@@ -62,21 +62,40 @@ with an actionable per-item list. Confirmed.
 | `Resolution` | `includes/Identity/class-resolution.php` |
 | `IdentityRecord` | `includes/Identity/class-identity-record.php` |
 | `ChannelRegistry` | `includes/Identity/class-channel-registry.php` |
-| `IdentityChannel` (interface) | `includes/Identity/Channels/class-channel-interface.php` |
+| `OpaqueLogin` | `includes/Identity/class-opaque-login.php` |
+| `IdentityChannel` (interface) | `includes/Identity/Channels/class-identity-channel.php` |
 | `PhoneChannel` | `includes/Identity/Channels/class-phone-channel.php` |
 | `MailChannel` | `includes/Identity/Channels/class-mail-channel.php` |
 | `FederatedChannel` | `includes/Identity/Channels/class-federated-channel.php` |
-| `OpaqueLogin` | `includes/Identity/class-opaque-login.php` |
 
-`MailChannel`, not `EmailChannel`: `SmartLogin\OTP\Channels\EmailChannel`
-already exists as a *delivery* channel. Phase 4 renames that namespace to
-`OTP\Transports` so "channel" means exactly one thing project-wide.
+Plus `tests/identity/run-core-tests.php` — 101 assertions, wired into
+`run-all.php` as **required**, so Phase 1 is protected from Phase 2 onward.
 
-**Acceptance**
+**Notes from doing the work**
 
-- Identity core tests green in the standalone harness
-- Zero database access and zero WordPress calls beyond sanitisation
-- Registering a fictional channel in a test requires no edit outside its class
+- The interface file is `class-identity-channel.php`, not
+  `class-channel-interface.php` as this plan first stated. The autoloader derives
+  the filename from the class name, so an interface named `IdentityChannel` can
+  only live in that file.
+- `FederatedChannel` is concrete and parameterised, so Google and Zalo cost
+  **zero** classes between them: `new FederatedChannel( 'google', 'Google' )`.
+- `MailChannel`, not `EmailChannel`: the OTP delivery namespace already owns that
+  class name and the two would collide on disk. The stored channel id stays
+  `email`. Phase 4 renames `OTP\Channels` to `OTP\Transports` to retire the
+  ambiguity.
+- Value objects use private properties with accessors rather than the public
+  typed properties used by `AuthContext` / `ProviderIdentity`. Deliberate: a
+  mutable subject could be swapped after verification.
+- `MailChannel::is_valid()` rejects synthetic `@phone.invalid` addresses. They are
+  well-formed but unreachable, so they must never become a claimable identity.
+- Nothing is wired into `Plugin::boot()` yet. The core is dormant until Phase 3,
+  so runtime behaviour is unchanged and regression risk is zero.
+- `ChannelRegistry::is_enabled()` prefers a `channels_enabled` setting and falls
+  back to deriving from the legacy `id_mode` / `google_enabled` / `zalo_enabled`
+  flags. Phase 4 introduces the setting and removes the fallback.
+
+**Acceptance:** identity core green (101 passed), all Phase 1 items in the
+contract suite green, regression suite still 163, zero DB access. Confirmed.
 
 ---
 

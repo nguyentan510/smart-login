@@ -34,6 +34,11 @@ $suites = array(
 		'kind' => 'required',
 	),
 	array(
+		'name' => 'Identity core',
+		'file' => 'identity/run-core-tests.php',
+		'kind' => 'required',
+	),
+	array(
 		'name' => 'Identity contract',
 		'file' => 'identity/run-contract-tests.php',
 		'kind' => 'spec',
