@@ -81,11 +81,13 @@ final class ContactVerificationService {
 			);
 		}
 
-		$purpose = 'phone' === $type ? OtpService::PURPOSE_CHANGE_PHONE : OtpService::PURPOSE_CHANGE_EMAIL;
+		// One intent for every channel. This is the line that used to need a new
+		// PURPOSE_* constant each time a channel was added.
+		$intent = OtpService::INTENT_ADD_IDENTITY;
 
 		$result = $this->otp->issue(
 			$destination,
-			$purpose,
+			$intent,
 			array( 'user_id' => $user_id, 'contact_type' => $type ),
 			array( 'user_name' => $user->display_name )
 		);
@@ -109,8 +111,7 @@ final class ContactVerificationService {
 		if ( ! in_array( $type, array( 'phone', 'email' ), true ) ) {
 			return new WP_Error( 'smart_login_bad_contact', __( 'Thông tin liên hệ không hợp lệ.', 'smart-login' ) );
 		}
-		$purpose = 'phone' === $type ? OtpService::PURPOSE_CHANGE_PHONE : OtpService::PURPOSE_CHANGE_EMAIL;
-		$row = $this->otp->verify( $token, $code, $purpose );
+		$row = $this->otp->verify( $token, $code, OtpService::INTENT_ADD_IDENTITY );
 		if ( is_wp_error( $row ) ) {
 			return $row;
 		}

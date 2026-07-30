@@ -3,11 +3,11 @@
  * OTP verification screen. Override at yourtheme/smart-login/form-otp.php
  *
  * @var array  $notices
- * @var string $purpose
+ * @var string $intent
  * @var string $masked
  * @var int    $expires_in
  * @var int    $resend_after
- * @var string $channel
+ * @var string $transport
  * @var int    $otp_length
  * @var string $dev_code
  * @var bool   $has_session
@@ -22,7 +22,7 @@ use SmartLogin\Security\RequestGuard;
 
 defined( 'ABSPATH' ) || exit;
 
-$sl_back = OtpService::PURPOSE_REGISTER === $purpose ? Flow::STEP_REGISTER : Flow::STEP_LOGIN;
+$sl_back = OtpService::INTENT_REGISTER === $intent ? Flow::STEP_REGISTER : Flow::STEP_LOGIN;
 ?>
 <div class="smart-login smart-login--otp">
 
@@ -41,7 +41,7 @@ $sl_back = OtpService::PURPOSE_REGISTER === $purpose ? Flow::STEP_REGISTER : Flo
 
 		<p class="sl-lead">
 			<?php
-			if ( 'email' === $channel ) {
+			if ( 'email' === $transport ) {
 				printf(
 					/* translators: %s: masked email address. */
 					esc_html__( 'Vui lòng nhập vào mã OTP đã được gửi đến email %s', 'smart-login' ),

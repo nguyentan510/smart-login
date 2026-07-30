@@ -17,7 +17,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 1 — Identity core (pure, no DB)**
 - [x] **Phase 2 — Persistence**
 - [x] **Phase 3 — Directory and state machine**
-- [ ] **Phase 4 — Proof layer: OTP**
+- [x] **Phase 4 — Proof layer: OTP**
 - [ ] **Phase 5 — Profile boundary**
 - [ ] **Phase 6 — Provider lifecycle**
 - [ ] **Phase 7 — Release preparation**
@@ -239,22 +239,64 @@ SMART_LOGIN_ZALO_STAGING_SMOKE_OK
 
 ---
 
-## Phase 4 — Proof layer: OTP
+## Phase 4 — Proof layer: OTP ✅
 
-**Build**
+**Delivered**
 
-- Replace six `PURPOSE_*` constants with `channel` + `intent` columns
-- OTP verification returns a `VerifiedClaim`
-- Rename `OTP\Channels` → `OTP\Transports`
-  (`WebhookTransport`, `MailTransport`, `TransportRouter`)
-- Apply `smart_login_validate_password` on **reset** as well as registration
-- Fix `smart_login_phone_is_valid`, currently dead on the default `84` country
-  code because the Vietnamese branch returns before the filter
+- Six `PURPOSE_*` constants → four `INTENT_*` (`register`, `login`, `recover`,
+  `add_identity`). `change_phone`, `change_email` and `verify_email` were the
+  same intent applied to different channels
+- OTP schema: `purpose` → `intent`, `channel` → `transport`, plus a new
+  `identity_channel`; index `dest_purpose` → `dest_intent`. DB_VERSION 3 → 4
+- `OTP\Channels` → `OTP\Transports`: `TransportInterface`, `TransportRouter`,
+  `WebhookTransport`, `MailTransport`. "Channel" now means exactly one thing
+  project-wide. Filter `smart_login_otp_channels` → `smart_login_otp_transports`
+- `PasswordPolicy` extracted; `smart_login_validate_password` now runs on reset
+  as well as registration
+- `smart_login_phone_is_valid` reaches Vietnamese numbers
+- Placeholders `{{purpose}}`/`{{channel}}` → `{{intent}}`/`{{transport}}`
 
-**Acceptance**
+**Notes from doing the work**
 
-- Adding a fictional transport in a test changes no file outside that class
-- Password policy enforced on both registration and reset
+- **`dbDelta` cannot rename columns**, only add them, so the old NOT NULL
+  `purpose` column would have survived and broken every insert.
+  `Installer::recreate_renamed_tables()` drops the OTP table when the stored
+  version is below 4. Safe because the table holds nothing but unexpired
+  one-time codes; the worst case is a visitor mid-flow requesting a new one.
+  Verified against the live database: `purpose` and `channel` are gone,
+  `intent`/`identity_channel`/`transport` are present, and the old
+  `dest_purpose` index no longer exists.
+- **The mechanical rename introduced two real bugs, and neither test suite
+  caught them.** `PendingSession` still returned the key `purpose` while the
+  controllers had been switched to read `intent`, so REST verify and resend
+  would have broken; and `RestController::session_for()` ended up returning
+  `'intent' => $intent` with `$intent` never assigned. Both were found by
+  grepping for leftovers rather than by a test. A throwaway dangling-variable
+  scan over the four renamed names now reports zero, but the lesson stands:
+  a token rename across a session/flow boundary needs the boundary checked
+  explicitly, because no unit test crosses it.
+- **Two of the project's own fitness rules produced false positives on prose.**
+  A `UserManager` docblock saying "Output of `wp_hash_password()`" tripped the
+  password-policy rule, and earlier a `MailChannel` docblock quoting the old
+  namespace tripped the transport rule. Both patterns now anchor on call or
+  statement syntax instead of a bare name. Source-scanning rules have to
+  distinguish code from comments, or they train people to add allowlist entries.
+- `templates/form-otp.php` was outside the rename script's file list and still
+  referenced `OtpService::PURPOSE_REGISTER`. The fitness rule caught it, which is
+  the argument for scanning templates as well as classes.
+- `WebhookTester` still accepts a posted `channel` field as well as `transport`,
+  because the admin JS posts the old name and the two rename independently.
+
+**Acceptance — both met**
+
+- A fictional `zns` transport is registered and exercised entirely from
+  `run-core-tests.php`, touching no other file; the suite also asserts that
+  exactly four intents exist, which is the property that keeps channels and
+  transports independent
+- `PasswordPolicy::validate()` is required by a fitness rule at every call site
+  that sets a password, and the reset path now runs the filter
+
+Integration gate green on WordPress 7.0.2 with `db_version=4`.
 
 ---
 

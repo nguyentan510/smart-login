@@ -143,11 +143,11 @@ class Shortcodes {
 	 * was reloaded rather than reached through a form post.
 	 */
 	private function otp_args(): array {
-		$purpose      = (string) Flow::data( 'purpose', '' );
+		$intent       = (string) Flow::data( 'intent', '' );
 		$masked       = (string) Flow::data( 'masked', '' );
 		$expires_in   = Flow::data( 'expires_in', null );
 		$resend_after = (int) Flow::data( 'resend_after', 0 );
-		$channel      = (string) Flow::data( 'channel', 'sms' );
+		$transport    = (string) Flow::data( 'transport', 'sms' );
 
 		if ( null === $expires_in ) {
 			$service = new OtpService();
@@ -155,21 +155,21 @@ class Shortcodes {
 			$row     = $session ? $service->peek( $session['token'] ) : null;
 
 			if ( $row ) {
-				$purpose    = $session['purpose'];
+				$intent     = $session['intent'];
 				$masked     = \SmartLogin\Security\RateLimiter::mask_identity( $row['destination'] );
 				$expires_in = $service->seconds_left( $row );
-				$channel    = $row['channel'];
+				$transport  = $row['transport'];
 			} else {
 				$expires_in = 0;
 			}
 		}
 
 		return array(
-			'purpose'      => $purpose,
+			'intent'       => $intent,
 			'masked'       => $masked,
 			'expires_in'   => (int) $expires_in,
 			'resend_after' => $resend_after,
-			'channel'      => $channel,
+			'transport'    => $transport,
 			'otp_length'   => min( 8, max( 4, Settings::get_int( 'otp_length', 6 ) ) ),
 			'dev_code'     => (string) Flow::data( 'dev_code', '' ),
 			'has_session'  => (bool) PendingSession::token(),

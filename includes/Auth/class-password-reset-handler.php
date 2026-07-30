@@ -94,7 +94,7 @@ class PasswordResetHandler {
 
 		$result = $this->otp->issue(
 			$claim->subject(),
-			OtpService::PURPOSE_RESET,
+			OtpService::INTENT_RECOVER,
 			array( 'user_id' => $user->ID ),
 			array( 'user_name' => $user->display_name )
 		);
@@ -103,7 +103,7 @@ class PasswordResetHandler {
 			return $result;
 		}
 
-		PendingSession::start( $result['token'], OtpService::PURPOSE_RESET );
+		PendingSession::start( $result['token'], OtpService::INTENT_RECOVER );
 
 		return $result;
 	}
@@ -114,13 +114,13 @@ class PasswordResetHandler {
 	 * @return string|WP_Error The grant token.
 	 */
 	public function verify( string $token, string $code ) {
-		$row = $this->otp->verify( $token, $code, OtpService::PURPOSE_RESET );
+		$row = $this->otp->verify( $token, $code, OtpService::INTENT_RECOVER );
 
 		if ( is_wp_error( $row ) ) {
 			return $row;
 		}
 
-		if ( OtpService::PURPOSE_RESET !== $row['purpose'] ) {
+		if ( OtpService::INTENT_RECOVER !== $row['intent'] ) {
 			return new WP_Error( 'smart_login_wrong_purpose', __( 'Phiên xác thực không hợp lệ.', 'smart-login' ) );
 		}
 
@@ -150,26 +150,17 @@ class PasswordResetHandler {
 
 		$password = (string) wp_unslash( $input['password'] ?? '' );
 		$confirm  = (string) wp_unslash( $input['password_confirm'] ?? '' );
-		$min      = max( 6, Settings::get_int( 'min_password_length', 8 ) );
 
-		if ( mb_strlen( $password ) < $min ) {
-			// The grant was consumed, so hand back a fresh one rather than
-			// making the user redo the whole OTP flow over a typo.
-			return new WP_Error(
-				'smart_login_weak_password',
-				sprintf(
-					/* translators: %d: minimum length. */
-					__( 'Mật khẩu phải có ít nhất %d ký tự.', 'smart-login' ),
-					$min
-				),
-				array( 'grant' => PendingSession::grant_password_reset( $user_id ) )
-			);
-		}
+		// The same policy as registration, including the
+		// smart_login_validate_password filter, which used to apply only there.
+		$verdict = PasswordPolicy::validate( $password, $confirm );
 
-		if ( $password !== $confirm ) {
+		if ( is_wp_error( $verdict ) ) {
+			// The grant was consumed, so hand back a fresh one rather than making
+			// the user redo the whole OTP flow over a typo.
 			return new WP_Error(
-				'smart_login_password_mismatch',
-				__( 'Mật khẩu nhập lại không khớp.', 'smart-login' ),
+				$verdict->get_error_code(),
+				$verdict->get_error_message(),
 				array( 'grant' => PendingSession::grant_password_reset( $user_id ) )
 			);
 		}

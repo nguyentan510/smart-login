@@ -28,7 +28,7 @@ use SmartLogin\Auth\Providers\ProviderRedirect;
 use SmartLogin\Auth\Providers\ProviderRegistry;
 use SmartLogin\Identity\Phone;
 use SmartLogin\Identity\UserManager;
-use SmartLogin\OTP\Channels\WebhookChannel;
+use SmartLogin\OTP\Transports\WebhookTransport;
 use SmartLogin\OTP\OtpRepository;
 use SmartLogin\OTP\OtpService;
 use SmartLogin\OTP\Placeholders;
@@ -377,7 +377,7 @@ Settings::update( array( 'audit_enabled' => 0 ) );
 $otp_row = array(
 	'id'          => 7,
 	'token'       => 'test-token',
-	'purpose'     => OtpService::PURPOSE_RESET,
+	'intent'      => OtpService::INTENT_RECOVER,
 	'destination' => '84969789475',
 	'code_hash'   => hash_hmac( 'sha256', '123456', wp_salt( 'auth' ) ),
 	'payload'     => array( 'user_id' => 42 ),
@@ -386,21 +386,21 @@ $otp_row = array(
 	'expires_at'  => gmdate( 'Y-m-d H:i:s', time() + 300 ),
 );
 
-$purpose_repo = new SecurityTestOtpRepository( $otp_row );
-$purpose_otp  = new OtpService( $purpose_repo );
-$mismatch     = $purpose_otp->verify( 'test-token', '123456', OtpService::PURPOSE_LOGIN );
+$intent_repo = new SecurityTestOtpRepository( $otp_row );
+$intent_otp  = new OtpService( $intent_repo );
+$mismatch    = $intent_otp->verify( 'test-token', '123456', OtpService::INTENT_LOGIN );
 
-check( 'cross-purpose OTP is rejected', true, is_wp_error( $mismatch ) );
-check( 'cross-purpose error code', 'smart_login_wrong_purpose', $mismatch->get_error_code() );
-check( 'purpose mismatch does not consume the row', 0, $purpose_repo->consume_calls );
+check( 'cross-intent OTP is rejected', true, is_wp_error( $mismatch ) );
+check( 'cross-intent error code', 'smart_login_wrong_intent', $mismatch->get_error_code() );
+check( 'intent mismatch does not consume the row', 0, $intent_repo->consume_calls );
 
-$verified = $purpose_otp->verify( 'test-token', '123456', OtpService::PURPOSE_RESET );
-check( 'matching purpose verifies', true, is_array( $verified ) );
-check( 'successful verification claims once', 1, $purpose_repo->consume_calls );
+$verified = $intent_otp->verify( 'test-token', '123456', OtpService::INTENT_RECOVER );
+check( 'matching intent verifies', true, is_array( $verified ) );
+check( 'successful verification claims once', 1, $intent_repo->consume_calls );
 
 $replay_repo                 = new SecurityTestOtpRepository( $otp_row );
 $replay_repo->consume_result = false;
-$replay                      = ( new OtpService( $replay_repo ) )->verify( 'test-token', '123456', OtpService::PURPOSE_RESET );
+$replay                      = ( new OtpService( $replay_repo ) )->verify( 'test-token', '123456', OtpService::INTENT_RECOVER );
 
 check( 'losing an atomic consume race is rejected', true, is_wp_error( $replay ) );
 check( 'atomic consume race uses replay error', 'smart_login_otp_used', $replay->get_error_code() );
@@ -436,13 +436,13 @@ $webhook_options = array(
 
 Settings::update( $webhook_options );
 $GLOBALS['sl_http_requests'] = array();
-( new WebhookChannel() )->dispatch( '84969789475', '123456', array( 'purpose' => OtpService::PURPOSE_LOGIN ) );
+( new WebhookTransport() )->dispatch( '84969789475', '123456', array( 'intent' => OtpService::INTENT_LOGIN ) );
 check( 'retry is disabled without an idempotency contract', 1, count( $GLOBALS['sl_http_requests'] ) );
 
 $webhook_options['webhook_idempotency_header'] = 'Idempotency-Key';
 Settings::update( $webhook_options );
 $GLOBALS['sl_http_requests'] = array();
-( new WebhookChannel() )->dispatch( '84969789475', '123456', array( 'purpose' => OtpService::PURPOSE_LOGIN ) );
+( new WebhookTransport() )->dispatch( '84969789475', '123456', array( 'intent' => OtpService::INTENT_LOGIN ) );
 
 $first_id  = $GLOBALS['sl_http_requests'][0]['args']['headers']['Idempotency-Key'] ?? '';
 $second_id = $GLOBALS['sl_http_requests'][1]['args']['headers']['Idempotency-Key'] ?? '';

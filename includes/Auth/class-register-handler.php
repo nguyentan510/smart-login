@@ -88,7 +88,7 @@ class RegisterHandler {
 
 		$result = $this->otp->issue(
 			$claim->subject(),
-			OtpService::PURPOSE_REGISTER,
+			OtpService::INTENT_REGISTER,
 			$payload,
 			array( 'user_name' => $full_name )
 		);
@@ -97,7 +97,7 @@ class RegisterHandler {
 			return $result;
 		}
 
-		PendingSession::start( $result['token'], OtpService::PURPOSE_REGISTER );
+		PendingSession::start( $result['token'], OtpService::INTENT_REGISTER );
 
 		return $result;
 	}
@@ -108,13 +108,13 @@ class RegisterHandler {
 	 * @return int|WP_Error New user ID.
 	 */
 	public function complete( string $token, string $code ) {
-		$row = $this->otp->verify( $token, $code, OtpService::PURPOSE_REGISTER );
+		$row = $this->otp->verify( $token, $code, OtpService::INTENT_REGISTER );
 
 		if ( is_wp_error( $row ) ) {
 			return $row;
 		}
 
-		if ( OtpService::PURPOSE_REGISTER !== $row['purpose'] ) {
+		if ( OtpService::INTENT_REGISTER !== $row['intent'] ) {
 			return new WP_Error( 'smart_login_wrong_purpose', __( 'Phiên xác thực không hợp lệ.', 'smart-login' ) );
 		}
 
@@ -296,42 +296,15 @@ class RegisterHandler {
 		if ( '' === $password ) {
 			$password = (string) wp_unslash( $input['register_password'] ?? $input['password_1'] ?? $input['pass'] ?? '' );
 		}
-		$min      = max( 6, Settings::get_int( 'min_password_length', 8 ) );
-
-		if ( '' === $password ) {
-			return new WP_Error( 'smart_login_no_password', __( 'Vui lòng nhập mật khẩu.', 'smart-login' ) );
-		}
-
-		if ( mb_strlen( $password ) < $min ) {
-			return new WP_Error(
-				'smart_login_weak_password',
-				sprintf(
-					/* translators: %d: minimum length. */
-					__( 'Mật khẩu phải có ít nhất %d ký tự.', 'smart-login' ),
-					$min
-				)
-			);
-		}
 
 		$confirmation = $input['password_confirm'] ?? $input['register_password_confirm'] ?? $input['password_2'] ?? null;
 
-		if ( null !== $confirmation && (string) wp_unslash( $confirmation ) !== $password ) {
-			return new WP_Error( 'smart_login_password_mismatch', __( 'Mật khẩu nhập lại không khớp.', 'smart-login' ) );
-		}
+		$verdict = PasswordPolicy::validate(
+			$password,
+			null !== $confirmation ? (string) wp_unslash( $confirmation ) : null
+		);
 
-		/**
-		 * Enforce an additional password policy.
-		 *
-		 * @param true|WP_Error $result
-		 * @param string        $password
-		 */
-		$extra = apply_filters( 'smart_login_validate_password', true, $password );
-
-		if ( is_wp_error( $extra ) ) {
-			return $extra;
-		}
-
-		return $password;
+		return is_wp_error( $verdict ) ? $verdict : $password;
 	}
 
 	/**

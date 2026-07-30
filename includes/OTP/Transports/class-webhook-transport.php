@@ -5,7 +5,7 @@
  * @package SmartLogin
  */
 
-namespace SmartLogin\OTP\Channels;
+namespace SmartLogin\OTP\Transports;
 
 use SmartLogin\OTP\Placeholders;
 use SmartLogin\Settings;
@@ -13,7 +13,7 @@ use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
 
-class WebhookChannel implements ChannelInterface {
+class WebhookTransport implements TransportInterface {
 
 	public function id(): string {
 		return 'sms';

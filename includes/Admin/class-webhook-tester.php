@@ -12,8 +12,8 @@
 namespace SmartLogin\Admin;
 
 use SmartLogin\Identity\Phone;
-use SmartLogin\OTP\Channels\EmailChannel;
-use SmartLogin\OTP\Channels\WebhookChannel;
+use SmartLogin\OTP\Transports\MailTransport;
+use SmartLogin\OTP\Transports\WebhookTransport;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -33,7 +33,10 @@ class WebhookTester {
 
 		check_ajax_referer( self::NONCE, 'nonce' );
 
-		$channel     = isset( $_POST['channel'] ) ? sanitize_key( wp_unslash( $_POST['channel'] ) ) : 'sms';
+		// Accepts the legacy `channel` field name too: the admin JS posts it, and
+		// the two are renamed independently.
+		$transport   = isset( $_POST['transport'] ) ? sanitize_key( wp_unslash( $_POST['transport'] ) ) : '';
+		$transport   = '' !== $transport ? $transport : ( isset( $_POST['channel'] ) ? sanitize_key( wp_unslash( $_POST['channel'] ) ) : 'sms' );
 		$destination = isset( $_POST['destination'] ) ? sanitize_text_field( wp_unslash( $_POST['destination'] ) ) : '';
 
 		if ( '' === trim( $destination ) ) {
@@ -45,14 +48,14 @@ class WebhookTester {
 		$code = str_pad( (string) random_int( 0, 999999 ), 6, '0', STR_PAD_LEFT );
 
 		$ctx = array(
-			'purpose'     => 'test',
-			'channel'     => $channel,
+			'intent'      => 'test',
+			'transport'   => $transport,
 			'ttl_seconds' => 300,
 			'expires_ts'  => time() + 300,
 			'user_name'   => wp_get_current_user()->display_name,
 		);
 
-		if ( 'email' === $channel ) {
+		if ( 'email' === $transport ) {
 			$this->test_email( $destination, $code, $ctx );
 		}
 
@@ -78,7 +81,7 @@ class WebhookTester {
 			);
 		}
 
-		$channel = new WebhookChannel();
+		$channel = new WebhookTransport();
 
 		if ( ! $channel->is_available() ) {
 			wp_send_json_error( array( 'message' => __( 'Webhook chưa bật hoặc chưa có URL. Hãy lưu cấu hình trước.', 'smart-login' ) ) );
@@ -114,7 +117,7 @@ class WebhookTester {
 			wp_send_json_error( array( 'message' => __( 'Địa chỉ email không hợp lệ.', 'smart-login' ) ) );
 		}
 
-		$channel = new EmailChannel();
+		$channel = new MailTransport();
 
 		if ( ! $channel->is_available() ) {
 			wp_send_json_error( array( 'message' => __( 'Kênh email đang tắt. Hãy bật và lưu cấu hình trước.', 'smart-login' ) ) );

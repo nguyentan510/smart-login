@@ -31,12 +31,12 @@ class RateLimiter {
 	 * Gate an OTP send request.
 	 *
 	 * @param string $destination Canonical phone or email.
-	 * @param string $purpose     register|reset|login|…
+	 * @param string $intent      register|login|recover|add_identity
 	 * @return true|WP_Error
 	 */
-	public function check_otp_send( string $destination, string $purpose ) {
+	public function check_otp_send( string $destination, string $intent ) {
 		$cooldown = Settings::get_int( 'otp_resend_cooldown', 60 );
-		$last     = $this->repo->last_sent_at( $destination, $purpose );
+		$last     = $this->repo->last_sent_at( $destination, $intent );
 
 		if ( $last > 0 && ( time() - $last ) < $cooldown ) {
 			$wait = $cooldown - ( time() - $last );
@@ -75,9 +75,9 @@ class RateLimiter {
 		 *
 		 * @param true|WP_Error $result
 		 * @param string        $destination
-		 * @param string        $purpose
+		 * @param string        $intent
 		 */
-		return apply_filters( 'smart_login_check_otp_send', true, $destination, $purpose );
+		return apply_filters( 'smart_login_check_otp_send', true, $destination, $intent );
 	}
 
 	// -----------------------------------------------------------------

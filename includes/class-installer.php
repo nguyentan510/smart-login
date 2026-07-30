@@ -85,11 +85,16 @@ class Installer {
 		$identity = self::identities_table();
 		$history  = self::identity_history_table();
 
+		// `intent` is what the visitor is trying to do (register|login|recover|
+		// add_identity) and `identity_channel` is which namespace the destination
+		// belongs to. `transport` is how the code travels (sms|email) — a separate
+		// axis, and the column that used to be confusingly called `channel`.
 		$sql_otp = "CREATE TABLE {$otp} (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 			token CHAR(64) NOT NULL,
-			purpose VARCHAR(20) NOT NULL,
-			channel VARCHAR(10) NOT NULL,
+			intent VARCHAR(20) NOT NULL,
+			identity_channel VARCHAR(32) NOT NULL DEFAULT '',
+			transport VARCHAR(20) NOT NULL,
 			destination VARCHAR(191) NOT NULL,
 			code_hash CHAR(64) NOT NULL,
 			payload LONGTEXT NULL,
@@ -101,7 +106,7 @@ class Installer {
 			consumed_at DATETIME NULL,
 			PRIMARY KEY  (id),
 			UNIQUE KEY token (token),
-			KEY dest_purpose (destination(100), purpose, consumed_at),
+			KEY dest_intent (destination(100), intent, consumed_at),
 			KEY expires_at (expires_at),
 			KEY ip_created (ip, created_at)
 		) {$charset};";
@@ -169,11 +174,40 @@ class Installer {
 	private static function install_tables(): void {
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
+		self::recreate_renamed_tables();
+
 		foreach ( self::schema() as $sql ) {
 			dbDelta( $sql );
 		}
 
 		self::drop_legacy_tables();
+	}
+
+	/**
+	 * Drop tables whose columns were renamed, so dbDelta can rebuild them.
+	 *
+	 * dbDelta only ever adds columns. It cannot rename `purpose` to `intent` or
+	 * `channel` to `transport`, so without this the old NOT NULL columns would
+	 * survive with no default and every insert would fail.
+	 *
+	 * The OTP table is safe to drop: it holds nothing but unexpired one-time
+	 * codes, which live for minutes. The worst outcome is a visitor mid-flow
+	 * during an upgrade having to request a new code.
+	 */
+	private static function recreate_renamed_tables(): void {
+		global $wpdb;
+
+		// Version 4 renamed the OTP columns; anything at or above it is fine.
+		if ( (int) get_option( self::DB_VERSION_OPTION, 0 ) >= 4 ) {
+			return;
+		}
+
+		$otp     = self::otp_table();
+		$columns = $wpdb->get_col( "SHOW COLUMNS FROM {$otp}", 0 ); // phpcs:ignore WordPress.DB
+
+		if ( is_array( $columns ) && in_array( 'purpose', $columns, true ) ) {
+			$wpdb->query( "DROP TABLE IF EXISTS {$otp}" ); // phpcs:ignore WordPress.DB
+		}
 	}
 
 	/**

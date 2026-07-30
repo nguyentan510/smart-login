@@ -23,6 +23,7 @@ use SmartLogin\Identity\IdentityRecord;
 use SmartLogin\Identity\OpaqueLogin;
 use SmartLogin\Identity\Resolution;
 use SmartLogin\Identity\VerifiedClaim;
+use SmartLogin\OTP\OtpService;
 use SmartLogin\Settings;
 
 function sl_ctor_is_private( string $fqn ): bool {
@@ -262,6 +263,86 @@ sl_check( 'a phone number is not a valid opaque login', false, OpaqueLogin::is_o
 sl_check( 'an email address is not a valid opaque login', false, OpaqueLogin::is_opaque( 'nhu@example.com' ) );
 sl_check( 'a prefixed phone number is not a valid opaque login', false, OpaqueLogin::is_opaque( 'sl_84969789475' ) );
 sl_check( 'an uppercase hex login is rejected', false, OpaqueLogin::is_opaque( 'sl_ABCDEF0123456789ABCDEF01' ) );
+
+// ---------------------------------------------------------------------
+sl_section( 'A new transport costs one class, and no new intent (Phase 4)' );
+
+// Identity channels and delivery transports are independent axes. Adding a
+// transport must not require an intent constant, a schema change, or an edit to
+// register / login / recover.
+$zns = new class implements \SmartLogin\OTP\Transports\TransportInterface {
+	/** @var array<int,array<string,string>> */
+	public array $sent = array();
+
+	public function id(): string {
+		return 'zns';
+	}
+	public function is_available(): bool {
+		return true;
+	}
+	public function send( string $destination, string $code, array $ctx ) {
+		$this->sent[] = array( 'to' => $destination, 'code' => $code );
+		return true;
+	}
+};
+
+$router = new \SmartLogin\OTP\Transports\TransportRouter( array( 'zns' => $zns ) );
+
+sl_check( 'a third-party transport registers', 'zns', $router->get( 'zns' )->id() );
+sl_check( 'its availability is honoured', true, $router->is_available( 'zns' ) );
+sl_check( 'it delivers', true, $router->send( '84969789475', '123456', array( 'transport' => 'zns' ) ) );
+sl_check( 'it received the code', '123456', $zns->sent[0]['code'] ?? '' );
+sl_check( 'an unknown transport is refused, not guessed', true, is_wp_error( $router->send( '84969789475', '123456', array( 'transport' => 'nope' ) ) ) );
+
+// The property that makes the above scale: four intents, and adding channels or
+// transports adds none. There were six purpose constants before, growing by one
+// per feature, because change_phone / change_email / verify_email were the same
+// intent applied to different channels.
+$intents = array_filter(
+	array_keys( ( new ReflectionClass( OtpService::class ) )->getConstants() ),
+	static function ( string $name ): bool {
+		return 0 === strpos( $name, 'INTENT_' );
+	}
+);
+
+sl_check( 'exactly four intents exist', 4, count( $intents ) );
+sl_check(
+	'and they are the four from the decision table',
+	array( 'register', 'login', 'recover', 'add_identity' ),
+	array( OtpService::INTENT_REGISTER, OtpService::INTENT_LOGIN, OtpService::INTENT_RECOVER, OtpService::INTENT_ADD_IDENTITY )
+);
+
+// ---------------------------------------------------------------------
+sl_section( 'Password policy reaches every path that sets a password (Phase 4)' );
+
+Settings::update( array( 'min_password_length' => 8 ) );
+
+sl_check( 'a short password is refused', true, is_wp_error( \SmartLogin\Auth\PasswordPolicy::validate( 'abc' ) ) );
+sl_check( 'an empty password is refused', 'smart_login_no_password', \SmartLogin\Auth\PasswordPolicy::validate( '' )->get_error_code() );
+sl_check( 'a mismatched confirmation is refused', 'smart_login_password_mismatch', \SmartLogin\Auth\PasswordPolicy::validate( 'correct-horse', 'correct-hors' )->get_error_code() );
+sl_check( 'a good password passes', true, \SmartLogin\Auth\PasswordPolicy::validate( 'correct-horse', 'correct-horse' ) );
+sl_check( 'the configured minimum is honoured', 8, \SmartLogin\Auth\PasswordPolicy::min_length() );
+
+Settings::update( array( 'min_password_length' => 2 ) );
+sl_check( 'the absolute floor overrides a too-low setting', 6, \SmartLogin\Auth\PasswordPolicy::min_length() );
+Settings::update( array( 'min_password_length' => 8 ) );
+
+// ---------------------------------------------------------------------
+sl_section( 'smart_login_phone_is_valid reaches Vietnamese numbers (Phase 4)' );
+
+// The Vietnamese branch used to return before the filter ran, so the documented
+// hook was dead on the default country code — the one nearly every site uses.
+$phone_src = sl_source( 'includes/Identity/class-phone.php' );
+
+sl_assert(
+	'the VN branch no longer returns before the filter',
+	false === strpos( $phone_src, 'return (bool) preg_match( self::VN_MOBILE_NSN, $nsn );' ),
+	'Both branches must fall through to apply_filters().'
+);
+sl_assert(
+	'there is exactly one return path through the filter',
+	1 === substr_count( $phone_src, "apply_filters( 'smart_login_phone_is_valid'" )
+);
 
 // ---------------------------------------------------------------------
 sl_summary( 'Identity core' );

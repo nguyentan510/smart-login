@@ -136,10 +136,22 @@ sl_forbid_pattern(
 sl_section( 'Proof and intent are separate concerns (Phase 4)' );
 
 sl_forbid_pattern(
-	'OTP purposes are not enumerated per feature',
-	'/PURPOSE_CHANGE_PHONE|PURPOSE_CHANGE_EMAIL|PURPOSE_VERIFY_EMAIL/',
+	'OTP intents are not enumerated per channel',
+	'/OtpService::PURPOSE_|PURPOSE_CHANGE_PHONE|PURPOSE_CHANGE_EMAIL|PURPOSE_VERIFY_EMAIL/',
 	array(),
-	'Six purposes conflate proof-of-control with business intent. Replace with (channel, intent) so a new channel adds no constants.'
+	'Six purposes conflated proof-of-control with business intent. Four INTENT_* constants cover every flow, and a new channel adds none.'
+);
+
+// The password policy filter must not be reachable from only one of the two
+// paths that set a password. A policy applied on one path is not a policy.
+// Anchored on call syntax, not on the function name appearing anywhere: a
+// docblock that merely says "Output of wp_hash_password()" is documentation, not
+// a place a password is set.
+sl_require_companion(
+	'password policy is applied wherever a password is set',
+	'/(?:=>|=|\breturn\b)\s*wp_hash_password\(|^\s*wp_set_password\(/m',
+	'/PasswordPolicy::validate\(/',
+	'Both registration and reset must run smart_login_validate_password.'
 );
 
 sl_forbid_pattern(

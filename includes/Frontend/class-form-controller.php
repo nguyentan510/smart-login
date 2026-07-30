@@ -139,7 +139,7 @@ class FormController {
 			return;
 		}
 
-		Flow::set( Flow::STEP_OTP, $result + array( 'purpose' => OtpService::PURPOSE_REGISTER ) );
+		Flow::set( Flow::STEP_OTP, $result + array( 'intent' => OtpService::INTENT_REGISTER ) );
 	}
 
 	private function handle_verify_otp( array $post ): void {
@@ -162,16 +162,16 @@ class FormController {
 
 		$code = $this->extract_code( $post );
 
-		switch ( $session['purpose'] ) {
-			case OtpService::PURPOSE_REGISTER:
+		switch ( $session['intent'] ) {
+			case OtpService::INTENT_REGISTER:
 				$this->finish_registration( $session['token'], $code );
 				break;
 
-			case OtpService::PURPOSE_RESET:
+			case OtpService::INTENT_RECOVER:
 				$this->finish_reset_verification( $session['token'], $code );
 				break;
 
-			case OtpService::PURPOSE_LOGIN:
+			case OtpService::INTENT_LOGIN:
 				$this->finish_device_login( $session['token'], $code );
 				break;
 
@@ -217,7 +217,7 @@ class FormController {
 	}
 
 	private function finish_device_login( string $token, string $code ): void {
-		$row = $this->otp()->verify( $token, $code, OtpService::PURPOSE_LOGIN );
+		$row = $this->otp()->verify( $token, $code, OtpService::INTENT_LOGIN );
 
 		if ( is_wp_error( $row ) ) {
 			$this->fail_otp( $row, $token );
@@ -267,15 +267,15 @@ class FormController {
 		if ( is_wp_error( $result ) ) {
 			// Keep the user on the OTP screen; the old code may still be valid.
 			Notices::add_wp_error( $result );
-			$this->restore_otp_step( $session['token'], $session['purpose'] );
+			$this->restore_otp_step( $session['token'], $session['intent'] );
 			return;
 		}
 
-		PendingSession::start( $result['token'], $session['purpose'] );
+		PendingSession::start( $result['token'], $session['intent'] );
 
 		Notices::add( __( 'Đã gửi lại mã xác thực.', 'smart-login' ), 'success' );
 
-		Flow::set( Flow::STEP_OTP, $result + array( 'purpose' => $session['purpose'] ) );
+		Flow::set( Flow::STEP_OTP, $result + array( 'intent' => $session['intent'] ) );
 	}
 
 	private function handle_login( array $post ): void {
@@ -353,7 +353,7 @@ class FormController {
 
 		$result = $this->otp()->issue(
 			$destination,
-			OtpService::PURPOSE_LOGIN,
+			OtpService::INTENT_LOGIN,
 			array(
 				'user_id'     => $user_id,
 				'redirect_to' => $redirect_to,
@@ -367,11 +367,11 @@ class FormController {
 			return;
 		}
 
-		PendingSession::start( $result['token'], OtpService::PURPOSE_LOGIN );
+		PendingSession::start( $result['token'], OtpService::INTENT_LOGIN );
 
 		Notices::add( __( 'Thiết bị mới được phát hiện. Vui lòng nhập mã xác thực vừa gửi cho bạn.', 'smart-login' ), 'info' );
 
-		Flow::set( Flow::STEP_OTP, $result + array( 'purpose' => OtpService::PURPOSE_LOGIN ) );
+		Flow::set( Flow::STEP_OTP, $result + array( 'intent' => OtpService::INTENT_LOGIN ) );
 	}
 
 	private function complete_login( WP_User $user, string $redirect_to, bool $remember = true ): void {
@@ -397,7 +397,7 @@ class FormController {
 			return;
 		}
 
-		Flow::set( Flow::STEP_OTP, $result + array( 'purpose' => OtpService::PURPOSE_RESET ) );
+		Flow::set( Flow::STEP_OTP, $result + array( 'intent' => OtpService::INTENT_RECOVER ) );
 	}
 
 	private function handle_reset_password( array $post ): void {
@@ -481,20 +481,20 @@ class FormController {
 		}
 
 		$session = PendingSession::get();
-		$this->restore_otp_step( $token, $session['purpose'] ?? '' );
+		$this->restore_otp_step( $token, $session['intent'] ?? '' );
 	}
 
 	/**
 	 * Re-render the OTP screen with the live countdown of the existing code.
 	 */
-	private function restore_otp_step( string $token, string $purpose ): void {
+	private function restore_otp_step( string $token, string $intent ): void {
 		$row = $this->otp()->peek( $token );
 
 		if ( ! $row ) {
 			Flow::set(
 				Flow::STEP_OTP,
 				array(
-					'purpose'    => $purpose,
+					'intent'     => $intent,
 					'expires_in' => 0,
 				)
 			);
@@ -504,11 +504,11 @@ class FormController {
 		Flow::set(
 			Flow::STEP_OTP,
 			array(
-				'purpose'      => $purpose,
+				'intent'       => $intent,
 				'masked'       => RateLimiter::mask_identity( $row['destination'] ),
 				'expires_in'   => $this->otp()->seconds_left( $row ),
 				'resend_after' => 0,
-				'channel'      => $row['channel'],
+				'transport'    => $row['transport'],
 			)
 		);
 	}
