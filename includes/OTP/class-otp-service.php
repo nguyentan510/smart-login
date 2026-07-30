@@ -11,7 +11,12 @@
 
 namespace SmartLogin\OTP;
 
+use SmartLogin\Identity\ChannelRegistry;
+use SmartLogin\Identity\Channels\MailChannel;
+use SmartLogin\Identity\Channels\PhoneChannel;
+use SmartLogin\Identity\Claim;
 use SmartLogin\Identity\Phone;
+use SmartLogin\Identity\VerifiedClaim;
 use SmartLogin\OTP\Channels\ChannelRouter;
 use SmartLogin\Security\AuditLog;
 use SmartLogin\Security\Client;
@@ -298,6 +303,37 @@ class OtpService {
 
 	public function seconds_left( array $row ): int {
 		return max( 0, strtotime( $row['expires_at'] . ' UTC' ) - time() );
+	}
+
+	/**
+	 * Turn a successfully consumed OTP row into proof of control.
+	 *
+	 * This is the PROVE boundary for the OTP method: only a row that came back
+	 * from verify() should reach here, and the resulting VerifiedClaim is what
+	 * AuthProof::from_otp() and the identity directory require.
+	 *
+	 * The identity channel is taken from the row's payload where the flow
+	 * recorded one, and otherwise inferred from the destination. It deliberately
+	 * does not consult ChannelRegistry::enabled(): a code already sent to a
+	 * subject must remain verifiable even if an admin disables that channel
+	 * mid-flow.
+	 *
+	 * Note the row's own `channel` column is the delivery transport (sms|email),
+	 * which is a different axis — see docs/identity-model.md §6.
+	 */
+	public function verified_claim( array $row ): VerifiedClaim {
+		$destination = (string) ( $row['destination'] ?? '' );
+		$payload     = is_array( $row['payload'] ?? null ) ? $row['payload'] : array();
+		$channel_id  = (string) ( $payload['channel'] ?? '' );
+
+		if ( '' === $channel_id ) {
+			$channel_id = ( false !== strpos( $destination, '@' ) ) ? MailChannel::ID : PhoneChannel::ID;
+		}
+
+		$channel = ( new ChannelRegistry() )->get( $channel_id );
+		$subject = $channel ? $channel->normalize( $destination ) : $destination;
+
+		return VerifiedClaim::from( Claim::canonical( $channel_id, $subject ), VerifiedClaim::PROOF_OTP );
 	}
 
 	// -----------------------------------------------------------------

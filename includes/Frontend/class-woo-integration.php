@@ -9,7 +9,6 @@
 namespace SmartLogin\Frontend;
 
 use SmartLogin\Address\AddressFields;
-use SmartLogin\Identity\IdentityResolver;
 use SmartLogin\Identity\Phone;
 use SmartLogin\Identity\UserManager;
 use SmartLogin\Settings;

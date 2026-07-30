@@ -16,7 +16,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 0 — Foundation and contract**
 - [x] **Phase 1 — Identity core (pure, no DB)**
 - [x] **Phase 2 — Persistence**
-- [ ] **Phase 3 — Directory and state machine**
+- [x] **Phase 3 — Directory and state machine**
 - [ ] **Phase 4 — Proof layer: OTP**
 - [ ] **Phase 5 — Profile boundary**
 - [ ] **Phase 6 — Provider lifecycle**
@@ -164,29 +164,78 @@ SMART_LOGIN_ZALO_STAGING_SMOKE_OK
 
 ---
 
-## Phase 3 — Directory and state machine
+## Phase 3 — Directory and state machine ✅
 
-**Build**
+**Delivered**
 
-- `IdentityDirectory::resolve( Claim ): Resolution`
-- `AuthAction` — the decision table from spec §5
-- `AuthProof` with a private constructor; `SessionIssuer::issue()` requires it
-- `OpaqueLogin` wired into both `wp_insert_user()` call sites
-- Admin: "Định danh chính" column + `user_search_columns` so support can search
-  by phone
-- **Delete** `IdentityResolver`, including the `get_user_by( 'login' )` fallback
-- Rewrite to consume the directory: `RegisterHandler`, `PasswordResetHandler`,
-  `LoginHandler`, `AccountProvisioner`, `ContactVerificationService`
+- `IdentityDirectory` — the only resolver. `resolve()`, `resolve_in()`,
+  `resolve_any()`, `link()`, `retire()`, `replace_in_channel()`, `owner()`,
+  `otp_destination()`
+- `AuthAction` — the decision table as data, 16 cells, `decide()` defaulting to
+  `REJECT` so a typo in an intent cannot open a door
+- `AuthProof` — private constructor, three factories; `SessionIssuer::issue()`
+  takes it as the mandatory first argument
+- `OpaqueLogin` wired into both `wp_insert_user()` sites
+- `Admin\UsersColumn` — identity column plus identity-aware user search
+- **Deleted** `IdentityResolver`, and with it the `get_user_by( 'login' )`
+  fallback that made the takeover possible
+- Rewritten to consume the directory: `RegisterHandler`,
+  `PasswordResetHandler`, `LoginHandler`, `ContactVerificationService`,
+  `AccountProvisioner`; `RateLimiter` now normalises through `ChannelRegistry`
 
-Commit per handler, not one large commit. The decision-table tests must be green
-before the first handler is touched.
+**Notes from doing the work**
 
-**Acceptance**
+- **The synthetic email was a second instance of the same defect.** It was
+  `<phone>@phone.invalid` — derivable from the phone, and core resolves
+  `user_email` at `authenticate` priority 20, so it was a typeable identifier
+  that bypassed the directory. Worse, it was never updated on a phone change, so
+  the retired number stayed reachable through the email path. The local part is
+  now the account's opaque token: stable, non-derivable, never needs changing.
+  README documents the old format — Phase 7 fixes that.
+- `unique_login_from_email()`, `provider_login()` and
+  `provider_placeholder_email()` are all deleted. Every `user_login` is opaque
+  now, so there is nothing left to derive.
+- **`ContactVerificationService` is where RETIRED becomes reachable.** It calls
+  `replace_in_channel()`, which retires the old subject before claiming the new
+  one. The pre-refactor code only overwrote a meta value, which left the old
+  identifier live — the actual root cause.
+- **The admin search nearly shipped a real bug.** Appending `OR ID IN (…)` to
+  `WP_User_Query::$query_where` looks natural but AND binds tighter than OR, so
+  `role_clause AND search_clause OR ID IN (…)` would return identity matches
+  regardless of an active role or site filter. Narrowing with `include` instead
+  keeps every other filter intact and needs no SQL surgery. Documented
+  trade-off: an identity match replaces the name/email matches rather than
+  widening them.
+- **`OtpService::verified_claim()` is the PROVE boundary for OTP.** It
+  deliberately does not consult `ChannelRegistry::enabled()` — a code already
+  delivered must stay verifiable even if an admin disables that channel
+  mid-flow.
+- **`AuthProof::from_password()` trusts its caller**, unlike the other two
+  factories. WordPress's own `authenticate` chain is the verifier and it returns
+  a `WP_User`, not a token, so there is nothing stronger to check. The OTP and
+  OAuth factories require a `VerifiedClaim`, which only the PROVE layer can
+  produce.
+- `authenticate_by_phone()` is now `authenticate_by_identity()`: it serves every
+  self-asserted channel, not just phone.
 
-- Fitness tests for Invariant 1 green
-- All 16 decision-table cells green
-- `recover × RETIRED` cannot reach the previous owner
-- No code path issues a session without an `AuthProof`
+**Acceptance — all four met**
+
+- Fitness Invariant 1 fully green
+- All 16 decision-table cells green; contract suite 38 passed / 1 failed, the
+  remainder being `ProfileSeeder` from Phase 5
+- `recover × RETIRED` and `login × RETIRED` both resolve to "no account", so the
+  previous owner is unreachable
+- `SessionIssuer::issue()` requires an `AuthProof`, and `wp_set_auth_cookie()`
+  appears in no other file
+
+Integration gate re-run after the rewrite, on WordPress 7.0.2:
+
+```text
+SMART_LOGIN_AUTH_INTEGRATION_OK
+SMART_LOGIN_GOOGLE_STAGING_SMOKE_OK
+SMART_LOGIN_PROVIDER_LINKING_OK
+SMART_LOGIN_ZALO_STAGING_SMOKE_OK
+```
 
 ---
 

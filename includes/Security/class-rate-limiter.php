@@ -11,7 +11,7 @@
 
 namespace SmartLogin\Security;
 
-use SmartLogin\Identity\IdentityResolver;
+use SmartLogin\Identity\ChannelRegistry;
 use SmartLogin\OTP\OtpRepository;
 use SmartLogin\Settings;
 use WP_Error;
@@ -84,10 +84,18 @@ class RateLimiter {
 	// Login brute-force
 	// -----------------------------------------------------------------
 
+	/**
+	 * Lockouts are keyed on the canonical subject, so `0969789475`,
+	 * `+84 969 789 475` and `84969789475` all share one counter instead of
+	 * offering an attacker three independent budgets.
+	 *
+	 * This is a normalisation call, not an ownership lookup — the registry never
+	 * touches the database here.
+	 */
 	private function login_key( string $identity ): string {
-		$identity   = trim( wp_unslash( $identity ) );
-		$classified = IdentityResolver::classify( $identity );
-		$canonical  = '' !== $classified['value'] ? $classified['value'] : strtolower( $identity );
+		$identity = trim( wp_unslash( $identity ) );
+		$claim    = ( new ChannelRegistry() )->claim_any( $identity );
+		$canonical = $claim->is_empty() ? strtolower( $identity ) : $claim->subject();
 
 		return 'smart_login_lock_' . md5( $canonical . '|' . Client::ip() );
 	}

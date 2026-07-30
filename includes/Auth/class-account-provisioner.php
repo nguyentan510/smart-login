@@ -11,6 +11,7 @@ use SmartLogin\Auth\Providers\ProviderIdentity;
 use SmartLogin\Identity\Claim;
 use SmartLogin\Identity\IdentityRecord;
 use SmartLogin\Identity\IdentityRepository;
+use SmartLogin\Identity\OpaqueLogin;
 use SmartLogin\Identity\Phone;
 use SmartLogin\Identity\UserManager;
 use SmartLogin\Identity\VerifiedClaim;
@@ -83,6 +84,9 @@ final class AccountProvisioner {
 					strtolower( $identity->email )
 				)
 			);
+			// The only route to Resolution::CONFLICT in the whole system:
+			// smartlogin_identities cannot be ambiguous, but two WordPress users
+			// sharing an address can be. Fail closed rather than pick one.
 			if ( count( $ids ) > 1 ) {
 				return new WP_Error( 'smart_login_provider_conflict', __( 'Email đang thuộc về nhiều tài khoản. Không thể tự động liên kết.', 'smart-login' ) );
 			}
@@ -118,11 +122,18 @@ final class AccountProvisioner {
 	}
 
 	private function create_provider_user( ProviderIdentity $identity ) {
-		$email = $identity->email_verified && '' !== $identity->email ? $identity->email : $this->provider_placeholder_email( $identity );
+		// One opaque token, used for both the login and the placeholder mailbox,
+		// so neither can be derived from the provider subject. Generated before
+		// the email so the two agree.
+		$opaque = OpaqueLogin::generate();
+		$email  = $identity->email_verified && '' !== $identity->email
+			? $identity->email
+			: UserManager::synthetic_email( $opaque );
+
 		if ( email_exists( $email ) ) {
 			return new WP_Error( 'smart_login_exists', __( 'Tài khoản đã tồn tại.', 'smart-login' ) );
 		}
-		$login = $this->provider_login( $identity );
+		$login = $opaque;
 		$names = UserManager::split_name( $identity->display_name );
 		$user_id = wp_insert_user(
 			array(
@@ -205,17 +216,4 @@ final class AccountProvisioner {
 		);
 	}
 
-	private function provider_login( ProviderIdentity $identity ): string {
-		$base = sanitize_user( $identity->provider . '-' . substr( sha1( $identity->subject ), 0, 16 ), true );
-		$login = $base;
-		$i = 1;
-		while ( username_exists( $login ) ) {
-			$login = $base . '-' . ++$i;
-		}
-		return $login;
-	}
-
-	private function provider_placeholder_email( ProviderIdentity $identity ): string {
-		return $identity->provider . '-' . substr( sha1( $identity->subject ), 0, 32 ) . '@' . (string) Settings::get( 'synthetic_email_domain', 'phone.invalid' );
-	}
 }

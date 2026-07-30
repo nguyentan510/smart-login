@@ -10,7 +10,7 @@
 
 namespace SmartLogin\Auth;
 
-use SmartLogin\Identity\IdentityResolver;
+use SmartLogin\Identity\IdentityDirectory;
 use SmartLogin\Identity\UserManager;
 use SmartLogin\Security\AuditLog;
 use SmartLogin\Security\Client;
@@ -31,13 +31,16 @@ class LoginHandler {
 	/** @var RateLimiter */
 	private $limiter;
 
-	public function __construct( ?RateLimiter $limiter = null ) {
-		$this->limiter = $limiter ?? new RateLimiter();
+	private IdentityDirectory $directory;
+
+	public function __construct( ?RateLimiter $limiter = null, ?IdentityDirectory $directory = null ) {
+		$this->limiter   = $limiter ?? new RateLimiter();
+		$this->directory = $directory ?? new IdentityDirectory();
 	}
 
 	public function register(): void {
 		add_filter( 'authenticate', array( $this, 'gate_lockout' ), 5, 3 );
-		add_filter( 'authenticate', array( $this, 'authenticate_by_phone' ), 30, 3 );
+		add_filter( 'authenticate', array( $this, 'authenticate_by_identity' ), 30, 3 );
 		add_filter( 'authenticate', array( $this, 'maybe_require_device_otp' ), 40, 3 );
 
 		add_action( 'wp_login_failed', array( $this, 'on_login_failed' ), 10, 2 );
@@ -92,27 +95,44 @@ class LoginHandler {
 	}
 
 	/**
-	 * Core could not resolve the identifier — try it as a phone number.
+	 * Core could not resolve the identifier — ask the identity directory.
+	 *
+	 * Runs at priority 30, after core's own handlers at 20. Core can still
+	 * resolve a real email address, which is intended: wp_users.user_email is
+	 * kept in sync when a user changes it, so it is not a stale shadow copy.
+	 * user_login is, which is exactly why it is opaque and unguessable now.
+	 *
+	 * A RETIRED subject falls through to generic_failure() rather than to its
+	 * previous owner. That is the account-takeover fix at the login path.
 	 *
 	 * @param WP_User|WP_Error|null $user
 	 * @return WP_User|WP_Error|null
 	 */
-	public function authenticate_by_phone( $user, $username, $password ) {
+	public function authenticate_by_identity( $user, $username, $password ) {
 		if ( $user instanceof WP_User ) {
 			return $user;
 		}
 
-		if ( empty( $username ) || empty( $password ) || ! Settings::phone_enabled() ) {
+		if ( empty( $username ) || empty( $password ) ) {
 			return $user;
 		}
 
-		$identity = IdentityResolver::classify( (string) $username );
+		$claim = $this->directory->channels()->claim_any( (string) $username );
 
-		if ( IdentityResolver::TYPE_PHONE !== $identity['type'] || '' === $identity['value'] ) {
+		if ( $claim->is_empty() ) {
 			return $user;
 		}
 
-		$found = IdentityResolver::user_by_phone( $identity['value'] );
+		$decision = AuthAction::for_resolution(
+			AuthAction::LOGIN,
+			$this->directory->resolve( $claim )
+		);
+
+		if ( AuthAction::ISSUE_SESSION !== $decision ) {
+			return $this->generic_failure();
+		}
+
+		$found = $this->directory->owner( $claim );
 
 		if ( ! $found ) {
 			return $this->generic_failure();

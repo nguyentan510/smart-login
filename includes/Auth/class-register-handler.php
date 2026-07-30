@@ -7,9 +7,11 @@
 
 namespace SmartLogin\Auth;
 
-use SmartLogin\Identity\IdentityResolver;
-use SmartLogin\Identity\Phone;
+use SmartLogin\Identity\Claim;
+use SmartLogin\Identity\IdentityDirectory;
+use SmartLogin\Identity\IdentityHistory;
 use SmartLogin\Identity\UserManager;
+use SmartLogin\Identity\VerifiedClaim;
 use SmartLogin\OTP\OtpService;
 use SmartLogin\Security\AuditLog;
 use SmartLogin\Security\RateLimiter;
@@ -23,8 +25,11 @@ class RegisterHandler {
 	/** @var OtpService */
 	private $otp;
 
-	public function __construct( ?OtpService $otp = null ) {
-		$this->otp = $otp ?? new OtpService();
+	private IdentityDirectory $directory;
+
+	public function __construct( ?OtpService $otp = null, ?IdentityDirectory $directory = null ) {
+		$this->otp       = $otp ?? new OtpService();
+		$this->directory = $directory ?? new IdentityDirectory();
 	}
 
 	/**
@@ -35,10 +40,10 @@ class RegisterHandler {
 	 * @return array|WP_Error Result of OtpService::issue().
 	 */
 	public function start( array $input ) {
-		$identity = $this->validate_identity( $input );
+		$claim = $this->validate_identity( $input );
 
-		if ( is_wp_error( $identity ) ) {
-			return $identity;
+		if ( is_wp_error( $claim ) ) {
+			return $claim;
 		}
 
 		$password = $this->validate_password( $input );
@@ -58,9 +63,8 @@ class RegisterHandler {
 		}
 
 		$payload = array(
-			'identity_type' => $identity['type'],
-			'phone'         => IdentityResolver::TYPE_PHONE === $identity['type'] ? $identity['value'] : '',
-			'email'         => IdentityResolver::TYPE_EMAIL === $identity['type'] ? $identity['value'] : '',
+			'channel'       => $claim->channel(),
+			'subject'       => $claim->subject(),
 			'pass_hash'     => wp_hash_password( $password ),
 			'full_name'     => $full_name,
 			'dob'           => self::parse_dob( (string) ( $input['dob'] ?? '' ) ),
@@ -78,12 +82,12 @@ class RegisterHandler {
 
 		AuditLog::record(
 			AuditLog::REGISTER_STARTED,
-			RateLimiter::mask_identity( $identity['value'] ),
-			array( 'type' => $identity['type'] )
+			RateLimiter::mask_identity( $claim->subject() ),
+			array( 'channel' => $claim->channel() )
 		);
 
 		$result = $this->otp->issue(
-			$identity['value'],
+			$claim->subject(),
 			OtpService::PURPOSE_REGISTER,
 			$payload,
 			array( 'user_name' => $full_name )
@@ -117,14 +121,40 @@ class RegisterHandler {
 		$payload = is_array( $row['payload'] ) ? $row['payload'] : array();
 
 		// The destination on the row is authoritative — never the payload, which
-		// the browser could in principle have influenced.
-		if ( IdentityResolver::TYPE_EMAIL === ( $payload['identity_type'] ?? '' ) ) {
-			$payload['email'] = $row['destination'];
-		} else {
-			$payload['phone'] = $row['destination'];
+		// the browser could in principle have influenced. The channel comes from
+		// the payload but is re-validated by the registry, so a tampered value
+		// yields an empty claim rather than a mismatched identity.
+		$claim = $this->directory->channels()->claim(
+			(string) ( $payload['channel'] ?? '' ),
+			(string) $row['destination']
+		);
+
+		if ( $claim->is_empty() ) {
+			return new WP_Error( 'smart_login_bad_identity', __( 'Thông tin định danh không hợp lệ.', 'smart-login' ) );
 		}
 
-		$user_id = UserManager::create_verified_user( $payload );
+		// The OTP proved control of this subject just now.
+		$verified = VerifiedClaim::from( $claim, VerifiedClaim::PROOF_OTP );
+
+		// A subject with a previous owner is a recycled identifier, not the same
+		// person. Note it before the new account exists so the trail is complete.
+		$resolution = $this->directory->resolve( $claim );
+
+		if ( AuthAction::ALREADY_REGISTERED === AuthAction::for_resolution( AuthAction::REGISTER, $resolution ) ) {
+			return new WP_Error( 'smart_login_exists', __( 'Tài khoản đã tồn tại.', 'smart-login' ) );
+		}
+
+		if ( AuthAction::CREATE_NEW_USER === AuthAction::for_resolution( AuthAction::REGISTER, $resolution ) ) {
+			$this->directory->identities()->history()->record(
+				$resolution->prior_user_id(),
+				$claim,
+				IdentityHistory::RELINKED,
+				'subject_reused',
+				'system'
+			);
+		}
+
+		$user_id = UserManager::create_verified_user( $verified, $payload, $this->directory );
 
 		if ( is_wp_error( $user_id ) ) {
 			return $user_id;
@@ -133,7 +163,7 @@ class RegisterHandler {
 		AuditLog::record(
 			AuditLog::USER_REGISTERED,
 			RateLimiter::mask_identity( $row['destination'] ),
-			array( 'type' => $payload['identity_type'] ?? '' ),
+			array( 'channel' => $claim->channel() ),
 			$user_id
 		);
 
@@ -145,7 +175,7 @@ class RegisterHandler {
 		 */
 		do_action( 'smart_login_user_registered', $user_id, $payload );
 
-		$this->sign_in( $user_id );
+		$this->sign_in( $user_id, AuthProof::from_otp( $verified, $user_id ) );
 
 		PendingSession::clear();
 
@@ -155,7 +185,7 @@ class RegisterHandler {
 	/**
 	 * Log the freshly created user in for this and subsequent requests.
 	 */
-	public function sign_in( int $user_id ): void {
+	public function sign_in( int $user_id, AuthProof $proof ): void {
 		$user = get_userdata( $user_id );
 
 		if ( ! $user ) {
@@ -163,6 +193,7 @@ class RegisterHandler {
 		}
 
 		( new SessionIssuer() )->issue(
+			$proof,
 			$user,
 			new AuthContext(
 				array(
@@ -189,7 +220,13 @@ class RegisterHandler {
 	// -----------------------------------------------------------------
 
 	/**
-	 * @return array{type:string,value:string}|WP_Error
+	 * Turn raw form input into a claim this site is willing to register.
+	 *
+	 * Availability is decided by the decision table rather than by an ad-hoc
+	 * uniqueness check, so a recycled subject (RETIRED) is correctly treated as
+	 * available while an owned one (KNOWN) is not.
+	 *
+	 * @return Claim|WP_Error
 	 */
 	private function validate_identity( array $input ) {
 		$raw = (string) ( $input['identity'] ?? $input['phone'] ?? $input['email'] ?? '' );
@@ -204,46 +241,47 @@ class RegisterHandler {
 			);
 		}
 
-		$identity = IdentityResolver::classify( $raw );
+		$claim = $this->directory->channels()->claim_any( $raw );
 
-		if ( IdentityResolver::TYPE_PHONE === $identity['type'] ) {
-			if ( '' === $identity['value'] ) {
-				return new WP_Error( 'smart_login_bad_phone', __( 'Số điện thoại không hợp lệ.', 'smart-login' ) );
-			}
-
-			if ( IdentityResolver::user_by_phone( $identity['value'] ) ) {
-				return new WP_Error(
-					'smart_login_phone_taken',
-					__( 'Số điện thoại này đã được đăng ký. Vui lòng đăng nhập.', 'smart-login' )
-				);
-			}
-
-			return $identity;
+		if ( $claim->is_empty() ) {
+			return new WP_Error(
+				'smart_login_bad_identity',
+				sprintf(
+					/* translators: %s: identifier label, e.g. "Số điện thoại". */
+					__( '%s không hợp lệ.', 'smart-login' ),
+					self::identifier_label()
+				)
+			);
 		}
 
-		if ( IdentityResolver::TYPE_EMAIL === $identity['type'] ) {
-			if ( '' === $identity['value'] ) {
-				return new WP_Error( 'smart_login_bad_email', __( 'Địa chỉ email không hợp lệ.', 'smart-login' ) );
-			}
+		switch ( AuthAction::for_resolution( AuthAction::REGISTER, $this->directory->resolve( $claim ) ) ) {
+			case AuthAction::CREATE_USER:
+			case AuthAction::CREATE_NEW_USER:
+				return $claim;
 
-			if ( email_exists( $identity['value'] ) ) {
+			case AuthAction::ALREADY_REGISTERED:
 				return new WP_Error(
-					'smart_login_email_taken',
-					__( 'Email này đã được đăng ký. Vui lòng đăng nhập.', 'smart-login' )
+					'smart_login_identity_taken',
+					__( 'Thông tin này đã được đăng ký. Vui lòng đăng nhập.', 'smart-login' )
 				);
-			}
 
-			return $identity;
+			default:
+				return new WP_Error( 'smart_login_bad_identity', __( 'Không thể đăng ký với thông tin này.', 'smart-login' ) );
+		}
+	}
+
+	/**
+	 * Human label for the identifier field, driven by which channels are enabled.
+	 */
+	public static function identifier_label(): string {
+		$phone = Settings::phone_enabled();
+		$email = Settings::email_enabled();
+
+		if ( $phone && $email ) {
+			return __( 'Số điện thoại hoặc Email', 'smart-login' );
 		}
 
-		return new WP_Error(
-			'smart_login_bad_identity',
-			sprintf(
-				/* translators: %s: identifier label, e.g. "Số điện thoại". */
-				__( '%s không hợp lệ.', 'smart-login' ),
-				IdentityResolver::identifier_label()
-			)
-		);
+		return $email ? __( 'Email', 'smart-login' ) : __( 'Số điện thoại', 'smart-login' );
 	}
 
 	/**

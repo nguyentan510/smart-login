@@ -12,6 +12,7 @@ namespace SmartLogin\Frontend;
 use SmartLogin\Auth\LoginHandler;
 use SmartLogin\Auth\ContactVerificationService;
 use SmartLogin\Auth\AuthContext;
+use SmartLogin\Auth\AuthProof;
 use SmartLogin\Auth\PostAuthRedirector;
 use SmartLogin\Auth\SessionIssuer;
 use SmartLogin\Auth\PasswordResetHandler;
@@ -196,7 +197,8 @@ class RestController {
 				}
 
 				$context = new AuthContext( array( 'auth_method' => 'otp', 'user_id' => $user_id, 'intended_url' => (string) ( $row['payload']['redirect_to'] ?? '' ) ) );
-				$result = ( new SessionIssuer() )->issue( $user, $context, ! isset( $row['payload']['remember'] ) || ! empty( $row['payload']['remember'] ) );
+				$proof   = AuthProof::from_otp( $this->otp()->verified_claim( $row ), $user_id );
+				$result = ( new SessionIssuer() )->issue( $proof, $user, $context, ! isset( $row['payload']['remember'] ) || ! empty( $row['payload']['remember'] ) );
 				if ( is_wp_error( $result ) ) {
 					return $this->error( $result );
 				}
@@ -245,7 +247,7 @@ class RestController {
 		if ( $user instanceof WP_User ) {
 			$redirect_to = (string) $request->get_param( 'redirect_to' );
 			$context = new AuthContext( array( 'auth_method' => 'password', 'user_id' => $user->ID, 'intended_url' => $redirect_to ) );
-			$result = ( new SessionIssuer() )->issue( $user, $context, true );
+			$result = ( new SessionIssuer() )->issue( AuthProof::from_password( $user ), $user, $context, true );
 			if ( is_wp_error( $result ) ) {
 				return $this->error( $result );
 			}

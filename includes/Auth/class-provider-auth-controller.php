@@ -94,7 +94,14 @@ final class ProviderAuthController {
 		}
 		$context = $resolved['context'];
 		$context->intended_url = (string) ( $transaction['return_url'] ?? '' );
-		$result = ( new SessionIssuer() )->issue( $resolved['user'], $context );
+		$proof = AuthProof::from_oauth(
+			\SmartLogin\Identity\VerifiedClaim::from(
+				\SmartLogin\Identity\Claim::canonical( $identity->provider, $identity->subject ),
+				\SmartLogin\Identity\VerifiedClaim::PROOF_OAUTH
+			),
+			(int) $resolved['user']->ID
+		);
+		$result = ( new SessionIssuer() )->issue( $proof, $resolved['user'], $context );
 		if ( is_wp_error( $result ) ) {
 			$this->fail( $result );
 		}

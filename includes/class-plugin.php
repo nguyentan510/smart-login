@@ -10,6 +10,7 @@ namespace SmartLogin;
 use SmartLogin\Address\AddressRest;
 use SmartLogin\Address\WooAddress;
 use SmartLogin\Admin\SettingsPage;
+use SmartLogin\Admin\UsersColumn;
 use SmartLogin\Admin\WebhookTester;
 use SmartLogin\Auth\LoginHandler;
 use SmartLogin\Auth\ProviderAuthController;
@@ -77,6 +78,11 @@ final class Plugin {
 
 			$this->services['tester'] = new WebhookTester();
 			$this->services['tester']->register();
+
+			// user_login is opaque now, so the Users screen needs the identity
+			// column and identity-aware search to stay usable.
+			$this->services['users_column'] = new UsersColumn();
+			$this->services['users_column']->register();
 		}
 
 		add_action( 'wp_loaded', array( $this, 'maybe_flush_rewrite' ), 99 );

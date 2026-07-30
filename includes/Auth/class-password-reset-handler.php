@@ -7,7 +7,7 @@
 
 namespace SmartLogin\Auth;
 
-use SmartLogin\Identity\IdentityResolver;
+use SmartLogin\Identity\IdentityDirectory;
 use SmartLogin\Identity\UserManager;
 use SmartLogin\OTP\OtpService;
 use SmartLogin\Security\AuditLog;
@@ -23,8 +23,11 @@ class PasswordResetHandler {
 	/** @var OtpService */
 	private $otp;
 
-	public function __construct( ?OtpService $otp = null ) {
-		$this->otp = $otp ?? new OtpService();
+	private IdentityDirectory $directory;
+
+	public function __construct( ?OtpService $otp = null, ?IdentityDirectory $directory = null ) {
+		$this->otp       = $otp ?? new OtpService();
+		$this->directory = $directory ?? new IdentityDirectory();
 	}
 
 	/**
@@ -41,20 +44,28 @@ class PasswordResetHandler {
 				sprintf(
 					/* translators: %s: identifier label. */
 					__( 'Vui lòng nhập %s.', 'smart-login' ),
-					mb_strtolower( IdentityResolver::identifier_label() )
+					mb_strtolower( RegisterHandler::identifier_label() )
 				)
 			);
 		}
 
-		$identity = IdentityResolver::classify( $raw );
+		// A synthetic placeholder address is rejected by MailChannel::is_valid(),
+		// so it cannot produce a claim at all — no special case needed here.
+		$claim = $this->directory->channels()->claim_any( $raw );
 
-		if ( '' === $identity['value'] ) {
+		if ( $claim->is_empty() ) {
 			return new WP_Error( 'smart_login_bad_identity', __( 'Thông tin không hợp lệ.', 'smart-login' ) );
 		}
 
-		$user = IdentityResolver::resolve( $raw );
+		$resolution = $this->directory->resolve( $claim );
+		$decision   = AuthAction::for_resolution( AuthAction::RECOVER, $resolution );
 
-		if ( ! $user ) {
+		// The whole point of the refactor lands on this branch. A subject whose
+		// owner gave it up resolves RETIRED, the table maps that to NO_ACCOUNT,
+		// and the previous owner is unreachable. The pre-refactor code resolved
+		// ownership from wp_users.user_login, reported the old owner, and sent a
+		// reset code to whoever now holds the recycled number.
+		if ( AuthAction::ISSUE_RESET_GRANT !== $decision ) {
 			/**
 			 * Whether to tell the visitor that an identifier is not registered.
 			 * Registration already reveals this, so it is on by default; turn it
@@ -62,7 +73,7 @@ class PasswordResetHandler {
 			 *
 			 * @param bool $reveal
 			 */
-			if ( apply_filters( 'smart_login_reset_reveal_unknown', true ) ) {
+			if ( AuthAction::NO_ACCOUNT === $decision && apply_filters( 'smart_login_reset_reveal_unknown', true ) ) {
 				return new WP_Error(
 					'smart_login_unknown_identity',
 					__( 'Thông tin này chưa được đăng ký. Vui lòng kiểm tra lại hoặc tạo tài khoản mới.', 'smart-login' )
@@ -75,15 +86,14 @@ class PasswordResetHandler {
 			);
 		}
 
-		// A phone-registered account has no real inbox to fall back on.
-		$destination = $identity['value'];
+		$user = get_userdata( $resolution->user_id() );
 
-		if ( IdentityResolver::TYPE_EMAIL === $identity['type'] && UserManager::is_synthetic_email( $destination ) ) {
-			return new WP_Error( 'smart_login_bad_identity', __( 'Thông tin không hợp lệ.', 'smart-login' ) );
+		if ( ! $user ) {
+			return new WP_Error( 'smart_login_no_user', __( 'Không tìm thấy tài khoản.', 'smart-login' ) );
 		}
 
 		$result = $this->otp->issue(
-			$destination,
+			$claim->subject(),
 			OtpService::PURPOSE_RESET,
 			array( 'user_id' => $user->ID ),
 			array( 'user_name' => $user->display_name )
