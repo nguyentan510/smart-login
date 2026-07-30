@@ -93,18 +93,20 @@ class Assets {
 				'nonce'     => wp_create_nonce( 'wp_rest' ),
 				'otpLength' => min( 8, max( 4, Settings::get_int( 'otp_length', 6 ) ) ),
 				'i18n'      => array(
-					'resend'      => __( 'Gửi lại', 'smart-login' ),
-					'resendIn'    => __( 'Gửi lại sau %ds', 'smart-login' ),
-					'expired'     => __( 'Mã đã hết hạn', 'smart-login' ),
-					'sending'     => __( 'Đang gửi…', 'smart-login' ),
-					'showPass'    => __( 'Hiện mật khẩu', 'smart-login' ),
-					'hidePass'    => __( 'Ẩn mật khẩu', 'smart-login' ),
-					'passMatch'   => __( 'Mật khẩu đã khớp.', 'smart-login' ),
+					'resend'       => __( 'Gửi lại', 'smart-login' ),
+					/* translators: %d: seconds remaining before the code can be resent. */
+					'resendIn'     => __( 'Gửi lại sau %ds', 'smart-login' ),
+					'expired'      => __( 'Mã đã hết hạn', 'smart-login' ),
+					'sending'      => __( 'Đang gửi…', 'smart-login' ),
+					'showPass'     => __( 'Hiện mật khẩu', 'smart-login' ),
+					'hidePass'     => __( 'Ẩn mật khẩu', 'smart-login' ),
+					'passMatch'    => __( 'Mật khẩu đã khớp.', 'smart-login' ),
 					'passMismatch' => __( 'Mật khẩu nhập lại không khớp.', 'smart-login' ),
-					'passConfirm' => __( 'Vui lòng nhập lại mật khẩu.', 'smart-login' ),
-					'contactSent' => __( 'Mã OTP đã được gửi tới %s.', 'smart-login' ),
-					'contactDone' => __( 'Thông tin liên hệ đã được xác thực.', 'smart-login' ),
-					'contactWait' => __( 'Đang xử lý…', 'smart-login' ),
+					'passConfirm'  => __( 'Vui lòng nhập lại mật khẩu.', 'smart-login' ),
+					/* translators: %s: masked phone number or email address. */
+					'contactSent'  => __( 'Mã OTP đã được gửi tới %s.', 'smart-login' ),
+					'contactDone'  => __( 'Thông tin liên hệ đã được xác thực.', 'smart-login' ),
+					'contactWait'  => __( 'Đang xử lý…', 'smart-login' ),
 				),
 			)
 		);

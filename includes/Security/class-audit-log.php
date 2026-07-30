@@ -16,21 +16,23 @@ defined( 'ABSPATH' ) || exit;
 
 class AuditLog {
 
-	const REGISTER_STARTED = 'register_started';
-	const OTP_SENT         = 'otp_sent';
-	const OTP_SEND_FAILED  = 'otp_send_failed';
-	const OTP_VERIFIED     = 'otp_verified';
-	const OTP_FAILED       = 'otp_failed';
-	const OTP_EXPIRED      = 'otp_expired';
-	const USER_REGISTERED  = 'user_registered';
-	const LOGIN_SUCCESS    = 'login_success';
-	const LOGIN_FAILED     = 'login_failed';
-	const LOCKOUT          = 'lockout';
-	const RATE_LIMITED     = 'rate_limited';
-	const PASSWORD_RESET   = 'password_reset';
+	const REGISTER_STARTED  = 'register_started';
+	const OTP_SENT          = 'otp_sent';
+	const OTP_SEND_FAILED   = 'otp_send_failed';
+	const OTP_VERIFIED      = 'otp_verified';
+	const OTP_FAILED        = 'otp_failed';
+	const OTP_EXPIRED       = 'otp_expired';
+	const USER_REGISTERED   = 'user_registered';
+	const LOGIN_SUCCESS     = 'login_success';
+	const LOGIN_FAILED      = 'login_failed';
+	const LOCKOUT           = 'lockout';
+	const RATE_LIMITED      = 'rate_limited';
+	const PASSWORD_RESET    = 'password_reset';
 	const PROVIDER_LOGIN    = 'provider_login';
 	const PROVIDER_FAILED   = 'provider_failed';
 	const PROVIDER_LINKED   = 'provider_linked';
+	const PROVIDER_UNLINKED = 'provider_unlinked';
+	const IDENTITY_RETIRED  = 'identity_retired';
 	const CONTACT_PENDING   = 'contact_pending';
 	const CONTACT_VERIFIED  = 'contact_verified';
 

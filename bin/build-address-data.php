@@ -63,9 +63,9 @@ if ( ! $args ) {
 	exit( 1 );
 }
 
-foreach ( $args as $path ) {
-	if ( ! is_readable( $path ) ) {
-		fwrite( STDERR, "Cannot read: {$path}\n" );
+foreach ( $args as $target_path ) {
+	if ( ! is_readable( $target_path ) ) {
+		fwrite( STDERR, "Cannot read: {$target_path}\n" );
 		exit( 1 );
 	}
 }
@@ -73,12 +73,12 @@ foreach ( $args as $path ) {
 /**
  * @return mixed
  */
-function read_json( string $path ) {
-	$raw     = file_get_contents( $path );
+function read_json( string $target_path ) {
+	$raw     = file_get_contents( $target_path );
 	$decoded = json_decode( $raw, true );
 
 	if ( null === $decoded ) {
-		fwrite( STDERR, "Not valid JSON: {$path} (" . json_last_error_msg() . ")\n" );
+		fwrite( STDERR, "Not valid JSON: {$target_path} (" . json_last_error_msg() . ")\n" );
 		exit( 1 );
 	}
 
@@ -152,7 +152,17 @@ function short_name( string $name ): string {
 function unit_type( string $name, string $declared = '' ): string {
 	$slug = AddressNormalizer::slug( '' !== $declared ? $declared : $name );
 
-	foreach ( array( 'dac khu' => 'dac_khu', 'thanh pho' => 'thanh_pho', 'thi tran' => 'thi_tran', 'thi xa' => 'thi_xa', 'phuong' => 'phuong', 'quan' => 'quan', 'huyen' => 'huyen', 'tinh' => 'tinh', 'xa' => 'xa' ) as $needle => $type ) {
+	foreach ( array(
+		'dac khu'   => 'dac_khu',
+		'thanh pho' => 'thanh_pho',
+		'thi tran'  => 'thi_tran',
+		'thi xa'    => 'thi_xa',
+		'phuong'    => 'phuong',
+		'quan'      => 'quan',
+		'huyen'     => 'huyen',
+		'tinh'      => 'tinh',
+		'xa'        => 'xa',
+	) as $needle => $type ) {
 		if ( 0 === strpos( $slug, $needle ) || false !== strpos( $slug, ' ' . $needle . ' ' ) ) {
 			return $type;
 		}
@@ -326,7 +336,7 @@ if ( $problems ) {
 /**
  * Render a PHP array file with a stable, diff-friendly layout.
  */
-function write_php_file( string $path, string $header, array $rows ): void {
+function write_php_file( string $target_path, string $header, array $rows ): void {
 	$out = "<?php\n/**\n * {$header}\n *\n * GENERATED FILE — do not edit by hand.\n * Regenerate with: php bin/build-address-data.php <source.json>\n *\n * @package SmartLogin\n */\n\ndefined( 'ABSPATH' ) || exit;\n\nreturn array(\n";
 
 	foreach ( $rows as $key => $fields ) {
@@ -341,8 +351,8 @@ function write_php_file( string $path, string $header, array $rows ): void {
 
 	$out .= ");\n";
 
-	if ( false === file_put_contents( $path, $out ) ) {
-		fwrite( STDERR, "Failed to write {$path}\n" );
+	if ( false === file_put_contents( $target_path, $out ) ) {
+		fwrite( STDERR, "Failed to write {$target_path}\n" );
 		exit( 1 );
 	}
 }

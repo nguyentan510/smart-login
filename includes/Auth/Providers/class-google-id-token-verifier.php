@@ -22,8 +22,8 @@ final class GoogleIdTokenVerifier {
 			return $this->invalid();
 		}
 
-		$header = $this->decode_json( $parts[0] );
-		$claims = $this->decode_json( $parts[1] );
+		$header    = $this->decode_json( $parts[0] );
+		$claims    = $this->decode_json( $parts[1] );
 		$signature = $this->base64url_decode( $parts[2] );
 		if ( ! is_array( $header ) || ! is_array( $claims ) || false === $signature ) {
 			return $this->invalid();
@@ -62,13 +62,13 @@ final class GoogleIdTokenVerifier {
 			return $cached;
 		}
 
-		$url = (string) apply_filters( 'smart_login_google_certificates_url', 'https://www.googleapis.com/oauth2/v1/certs' );
+		$url      = (string) apply_filters( 'smart_login_google_certificates_url', 'https://www.googleapis.com/oauth2/v1/certs' );
 		$response = wp_remote_get( $url, array( 'timeout' => 15 ) );
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'smart_login_google_keys', __( 'Không thể tải khóa xác thực của Google.', 'smart-login' ) );
 		}
 		$status = (int) wp_remote_retrieve_response_code( $response );
-		$certs = json_decode( (string) wp_remote_retrieve_body( $response ), true );
+		$certs  = json_decode( (string) wp_remote_retrieve_body( $response ), true );
 		if ( 200 !== $status || ! is_array( $certs ) || empty( $certs ) ) {
 			return new WP_Error( 'smart_login_google_keys', __( 'Khóa xác thực của Google không hợp lệ.', 'smart-login' ) );
 		}

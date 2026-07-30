@@ -6,7 +6,7 @@
  * @package SmartLogin
  */
 
-namespace SmartLogin\OTP\Channels;
+namespace SmartLogin\OTP\Transports;
 
 use SmartLogin\Identity\UserManager;
 use SmartLogin\OTP\Placeholders;
@@ -15,7 +15,7 @@ use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
 
-class EmailChannel implements ChannelInterface {
+class MailTransport implements TransportInterface {
 
 	public function id(): string {
 		return 'email';

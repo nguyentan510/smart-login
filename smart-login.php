@@ -18,7 +18,7 @@
 defined( 'ABSPATH' ) || exit;
 
 define( 'SMART_LOGIN_VERSION', '1.0.1' );
-define( 'SMART_LOGIN_DB_VERSION', '2' );
+define( 'SMART_LOGIN_DB_VERSION', '4' );
 define( 'SMART_LOGIN_FILE', __FILE__ );
 define( 'SMART_LOGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SMART_LOGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -61,12 +61,12 @@ if ( version_compare( PHP_VERSION, '8.0', '<' ) ) {
  * Autoloader: SmartLogin\OTP\OtpService -> includes/OTP/class-otp-service.php
  */
 spl_autoload_register(
-	static function ( $class ) {
-		if ( 0 !== strpos( $class, 'SmartLogin\\' ) ) {
+	static function ( $class_name ) {
+		if ( 0 !== strpos( $class_name, 'SmartLogin\\' ) ) {
 			return;
 		}
 
-		$relative = substr( $class, strlen( 'SmartLogin\\' ) );
+		$relative = substr( $class_name, strlen( 'SmartLogin\\' ) );
 		$parts    = explode( '\\', $relative );
 		$short    = array_pop( $parts );
 

@@ -102,14 +102,19 @@ class Phone {
 		$cc = preg_replace( '/[^0-9]/', '', (string) Settings::get( 'default_country_code', '84' ) );
 
 		if ( '84' === $cc && 0 === strpos( $canonical, '84' ) ) {
-			$nsn = substr( $canonical, 2 );
-			return (bool) preg_match( self::VN_MOBILE_NSN, $nsn );
+			// Carrier-prefix validation for Vietnamese numbers.
+			$valid = (bool) preg_match( self::VN_MOBILE_NSN, substr( $canonical, 2 ) );
+		} else {
+			// Generic length check, so the plugin stays usable outside VN.
+			$valid = strlen( $canonical ) >= 8 && strlen( $canonical ) <= 15;
 		}
-
-		$valid = strlen( $canonical ) >= 8 && strlen( $canonical ) <= 15;
 
 		/**
 		 * Allow site owners to plug in their own numbering plan.
+		 *
+		 * Applies to every country code including the default 84. The Vietnamese
+		 * branch used to return before reaching this filter, which made the
+		 * documented hook dead on the one configuration almost every site uses.
 		 *
 		 * @param bool   $valid
 		 * @param string $canonical

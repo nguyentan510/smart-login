@@ -12,6 +12,8 @@ namespace SmartLogin\Frontend;
 
 use SmartLogin\Auth\LoginHandler;
 use SmartLogin\Auth\AuthContext;
+use SmartLogin\Auth\AuthProof;
+use SmartLogin\Auth\IdentityLinkService;
 use SmartLogin\Auth\PostAuthRedirector;
 use SmartLogin\Auth\SessionIssuer;
 use SmartLogin\Auth\PasswordResetHandler;
@@ -56,7 +58,7 @@ class FormController {
 	public function dispatch(): void {
 		Notices::absorb_flash();
 
-		if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) {
+		if ( 'POST' !== strtoupper( sanitize_key( wp_unslash( $_SERVER['REQUEST_METHOD'] ?? '' ) ) ) ) {
 			return;
 		}
 
@@ -93,7 +95,46 @@ class FormController {
 			case 'reset_password':
 				$this->handle_reset_password( $post );
 				break;
+
+			case 'unlink_identity':
+				$this->handle_unlink_identity( $post );
+				break;
 		}
+	}
+
+	/**
+	 * Detach an identity from the signed-in account, without JavaScript.
+	 *
+	 * Redirects back to the same page either way so the notice renders in place
+	 * rather than on a bare POST response.
+	 */
+	private function handle_unlink_identity( array $post ): void {
+		if ( ! is_user_logged_in() ) {
+			Notices::add( __( 'Bạn cần đăng nhập để thực hiện việc này.', 'smart-login' ) );
+			return;
+		}
+
+		if ( ! isset( $post['_wpnonce'] ) || ! wp_verify_nonce( $post['_wpnonce'], 'smart_login_unlink_identity' ) ) {
+			Notices::add( __( 'Phiên làm việc đã hết hạn. Vui lòng tải lại trang.', 'smart-login' ) );
+			return;
+		}
+
+		$result = ( new IdentityLinkService() )->unlink(
+			get_current_user_id(),
+			sanitize_key( (string) ( $post['channel'] ?? '' ) ),
+			(string) ( $post['subject'] ?? '' ),
+			(string) ( $post['password'] ?? '' )
+		);
+
+		// flash(), not add(): the redirect below discards anything not persisted.
+		if ( is_wp_error( $result ) ) {
+			Notices::flash( $result->get_error_message(), 'error' );
+		} else {
+			Notices::flash( __( 'Đã bỏ liên kết.', 'smart-login' ), 'success' );
+		}
+
+		$redirect = (string) ( $post['_redirect'] ?? '' );
+		$this->redirect( '' !== $redirect ? $redirect : home_url( '/' ) );
 	}
 
 	// -----------------------------------------------------------------
@@ -138,7 +179,7 @@ class FormController {
 			return;
 		}
 
-		Flow::set( Flow::STEP_OTP, $result + array( 'purpose' => OtpService::PURPOSE_REGISTER ) );
+		Flow::set( Flow::STEP_OTP, $result + array( 'intent' => OtpService::INTENT_REGISTER ) );
 	}
 
 	private function handle_verify_otp( array $post ): void {
@@ -161,16 +202,16 @@ class FormController {
 
 		$code = $this->extract_code( $post );
 
-		switch ( $session['purpose'] ) {
-			case OtpService::PURPOSE_REGISTER:
+		switch ( $session['intent'] ) {
+			case OtpService::INTENT_REGISTER:
 				$this->finish_registration( $session['token'], $code );
 				break;
 
-			case OtpService::PURPOSE_RESET:
+			case OtpService::INTENT_RECOVER:
 				$this->finish_reset_verification( $session['token'], $code );
 				break;
 
-			case OtpService::PURPOSE_LOGIN:
+			case OtpService::INTENT_LOGIN:
 				$this->finish_device_login( $session['token'], $code );
 				break;
 
@@ -216,7 +257,7 @@ class FormController {
 	}
 
 	private function finish_device_login( string $token, string $code ): void {
-		$row = $this->otp()->verify( $token, $code, OtpService::PURPOSE_LOGIN );
+		$row = $this->otp()->verify( $token, $code, OtpService::INTENT_LOGIN );
 
 		if ( is_wp_error( $row ) ) {
 			$this->fail_otp( $row, $token );
@@ -234,8 +275,15 @@ class FormController {
 			return;
 		}
 
-		$context = new AuthContext( array( 'auth_method' => 'otp', 'user_id' => $user_id, 'intended_url' => (string) ( $row['payload']['redirect_to'] ?? '' ) ) );
-		$result = ( new SessionIssuer() )->issue( $user, $context, ! isset( $row['payload']['remember'] ) || ! empty( $row['payload']['remember'] ) );
+		$context = new AuthContext(
+			array(
+				'auth_method'  => 'otp',
+				'user_id'      => $user_id,
+				'intended_url' => (string) ( $row['payload']['redirect_to'] ?? '' ),
+			)
+		);
+		$proof   = AuthProof::from_otp( $this->otp()->verified_claim( $row ), $user_id );
+		$result  = ( new SessionIssuer() )->issue( $proof, $user, $context, ! isset( $row['payload']['remember'] ) || ! empty( $row['payload']['remember'] ) );
 
 		PendingSession::clear();
 
@@ -265,15 +313,15 @@ class FormController {
 		if ( is_wp_error( $result ) ) {
 			// Keep the user on the OTP screen; the old code may still be valid.
 			Notices::add_wp_error( $result );
-			$this->restore_otp_step( $session['token'], $session['purpose'] );
+			$this->restore_otp_step( $session['token'], $session['intent'] );
 			return;
 		}
 
-		PendingSession::start( $result['token'], $session['purpose'] );
+		PendingSession::start( $result['token'], $session['intent'] );
 
 		Notices::add( __( 'Đã gửi lại mã xác thực.', 'smart-login' ), 'success' );
 
-		Flow::set( Flow::STEP_OTP, $result + array( 'purpose' => $session['purpose'] ) );
+		Flow::set( Flow::STEP_OTP, $result + array( 'intent' => $session['intent'] ) );
 	}
 
 	private function handle_login( array $post ): void {
@@ -307,12 +355,18 @@ class FormController {
 		}
 
 		$handler = new LoginHandler();
-		$user    = $handler->attempt( $identity, $password, $remember );
+		$user    = $handler->attempt( $identity, $password );
 
 		if ( $user instanceof WP_User ) {
 			$redirect_to = (string) ( $post['redirect_to'] ?? '' );
-			$context = new AuthContext( array( 'auth_method' => 'password', 'user_id' => $user->ID, 'intended_url' => $redirect_to ) );
-			$result = ( new SessionIssuer() )->issue( $user, $context, $remember );
+			$context     = new AuthContext(
+				array(
+					'auth_method'  => 'password',
+					'user_id'      => $user->ID,
+					'intended_url' => $redirect_to,
+				)
+			);
+			$result      = ( new SessionIssuer() )->issue( AuthProof::from_password( $user ), $user, $context, $remember );
 			$this->redirect( is_wp_error( $result ) ? LoginHandler::post_login_redirect( $redirect_to ) : ( new PostAuthRedirector() )->redirect( $result, $redirect_to ) );
 			return;
 		}
@@ -351,7 +405,7 @@ class FormController {
 
 		$result = $this->otp()->issue(
 			$destination,
-			OtpService::PURPOSE_LOGIN,
+			OtpService::INTENT_LOGIN,
 			array(
 				'user_id'     => $user_id,
 				'redirect_to' => $redirect_to,
@@ -365,15 +419,26 @@ class FormController {
 			return;
 		}
 
-		PendingSession::start( $result['token'], OtpService::PURPOSE_LOGIN );
+		PendingSession::start( $result['token'], OtpService::INTENT_LOGIN );
 
 		Notices::add( __( 'Thiết bị mới được phát hiện. Vui lòng nhập mã xác thực vừa gửi cho bạn.', 'smart-login' ), 'info' );
 
-		Flow::set( Flow::STEP_OTP, $result + array( 'purpose' => OtpService::PURPOSE_LOGIN ) );
+		Flow::set( Flow::STEP_OTP, $result + array( 'intent' => OtpService::INTENT_LOGIN ) );
 	}
 
 	private function complete_login( WP_User $user, string $redirect_to, bool $remember = true ): void {
-		$result = ( new SessionIssuer() )->issue( $user, new AuthContext( array( 'auth_method' => 'password', 'user_id' => $user->ID, 'intended_url' => $redirect_to ) ), $remember );
+		$result = ( new SessionIssuer() )->issue(
+			AuthProof::from_password( $user ),
+			$user,
+			new AuthContext(
+				array(
+					'auth_method'  => 'password',
+					'user_id'      => $user->ID,
+					'intended_url' => $redirect_to,
+				)
+			),
+			$remember
+		);
 		$this->redirect( is_wp_error( $result ) ? LoginHandler::post_login_redirect( $redirect_to ) : ( new PostAuthRedirector() )->redirect( $result, $redirect_to ) );
 	}
 
@@ -395,7 +460,7 @@ class FormController {
 			return;
 		}
 
-		Flow::set( Flow::STEP_OTP, $result + array( 'purpose' => OtpService::PURPOSE_RESET ) );
+		Flow::set( Flow::STEP_OTP, $result + array( 'intent' => OtpService::INTENT_RECOVER ) );
 	}
 
 	private function handle_reset_password( array $post ): void {
@@ -479,20 +544,20 @@ class FormController {
 		}
 
 		$session = PendingSession::get();
-		$this->restore_otp_step( $token, $session['purpose'] ?? '' );
+		$this->restore_otp_step( $token, $session['intent'] ?? '' );
 	}
 
 	/**
 	 * Re-render the OTP screen with the live countdown of the existing code.
 	 */
-	private function restore_otp_step( string $token, string $purpose ): void {
+	private function restore_otp_step( string $token, string $intent ): void {
 		$row = $this->otp()->peek( $token );
 
 		if ( ! $row ) {
 			Flow::set(
 				Flow::STEP_OTP,
 				array(
-					'purpose'    => $purpose,
+					'intent'     => $intent,
 					'expires_in' => 0,
 				)
 			);
@@ -502,11 +567,11 @@ class FormController {
 		Flow::set(
 			Flow::STEP_OTP,
 			array(
-				'purpose'      => $purpose,
+				'intent'       => $intent,
 				'masked'       => RateLimiter::mask_identity( $row['destination'] ),
 				'expires_in'   => $this->otp()->seconds_left( $row ),
 				'resend_after' => 0,
-				'channel'      => $row['channel'],
+				'transport'    => $row['transport'],
 			)
 		);
 	}

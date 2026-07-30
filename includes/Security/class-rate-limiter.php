@@ -11,7 +11,7 @@
 
 namespace SmartLogin\Security;
 
-use SmartLogin\Identity\IdentityResolver;
+use SmartLogin\Identity\ChannelRegistry;
 use SmartLogin\OTP\OtpRepository;
 use SmartLogin\Settings;
 use WP_Error;
@@ -31,12 +31,12 @@ class RateLimiter {
 	 * Gate an OTP send request.
 	 *
 	 * @param string $destination Canonical phone or email.
-	 * @param string $purpose     register|reset|login|…
+	 * @param string $intent      register|login|recover|add_identity
 	 * @return true|WP_Error
 	 */
-	public function check_otp_send( string $destination, string $purpose ) {
+	public function check_otp_send( string $destination, string $intent ) {
 		$cooldown = Settings::get_int( 'otp_resend_cooldown', 60 );
-		$last     = $this->repo->last_sent_at( $destination, $purpose );
+		$last     = $this->repo->last_sent_at( $destination, $intent );
 
 		if ( $last > 0 && ( time() - $last ) < $cooldown ) {
 			$wait = $cooldown - ( time() - $last );
@@ -75,19 +75,27 @@ class RateLimiter {
 		 *
 		 * @param true|WP_Error $result
 		 * @param string        $destination
-		 * @param string        $purpose
+		 * @param string        $intent
 		 */
-		return apply_filters( 'smart_login_check_otp_send', true, $destination, $purpose );
+		return apply_filters( 'smart_login_check_otp_send', true, $destination, $intent );
 	}
 
 	// -----------------------------------------------------------------
 	// Login brute-force
 	// -----------------------------------------------------------------
 
+	/**
+	 * Lockouts are keyed on the canonical subject, so `0969789475`,
+	 * `+84 969 789 475` and `84969789475` all share one counter instead of
+	 * offering an attacker three independent budgets.
+	 *
+	 * This is a normalisation call, not an ownership lookup — the registry never
+	 * touches the database here.
+	 */
 	private function login_key( string $identity ): string {
-		$identity   = trim( wp_unslash( $identity ) );
-		$classified = IdentityResolver::classify( $identity );
-		$canonical  = '' !== $classified['value'] ? $classified['value'] : strtolower( $identity );
+		$identity  = trim( wp_unslash( $identity ) );
+		$claim     = ( new ChannelRegistry() )->claim_any( $identity );
+		$canonical = $claim->is_empty() ? strtolower( $identity ) : $claim->subject();
 
 		return 'smart_login_lock_' . md5( $canonical . '|' . Client::ip() );
 	}

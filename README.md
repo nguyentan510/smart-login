@@ -19,7 +19,7 @@ Yêu cầu: WordPress 6.0+, PHP 8.0+. WooCommerce là tuỳ chọn.
 ### 1. Tab **Chung**
 - **Đăng nhập bằng**: `Chỉ số điện thoại` (mặc định).
 - **Mã quốc gia mặc định**: `84`.
-- **Domain email ảo**: giữ nguyên `phone.invalid`.
+- **Domain email ảo**: giữ nguyên `phone.invalid`. Phần trước `@` là mã nội bộ, không phải số điện thoại — xem mục Bảo mật.
 
 ### 2. Tab **Push OTP**
 Bật **Kích hoạt**, điền URL gateway và Body, rồi bấm **Gửi thử**. Xem ví dụ cấu hình bên dưới.
@@ -84,12 +84,14 @@ To={{phone_plus}}&From=%2B1XXXXXXXXXX&Body={{code}} is your verification code
 
 Body:
 ```json
-{"phone":"{{phone_plus}}","code":"{{code}}","purpose":"{{purpose}}","expires_at":"{{expires_at}}"}
+{"phone":"{{phone_plus}}","code":"{{code}}","intent":"{{intent}}","expires_at":"{{expires_at}}"}
 ```
 
 ### Danh sách placeholder
 
-`{{destination}}` `{{phone}}` `{{phone_local}}` `{{phone_plus}}` `{{email}}` `{{code}}` `{{purpose}}` `{{channel}}` `{{ttl_seconds}}` `{{ttl_minutes}}` `{{expires_at}}` `{{site_name}}` `{{site_url}}` `{{user_name}}` `{{delivery_id}}`
+`{{destination}}` `{{phone}}` `{{phone_local}}` `{{phone_plus}}` `{{email}}` `{{code}}` `{{intent}}` `{{transport}}` `{{ttl_seconds}}` `{{ttl_minutes}}` `{{expires_at}}` `{{site_name}}` `{{site_url}}` `{{user_name}}` `{{delivery_id}}`
+
+`{{intent}}` là mục đích (`register` / `login` / `recover` / `add_identity`), `{{transport}}` là kênh gửi (`sms` / `email`). Hai thứ này độc lập nhau: thêm một kênh gửi mới không sinh thêm mục đích nào.
 
 Với `application/json`, mọi giá trị được escape tự động nên payload luôn là JSON hợp lệ kể cả khi tên website chứa dấu nháy kép.
 
@@ -155,9 +157,11 @@ Hook khác: `smart_login_otp_code`, `smart_login_otp_sent`, `smart_login_otp_pla
 
 Bộ chọn **Tỉnh/Thành phố → Phường/Xã** theo mô hình hành chính có hiệu lực từ 01/7/2025 (34 tỉnh/thành, ~3.320 phường/xã, đã bỏ cấp huyện).
 
-### Cài dữ liệu hành chính
+### Dữ liệu hành chính
 
-Plugin **không kèm sẵn** dữ liệu — bạn phải sinh ra một lần:
+Plugin **kèm sẵn** bộ dữ liệu trong `data/` — 34 tỉnh/thành và 3.321 phường/xã — nên cài xong là dùng được ngay, không cần bước nào thêm.
+
+Chỉ cần sinh lại khi ranh giới hành chính thay đổi:
 
 1. Tải một bộ JSON 2 cấp, ví dụ [vietmap-company/vietnam_administrative_address](https://github.com/vietmap-company/vietnam_administrative_address) hoặc [qtv100291/Vietnam-administrative-division-json-server](https://github.com/qtv100291/Vietnam-administrative-division-json-server).
 2. Chạy:
@@ -213,11 +217,13 @@ add_action( 'smart_login_address_saved', function ( $user_id, $address ) {
 
 ## Tuỳ biến giao diện
 
-Copy file từ `templates/` sang `yourtheme/smart-login/` và sửa. Ví dụ để đổi form đăng nhập:
+Copy file từ `templates/` sang `yourtheme/smart-login/` và sửa. Màn hình đăng nhập/đăng ký là **`form-auth.php`** — một template gộp cả hai:
 
 ```
-wp-content/themes/your-theme/smart-login/form-login.php
+wp-content/themes/your-theme/smart-login/form-auth.php
 ```
+
+`form-login.php` và `form-register.php` vẫn còn trong `templates/` nhưng **không được nạp** — override chúng sẽ không có tác dụng gì.
 
 Với hai template WooCommerce, đường dẫn theo chuẩn của Woo:
 
@@ -305,7 +311,9 @@ Xem thêm ma trận kiểm thử thủ công 12 kịch bản trong kế hoạch 
 
 ## Lưu ý vận hành
 
-**Email ảo.** Tài khoản đăng ký bằng SĐT nhận địa chỉ `84xxxxxxxxx@phone.invalid`. Đuôi `.invalid` được RFC 2606 dành riêng nên không bao giờ phân giải được — đó là chủ ý. Tuỳ chọn *Chặn email ảo* (bật mặc định) sẽ loại các địa chỉ này khỏi mọi email gửi đi, tránh bounce làm hỏng uy tín domain. **Đừng tắt nó** trừ khi bạn có cách xử lý khác.
+**Email ảo.** Tài khoản đăng ký bằng SĐT nhận địa chỉ dạng `sl_9f2c…@phone.invalid`. Đuôi `.invalid` được RFC 2606 dành riêng nên không bao giờ phân giải được — đó là chủ ý.
+
+Phần trước dấu `@` là mã nội bộ của tài khoản, **không phải số điện thoại**. Hai lý do: WordPress phân giải `user_email` ở `authenticate` priority 20 nên một địa chỉ suy diễn được từ số điện thoại sẽ là một identifier gõ được, đi vòng qua tầng định danh; và nó sẽ không bao giờ được cập nhật khi người dùng đổi số, khiến số cũ vẫn với tới được tài khoản qua đường email. Tuỳ chọn *Chặn email ảo* (bật mặc định) sẽ loại các địa chỉ này khỏi mọi email gửi đi, tránh bounce làm hỏng uy tín domain. **Đừng tắt nó** trừ khi bạn có cách xử lý khác.
 
 **Chi phí SMS.** Với cấu hình mặc định, mỗi người dùng chỉ tốn 1 tin nhắn trọn đời (lúc đăng ký). Bật *OTP cho thiết bị lạ* sẽ làm chi phí tăng đáng kể.
 

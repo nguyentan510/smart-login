@@ -58,11 +58,15 @@ sl_forbid_pattern(
 	'A login phone must never overwrite a delivery contact. Route every write through ProfileSeeder::seed_if_empty().'
 );
 
-sl_forbid_pattern(
-	'checkout does not rely on the value-passed $data of woocommerce_after_checkout_validation',
+// The hook itself is fine — it is the only place with a WP_Error to add to. What
+// is not fine is depending on its $data, which do_action() passes by value. So
+// the rule is a pairing: anything using it must also use the filter that
+// actually returns the posted array.
+sl_require_companion(
+	'checkout mutates posted data on a filter, not on the validation action',
 	'/woocommerce_after_checkout_validation/',
-	array(),
-	'do_action() passes arrays by value, so the ward-name substitution is discarded. Use woocommerce_checkout_posted_data, which has a return value.'
+	'/woocommerce_checkout_posted_data/',
+	'do_action() passes arrays by value, so a substitution made in the validation hook is discarded. woocommerce_checkout_posted_data has a return value.'
 );
 
 // ---------------------------------------------------------------------
@@ -94,10 +98,14 @@ sl_assert(
 	'Add Installer::identity_history_table().'
 );
 
+// Two allowlisted references remain, both of which exist only to remove the
+// table: Installer::drop_legacy_tables() and the uninstall routine. They are the
+// migration itself, not a dependency on it. Both should be deleted once no
+// installation can still be carrying the table.
 sl_forbid_pattern(
-	'the external_identities table is gone (folded into identities)',
+	'the external_identities table is only ever dropped, never used',
 	'/external_identities/',
-	array(),
+	array( 'includes/class-installer.php', 'uninstall.php' ),
 	'Federated providers stop being a special case; one table serves every channel.'
 );
 
@@ -132,10 +140,22 @@ sl_forbid_pattern(
 sl_section( 'Proof and intent are separate concerns (Phase 4)' );
 
 sl_forbid_pattern(
-	'OTP purposes are not enumerated per feature',
-	'/PURPOSE_CHANGE_PHONE|PURPOSE_CHANGE_EMAIL|PURPOSE_VERIFY_EMAIL/',
+	'OTP intents are not enumerated per channel',
+	'/OtpService::PURPOSE_|PURPOSE_CHANGE_PHONE|PURPOSE_CHANGE_EMAIL|PURPOSE_VERIFY_EMAIL/',
 	array(),
-	'Six purposes conflate proof-of-control with business intent. Replace with (channel, intent) so a new channel adds no constants.'
+	'Six purposes conflated proof-of-control with business intent. Four INTENT_* constants cover every flow, and a new channel adds none.'
+);
+
+// The password policy filter must not be reachable from only one of the two
+// paths that set a password. A policy applied on one path is not a policy.
+// Anchored on call syntax, not on the function name appearing anywhere: a
+// docblock that merely says "Output of wp_hash_password()" is documentation, not
+// a place a password is set.
+sl_require_companion(
+	'password policy is applied wherever a password is set',
+	'/(?:=>|=|\breturn\b)\s*wp_hash_password\(|^\s*wp_set_password\(/m',
+	'/PasswordPolicy::validate\(/',
+	'Both registration and reset must run smart_login_validate_password.'
 );
 
 sl_forbid_pattern(
@@ -151,6 +171,30 @@ sl_assert(
 	'smart_login_phone_is_valid applies to Vietnamese numbers too',
 	false === strpos( $phone, 'return (bool) preg_match( self::VN_MOBILE_NSN, $nsn );' ),
 	'The Vietnamese branch returns before the filter runs, so the documented hook is dead on the default 84 country code.'
+);
+
+// ---------------------------------------------------------------------
+sl_section( 'Identity lifecycle (Phase 6)' );
+
+// Retiring an identity is how an account loses a way in. Every caller outside the
+// repository and the directory must go through the service that carries the
+// orphan guard, so a future feature cannot detach the last identity by accident.
+sl_forbid_pattern(
+	'identities are retired only through the directory or the link service',
+	'/->retire\(/',
+	array(
+		'includes/Identity/class-identity-repository.php',
+		'includes/Identity/class-identity-directory.php',
+		'includes/Auth/class-identity-link-service.php',
+	),
+	'IdentityLinkService::unlink() is the only user-facing path, and it refuses to remove the last identity.'
+);
+
+sl_require_companion(
+	'unlink checks the orphan guard and re-authenticates',
+	'/function unlink\(/',
+	'/can_unlink\(.*\R?.*|wp_check_password\(/',
+	'Removing the last identity would lock the owner out with no recovery path, because user_login is opaque.'
 );
 
 // ---------------------------------------------------------------------

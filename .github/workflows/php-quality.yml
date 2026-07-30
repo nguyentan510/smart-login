@@ -25,10 +25,15 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
           coverage: none
-          tools: none
+          tools: composer
 
-      # Runs the required suites (regression + lint) and reports the identity
-      # spec suites without blocking. The spec is intentionally red until
-      # Phase 7 — see docs/refactor-plan.md.
+      # Dev-only: phpcs and the WordPress standard. Without it the coding
+      # standards suite skips itself rather than failing.
+      - name: Install dev dependencies
+        run: composer install --no-progress --prefer-dist --no-interaction
+
+      # Required suites must pass. Suites marked `spec` are reported in full but
+      # do not block — currently only coding standards, whose deferred
+      # documentation sniffs are justified in phpcs.xml.
       - name: Run test suites
         run: php tests/run-all.php

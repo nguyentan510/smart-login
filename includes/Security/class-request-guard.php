@@ -73,7 +73,14 @@ class RequestGuard {
 
 		// Honeypot must be untouched.
 		if ( ! empty( $request[ $honeypot ] ) ) {
-			AuditLog::record( AuditLog::RATE_LIMITED, '', array( 'reason' => 'honeypot', 'action' => $action ) );
+			AuditLog::record(
+				AuditLog::RATE_LIMITED,
+				'',
+				array(
+					'reason' => 'honeypot',
+					'action' => $action,
+				)
+			);
 
 			return new WP_Error(
 				'smart_login_bot',

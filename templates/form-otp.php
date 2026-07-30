@@ -3,11 +3,11 @@
  * OTP verification screen. Override at yourtheme/smart-login/form-otp.php
  *
  * @var array  $notices
- * @var string $purpose
+ * @var string $intent
  * @var string $masked
  * @var int    $expires_in
  * @var int    $resend_after
- * @var string $channel
+ * @var string $transport
  * @var int    $otp_length
  * @var string $dev_code
  * @var bool   $has_session
@@ -22,7 +22,7 @@ use SmartLogin\Security\RequestGuard;
 
 defined( 'ABSPATH' ) || exit;
 
-$sl_back = OtpService::PURPOSE_REGISTER === $purpose ? Flow::STEP_REGISTER : Flow::STEP_LOGIN;
+$sl_back = OtpService::INTENT_REGISTER === $intent ? Flow::STEP_REGISTER : Flow::STEP_LOGIN;
 ?>
 <div class="smart-login smart-login--otp">
 
@@ -41,7 +41,7 @@ $sl_back = OtpService::PURPOSE_REGISTER === $purpose ? Flow::STEP_REGISTER : Flo
 
 		<p class="sl-lead">
 			<?php
-			if ( 'email' === $channel ) {
+			if ( 'email' === $transport ) {
 				printf(
 					/* translators: %s: masked email address. */
 					esc_html__( 'Vui lòng nhập vào mã OTP đã được gửi đến email %s', 'smart-login' ),
@@ -84,13 +84,15 @@ $sl_back = OtpService::PURPOSE_REGISTER === $purpose ? Flow::STEP_REGISTER : Flo
 						pattern="[0-9]*"
 						maxlength="1"
 						autocomplete="<?php echo 0 === $sl_i ? 'one-time-code' : 'off'; ?>"
-						aria-label="<?php
+						aria-label="
+						<?php
 							printf(
 								/* translators: %d: digit position. */
 								esc_attr__( 'Ký tự thứ %d của mã OTP', 'smart-login' ),
-								$sl_i + 1
+								(int) $sl_i + 1
 							);
-						?>"
+						?>
+						"
 						<?php echo 0 === $sl_i ? 'autofocus' : ''; ?>
 					/>
 				<?php endfor; ?>

@@ -9,8 +9,8 @@
 namespace SmartLogin\Frontend;
 
 use SmartLogin\Address\AddressFields;
-use SmartLogin\Identity\IdentityResolver;
 use SmartLogin\Identity\Phone;
+use SmartLogin\Identity\ProfileSeeder;
 use SmartLogin\Identity\UserManager;
 use SmartLogin\Settings;
 
@@ -31,6 +31,7 @@ class WooIntegration {
 		add_action( 'woocommerce_customer_save_address', array( $this, 'sync_phone_from_address' ), 10, 2 );
 
 		add_filter( 'woocommerce_billing_fields', array( $this, 'filter_billing_fields' ), 20, 1 );
+		add_filter( 'woocommerce_shipping_fields', array( $this, 'ensure_shipping_phone' ), 20, 1 );
 
 		// The account template is loaded by Woo, not by a shortcode, so it needs
 		// the plugin's styles and scripts enqueued explicitly.
@@ -129,7 +130,7 @@ class WooIntegration {
 	 *  - The form collects one "Họ tên" field; Woo wants first/last/display.
 	 */
 	public function prepare_account_post(): void {
-		if ( 'POST' !== ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) {
+		if ( 'POST' !== strtoupper( sanitize_key( wp_unslash( $_SERVER['REQUEST_METHOD'] ?? '' ) ) ) ) {
 			return;
 		}
 
@@ -183,7 +184,9 @@ class WooIntegration {
 
 		// phpcs:disable WordPress.Security.NonceVerification -- WooCommerce verified its own nonce.
 		if ( isset( $_POST['smartlogin_dob'] ) ) {
-			$dob = \SmartLogin\Auth\RegisterHandler::parse_dob( (string) wp_unslash( $_POST['smartlogin_dob'] ) );
+			// parse_dob() is the sanitiser: it returns a Y-m-d string or nothing at
+			// all, so an unparseable value cannot reach the database.
+			$dob = \SmartLogin\Auth\RegisterHandler::parse_dob( (string) wp_unslash( $_POST['smartlogin_dob'] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
 			if ( '' !== $dob ) {
 				update_user_meta( $user_id, UserManager::META_DOB, $dob );
@@ -218,9 +221,7 @@ class WooIntegration {
 		if ( $user && ! UserManager::is_synthetic_email( $user->user_email ) ) {
 			delete_user_meta( $user_id, UserManager::META_SYNTHETIC );
 
-			if ( ! get_user_meta( $user_id, 'billing_email', true ) ) {
-				update_user_meta( $user_id, 'billing_email', $user->user_email );
-			}
+			ProfileSeeder::seed_if_empty( $user_id, 'billing_email', (string) $user->user_email );
 		}
 	}
 
@@ -254,10 +255,20 @@ class WooIntegration {
 	}
 
 	/**
-	 * Restore the verified canonical phone after a billing-address edit.
+	 * Pre-fill the billing phone after an address edit, if it is still blank.
 	 *
-	 * A billing form cannot verify ownership, so it must not update the phone
-	 * used for login. ContactVerificationService is the only write path.
+	 * Two separate rules meet here and both matter.
+	 *
+	 * A billing form cannot verify ownership, so it must never update the phone
+	 * used for login — ContactVerificationService is the only write path for
+	 * that, and this method has no route to it.
+	 *
+	 * But the reverse is not symmetric: `billing_phone` is a delivery contact
+	 * with its own purpose. It may legitimately be a family member's number.
+	 * This used to overwrite it unconditionally on every address save, which made
+	 * that impossible — the customer typed a number, WooCommerce saved it, and
+	 * this hook reset it a moment later. Seeding only when empty keeps the
+	 * convenience without taking the field over.
 	 *
 	 * @param int    $user_id
 	 * @param string $load_address billing|shipping
@@ -278,7 +289,7 @@ class WooIntegration {
 			return;
 		}
 
-		update_user_meta( $user_id, 'billing_phone', Phone::to_local( $canonical ) );
+		ProfileSeeder::seed_if_empty( (int) $user_id, 'billing_phone', Phone::to_local( $canonical ) );
 	}
 
 	/**
@@ -293,6 +304,40 @@ class WooIntegration {
 		if ( Settings::is_on( 'woo_relax_billing_email' ) && isset( $fields['billing_email'] ) ) {
 			$fields['billing_email']['required'] = false;
 		}
+
+		return $fields;
+	}
+
+	/**
+	 * Give the recipient's phone number a field of its own.
+	 *
+	 * `billing_phone` is now seeded from the login phone and never overwritten,
+	 * which is the right rule but leaves a gap: a customer whose parcel should
+	 * reach someone else needs a second number. WooCommerce ships
+	 * `shipping_phone` in recent versions; this only adds it when a theme or an
+	 * older release has left it out, and always as an optional field so no
+	 * existing checkout starts failing validation.
+	 *
+	 * Nothing ever seeds this from an identity. It belongs entirely to the
+	 * customer.
+	 *
+	 * @param array $fields
+	 * @return array
+	 */
+	public function ensure_shipping_phone( $fields ) {
+		if ( ! is_array( $fields ) || isset( $fields['shipping_phone'] ) ) {
+			return $fields;
+		}
+
+		$fields['shipping_phone'] = array(
+			'label'        => __( 'Số điện thoại người nhận', 'smart-login' ),
+			'required'     => false,
+			'type'         => 'tel',
+			'class'        => array( 'form-row-wide' ),
+			'validate'     => array( 'phone' ),
+			'autocomplete' => 'tel',
+			'priority'     => 100,
+		);
 
 		return $fields;
 	}
@@ -332,13 +377,13 @@ class WooIntegration {
 	/**
 	 * Nothing left to send to: report success without touching the mailer.
 	 *
-	 * @param null|bool $return
+	 * @param null|bool $is_returning
 	 * @param array     $atts
 	 * @return null|bool
 	 */
-	public function abort_empty_mail( $return, $atts ) {
-		if ( null !== $return ) {
-			return $return;
+	public function abort_empty_mail( $is_returning, $atts ) {
+		if ( null !== $is_returning ) {
+			return $is_returning;
 		}
 
 		$to = $atts['to'] ?? '';
@@ -347,7 +392,7 @@ class WooIntegration {
 			$to = implode( ',', $to );
 		}
 
-		return '' === trim( (string) $to ) ? true : $return;
+		return '' === trim( (string) $to ) ? true : $is_returning;
 	}
 
 	/**

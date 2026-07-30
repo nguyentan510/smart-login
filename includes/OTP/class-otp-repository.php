@@ -26,19 +26,20 @@ class OtpRepository {
 		$ok = $wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			$this->table(),
 			array(
-				'token'       => $data['token'],
-				'purpose'     => $data['purpose'],
-				'channel'     => $data['channel'],
-				'destination' => $data['destination'],
-				'code_hash'   => $data['code_hash'],
-				'payload'     => isset( $data['payload'] ) ? wp_json_encode( $data['payload'] ) : null,
-				'attempts'    => 0,
-				'resend_of'   => $data['resend_of'] ?? null,
-				'ip'          => $data['ip'] ?? null,
-				'created_at'  => $data['created_at'],
-				'expires_at'  => $data['expires_at'],
+				'token'            => $data['token'],
+				'intent'           => $data['intent'],
+				'identity_channel' => (string) ( $data['identity_channel'] ?? '' ),
+				'transport'        => $data['transport'],
+				'destination'      => $data['destination'],
+				'code_hash'        => $data['code_hash'],
+				'payload'          => isset( $data['payload'] ) ? wp_json_encode( $data['payload'] ) : null,
+				'attempts'         => 0,
+				'resend_of'        => $data['resend_of'] ?? null,
+				'ip'               => $data['ip'] ?? null,
+				'created_at'       => $data['created_at'],
+				'expires_at'       => $data['expires_at'],
 			),
-			array( '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%s', '%s' )
+			array( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%s', '%s', '%s' )
 		);
 
 		return $ok ? (int) $wpdb->insert_id : 0;
@@ -125,20 +126,20 @@ class OtpRepository {
 	}
 
 	/**
-	 * Invalidate every live code for a destination/purpose pair.
+	 * Invalidate every live code for a destination/intent pair.
 	 * Called before issuing a fresh one so only the newest code works.
 	 */
-	public function consume_open_codes( string $destination, string $purpose ): void {
+	public function consume_open_codes( string $destination, string $intent ): void {
 		global $wpdb;
 
 		$table = $this->table();
 
 		$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			$wpdb->prepare(
-				"UPDATE {$table} SET consumed_at = %s WHERE destination = %s AND purpose = %s AND consumed_at IS NULL", // phpcs:ignore WordPress.DB.PreparedSQL
+				"UPDATE {$table} SET consumed_at = %s WHERE destination = %s AND intent = %s AND consumed_at IS NULL", // phpcs:ignore WordPress.DB.PreparedSQL
 				current_time( 'mysql', true ),
 				$destination,
-				$purpose
+				$intent
 			)
 		);
 	}
@@ -183,16 +184,16 @@ class OtpRepository {
 	 *
 	 * @return int Unix timestamp, 0 when none.
 	 */
-	public function last_sent_at( string $destination, string $purpose ): int {
+	public function last_sent_at( string $destination, string $intent ): int {
 		global $wpdb;
 
 		$table = $this->table();
 
 		$value = $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			$wpdb->prepare(
-				"SELECT created_at FROM {$table} WHERE destination = %s AND purpose = %s ORDER BY id DESC LIMIT 1", // phpcs:ignore WordPress.DB.PreparedSQL
+				"SELECT created_at FROM {$table} WHERE destination = %s AND intent = %s ORDER BY id DESC LIMIT 1", // phpcs:ignore WordPress.DB.PreparedSQL
 				$destination,
-				$purpose
+				$intent
 			)
 		);
 

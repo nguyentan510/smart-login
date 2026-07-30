@@ -52,7 +52,10 @@ $sl_req = ! empty( $required );
 	<div class="sl-field">
 		<label class="sl-label" for="<?php echo esc_attr( $sl_uid ); ?>-province">
 			<?php esc_html_e( 'Tỉnh/Thành phố', 'smart-login' ); ?>
-			<?php if ( $sl_req ) : ?><span class="sl-required">*</span><?php endif; ?>
+			<?php
+			if ( $sl_req ) :
+				?>
+				<span class="sl-required">*</span><?php endif; ?>
 		</label>
 		<select
 			class="sl-input sl-address__province"
@@ -73,7 +76,10 @@ $sl_req = ! empty( $required );
 	<div class="sl-field">
 		<label class="sl-label" for="<?php echo esc_attr( $sl_uid ); ?>-ward">
 			<?php esc_html_e( 'Phường/Xã', 'smart-login' ); ?>
-			<?php if ( $sl_req ) : ?><span class="sl-required">*</span><?php endif; ?>
+			<?php
+			if ( $sl_req ) :
+				?>
+				<span class="sl-required">*</span><?php endif; ?>
 		</label>
 		<select
 			class="sl-input sl-address__ward"

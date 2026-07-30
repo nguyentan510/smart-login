@@ -16,8 +16,8 @@
 
 defined( 'ABSPATH' ) || exit;
 
-$sl_id       = $id ?? 'sl-' . $name;
-$sl_required = $required ?? true;
+$sl_id           = $id ?? 'sl-' . $name;
+$sl_required     = $required ?? true;
 $sl_autocomplete = $autocomplete ?? ( 'password' === $name ? 'current-password' : 'new-password' );
 $sl_minlength    = isset( $minlength ) ? max( 0, (int) $minlength ) : 0;
 $sl_describedby  = isset( $describedby ) ? trim( (string) $describedby ) : '';
@@ -26,7 +26,10 @@ $sl_disabled     = ! empty( $disabled );
 <div class="sl-field sl-field--password">
 	<label class="sl-label" for="<?php echo esc_attr( $sl_id ); ?>">
 		<?php echo esc_html( $label ); ?>
-		<?php if ( $sl_required ) : ?><span class="sl-required">*</span><?php endif; ?>
+		<?php
+		if ( $sl_required ) :
+			?>
+			<span class="sl-required">*</span><?php endif; ?>
 	</label>
 	<div class="sl-input-wrap">
 		<input
@@ -35,8 +38,14 @@ $sl_disabled     = ! empty( $disabled );
 			id="<?php echo esc_attr( $sl_id ); ?>"
 			name="<?php echo esc_attr( $name ); ?>"
 			autocomplete="<?php echo esc_attr( $sl_autocomplete ); ?>"
-			<?php if ( $sl_minlength > 0 ) : ?>minlength="<?php echo esc_attr( $sl_minlength ); ?>"<?php endif; ?>
-			<?php if ( '' !== $sl_describedby ) : ?>aria-describedby="<?php echo esc_attr( $sl_describedby ); ?>"<?php endif; ?>
+			<?php
+			if ( $sl_minlength > 0 ) :
+				?>
+				minlength="<?php echo esc_attr( $sl_minlength ); ?>"<?php endif; ?>
+			<?php
+			if ( '' !== $sl_describedby ) :
+				?>
+				aria-describedby="<?php echo esc_attr( $sl_describedby ); ?>"<?php endif; ?>
 			<?php echo $sl_disabled ? 'disabled' : ''; ?>
 			<?php echo $sl_required ? 'required' : ''; ?>
 		/>

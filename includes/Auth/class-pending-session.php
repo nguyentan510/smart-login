@@ -24,11 +24,11 @@ class PendingSession {
 	/**
 	 * Remember the token for the pending flow.
 	 */
-	public static function start( string $token, string $purpose ): void {
+	public static function start( string $token, string $intent ): void {
 		$value = wp_json_encode(
 			array(
-				'token'   => $token,
-				'purpose' => $purpose,
+				'token'  => $token,
+				'intent' => $intent,
 			)
 		);
 
@@ -36,7 +36,7 @@ class PendingSession {
 	}
 
 	/**
-	 * @return array{token:string,purpose:string}|null
+	 * @return array{token:string,intent:string}|null
 	 */
 	public static function get(): ?array {
 		if ( empty( $_COOKIE[ self::COOKIE ] ) ) {
@@ -57,8 +57,8 @@ class PendingSession {
 		}
 
 		return array(
-			'token'   => (string) $data['token'],
-			'purpose' => (string) ( $data['purpose'] ?? '' ),
+			'token'  => (string) $data['token'],
+			'intent' => (string) ( $data['intent'] ?? '' ),
 		);
 	}
 

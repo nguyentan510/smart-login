@@ -11,7 +11,9 @@ namespace SmartLogin\Frontend;
 
 use SmartLogin\Auth\LoginHandler;
 use SmartLogin\Auth\ContactVerificationService;
+use SmartLogin\Auth\IdentityLinkService;
 use SmartLogin\Auth\AuthContext;
+use SmartLogin\Auth\AuthProof;
 use SmartLogin\Auth\PostAuthRedirector;
 use SmartLogin\Auth\SessionIssuer;
 use SmartLogin\Auth\PasswordResetHandler;
@@ -75,7 +77,15 @@ class RestController {
 			);
 		}
 
-		foreach ( array( 'contact/start' => 'handle_contact_start', 'contact/verify' => 'handle_contact_verify', 'contact/resend' => 'handle_contact_resend' ) as $route => $callback ) {
+		$authenticated = array(
+			'contact/start'     => 'handle_contact_start',
+			'contact/verify'    => 'handle_contact_verify',
+			'contact/resend'    => 'handle_contact_resend',
+			'identities'        => 'handle_identities',
+			'identities/unlink' => 'handle_identity_unlink',
+		);
+
+		foreach ( $authenticated as $route => $callback ) {
 			register_rest_route(
 				self::REST_NAMESPACE,
 				'/' . $route,
@@ -141,9 +151,9 @@ class RestController {
 			return $this->error( $result );
 		}
 
-		PendingSession::start( $result['token'], OtpService::PURPOSE_REGISTER );
+		PendingSession::start( $result['token'], OtpService::INTENT_REGISTER );
 
-		return $this->success( $this->public_otp_payload( $result, OtpService::PURPOSE_REGISTER ) );
+		return $this->success( $this->public_otp_payload( $result, OtpService::INTENT_REGISTER ) );
 	}
 
 	public function handle_verify( WP_REST_Request $request ) {
@@ -155,8 +165,8 @@ class RestController {
 
 		$code = (string) $request->get_param( 'code' );
 
-		switch ( $session['purpose'] ) {
-			case OtpService::PURPOSE_REGISTER:
+		switch ( $session['intent'] ) {
+			case OtpService::INTENT_REGISTER:
 				$handler = new RegisterHandler( $this->otp() );
 				$user_id = $handler->complete( $session['token'], $code );
 
@@ -171,7 +181,7 @@ class RestController {
 					)
 				);
 
-			case OtpService::PURPOSE_RESET:
+			case OtpService::INTENT_RECOVER:
 				$handler = new PasswordResetHandler( $this->otp() );
 				$grant   = $handler->verify( $session['token'], $code );
 
@@ -181,8 +191,8 @@ class RestController {
 
 				return $this->success( array( 'grant' => $grant ) );
 
-			case OtpService::PURPOSE_LOGIN:
-				$row = $this->otp()->verify( $session['token'], $code, OtpService::PURPOSE_LOGIN );
+			case OtpService::INTENT_LOGIN:
+				$row = $this->otp()->verify( $session['token'], $code, OtpService::INTENT_LOGIN );
 
 				if ( is_wp_error( $row ) ) {
 					return $this->error( $row );
@@ -195,8 +205,15 @@ class RestController {
 					return $this->error( new WP_Error( 'smart_login_no_user', __( 'Không tìm thấy tài khoản.', 'smart-login' ) ) );
 				}
 
-				$context = new AuthContext( array( 'auth_method' => 'otp', 'user_id' => $user_id, 'intended_url' => (string) ( $row['payload']['redirect_to'] ?? '' ) ) );
-				$result = ( new SessionIssuer() )->issue( $user, $context, ! isset( $row['payload']['remember'] ) || ! empty( $row['payload']['remember'] ) );
+				$context = new AuthContext(
+					array(
+						'auth_method'  => 'otp',
+						'user_id'      => $user_id,
+						'intended_url' => (string) ( $row['payload']['redirect_to'] ?? '' ),
+					)
+				);
+				$proof   = AuthProof::from_otp( $this->otp()->verified_claim( $row ), $user_id );
+				$result  = ( new SessionIssuer() )->issue( $proof, $user, $context, ! isset( $row['payload']['remember'] ) || ! empty( $row['payload']['remember'] ) );
 				if ( is_wp_error( $result ) ) {
 					return $this->error( $result );
 				}
@@ -226,9 +243,9 @@ class RestController {
 			return $this->error( $result );
 		}
 
-		PendingSession::start( $result['token'], $session['purpose'] );
+		PendingSession::start( $result['token'], $session['intent'] );
 
-		return $this->success( $this->public_otp_payload( $result, $session['purpose'] ) );
+		return $this->success( $this->public_otp_payload( $result, $session['intent'] ) );
 	}
 
 	public function handle_login( WP_REST_Request $request ) {
@@ -240,12 +257,18 @@ class RestController {
 		}
 
 		$handler = new LoginHandler();
-		$user    = $handler->attempt( $identity, $password, true );
+		$user    = $handler->attempt( $identity, $password );
 
 		if ( $user instanceof WP_User ) {
 			$redirect_to = (string) $request->get_param( 'redirect_to' );
-			$context = new AuthContext( array( 'auth_method' => 'password', 'user_id' => $user->ID, 'intended_url' => $redirect_to ) );
-			$result = ( new SessionIssuer() )->issue( $user, $context, true );
+			$context     = new AuthContext(
+				array(
+					'auth_method'  => 'password',
+					'user_id'      => $user->ID,
+					'intended_url' => $redirect_to,
+				)
+			);
+			$result      = ( new SessionIssuer() )->issue( AuthProof::from_password( $user ), $user, $context, true );
 			if ( is_wp_error( $result ) ) {
 				return $this->error( $result );
 			}
@@ -270,7 +293,7 @@ class RestController {
 
 			$result = $this->otp()->issue(
 				$destination,
-				OtpService::PURPOSE_LOGIN,
+				OtpService::INTENT_LOGIN,
 				array(
 					'user_id'     => $user_id,
 					'redirect_to' => (string) $request->get_param( 'redirect_to' ),
@@ -283,9 +306,9 @@ class RestController {
 				return $this->error( $result );
 			}
 
-			PendingSession::start( $result['token'], OtpService::PURPOSE_LOGIN );
+			PendingSession::start( $result['token'], OtpService::INTENT_LOGIN );
 
-			return $this->success( $this->public_otp_payload( $result, OtpService::PURPOSE_LOGIN ) );
+			return $this->success( $this->public_otp_payload( $result, OtpService::INTENT_LOGIN ) );
 		}
 
 		return $this->error( $user instanceof WP_Error ? $user : new WP_Error( 'smart_login_failed', __( 'Đăng nhập không thành công.', 'smart-login' ) ) );
@@ -299,7 +322,7 @@ class RestController {
 			return $this->error( $result );
 		}
 
-		return $this->success( $this->public_otp_payload( $result, OtpService::PURPOSE_RESET ) );
+		return $this->success( $this->public_otp_payload( $result, OtpService::INTENT_RECOVER ) );
 	}
 
 	public function handle_reset( WP_REST_Request $request ) {
@@ -314,32 +337,74 @@ class RestController {
 	}
 
 	public function handle_contact_start( WP_REST_Request $request ) {
-		$type = sanitize_key( (string) $request->get_param( 'type' ) );
+		$type   = sanitize_key( (string) $request->get_param( 'type' ) );
 		$result = ( new ContactVerificationService( $this->otp() ) )->start( get_current_user_id(), $type, (string) $request->get_param( 'value' ) );
-		return is_wp_error( $result ) ? $this->error( $result ) : $this->success( $this->public_otp_payload( $result, 'phone' === $type ? OtpService::PURPOSE_CHANGE_PHONE : OtpService::PURPOSE_CHANGE_EMAIL ) );
+		return is_wp_error( $result ) ? $this->error( $result ) : $this->success( $this->public_otp_payload( $result, OtpService::INTENT_ADD_IDENTITY ) );
 	}
 
 	public function handle_contact_verify( WP_REST_Request $request ) {
-		$type = sanitize_key( (string) $request->get_param( 'type' ) );
+		$type   = sanitize_key( (string) $request->get_param( 'type' ) );
 		$result = ( new ContactVerificationService( $this->otp() ) )->verify( get_current_user_id(), (string) $request->get_param( 'token' ), (string) $request->get_param( 'code' ), $type );
 		return is_wp_error( $result ) ? $this->error( $result ) : $this->success( $result );
 	}
 
+	/**
+	 * What is linked to the signed-in account.
+	 */
+	public function handle_identities( WP_REST_Request $request ) { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- REST callbacks always receive the request.
+		$service = new IdentityLinkService();
+		$user_id = get_current_user_id();
+
+		return $this->success(
+			array(
+				'identities' => $service->linked( $user_id ),
+				'can_unlink' => $service->can_unlink( $user_id ),
+			)
+		);
+	}
+
+	/**
+	 * Detach one identity. Requires the account password, and refuses to remove
+	 * the last way in.
+	 */
+	public function handle_identity_unlink( WP_REST_Request $request ) {
+		$result = ( new IdentityLinkService() )->unlink(
+			get_current_user_id(),
+			sanitize_key( (string) $request->get_param( 'channel' ) ),
+			(string) $request->get_param( 'subject' ),
+			(string) $request->get_param( 'password' )
+		);
+
+		if ( is_wp_error( $result ) ) {
+			return $this->error( $result );
+		}
+
+		$service = new IdentityLinkService();
+
+		return $this->success(
+			array(
+				'unlinked'   => true,
+				'identities' => $service->linked( get_current_user_id() ),
+				'can_unlink' => $service->can_unlink( get_current_user_id() ),
+			)
+		);
+	}
+
 	public function handle_contact_resend( WP_REST_Request $request ) {
-		$token = (string) $request->get_param( 'token' );
-		$row = $this->otp()->peek( $token );
-		$valid_purpose = $row && in_array( (string) $row['purpose'], array( OtpService::PURPOSE_CHANGE_PHONE, OtpService::PURPOSE_CHANGE_EMAIL ), true );
-		if ( ! $valid_purpose || (int) ( $row['payload']['user_id'] ?? 0 ) !== get_current_user_id() ) {
+		$token        = (string) $request->get_param( 'token' );
+		$row          = $this->otp()->peek( $token );
+		$valid_intent = $row && in_array( (string) $row['intent'], array( OtpService::INTENT_ADD_IDENTITY ), true );
+		if ( ! $valid_intent || (int) ( $row['payload']['user_id'] ?? 0 ) !== get_current_user_id() ) {
 			return $this->error( new WP_Error( 'smart_login_contact_session', __( 'Phiên xác thực thông tin liên hệ không hợp lệ.', 'smart-login' ) ) );
 		}
 		$result = $this->otp()->resend( $token );
-		return is_wp_error( $result ) ? $this->error( $result ) : $this->success( $this->public_otp_payload( $result, (string) $row['purpose'] ) );
+		return is_wp_error( $result ) ? $this->error( $result ) : $this->success( $this->public_otp_payload( $result, (string) $row['intent'] ) );
 	}
 
 	// -----------------------------------------------------------------
 
 	/**
-	 * @return array{token:string,purpose:string}|WP_Error
+	 * @return array{token:string,intent:string}|WP_Error
 	 */
 	private function session_for( WP_REST_Request $request ) {
 		$session = PendingSession::get();
@@ -349,13 +414,13 @@ class RestController {
 		}
 
 		// Cookie-less clients (native apps) may pass the token explicitly.
-		$token   = (string) $request->get_param( 'token' );
-		$purpose = (string) $request->get_param( 'purpose' );
+		$token  = (string) $request->get_param( 'token' );
+		$intent = (string) $request->get_param( 'intent' );
 
-		if ( '' !== $token && '' !== $purpose ) {
+		if ( '' !== $token && '' !== $intent ) {
 			return array(
-				'token'   => $token,
-				'purpose' => $purpose,
+				'token'  => $token,
+				'intent' => $intent,
 			);
 		}
 
@@ -370,13 +435,13 @@ class RestController {
 	 * Strip the internal token from responses for cookie-based clients, but keep
 	 * it for cookie-less ones that have to send it back.
 	 */
-	private function public_otp_payload( array $result, string $purpose ): array {
+	private function public_otp_payload( array $result, string $intent ): array {
 		$payload = array(
-			'purpose'      => $purpose,
+			'intent'       => $intent,
 			'masked'       => $result['masked'],
 			'expires_in'   => $result['expires_in'],
 			'resend_after' => $result['resend_after'],
-			'channel'      => $result['channel'],
+			'channel'      => $result['transport'],
 			'token'        => $result['token'],
 		);
 

@@ -7,6 +7,8 @@
 
 namespace SmartLogin\Identity;
 
+use SmartLogin\Identity\Channels\MailChannel;
+use SmartLogin\Identity\Channels\PhoneChannel;
 use SmartLogin\Settings;
 use WP_Error;
 use WP_User;
@@ -24,22 +26,34 @@ class UserManager {
 	const META_SYNTHETIC      = 'smartlogin_synthetic_email';
 
 	/**
-	 * Build the placeholder address used when a user registers with a phone only.
+	 * Build the placeholder address used when an account has no real inbox.
 	 *
 	 * `.invalid` is reserved by RFC 2606 and can never resolve, which is the
 	 * point: nothing should ever try to deliver mail here.
+	 *
+	 * The local part is the account's opaque login, NOT its phone number. Two
+	 * reasons, both of which cost nothing here and matter a lot:
+	 *
+	 *  1. WordPress core resolves user_email at `authenticate` priority 20, so a
+	 *     derivable placeholder is a typeable identifier that bypasses
+	 *     IdentityDirectory entirely.
+	 *  2. It never has to change. A phone-derived placeholder goes stale the
+	 *     moment the user changes their number, leaving the retired number
+	 *     reachable through the email path — the same defect in a new place.
+	 *
+	 * @param string $opaque_token Output of OpaqueLogin::generate().
 	 */
-	public static function synthetic_email( string $canonical_phone ): string {
+	public static function synthetic_email( string $opaque_token ): string {
 		$domain = (string) Settings::get( 'synthetic_email_domain', 'phone.invalid' );
-		$email  = $canonical_phone . '@' . $domain;
+		$email  = $opaque_token . '@' . $domain;
 
 		/**
 		 * Filter the generated placeholder email.
 		 *
 		 * @param string $email
-		 * @param string $canonical_phone
+		 * @param string $opaque_token
 		 */
-		return (string) apply_filters( 'smart_login_synthetic_email', $email, $canonical_phone );
+		return (string) apply_filters( 'smart_login_synthetic_email', $email, $opaque_token );
 	}
 
 	/**
@@ -71,11 +85,9 @@ class UserManager {
 	 * hashing whatever it is given, so we write a throwaway password first and
 	 * swap in the real hash immediately afterwards.
 	 *
-	 * @param array $data {
-	 *     @type string $identity_type phone|email
-	 *     @type string $phone         Canonical digits (phone registrations).
-	 *     @type string $email         Real address (email registrations).
-	 *     @type string $pass_hash     Output of wp_hash_password().
+	 * @param VerifiedClaim $claim The proven identity this account is built on.
+	 * @param array         $data {
+	 *     @type string $pass_hash Output of wp_hash_password().
 	 *     @type string $full_name
 	 *     @type string $dob
 	 *     @type string $gender
@@ -83,28 +95,25 @@ class UserManager {
 	 * }
 	 * @return int|WP_Error New user ID.
 	 */
-	public static function create_verified_user( array $data ) {
-		$type  = $data['identity_type'] ?? IdentityResolver::TYPE_PHONE;
-		$phone = $data['phone'] ?? '';
-		$email = $data['email'] ?? '';
+	public static function create_verified_user( VerifiedClaim $claim, array $data = array(), ?IdentityDirectory $directory = null ) {
+		$directory = $directory ?? new IdentityDirectory();
+		$channel   = $claim->channel();
+		$subject   = $claim->subject();
 
-		if ( IdentityResolver::TYPE_PHONE === $type ) {
-			if ( '' === $phone ) {
-				return new WP_Error( 'smart_login_no_phone', __( 'Thiếu số điện thoại.', 'smart-login' ) );
-			}
-			$login = $phone;
-			$mail  = '' !== $email ? $email : self::synthetic_email( $phone );
-		} else {
-			if ( '' === $email ) {
-				return new WP_Error( 'smart_login_no_email', __( 'Thiếu địa chỉ email.', 'smart-login' ) );
-			}
-			$login = self::unique_login_from_email( $email );
-			$mail  = $email;
+		if ( '' === $subject ) {
+			return new WP_Error( 'smart_login_no_identity', __( 'Thiếu thông tin định danh.', 'smart-login' ) );
 		}
 
-		if ( username_exists( $login ) ) {
+		// Ownership is the directory's question, not a uniqueness check here.
+		if ( $directory->resolve( $claim->claim() )->has_owner() ) {
 			return new WP_Error( 'smart_login_exists', __( 'Tài khoản đã tồn tại.', 'smart-login' ) );
 		}
+
+		// One opaque token serves as both the login and the placeholder mailbox,
+		// so neither is derivable from anything the user typed.
+		$login    = OpaqueLogin::generate();
+		$is_email = MailChannel::ID === $channel;
+		$mail     = $is_email ? $subject : self::synthetic_email( $login );
 
 		if ( email_exists( $mail ) ) {
 			return new WP_Error( 'smart_login_exists', __( 'Tài khoản đã tồn tại.', 'smart-login' ) );
@@ -130,24 +139,39 @@ class UserManager {
 			return $user_id;
 		}
 
+		// The identity row is the source of truth, so it has to succeed. Losing a
+		// race here means another request claimed the subject in between; roll the
+		// half-built account back rather than leave it stranded without identity.
+		if ( ! $directory->link( (int) $user_id, $claim, IdentityRecord::BY_REGISTRATION, true ) ) {
+			if ( ! function_exists( 'wp_delete_user' ) ) {
+				require_once ABSPATH . 'wp-admin/includes/user.php';
+			}
+			wp_delete_user( (int) $user_id );
+
+			return new WP_Error( 'smart_login_exists', __( 'Tài khoản đã tồn tại.', 'smart-login' ) );
+		}
+
 		self::apply_password_hash( (int) $user_id, (string) ( $data['pass_hash'] ?? '' ) );
 
 		$now = current_time( 'mysql', true );
 
-		if ( '' !== $phone ) {
-			update_user_meta( $user_id, self::META_PHONE, $phone );
+		// Everything below is a DERIVED MIRROR of the identity row, kept because
+		// README documents these meta keys as a public contract for other plugins.
+		// Nothing reads them to answer "who owns this subject" — see Invariant 1.
+		if ( PhoneChannel::ID === $channel ) {
+			update_user_meta( $user_id, self::META_PHONE, $subject );
 			update_user_meta( $user_id, self::META_PHONE_VERIFIED, $now );
 
 			if ( Settings::is_on( 'woo_sync_billing_phone' ) ) {
-				update_user_meta( $user_id, 'billing_phone', Phone::to_local( $phone ) );
+				ProfileSeeder::seed_if_empty( (int) $user_id, 'billing_phone', Phone::to_local( $subject ) );
 			}
 		}
 
 		if ( self::is_synthetic_email( $mail ) ) {
 			update_user_meta( $user_id, self::META_SYNTHETIC, 1 );
-		} elseif ( IdentityResolver::TYPE_EMAIL === $type ) {
+		} elseif ( $is_email ) {
 			update_user_meta( $user_id, self::META_EMAIL_VERIFIED, $now );
-			update_user_meta( $user_id, 'billing_email', $mail );
+			ProfileSeeder::seed_if_empty( (int) $user_id, 'billing_email', $mail );
 		}
 
 		if ( ! empty( $data['dob'] ) ) {
@@ -163,8 +187,13 @@ class UserManager {
 		}
 
 		if ( '' !== $names['first'] ) {
-			update_user_meta( $user_id, 'billing_first_name', $names['first'] );
-			update_user_meta( $user_id, 'billing_last_name', $names['last'] );
+			ProfileSeeder::seed_many(
+				(int) $user_id,
+				array(
+					'billing_first_name' => $names['first'],
+					'billing_last_name'  => $names['last'],
+				)
+			);
 		}
 
 		return (int) $user_id;
@@ -234,26 +263,6 @@ class UserManager {
 			'first' => $given,
 			'last'  => implode( ' ', $parts ),
 		);
-	}
-
-	/**
-	 * Derive a free user_login from an email address.
-	 */
-	private static function unique_login_from_email( string $email ): string {
-		$base = sanitize_user( current( explode( '@', $email ) ), true );
-
-		if ( '' === $base ) {
-			$base = 'user';
-		}
-
-		$login = $base;
-		$i     = 1;
-
-		while ( username_exists( $login ) ) {
-			$login = $base . ++$i;
-		}
-
-		return $login;
 	}
 
 	/**

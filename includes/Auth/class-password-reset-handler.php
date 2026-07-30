@@ -7,7 +7,7 @@
 
 namespace SmartLogin\Auth;
 
-use SmartLogin\Identity\IdentityResolver;
+use SmartLogin\Identity\IdentityDirectory;
 use SmartLogin\Identity\UserManager;
 use SmartLogin\OTP\OtpService;
 use SmartLogin\Security\AuditLog;
@@ -23,8 +23,11 @@ class PasswordResetHandler {
 	/** @var OtpService */
 	private $otp;
 
-	public function __construct( ?OtpService $otp = null ) {
-		$this->otp = $otp ?? new OtpService();
+	private IdentityDirectory $directory;
+
+	public function __construct( ?OtpService $otp = null, ?IdentityDirectory $directory = null ) {
+		$this->otp       = $otp ?? new OtpService();
+		$this->directory = $directory ?? new IdentityDirectory();
 	}
 
 	/**
@@ -41,20 +44,28 @@ class PasswordResetHandler {
 				sprintf(
 					/* translators: %s: identifier label. */
 					__( 'Vui lòng nhập %s.', 'smart-login' ),
-					mb_strtolower( IdentityResolver::identifier_label() )
+					mb_strtolower( RegisterHandler::identifier_label() )
 				)
 			);
 		}
 
-		$identity = IdentityResolver::classify( $raw );
+		// A synthetic placeholder address is rejected by MailChannel::is_valid(),
+		// so it cannot produce a claim at all — no special case needed here.
+		$claim = $this->directory->channels()->claim_any( $raw );
 
-		if ( '' === $identity['value'] ) {
+		if ( $claim->is_empty() ) {
 			return new WP_Error( 'smart_login_bad_identity', __( 'Thông tin không hợp lệ.', 'smart-login' ) );
 		}
 
-		$user = IdentityResolver::resolve( $raw );
+		$resolution = $this->directory->resolve( $claim );
+		$decision   = AuthAction::for_resolution( AuthAction::RECOVER, $resolution );
 
-		if ( ! $user ) {
+		// The whole point of the refactor lands on this branch. A subject whose
+		// owner gave it up resolves RETIRED, the table maps that to NO_ACCOUNT,
+		// and the previous owner is unreachable. The pre-refactor code resolved
+		// ownership from wp_users.user_login, reported the old owner, and sent a
+		// reset code to whoever now holds the recycled number.
+		if ( AuthAction::ISSUE_RESET_GRANT !== $decision ) {
 			/**
 			 * Whether to tell the visitor that an identifier is not registered.
 			 * Registration already reveals this, so it is on by default; turn it
@@ -62,7 +73,7 @@ class PasswordResetHandler {
 			 *
 			 * @param bool $reveal
 			 */
-			if ( apply_filters( 'smart_login_reset_reveal_unknown', true ) ) {
+			if ( AuthAction::NO_ACCOUNT === $decision && apply_filters( 'smart_login_reset_reveal_unknown', true ) ) {
 				return new WP_Error(
 					'smart_login_unknown_identity',
 					__( 'Thông tin này chưa được đăng ký. Vui lòng kiểm tra lại hoặc tạo tài khoản mới.', 'smart-login' )
@@ -75,16 +86,15 @@ class PasswordResetHandler {
 			);
 		}
 
-		// A phone-registered account has no real inbox to fall back on.
-		$destination = $identity['value'];
+		$user = get_userdata( $resolution->user_id() );
 
-		if ( IdentityResolver::TYPE_EMAIL === $identity['type'] && UserManager::is_synthetic_email( $destination ) ) {
-			return new WP_Error( 'smart_login_bad_identity', __( 'Thông tin không hợp lệ.', 'smart-login' ) );
+		if ( ! $user ) {
+			return new WP_Error( 'smart_login_no_user', __( 'Không tìm thấy tài khoản.', 'smart-login' ) );
 		}
 
 		$result = $this->otp->issue(
-			$destination,
-			OtpService::PURPOSE_RESET,
+			$claim->subject(),
+			OtpService::INTENT_RECOVER,
 			array( 'user_id' => $user->ID ),
 			array( 'user_name' => $user->display_name )
 		);
@@ -93,7 +103,7 @@ class PasswordResetHandler {
 			return $result;
 		}
 
-		PendingSession::start( $result['token'], OtpService::PURPOSE_RESET );
+		PendingSession::start( $result['token'], OtpService::INTENT_RECOVER );
 
 		return $result;
 	}
@@ -104,13 +114,13 @@ class PasswordResetHandler {
 	 * @return string|WP_Error The grant token.
 	 */
 	public function verify( string $token, string $code ) {
-		$row = $this->otp->verify( $token, $code, OtpService::PURPOSE_RESET );
+		$row = $this->otp->verify( $token, $code, OtpService::INTENT_RECOVER );
 
 		if ( is_wp_error( $row ) ) {
 			return $row;
 		}
 
-		if ( OtpService::PURPOSE_RESET !== $row['purpose'] ) {
+		if ( OtpService::INTENT_RECOVER !== $row['intent'] ) {
 			return new WP_Error( 'smart_login_wrong_purpose', __( 'Phiên xác thực không hợp lệ.', 'smart-login' ) );
 		}
 
@@ -140,26 +150,17 @@ class PasswordResetHandler {
 
 		$password = (string) wp_unslash( $input['password'] ?? '' );
 		$confirm  = (string) wp_unslash( $input['password_confirm'] ?? '' );
-		$min      = max( 6, Settings::get_int( 'min_password_length', 8 ) );
 
-		if ( mb_strlen( $password ) < $min ) {
-			// The grant was consumed, so hand back a fresh one rather than
-			// making the user redo the whole OTP flow over a typo.
-			return new WP_Error(
-				'smart_login_weak_password',
-				sprintf(
-					/* translators: %d: minimum length. */
-					__( 'Mật khẩu phải có ít nhất %d ký tự.', 'smart-login' ),
-					$min
-				),
-				array( 'grant' => PendingSession::grant_password_reset( $user_id ) )
-			);
-		}
+		// The same policy as registration, including the
+		// smart_login_validate_password filter, which used to apply only there.
+		$verdict = PasswordPolicy::validate( $password, $confirm );
 
-		if ( $password !== $confirm ) {
+		if ( is_wp_error( $verdict ) ) {
+			// The grant was consumed, so hand back a fresh one rather than making
+			// the user redo the whole OTP flow over a typo.
 			return new WP_Error(
-				'smart_login_password_mismatch',
-				__( 'Mật khẩu nhập lại không khớp.', 'smart-login' ),
+				$verdict->get_error_code(),
+				$verdict->get_error_message(),
 				array( 'grant' => PendingSession::grant_password_reset( $user_id ) )
 			);
 		}

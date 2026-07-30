@@ -14,6 +14,9 @@ define( 'SMART_LOGIN_VERSION', '1.0.1' );
 define( 'SMART_LOGIN_DIR', dirname( __DIR__ ) . '/' );
 define( 'SMART_LOGIN_BASENAME', 'smart-login/smart-login.php' );
 define( 'HOUR_IN_SECONDS', 3600 );
+define( 'ARRAY_A', 'ARRAY_A' );
+define( 'ARRAY_N', 'ARRAY_N' );
+define( 'OBJECT', 'OBJECT' );
 define( 'MINUTE_IN_SECONDS', 60 );
 define( 'DAY_IN_SECONDS', 86400 );
 
@@ -55,6 +58,26 @@ function delete_transient( $name ) {
 
 function apply_filters( $hook, $value ) {
 	return $value;
+}
+
+$GLOBALS['sl_user_meta'] = array();
+
+function get_user_meta( $user_id, $key = '', $single = false ) {
+	$value = $GLOBALS['sl_user_meta'][ (int) $user_id ][ $key ] ?? '';
+
+	return $single ? $value : ( '' === $value ? array() : array( $value ) );
+}
+
+function update_user_meta( $user_id, $key, $value ) {
+	$GLOBALS['sl_user_meta'][ (int) $user_id ][ $key ] = $value;
+
+	return true;
+}
+
+function delete_user_meta( $user_id, $key ) {
+	unset( $GLOBALS['sl_user_meta'][ (int) $user_id ][ $key ] );
+
+	return true;
 }
 
 function do_action( $hook ) {}
@@ -183,6 +206,83 @@ function wp_remote_retrieve_response_code( $response ) {
 function wp_remote_retrieve_body( $response ) {
 	return (string) ( $response['body'] ?? '' );
 }
+
+/**
+ * Minimal $wpdb so repository code can be exercised without MySQL.
+ *
+ * Deliberately dumb: it does not parse SQL. Each getter returns whatever the
+ * test put in the matching global, which is enough to drive code paths whose
+ * logic lives in PHP rather than in the query. Anything that depends on real SQL
+ * semantics belongs in the integration gate, not here.
+ */
+class SmartLoginStubWpdb {
+
+	public $prefix = 'wp_';
+	public $users = 'wp_users';
+	public $usermeta = 'wp_usermeta';
+	public $last_error = '';
+	public $insert_id = 1;
+
+	/** @var array<int,array<string,mixed>> Every write this stub received. */
+	public $writes = array();
+
+	public function prepare( $query, ...$args ) {
+		// Close enough for tests: swap placeholders for the literal values.
+		$query = str_replace( array( '%d', '%s' ), '%s', $query );
+
+		return $args ? vsprintf( $query, array_map( 'strval', $args ) ) : $query;
+	}
+
+	public function get_var( $query = null ) {
+		return $GLOBALS['sl_wpdb_var'] ?? null;
+	}
+
+	public function get_row( $query = null, $output = null ) {
+		return $GLOBALS['sl_wpdb_row'] ?? null;
+	}
+
+	public function get_results( $query = null, $output = null ) {
+		return $GLOBALS['sl_wpdb_results'] ?? array();
+	}
+
+	public function get_col( $query = null, $index = 0 ) {
+		return $GLOBALS['sl_wpdb_col'] ?? array();
+	}
+
+	public function insert( $table, $data, $format = null ) {
+		$this->writes[] = array( 'op' => 'insert', 'table' => $table, 'data' => $data );
+
+		return $GLOBALS['sl_wpdb_insert_result'] ?? 1;
+	}
+
+	public function update( $table, $data, $where, $format = null, $where_format = null ) {
+		$this->writes[] = array( 'op' => 'update', 'table' => $table, 'data' => $data );
+
+		return $GLOBALS['sl_wpdb_update_result'] ?? 1;
+	}
+
+	public function delete( $table, $where, $where_format = null ) {
+		$this->writes[] = array( 'op' => 'delete', 'table' => $table, 'where' => $where );
+
+		return $GLOBALS['sl_wpdb_delete_result'] ?? 1;
+	}
+
+	public function query( $query ) {
+		$this->writes[] = array( 'op' => 'query', 'sql' => $query );
+
+		return 1;
+	}
+
+	public function suppress_errors( $suppress = true ) {
+		return false;
+	}
+
+	public function get_charset_collate() {
+		return 'DEFAULT CHARACTER SET utf8mb4';
+	}
+}
+
+$GLOBALS['wpdb'] = new SmartLoginStubWpdb();
 
 class WP_Error {
 

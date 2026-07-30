@@ -19,7 +19,7 @@ class Placeholders {
 	 *
 	 * @param string $destination Canonical phone digits or email address.
 	 * @param string $code        The plaintext code (in memory only).
-	 * @param array  $ctx         purpose, channel, expires_at, user_name…
+	 * @param array  $ctx         intent, transport, expires_at, user_name…
 	 */
 	public static function build( string $destination, string $code, array $ctx ): array {
 		$ttl        = (int) ( $ctx['ttl_seconds'] ?? Settings::get_int( 'otp_ttl', 300 ) );
@@ -33,8 +33,8 @@ class Placeholders {
 			'phone_plus'  => $is_email ? '' : '+' . $destination,
 			'email'       => $is_email ? $destination : '',
 			'code'        => $code,
-			'purpose'     => (string) ( $ctx['purpose'] ?? '' ),
-			'channel'     => (string) ( $ctx['channel'] ?? '' ),
+			'intent'      => (string) ( $ctx['intent'] ?? '' ),
+			'transport'   => (string) ( $ctx['transport'] ?? '' ),
 			'ttl_seconds' => (string) $ttl,
 			'ttl_minutes' => (string) max( 1, (int) round( $ttl / 60 ) ),
 			'expires_at'  => wp_date( 'H:i d/m/Y', $expires_ts ),
@@ -95,8 +95,8 @@ class Placeholders {
 			'{{phone_plus}}'  => __( 'SĐT dạng quốc tế — +84969789475', 'smart-login' ),
 			'{{email}}'       => __( 'Email nhận mã (rỗng nếu gửi SMS)', 'smart-login' ),
 			'{{code}}'        => __( 'Mã OTP', 'smart-login' ),
-			'{{purpose}}'     => __( 'Mục đích: register / reset / login', 'smart-login' ),
-			'{{channel}}'     => __( 'Kênh gửi: sms / email', 'smart-login' ),
+			'{{intent}}'      => __( 'Mục đích: register / login / recover / add_identity', 'smart-login' ),
+			'{{transport}}'   => __( 'Kênh gửi: sms / email', 'smart-login' ),
 			'{{ttl_seconds}}' => __( 'Thời gian hiệu lực tính bằng giây', 'smart-login' ),
 			'{{ttl_minutes}}' => __( 'Thời gian hiệu lực tính bằng phút', 'smart-login' ),
 			'{{expires_at}}'  => __( 'Thời điểm hết hạn', 'smart-login' ),

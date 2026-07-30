@@ -53,8 +53,8 @@ final class ProviderCredentials {
 	}
 
 	public static function source( string $provider ): string {
-		$provider = sanitize_key( $provider );
-		$id_constant = 'google' === $provider ? 'SMART_LOGIN_GOOGLE_CLIENT_ID' : 'SMART_LOGIN_ZALO_APP_ID';
+		$provider        = sanitize_key( $provider );
+		$id_constant     = 'google' === $provider ? 'SMART_LOGIN_GOOGLE_CLIENT_ID' : 'SMART_LOGIN_ZALO_APP_ID';
 		$secret_constant = 'google' === $provider ? 'SMART_LOGIN_GOOGLE_CLIENT_SECRET' : 'SMART_LOGIN_ZALO_APP_SECRET';
 		if ( '' !== self::constant_value( $id_constant ) || '' !== self::constant_value( $secret_constant ) ) {
 			return 'environment';
@@ -72,15 +72,15 @@ final class ProviderCredentials {
 		if ( ! is_array( $record ) ) {
 			return false;
 		}
-		$stored = get_option( self::SECRET_OPTION, array() );
-		$stored = is_array( $stored ) ? $stored : array();
+		$stored              = get_option( self::SECRET_OPTION, array() );
+		$stored              = is_array( $stored ) ? $stored : array();
 		$stored[ $provider ] = $record;
 		return update_option( self::SECRET_OPTION, $stored );
 	}
 
 	public static function clear_secret( string $provider ): bool {
 		$provider = sanitize_key( $provider );
-		$stored = get_option( self::SECRET_OPTION, array() );
+		$stored   = get_option( self::SECRET_OPTION, array() );
 		if ( ! is_array( $stored ) || ! array_key_exists( $provider, $stored ) ) {
 			return true;
 		}
@@ -100,8 +100,8 @@ final class ProviderCredentials {
 		if ( ! function_exists( 'openssl_encrypt' ) ) {
 			return null;
 		}
-		$iv  = random_bytes( 12 );
-		$tag = '';
+		$iv         = random_bytes( 12 );
+		$tag        = '';
 		$ciphertext = openssl_encrypt( $plaintext, self::CIPHER, self::key(), OPENSSL_RAW_DATA, $iv, $tag );
 		if ( false === $ciphertext || '' === $tag ) {
 			return null;
@@ -123,8 +123,8 @@ final class ProviderCredentials {
 		) {
 			return '';
 		}
-		$iv = base64_decode( (string) ( $record['iv'] ?? '' ), true );
-		$tag = base64_decode( (string) ( $record['tag'] ?? '' ), true );
+		$iv         = base64_decode( (string) ( $record['iv'] ?? '' ), true );
+		$tag        = base64_decode( (string) ( $record['tag'] ?? '' ), true );
 		$ciphertext = base64_decode( (string) ( $record['ciphertext'] ?? '' ), true );
 		if ( false === $iv || false === $tag || false === $ciphertext ) {
 			return '';
