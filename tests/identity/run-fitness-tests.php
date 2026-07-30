@@ -198,4 +198,59 @@ sl_require_companion(
 );
 
 // ---------------------------------------------------------------------
+sl_section( 'Every referenced SmartLogin class exists on disk' );
+
+/**
+ * Resolve a class name to its file the way smart-login.php's autoloader does.
+ */
+function sl_class_file( string $fqn ): string {
+	$relative = substr( $fqn, strlen( 'SmartLogin\\' ) );
+	$parts    = explode( '\\', $relative );
+	$short    = array_pop( $parts );
+	$kebab    = strtolower( preg_replace( '/(?<!^)([A-Z])/', '-$1', $short ) );
+
+	return 'includes/' . ( $parts ? implode( '/', $parts ) . '/' : '' ) . 'class-' . $kebab . '.php';
+}
+
+// A deleted class leaves callers behind, and PHP only notices when the line runs.
+// php -l cannot see it, and no unit test renders a template — which is exactly
+// how templates/form-auth.php kept calling IdentityResolver for four phases after
+// it was removed, fatalling the WooCommerce My Account page on every load.
+$missing = array();
+
+foreach ( sl_plugin_sources() as $relative => $contents ) {
+	$referenced = array();
+
+	// `use SmartLogin\Foo\Bar;`
+	if ( preg_match_all( '/^use\s+(SmartLogin\\\\[A-Za-z0-9_\\\\]+)\s*;/m', $contents, $imports ) ) {
+		$referenced = array_merge( $referenced, $imports[1] );
+	}
+
+	// Inline `\SmartLogin\Foo\Bar::` or `new \SmartLogin\Foo\Bar(`
+	if ( preg_match_all( '/\\\\(SmartLogin\\\\[A-Za-z0-9_\\\\]+?)(?:::|\s*\()/', $contents, $inline ) ) {
+		$referenced = array_merge( $referenced, $inline[1] );
+	}
+
+	foreach ( array_unique( $referenced ) as $fqn ) {
+		$file = sl_class_file( $fqn );
+
+		if ( '' === sl_source( $file ) ) {
+			$missing[] = $relative . ' → ' . $fqn;
+		}
+	}
+}
+
+if ( $missing ) {
+	++$GLOBALS['sl_harness']['failed'];
+	printf( "  FAIL     every referenced SmartLogin class resolves to a file\n" );
+	printf( "           A reference to a deleted class is a fatal error the moment that line runs.\n" );
+
+	foreach ( array_unique( $missing ) as $offender ) {
+		printf( "           → %s\n", $offender );
+	}
+} else {
+	++$GLOBALS['sl_harness']['passed'];
+}
+
+// ---------------------------------------------------------------------
 sl_summary( 'Identity fitness' );

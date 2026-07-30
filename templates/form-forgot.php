@@ -9,7 +9,7 @@
 
 use SmartLogin\Frontend\Flow;
 use SmartLogin\Frontend\TemplateLoader;
-use SmartLogin\Identity\IdentityResolver;
+use SmartLogin\Auth\RegisterHandler;
 use SmartLogin\Security\RequestGuard;
 
 defined( 'ABSPATH' ) || exit;
@@ -30,7 +30,7 @@ defined( 'ABSPATH' ) || exit;
 
 		<div class="sl-field">
 			<label class="sl-label" for="sl-forgot-identity">
-				<?php echo esc_html( IdentityResolver::identifier_label() ); ?>
+				<?php echo esc_html( RegisterHandler::identifier_label() ); ?>
 				<span class="sl-required">*</span>
 			</label>
 			<input

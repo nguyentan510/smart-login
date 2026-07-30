@@ -15,7 +15,7 @@ use SmartLogin\Auth\ProviderAuthController;
 use SmartLogin\Auth\Providers\ProviderRegistry;
 use SmartLogin\Frontend\Flow;
 use SmartLogin\Frontend\TemplateLoader;
-use SmartLogin\Identity\IdentityResolver;
+use SmartLogin\Auth\RegisterHandler;
 use SmartLogin\Security\RequestGuard;
 use SmartLogin\Settings;
 
@@ -76,7 +76,7 @@ $sl_register_disabled = Flow::STEP_REGISTER !== $sl_active_tab;
 	>
 			<div class="sl-field">
 				<label class="sl-label" for="sl-identity">
-					<?php echo esc_html( IdentityResolver::identifier_label() ); ?>
+					<?php echo esc_html( RegisterHandler::identifier_label() ); ?>
 					<span class="sl-required">*</span>
 				</label>
 				<input
@@ -145,7 +145,7 @@ $sl_register_disabled = Flow::STEP_REGISTER !== $sl_active_tab;
 
 			<div class="sl-field">
 				<label class="sl-label" for="sl-reg-identity">
-					<?php echo esc_html( IdentityResolver::identifier_label() ); ?>
+					<?php echo esc_html( RegisterHandler::identifier_label() ); ?>
 					<span class="sl-required">*</span>
 				</label>
 				<input
