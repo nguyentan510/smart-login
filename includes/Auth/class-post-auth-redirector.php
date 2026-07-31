@@ -37,8 +37,21 @@ final class PostAuthRedirector {
 		if ( '' !== $requested ) {
 			$url = $requested;
 		} else {
-			$configured = trim( (string) Settings::get( 'redirect_after_login', '' ) );
-			$url        = '' !== $configured ? $configured : ( function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'myaccount' ) : home_url( '/' ) );
+			// A freshly registered account prefers the registration destination
+			// when one is configured. This setting had a control on the settings
+			// screen from the start and no reader anywhere, so an admin who filled
+			// it in got a page that was never visited — the same defect as
+			// `require_verification`, and the reason the schema is now declared in
+			// one place that both draws a control and is read.
+			$configured = $result->is_new_user
+				? trim( (string) Settings::get( 'signup.redirect_register', '' ) )
+				: '';
+
+			if ( '' === $configured ) {
+				$configured = trim( (string) Settings::get( 'signup.redirect_login', '' ) );
+			}
+
+			$url = '' !== $configured ? $configured : ( function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'myaccount' ) : home_url( '/' ) );
 		}
 
 		$filtered             = (string) apply_filters( 'smart_login_post_login_redirect', $url );

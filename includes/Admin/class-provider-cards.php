@@ -1,0 +1,231 @@
+<?php
+/**
+ * The Google and Zalo setup cards.
+ *
+ * Kept apart from the generic registry renderer because a provider needs more
+ * than a list of controls: a readiness badge, a credential that is written but
+ * never read back, a copyable callback URL, and setup instructions. The plain
+ * fields (enabled, client id) still come from the registry, so they are declared
+ * in the same place as everything else.
+ *
+ * @package SmartLogin
+ */
+
+namespace SmartLogin\Admin;
+
+use SmartLogin\Auth\Providers\ProviderCredentials;
+use SmartLogin\Settings;
+
+defined( 'ABSPATH' ) || exit;
+
+final class ProviderCards {
+
+	/**
+	 * @param array<string,array> $fields The registry rows in the provider section.
+	 */
+	public function render( array $fields ): void {
+		?>
+		<div class="notice notice-info inline sl-provider-intro">
+			<p>
+				<?php
+				echo wp_kses_post(
+					__( 'Bạn có thể cấu hình trực tiếp tại đây. Client secret được <strong>mã hóa trước khi lưu</strong> và không bao giờ hiển thị lại. Nếu website đã khai báo credentials trong <code>wp-config.php</code> hoặc biến môi trường, cấu hình triển khai đó sẽ được ưu tiên.', 'smart-login' )
+				);
+				?>
+			</p>
+		</div>
+
+		<div class="sl-provider-grid">
+			<?php
+			$this->card( 'google', __( 'Google Login', 'smart-login' ), $fields, 'google_client_secret', 'google_clear_secret' );
+			$this->card( 'zalo', __( 'Zalo Login', 'smart-login' ), $fields, 'zalo_app_secret', 'zalo_clear_secret' );
+			?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * @param string              $provider     Provider slug.
+	 * @param string              $label        Human name for the card heading.
+	 * @param array<string,array> $fields       Every registry row in the section.
+	 * @param string              $secret_field Request key the secret arrives under.
+	 * @param string              $clear_field  Request key that erases a stored secret.
+	 */
+	private function card( string $provider, string $label, array $fields, string $secret_field, string $clear_field ): void {
+		$configured    = ProviderCredentials::is_configured( $provider );
+		$has_secret    = '' !== ProviderCredentials::secret( $provider );
+		$source        = ProviderCredentials::source( $provider );
+		$source_labels = array(
+			'environment' => __( 'wp-config.php / Environment', 'smart-login' ),
+			'settings'    => __( 'Settings đã mã hóa', 'smart-login' ),
+			'missing'     => __( 'Chưa cấu hình', 'smart-login' ),
+		);
+		$secret_label  = 'google' === $provider
+			? __( 'Google Client Secret', 'smart-login' )
+			: __( 'Zalo App Secret', 'smart-login' );
+
+		// Whatever the registry declares for this provider, in declared order.
+		$own = array_filter(
+			$fields,
+			static fn( string $path ): bool => 0 === strpos( $path, 'providers.' . $provider . '.' ),
+			ARRAY_FILTER_USE_KEY
+		);
+		?>
+		<section class="sl-provider-card" data-provider-card="<?php echo esc_attr( $provider ); ?>">
+			<header class="sl-provider-card__header">
+				<div>
+					<h3><?php echo esc_html( $label ); ?></h3>
+					<p>
+						<?php
+						printf(
+							/* translators: %s: credential source. */
+							esc_html__( 'Nguồn: %s', 'smart-login' ),
+							esc_html( $source_labels[ $source ] ?? $source_labels['missing'] )
+						);
+						?>
+					</p>
+				</div>
+				<span class="sl-provider-status <?php echo $configured ? 'is-ready' : 'is-missing'; ?>">
+					<?php echo $configured ? esc_html__( 'Sẵn sàng', 'smart-login' ) : esc_html__( 'Thiếu credentials', 'smart-login' ); ?>
+				</span>
+			</header>
+
+			<div class="sl-provider-tabs" role="tablist" aria-label="<?php echo esc_attr( $label ); ?>">
+				<button type="button" class="button-link is-active" role="tab" aria-selected="true" data-provider-tab="setup">
+					<?php esc_html_e( 'Thiết lập', 'smart-login' ); ?>
+				</button>
+				<button type="button" class="button-link" role="tab" aria-selected="false" data-provider-tab="docs">
+					<?php esc_html_e( 'Hướng dẫn', 'smart-login' ); ?>
+				</button>
+			</div>
+
+			<div class="sl-provider-panel" data-provider-panel="setup">
+				<table class="form-table" role="presentation">
+					<tbody>
+						<?php
+						foreach ( $own as $path => $field ) {
+							FieldRenderer::render( $path, $field );
+						}
+
+						if ( 'environment' === $source ) {
+							printf(
+								'<tr><th scope="row"></th><td><p class="description">%s</p></td></tr>',
+								esc_html__( 'Giá trị triển khai đang được ưu tiên; các ô trên là cấu hình dự phòng.', 'smart-login' )
+							);
+						}
+						?>
+						<tr>
+							<th scope="row">
+								<label for="sl-<?php echo esc_attr( $secret_field ); ?>"><?php echo esc_html( $secret_label ); ?></label>
+							</th>
+							<td>
+								<input
+									type="password"
+									id="sl-<?php echo esc_attr( $secret_field ); ?>"
+									name="<?php echo esc_attr( Settings::OPTION . '[' . $secret_field . ']' ); ?>"
+									value=""
+									class="regular-text"
+									autocomplete="new-password"
+									placeholder="<?php echo $has_secret ? esc_attr__( 'Đã lưu — để trống để giữ nguyên', 'smart-login' ) : esc_attr__( 'Nhập secret', 'smart-login' ); ?>"
+								/>
+								<p class="description">
+									<?php esc_html_e( 'Secret chỉ dùng khi lưu; plugin không đưa secret hiện có trở lại HTML.', 'smart-login' ); ?>
+								</p>
+								<?php if ( $has_secret && 'environment' !== $source ) : ?>
+									<label class="sl-provider-clear-secret">
+										<input type="checkbox" name="<?php echo esc_attr( Settings::OPTION . '[' . $clear_field . ']' ); ?>" value="1" />
+										<?php esc_html_e( 'Xóa secret đã lưu khi bấm Lưu thay đổi', 'smart-login' ); ?>
+									</label>
+								<?php endif; ?>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><?php esc_html_e( 'Callback URL', 'smart-login' ); ?></th>
+							<td>
+								<input
+									type="text"
+									class="large-text code"
+									value="<?php echo esc_attr( ProviderCredentials::redirect_uri( $provider ) ); ?>"
+									readonly
+									data-provider-callback
+								/>
+								<p class="description"><?php esc_html_e( 'Sao chép chính xác URL này sang cấu hình ứng dụng của provider.', 'smart-login' ); ?></p>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<div class="sl-provider-panel sl-provider-docs" data-provider-panel="docs" hidden>
+				<?php $this->docs( $provider ); ?>
+			</div>
+		</section>
+		<?php
+	}
+
+	private function docs( string $provider ): void {
+		if ( 'google' === $provider ) {
+			?>
+			<h4><?php esc_html_e( 'Tạo OAuth Client trên Google Cloud', 'smart-login' ); ?></h4>
+			<ol>
+				<li>
+					<?php
+					printf(
+						wp_kses(
+							/* translators: %s: Google Cloud Console URL. */
+							__( 'Mở <a href="%s" target="_blank" rel="noopener noreferrer">Google Cloud Console → Clients</a>, chọn đúng project.', 'smart-login' ),
+							array(
+								'a' => array(
+									'href'   => array(),
+									'target' => array(),
+									'rel'    => array(),
+								),
+							)
+						),
+						esc_url( 'https://console.cloud.google.com/auth/clients' )
+					);
+					?>
+				</li>
+				<li><?php esc_html_e( 'Cấu hình OAuth consent screen; nếu ứng dụng đang ở Testing, thêm các tài khoản thử nghiệm vào Test users.', 'smart-login' ); ?></li>
+				<li><?php esc_html_e( 'Tạo OAuth Client ID loại Web application.', 'smart-login' ); ?></li>
+				<li><?php esc_html_e( 'Trong Authorized redirect URIs, dán chính xác Callback URL ở tab Thiết lập.', 'smart-login' ); ?></li>
+				<li><?php esc_html_e( 'Sao chép Client ID và Client Secret vào các ô tương ứng, bật Kích hoạt rồi Lưu thay đổi.', 'smart-login' ); ?></li>
+			</ol>
+			<div class="notice notice-warning inline">
+				<p><?php esc_html_e( 'Không dùng JavaScript origin thay cho redirect URI. Google yêu cầu URI callback phải khớp chính xác với URI đã khai báo.', 'smart-login' ); ?></p>
+			</div>
+			<?php
+			return;
+		}
+		?>
+		<h4><?php esc_html_e( 'Tạo ứng dụng Zalo Login', 'smart-login' ); ?></h4>
+		<ol>
+			<li>
+				<?php
+				printf(
+					wp_kses(
+						/* translators: %s: Zalo Developers URL. */
+						__( 'Mở <a href="%s" target="_blank" rel="noopener noreferrer">Zalo Developers</a>, tạo hoặc chọn ứng dụng.', 'smart-login' ),
+						array(
+							'a' => array(
+								'href'   => array(),
+								'target' => array(),
+								'rel'    => array(),
+							),
+						)
+					),
+					esc_url( 'https://developers.zalo.me/' )
+				);
+				?>
+			</li>
+			<li><?php esc_html_e( 'Kích hoạt sản phẩm Zalo Login và khai báo domain website theo yêu cầu của ứng dụng.', 'smart-login' ); ?></li>
+			<li><?php esc_html_e( 'Trong cấu hình callback/redirect URL, dán chính xác Callback URL ở tab Thiết lập.', 'smart-login' ); ?></li>
+			<li><?php esc_html_e( 'Sao chép App ID và App Secret vào các ô tương ứng, bật Kích hoạt rồi Lưu thay đổi.', 'smart-login' ); ?></li>
+			<li><?php esc_html_e( 'Nếu ứng dụng Zalo còn ở chế độ phát triển, chỉ các tài khoản được cấp quyền thử nghiệm có thể đăng nhập.', 'smart-login' ); ?></li>
+		</ol>
+		<div class="notice notice-info inline">
+			<p><?php esc_html_e( 'Zalo Login và Zalo OA/ZNS là hai chức năng khác nhau. Phần này chỉ cấu hình đăng nhập; gửi OTP qua OA/ZNS thuộc kênh OTP riêng.', 'smart-login' ); ?></p>
+		</div>
+		<?php
+	}
+}

@@ -19,7 +19,7 @@ final class ProviderCredentials {
 	public static function client_id( string $provider ): string {
 		$provider = sanitize_key( $provider );
 		$constant = 'google' === $provider ? 'SMART_LOGIN_GOOGLE_CLIENT_ID' : 'SMART_LOGIN_ZALO_APP_ID';
-		$setting  = 'google' === $provider ? 'google_client_id' : 'zalo_app_id';
+		$setting  = 'google' === $provider ? 'providers.google.client_id' : 'providers.zalo.app_id';
 
 		return self::constant_value( $constant ) ?: trim( (string) Settings::get( $setting, '' ) );
 	}

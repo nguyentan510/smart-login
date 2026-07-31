@@ -91,7 +91,7 @@ class Assets {
 			array(
 				'restUrl'   => esc_url_raw( rest_url( 'smart-login/v1/' ) ),
 				'nonce'     => wp_create_nonce( 'wp_rest' ),
-				'otpLength' => min( 8, max( 4, Settings::get_int( 'otp_length', 6 ) ) ),
+				'otpLength' => min( 8, max( 4, Settings::get_int( 'otp.length', 6 ) ) ),
 				'i18n'      => array(
 					'resend'      => __( 'Gửi lại', 'smart-login' ),
 					/* translators: %d: seconds remaining before the code can be resent. */

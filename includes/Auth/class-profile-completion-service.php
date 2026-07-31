@@ -65,23 +65,23 @@ final class ProfileCompletionService {
 			$required[] = $this->item( 'full_name', __( 'Họ tên', 'smart-login' ), false );
 		}
 
-		if ( ! Settings::is_on( 'field_email_optional' ) && UserManager::is_synthetic_email( (string) $user->user_email ) ) {
+		if ( ! Settings::is_on( 'profile.email_optional' ) && UserManager::is_synthetic_email( (string) $user->user_email ) ) {
 			$required[] = $this->item( 'email', __( 'Email', 'smart-login' ), true );
 		}
 
-		if ( Settings::is_on( 'address_required_in_profile' ) ) {
+		if ( Settings::is_on( 'address.required_in_profile' ) ) {
 			if ( ! AddressFields::is_complete( $user_id ) || ! get_user_meta( $user_id, 'billing_address_1', true ) ) {
 				$required[] = $this->item( 'address', __( 'Địa chỉ', 'smart-login' ), false );
 			}
-		} elseif ( Settings::is_on( 'address_enabled' ) && ( ! AddressFields::is_complete( $user_id ) || ! get_user_meta( $user_id, 'billing_address_1', true ) ) ) {
+		} elseif ( Settings::is_on( 'address.enabled' ) && ( ! AddressFields::is_complete( $user_id ) || ! get_user_meta( $user_id, 'billing_address_1', true ) ) ) {
 			$recommended[] = $this->item( 'address', __( 'Địa chỉ', 'smart-login' ), false );
 		}
 
-		if ( Settings::is_on( 'field_dob' ) && ! get_user_meta( $user_id, UserManager::META_DOB, true ) ) {
+		if ( Settings::is_on( 'profile.dob' ) && ! get_user_meta( $user_id, UserManager::META_DOB, true ) ) {
 			$recommended[] = $this->item( 'dob', __( 'Ngày sinh', 'smart-login' ), false );
 		}
 
-		if ( Settings::is_on( 'field_gender' ) && ! get_user_meta( $user_id, UserManager::META_GENDER, true ) ) {
+		if ( Settings::is_on( 'profile.gender' ) && ! get_user_meta( $user_id, UserManager::META_GENDER, true ) ) {
 			$recommended[] = $this->item( 'gender', __( 'Giới tính', 'smart-login' ), false );
 		}
 

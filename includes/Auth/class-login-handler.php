@@ -162,7 +162,7 @@ class LoginHandler {
 			return $user;
 		}
 
-		if ( ! self::$enforce_device_check || ! Settings::is_on( 'login_otp_new_device' ) ) {
+		if ( ! self::$enforce_device_check || ! Settings::is_on( 'login.otp_new_device' ) ) {
 			return $user;
 		}
 
@@ -242,7 +242,7 @@ class LoginHandler {
 	 * a user-entered number into the canonical login identity.
 	 */
 	public function sync_phone_from_profile( $user_id ): void {
-		if ( ! Settings::is_on( 'woo_sync_billing_phone' ) ) {
+		if ( ! Settings::is_on( 'woo.sync_billing_phone' ) ) {
 			return;
 		}
 
@@ -275,7 +275,7 @@ class LoginHandler {
 	}
 
 	public static function remember_device( int $user_id ): void {
-		if ( ! Settings::is_on( 'login_otp_new_device' ) ) {
+		if ( ! Settings::is_on( 'login.otp_new_device' ) ) {
 			return;
 		}
 
@@ -298,7 +298,7 @@ class LoginHandler {
 		if ( '' !== $requested ) {
 			$url = $requested;
 		} else {
-			$configured = trim( (string) Settings::get( 'redirect_after_login', '' ) );
+			$configured = trim( (string) Settings::get( 'signup.redirect_login', '' ) );
 
 			if ( '' !== $configured ) {
 				$url = $configured;

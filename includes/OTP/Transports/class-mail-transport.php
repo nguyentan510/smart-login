@@ -22,7 +22,7 @@ class MailTransport implements TransportInterface {
 	}
 
 	public function is_available(): bool {
-		return Settings::is_on( 'email_enabled' );
+		return Settings::is_on( 'email.enabled' );
 	}
 
 	/**
@@ -47,14 +47,14 @@ class MailTransport implements TransportInterface {
 		}
 
 		$map     = Placeholders::build( $destination, $code, $ctx );
-		$subject = Placeholders::render( (string) Settings::get( 'email_subject', '' ), $map );
-		$body    = Placeholders::render( (string) Settings::get( 'email_body', '' ), $map );
-		$is_html = Settings::is_on( 'email_is_html' );
+		$subject = Placeholders::render( (string) Settings::get( 'email.subject', '' ), $map );
+		$body    = Placeholders::render( (string) Settings::get( 'email.body', '' ), $map );
+		$is_html = Settings::is_on( 'email.is_html' );
 
 		$headers = array();
 
-		$from_name    = trim( (string) Settings::get( 'email_from_name', '' ) );
-		$from_address = trim( (string) Settings::get( 'email_from_address', '' ) );
+		$from_name    = trim( (string) Settings::get( 'email.from_name', '' ) );
+		$from_address = trim( (string) Settings::get( 'email.from_address', '' ) );
 
 		if ( '' !== $from_address && is_email( $from_address ) ) {
 			$name      = '' !== $from_name ? $from_name : wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );

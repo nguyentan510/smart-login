@@ -19,7 +19,7 @@ defined( 'ABSPATH' ) || exit;
 class WooIntegration {
 
 	public function register(): void {
-		if ( Settings::is_on( 'woo_replace_login_form' ) ) {
+		if ( Settings::is_on( 'woo.replace_login_form' ) ) {
 			add_filter( 'woocommerce_locate_template', array( $this, 'swap_template' ), 10, 3 );
 		}
 
@@ -39,7 +39,7 @@ class WooIntegration {
 
 		add_action( 'woocommerce_account_content', array( $this, 'render_registration_success' ), 1 );
 
-		if ( Settings::is_on( 'woo_block_synthetic_emails' ) ) {
+		if ( Settings::is_on( 'woo.block_synthetic_emails' ) ) {
 			add_filter( 'wp_mail', array( $this, 'strip_synthetic_recipients' ), 5, 1 );
 			add_filter( 'pre_wp_mail', array( $this, 'abort_empty_mail' ), 5, 2 );
 		}
@@ -264,7 +264,7 @@ class WooIntegration {
 	 * the rest of the profile still updates and the customer sees why.
 	 */
 	private function save_account_address( int $user_id ): void {
-		if ( ! Settings::is_on( 'address_enabled' ) ) {
+		if ( ! Settings::is_on( 'address.enabled' ) ) {
 			return;
 		}
 
@@ -274,7 +274,7 @@ class WooIntegration {
 		}
 
 		// phpcs:ignore WordPress.Security.NonceVerification
-		$clean = AddressFields::validate( wp_unslash( $_POST ), Settings::is_on( 'address_required_in_profile' ) );
+		$clean = AddressFields::validate( wp_unslash( $_POST ), Settings::is_on( 'address.required_in_profile' ) );
 
 		if ( is_wp_error( $clean ) ) {
 			if ( function_exists( 'wc_add_notice' ) ) {
@@ -306,7 +306,7 @@ class WooIntegration {
 	 * @param string $load_address billing|shipping
 	 */
 	public function sync_phone_from_address( $user_id, $load_address ): void {
-		if ( 'billing' !== $load_address || ! Settings::is_on( 'woo_sync_billing_phone' ) ) {
+		if ( 'billing' !== $load_address || ! Settings::is_on( 'woo.sync_billing_phone' ) ) {
 			return;
 		}
 
@@ -333,7 +333,7 @@ class WooIntegration {
 			$fields['billing_phone']['required'] = true;
 		}
 
-		if ( Settings::is_on( 'woo_relax_billing_email' ) && isset( $fields['billing_email'] ) ) {
+		if ( Settings::is_on( 'woo.relax_billing_email' ) && isset( $fields['billing_email'] ) ) {
 			$fields['billing_email']['required'] = false;
 		}
 

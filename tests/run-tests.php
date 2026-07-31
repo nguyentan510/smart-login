@@ -182,8 +182,8 @@ section( 'Provider credential storage' );
 
 Settings::update(
 	array(
-		'google_client_id' => 'google-client-from-settings',
-		'zalo_app_id'      => 'zalo-app-from-settings',
+		'providers.google.client_id' => 'google-client-from-settings',
+		'providers.zalo.app_id'      => 'zalo-app-from-settings',
 	)
 );
 check( 'Google client ID falls back to Settings', 'google-client-from-settings', ProviderCredentials::client_id( 'google' ) );
@@ -372,7 +372,7 @@ check( 'delivery id token', 'delivery-123', $delivery_map['delivery_id'] );
 // ---------------------------------------------------------------------
 section( 'OTP security boundaries' );
 
-Settings::update( array( 'audit_enabled' => 0 ) );
+Settings::update( array( 'advanced.audit_enabled' => 0 ) );
 
 $otp_row = array(
 	'id'          => 7,
@@ -423,15 +423,15 @@ check( 'grant fails closed when atomic delete loses', 0, $failed_delete_result )
 section( 'Webhook retry — idempotency gate' );
 
 $webhook_options = array(
-	'webhook_enabled'            => 1,
-	'webhook_url'                => 'https://gateway.example.test/send',
-	'webhook_method'             => 'POST',
-	'webhook_content_type'       => 'application/json',
-	'webhook_headers'            => array(),
-	'webhook_body'               => '{"code":"{{code}}","delivery":"{{delivery_id}}"}',
-	'webhook_timeout'            => 3,
-	'webhook_retry'              => 1,
-	'webhook_idempotency_header' => '',
+	'sms.enabled'            => 1,
+	'sms.url'                => 'https://gateway.example.test/send',
+	'sms.method'             => 'POST',
+	'sms.content_type'       => 'application/json',
+	'sms.headers'            => array(),
+	'sms.body'               => '{"code":"{{code}}","delivery":"{{delivery_id}}"}',
+	'sms.timeout'            => 3,
+	'sms.retry'              => 1,
+	'sms.idempotency_header' => '',
 );
 
 Settings::update( $webhook_options );
@@ -439,7 +439,7 @@ $GLOBALS['sl_http_requests'] = array();
 ( new WebhookTransport() )->dispatch( '84969789475', '123456', array( 'intent' => OtpService::INTENT_LOGIN ) );
 check( 'retry is disabled without an idempotency contract', 1, count( $GLOBALS['sl_http_requests'] ) );
 
-$webhook_options['webhook_idempotency_header'] = 'Idempotency-Key';
+$webhook_options['sms.idempotency_header'] = 'Idempotency-Key';
 Settings::update( $webhook_options );
 $GLOBALS['sl_http_requests'] = array();
 ( new WebhookTransport() )->dispatch( '84969789475', '123456', array( 'intent' => OtpService::INTENT_LOGIN ) );
@@ -603,58 +603,238 @@ check( 'referral code moved to optional profile form', true, false !== strpos( $
 section( 'Every tabbed setting is actually rendered' );
 
 /*
- * The settings screen posts the whole option array on every save. Keys outside
- * the open tab survive as hidden inputs; keys claimed by the open tab are
- * expected to come back from its own fields. So a key listed in tab_fields()
- * but never rendered is not merely invisible — it is absent from $_POST, and
- * Settings::sanitize() reads that absence as an unchecked checkbox and stores
- * a zero.
+ * The defect this replaces, stated once so the assertions below read as what
+ * they are.
  *
- * This is not hypothetical. `field_email_optional` defaulted to 1, was claimed
- * by the Chung tab, and was drawn nowhere. The first time an admin pressed Lưu
- * on that tab it flipped to 0, and every phone-only account started reporting a
- * missing required Email — one they could not supply, because the Email box on
- * the profile form is readonly by design. `require_verification` had the same
- * defect and has since been deleted as dead.
+ * The old screen posted the entire option on every save. Keys outside the open
+ * tab survived as hidden inputs; keys claimed by the open tab were expected back
+ * from its own controls. A key listed in tab_fields() but drawn by nothing was
+ * therefore absent from both, and sanitize() read that absence as an unchecked
+ * checkbox and stored a zero.
  *
- * The rule: a key belongs to a tab only if that tab draws it.
+ * `field_email_optional` defaulted to 1, was claimed by the Chung tab, and was
+ * drawn nowhere. One press of Lưu flipped it, and every phone-only account began
+ * reporting a missing required Email it could not supply, because the Email box
+ * on the profile form is readonly by design.
+ *
+ * The schema now declares each setting once, and a save writes only the fields
+ * carried by the tab it names. These tests assert that behaviour directly rather
+ * than grepping the screen for control names — they post payloads and read back
+ * what sanitize() produced.
  */
-preg_match( '/private function tab_fields\(\): array \{(.*?)\n\t\}/s', $settings_page, $tab_fields_body );
-$tab_fields_src = $tab_fields_body[1] ?? '';
-$rest_of_page   = str_replace( $tab_fields_src, '', $settings_page );
 
-check( 'the tab map was located', true, '' !== $tab_fields_src );
+/**
+ * Read a dot path out of a nested settings array.
+ *
+ * @return mixed
+ */
+function sl_dig_setting( array $source, string $path ) {
+	$node = $source;
 
-preg_match_all( "/'([a-z0-9_]+)'/", $tab_fields_src, $tab_keys );
+	foreach ( explode( '.', $path ) as $segment ) {
+		if ( ! is_array( $node ) || ! array_key_exists( $segment, $node ) ) {
+			return null;
+		}
 
-$unrendered = array();
-
-foreach ( array_unique( $tab_keys[1] ?? array() ) as $tab_key ) {
-	// Tab slugs are the array keys, not settings; they name a render method.
-	if ( in_array( $tab_key, array( 'general', 'otp', 'webhook', 'email', 'providers', 'advanced' ), true ) ) {
-		continue;
+		$node = $node[ $segment ];
 	}
 
-	if ( false === strpos( $rest_of_page, "'" . $tab_key . "'" ) ) {
-		$unrendered[] = $tab_key;
+	return $node;
+}
+
+/**
+ * Build the request shape FieldRenderer::name() produces for a dot path.
+ *
+ * @param mixed $value
+ */
+function sl_post_setting( array &$payload, string $path, $value ): void {
+	$segments = explode( '.', $path );
+	$leaf     = array_pop( $segments );
+	$node     = &$payload;
+
+	foreach ( $segments as $segment ) {
+		if ( ! isset( $node[ $segment ] ) || ! is_array( $node[ $segment ] ) ) {
+			$node[ $segment ] = array();
+		}
+
+		$node = &$node[ $segment ];
+	}
+
+	$node[ $leaf ] = $value;
+
+	unset( $node );
+}
+
+/**
+ * A value the field will accept unchanged, so a round-trip mismatch means the
+ * plumbing lost it rather than the sanitiser rejecting it.
+ *
+ * @return mixed
+ */
+function sl_sample_value( array $field ) {
+	// A field with its own sanitiser needs a sample that sanitiser accepts,
+	// otherwise the round-trip measures the rule rather than the plumbing.
+	switch ( $field['sanitize'] ?? '' ) {
+		case 'country_code':
+			return '84';
+
+		case 'domain':
+			return 'sample.invalid';
+
+		case 'header_name':
+			return 'X-Sample-Key';
+
+		case 'headers':
+			return array( array( 'key' => 'X-Test', 'value' => 'sample' ) );
+	}
+
+	switch ( $field['type'] ?? 'text' ) {
+		case 'checkbox':
+			return 1;
+
+		case 'number':
+			$min = (int) ( $field['min'] ?? 1 );
+			$max = (int) ( $field['max'] ?? ( $min + 10 ) );
+
+			return (int) floor( ( $min + $max ) / 2 );
+
+		case 'select':
+			$choices = array_keys( $field['choices'] ?? array() );
+
+			return (string) end( $choices );
+
+		case 'url':
+			return 'https://example.test/page';
+
+		case 'email':
+			return 'admin@example.test';
+
+		case 'headers':
+			return array( array( 'key' => 'X-Test', 'value' => 'sample' ) );
+
+		default:
+			return 'sample-value';
 	}
 }
 
-check( 'no tab claims a setting it never draws', array(), $unrendered );
+$registry_tabs = \SmartLogin\FieldRegistry::tabs();
 
-foreach ( array( 'field_email_optional', 'id_mode', 'min_password_length' ) as $must_render ) {
-	check( sprintf( '%s has a control', $must_render ), true, false !== strpos( $rest_of_page, "'" . $must_render . "'" ) );
+foreach ( \SmartLogin\FieldRegistry::all() as $path => $field ) {
+	if ( ! isset( $field['type'] ) || ! array_key_exists( 'default', $field ) ) {
+		check( sprintf( '%s declares a type and a default', $path ), true, false );
+	}
+
+	$tab = $field['tab'] ?? '';
+
+	if ( '' !== $tab && ! isset( $registry_tabs[ $tab ] ) ) {
+		check( sprintf( '%s names a real tab', $path ), true, false );
+	}
 }
+
+check(
+	'defaults() covers exactly the registry',
+	array(),
+	array_values(
+		array_filter(
+			array_keys( \SmartLogin\FieldRegistry::all() ),
+			static fn( string $path ): bool => null === sl_dig_setting( Settings::defaults(), $path )
+				&& null !== \SmartLogin\FieldRegistry::get( $path )['default']
+		)
+	)
+);
+
+$settings_before = Settings::all();
+
+foreach ( array_keys( $registry_tabs ) as $registry_tab ) {
+	$tab_fields = \SmartLogin\FieldRegistry::for_tab( $registry_tab );
+
+	check( sprintf( 'tab "%s" draws at least one field', $registry_tab ), true, count( $tab_fields ) > 0 );
+
+	// 1. A full save of this tab lands every one of its own values...
+	$payload = array( Settings::TAB_FIELD => $registry_tab );
+
+	foreach ( $tab_fields as $path => $field ) {
+		sl_post_setting( $payload, $path, sl_sample_value( $field ) );
+	}
+
+	$saved   = Settings::sanitize( $payload );
+	$dropped = array();
+
+	foreach ( $tab_fields as $path => $field ) {
+		if ( sl_dig_setting( $saved, $path ) !== sl_sample_value( $field ) ) {
+			$dropped[] = $path;
+		}
+	}
+
+	check( sprintf( 'saving "%s" keeps every value it posted', $registry_tab ), array(), $dropped );
+
+	// ...and touches nothing belonging to another tab.
+	$collateral = array();
+
+	foreach ( \SmartLogin\FieldRegistry::all() as $path => $field ) {
+		if ( ( $field['tab'] ?? '' ) === $registry_tab ) {
+			continue;
+		}
+
+		if ( sl_dig_setting( $saved, $path ) !== sl_dig_setting( $settings_before, $path ) ) {
+			$collateral[] = $path;
+		}
+	}
+
+	check( sprintf( 'saving "%s" changes no other tab', $registry_tab ), array(), $collateral );
+
+	// 2. The exact shape of the old bug: a save carrying nothing but its tab
+	//    name. Checkboxes on that tab were genuinely unticked and must clear;
+	//    checkboxes anywhere else were never on screen and must not move.
+	$empty      = Settings::sanitize( array( Settings::TAB_FIELD => $registry_tab ) );
+	$phantom    = array();
+	$not_leared = array();
+
+	foreach ( \SmartLogin\FieldRegistry::all() as $path => $field ) {
+		if ( 'checkbox' !== ( $field['type'] ?? '' ) ) {
+			continue;
+		}
+
+		if ( ( $field['tab'] ?? '' ) === $registry_tab ) {
+			if ( 0 !== sl_dig_setting( $empty, $path ) ) {
+				$not_leared[] = $path;
+			}
+
+			continue;
+		}
+
+		if ( sl_dig_setting( $empty, $path ) !== sl_dig_setting( $settings_before, $path ) ) {
+			$phantom[] = $path;
+		}
+	}
+
+	check( sprintf( 'an empty "%s" save clears only its own checkboxes', $registry_tab ), array(), $not_leared );
+	check( sprintf( 'an empty "%s" save cannot zero another tab', $registry_tab ), array(), $phantom );
+}
+
+// A save that cannot say which tab it came from writes nothing at all.
+check(
+	'a save with no tab is a no-op',
+	$settings_before,
+	Settings::sanitize( array( 'identity' => array( 'mode' => 'email_only' ) ) )
+);
 
 check( 'the dead require_verification switch is gone', false, false !== strpos( $settings_page, 'require_verification' ) );
 
 // ---------------------------------------------------------------------
 section( 'Provider settings UI' );
 
-check( 'provider settings render one card per provider', 2, substr_count( $settings_page, '$this->provider_setup_card(' ) );
-check( 'provider settings expose inline docs tabs', true, false !== strpos( $settings_page, 'data-provider-tab="docs"' ) );
-check( 'provider settings expose secret inputs without stored values', true, false !== strpos( $settings_page, "'google_client_secret'" ) && false !== strpos( $settings_page, "'zalo_app_secret'" ) && false !== strpos( $settings_page, 'value=""' ) );
-check( 'provider settings expose read-only callback URLs', true, false !== strpos( $settings_page, 'data-provider-callback' ) && false !== strpos( $settings_page, 'readonly' ) );
+$provider_cards = file_get_contents( dirname( __DIR__ ) . '/includes/Admin/class-provider-cards.php' );
+
+check( 'provider settings render one card per provider', 2, substr_count( $provider_cards, '$this->card(' ) );
+check( 'provider settings expose inline docs tabs', true, false !== strpos( $provider_cards, 'data-provider-tab="docs"' ) );
+check( 'provider settings expose secret inputs without stored values', true, false !== strpos( $provider_cards, "'google_client_secret'" ) && false !== strpos( $provider_cards, "'zalo_app_secret'" ) && false !== strpos( $provider_cards, 'value=""' ) );
+check( 'provider settings expose read-only callback URLs', true, false !== strpos( $provider_cards, 'data-provider-callback' ) && false !== strpos( $provider_cards, 'readonly' ) );
+
+// The screen that used to hold all of the above is now routing only. Size is a
+// blunt proxy, but it is the property that made the old class impossible to
+// keep honest, so it is worth pinning.
+check( 'the settings page no longer renders fields itself', false, false !== strpos( $settings_page, 'form-table' ) );
 check( 'admin script switches provider setup and docs panels', true, false !== strpos( $admin_script, 'initProviderCard' ) && false !== strpos( $admin_script, 'data-provider-panel' ) );
 check( 'provider failure no longer redirects from current callback URL', false, false !== strpos( $provider_controller, 'wp_safe_redirect( Flow::url(' ) );
 

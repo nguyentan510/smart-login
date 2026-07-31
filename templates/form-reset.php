@@ -36,7 +36,7 @@ defined( 'ABSPATH' ) || exit;
 			printf(
 				/* translators: %d: minimum password length. */
 				esc_html__( 'Mật khẩu mới cần tối thiểu %d ký tự.', 'smart-login' ),
-				esc_html( max( 6, Settings::get_int( 'min_password_length', 8 ) ) )
+				esc_html( max( 6, Settings::get_int( 'signup.min_password_length', 8 ) ) )
 			);
 			?>
 		</p>

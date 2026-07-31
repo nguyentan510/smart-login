@@ -851,7 +851,7 @@ class FormController {
 			return 0;
 		}
 
-		return max( 0, Settings::get_int( 'otp_resend_cooldown', 60 ) - ( time() - $sent_at ) );
+		return max( 0, Settings::get_int( 'otp.resend_cooldown', 60 ) - ( time() - $sent_at ) );
 	}
 
 	private function redirect( string $url ): void {

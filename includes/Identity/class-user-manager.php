@@ -44,7 +44,7 @@ class UserManager {
 	 * @param string $opaque_token Output of OpaqueLogin::generate().
 	 */
 	public static function synthetic_email( string $opaque_token ): string {
-		$domain = (string) Settings::get( 'synthetic_email_domain', 'phone.invalid' );
+		$domain = (string) Settings::get( 'identity.synthetic_domain', 'phone.invalid' );
 		$email  = $opaque_token . '@' . $domain;
 
 		/**
@@ -60,7 +60,7 @@ class UserManager {
 	 * Is this address a placeholder rather than something a human reads?
 	 */
 	public static function is_synthetic_email( string $email ): bool {
-		$domain = (string) Settings::get( 'synthetic_email_domain', 'phone.invalid' );
+		$domain = (string) Settings::get( 'identity.synthetic_domain', 'phone.invalid' );
 
 		$is = ( '' !== $domain && str_ends_with( strtolower( $email ), '@' . strtolower( $domain ) ) );
 
@@ -162,7 +162,7 @@ class UserManager {
 			update_user_meta( $user_id, self::META_PHONE, $subject );
 			update_user_meta( $user_id, self::META_PHONE_VERIFIED, $now );
 
-			if ( Settings::is_on( 'woo_sync_billing_phone' ) ) {
+			if ( Settings::is_on( 'woo.sync_billing_phone' ) ) {
 				ProfileSeeder::seed_if_empty( (int) $user_id, 'billing_phone', Phone::to_local( $subject ) );
 			}
 		}

@@ -159,7 +159,7 @@ do_action( 'woocommerce_before_edit_account_form' );
 				<div class="sl-contact-confirm" data-sl-contact-confirm hidden>
 					<p class="sl-hint" data-sl-contact-masked></p>
 					<div class="sl-contact-row">
-						<input type="text" class="sl-input" data-sl-contact-code inputmode="numeric" autocomplete="one-time-code" maxlength="<?php echo esc_attr( Settings::get_int( 'otp_length', 6 ) ); ?>" placeholder="<?php esc_attr_e( 'Mã OTP', 'smart-login' ); ?>" />
+						<input type="text" class="sl-input" data-sl-contact-code inputmode="numeric" autocomplete="one-time-code" maxlength="<?php echo esc_attr( Settings::get_int( 'otp.length', 6 ) ); ?>" placeholder="<?php esc_attr_e( 'Mã OTP', 'smart-login' ); ?>" />
 						<button type="button" class="sl-btn sl-btn--primary" data-sl-contact-verify><?php esc_html_e( 'Xác thực', 'smart-login' ); ?></button>
 					</div>
 					<button type="button" class="sl-link sl-link--button" data-sl-contact-resend><?php esc_html_e( 'Gửi lại mã', 'smart-login' ); ?></button>
@@ -176,7 +176,7 @@ do_action( 'woocommerce_before_edit_account_form' );
 				<div class="sl-contact-confirm" data-sl-contact-confirm hidden>
 					<p class="sl-hint" data-sl-contact-masked></p>
 					<div class="sl-contact-row">
-						<input type="text" class="sl-input" data-sl-contact-code inputmode="numeric" autocomplete="one-time-code" maxlength="<?php echo esc_attr( Settings::get_int( 'otp_length', 6 ) ); ?>" placeholder="<?php esc_attr_e( 'Mã OTP', 'smart-login' ); ?>" />
+						<input type="text" class="sl-input" data-sl-contact-code inputmode="numeric" autocomplete="one-time-code" maxlength="<?php echo esc_attr( Settings::get_int( 'otp.length', 6 ) ); ?>" placeholder="<?php esc_attr_e( 'Mã OTP', 'smart-login' ); ?>" />
 						<button type="button" class="sl-btn sl-btn--primary" data-sl-contact-verify><?php esc_html_e( 'Xác thực', 'smart-login' ); ?></button>
 					</div>
 					<button type="button" class="sl-link sl-link--button" data-sl-contact-resend><?php esc_html_e( 'Gửi lại mã', 'smart-login' ); ?></button>
@@ -204,12 +204,12 @@ do_action( 'woocommerce_before_edit_account_form' );
 			</div>
 		<?php endif; ?>
 
-		<?php if ( Settings::is_on( 'field_gender' ) || Settings::is_on( 'field_dob' ) || Settings::is_on( 'field_referral' ) ) : ?>
+		<?php if ( Settings::is_on( 'profile.gender' ) || Settings::is_on( 'profile.dob' ) || Settings::is_on( 'profile.referral' ) ) : ?>
 			<hr class="sl-separator" />
 			<p class="sl-lead"><?php esc_html_e( 'Thông tin bổ sung', 'smart-login' ); ?></p>
 			<p class="sl-hint"><?php esc_html_e( 'Các thông tin dưới đây không bắt buộc và có thể bổ sung sau.', 'smart-login' ); ?></p>
 
-			<?php if ( Settings::is_on( 'field_gender' ) ) : ?>
+			<?php if ( Settings::is_on( 'profile.gender' ) ) : ?>
 				<fieldset class="sl-field sl-field--radio">
 					<legend class="sl-label"><?php esc_html_e( 'Giới tính', 'smart-login' ); ?></legend>
 					<?php
@@ -227,7 +227,7 @@ do_action( 'woocommerce_before_edit_account_form' );
 				</fieldset>
 			<?php endif; ?>
 
-			<?php if ( Settings::is_on( 'field_dob' ) ) : ?>
+			<?php if ( Settings::is_on( 'profile.dob' ) ) : ?>
 				<div class="sl-field">
 					<label class="sl-label" for="sl-dob"><?php esc_html_e( 'Ngày sinh', 'smart-login' ); ?></label>
 					<input
@@ -243,7 +243,7 @@ do_action( 'woocommerce_before_edit_account_form' );
 				</div>
 			<?php endif; ?>
 
-			<?php if ( Settings::is_on( 'field_referral' ) ) : ?>
+			<?php if ( Settings::is_on( 'profile.referral' ) ) : ?>
 				<div class="sl-field">
 					<label class="sl-label" for="smartlogin_referral_code"><?php esc_html_e( 'Mã giới thiệu', 'smart-login' ); ?></label>
 					<input
@@ -258,7 +258,7 @@ do_action( 'woocommerce_before_edit_account_form' );
 			<?php endif; ?>
 		<?php endif; ?>
 
-		<?php if ( Settings::is_on( 'address_enabled' ) ) : ?>
+		<?php if ( Settings::is_on( 'address.enabled' ) ) : ?>
 			<hr class="sl-separator" />
 
 			<div class="sl-field">
@@ -270,7 +270,7 @@ do_action( 'woocommerce_before_edit_account_form' );
 			AddressFields::output(
 				array(
 					'values'   => AddressFields::get_for_user( $sl_user->ID ),
-					'required' => Settings::is_on( 'address_required_in_profile' ),
+					'required' => Settings::is_on( 'address.required_in_profile' ),
 				)
 			);
 			?>

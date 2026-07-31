@@ -22,7 +22,7 @@ class Placeholders {
 	 * @param array  $ctx         intent, transport, expires_at, user_name…
 	 */
 	public static function build( string $destination, string $code, array $ctx ): array {
-		$ttl        = (int) ( $ctx['ttl_seconds'] ?? Settings::get_int( 'otp_ttl', 300 ) );
+		$ttl        = (int) ( $ctx['ttl_seconds'] ?? Settings::get_int( 'otp.ttl', 300 ) );
 		$is_email   = ( false !== strpos( $destination, '@' ) );
 		$expires_ts = (int) ( $ctx['expires_ts'] ?? ( time() + $ttl ) );
 

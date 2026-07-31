@@ -43,7 +43,7 @@ class AuditLog {
 	 * @param int    $user_id         0 when unknown.
 	 */
 	public static function record( string $event, string $identity_masked = '', array $meta = array(), int $user_id = 0 ): void {
-		if ( ! Settings::is_on( 'audit_enabled' ) ) {
+		if ( ! Settings::is_on( 'advanced.audit_enabled' ) ) {
 			return;
 		}
 

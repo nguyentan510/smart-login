@@ -1,6 +1,16 @@
 <?php
 /**
- * Settings schema, defaults and typed accessors.
+ * Typed access to the stored settings.
+ *
+ * The schema itself lives in FieldRegistry. Nothing is declared twice here:
+ * defaults, types, sanitisers and clamps are all read off the registry, so the
+ * only way to add a setting is to add a row there — and a row there is
+ * simultaneously the thing that draws the control.
+ *
+ * Values are addressed by dot path (`otp.ttl`) and stored nested. The read API
+ * — get(), get_int(), is_on(), phone_enabled(), email_enabled() — keeps the
+ * signatures it always had, so the thirty-odd files that consume settings only
+ * ever saw their key strings change.
  *
  * @package SmartLogin
  */
@@ -13,176 +23,97 @@ class Settings {
 
 	const OPTION = 'smart_login_settings';
 
-	/** @var array|null Runtime cache. */
+	/** Hidden field naming the tab a save came from. */
+	const TAB_FIELD = '_sl_tab';
+
+	/** @var array|null Runtime cache, always in registry shape. */
 	private static $cache = null;
 
 	/**
-	 * Every setting the plugin understands, with its default value.
-	 * Anything not listed here is dropped on save.
+	 * Every setting at its default, nested.
 	 */
 	public static function defaults(): array {
-		return array(
-			// --- Tab: Chung ---
-			'id_mode'                      => 'phone_only', // phone_only | email_only | both.
-			'default_country_code'         => '84',
-			'synthetic_email_domain'       => 'phone.invalid',
-			// `require_verification` used to live here. Nothing ever read it —
-			// every flow verifies unconditionally — so it was a switch wired to
-			// nothing, and one that quietly zeroed itself on save.
-			'min_password_length'          => 8,
-			'field_dob'                    => 1,
-			'field_gender'                 => 1,
-			'field_referral'               => 1,
-			'field_email_optional'         => 1,
-			'redirect_after_register'      => '',
-			'redirect_after_login'         => '',
-			'terms_url'                    => '',
-			'google_enabled'               => 0,
-			'google_client_id'             => '',
-			'zalo_enabled'                 => 0,
-			'zalo_app_id'                  => '',
-			'provider_auto_link_email'     => 1,
+		$out = array();
 
-			// --- Tab: OTP ---
-			'otp_length'                   => 6,
-			'otp_ttl'                      => 300,
-			'otp_max_attempts'             => 5,
-			'otp_resend_cooldown'          => 60,
-			'otp_max_per_destination_hour' => 5,
-			'otp_max_per_ip_hour'          => 10,
-			'login_otp_new_device'         => 0,
-			'login_max_attempts'           => 5,
-			'login_lockout_minutes'        => 15,
+		foreach ( FieldRegistry::all() as $path => $field ) {
+			self::plant( $out, $path, $field['default'] );
+		}
 
-			// --- Tab: Push OTP (webhook) ---
-			'webhook_enabled'              => 0,
-			'webhook_url'                  => '',
-			'webhook_method'               => 'POST',
-			'webhook_content_type'         => 'application/json',
-			'webhook_headers'              => array(),
-			'webhook_body'                 => '{"phone":"{{phone_local}}","content":"{{code}} la ma xac thuc cua ban tai {{site_name}}. Ma co hieu luc {{ttl_minutes}} phut."}',
-			'webhook_timeout'              => 10,
-			'webhook_success_path'         => '',
-			'webhook_success_value'        => '',
-			'webhook_retry'                => 0,
-			'webhook_idempotency_header'   => '',
-
-			// --- Tab: Email ---
-			'email_enabled'                => 1,
-			'email_from_name'              => '',
-			'email_from_address'           => '',
-			'email_subject'                => 'Mã xác thực {{code}} - {{site_name}}',
-			'email_body'                   => "Xin chào,\n\nMã xác thực của bạn là: {{code}}\nMã có hiệu lực trong {{ttl_minutes}} phút.\n\nNếu bạn không yêu cầu mã này, vui lòng bỏ qua email.\n\n{{site_name}}",
-			'email_is_html'                => 0,
-
-			// --- Tab: Nâng cao ---
-			'audit_enabled'                => 1,
-			'audit_retention_days'         => 90,
-			'otp_retention_days'           => 7,
-			'delete_data_on_uninstall'     => 0,
-			'dev_mode'                     => 0,
-
-			// --- Địa chỉ ---
-			'address_enabled'              => 1,
-			'address_quick_search'         => 1,
-			'address_hide_postcode'        => 0,
-			'address_required_in_profile'  => 0,
-
-			// --- WooCommerce ---
-			'woo_replace_login_form'       => 1,
-			'woo_relax_billing_email'      => 0,
-			'woo_block_synthetic_emails'   => 1,
-			'woo_sync_billing_phone'       => 1,
-		);
-	}
-
-	/**
-	 * Fields that are integers/booleans, for sanitising on save.
-	 */
-	public static function int_fields(): array {
-		return array(
-			'min_password_length',
-			'field_dob',
-			'field_gender',
-			'field_referral',
-			'field_email_optional',
-			'google_enabled',
-			'zalo_enabled',
-			'provider_auto_link_email',
-			'otp_length',
-			'otp_ttl',
-			'otp_max_attempts',
-			'otp_resend_cooldown',
-			'otp_max_per_destination_hour',
-			'otp_max_per_ip_hour',
-			'login_otp_new_device',
-			'login_max_attempts',
-			'login_lockout_minutes',
-			'webhook_enabled',
-			'webhook_timeout',
-			'webhook_retry',
-			'email_enabled',
-			'email_is_html',
-			'audit_enabled',
-			'audit_retention_days',
-			'otp_retention_days',
-			'delete_data_on_uninstall',
-			'dev_mode',
-			'address_enabled',
-			'address_quick_search',
-			'address_hide_postcode',
-			'address_required_in_profile',
-			'woo_replace_login_form',
-			'woo_relax_billing_email',
-			'woo_block_synthetic_emails',
-			'woo_sync_billing_phone',
-		);
+		return $out;
 	}
 
 	public static function all(): array {
 		if ( null === self::$cache ) {
 			$stored      = get_option( self::OPTION, array() );
-			$stored      = is_array( $stored ) ? $stored : array();
-			self::$cache = array_merge( self::defaults(), $stored );
+			self::$cache = self::hydrate( is_array( $stored ) ? $stored : array() );
 		}
 
 		return self::$cache;
 	}
 
 	/**
-	 * @param string $key      Setting key.
-	 * @param mixed  $fallback Value to use when the key is unknown.
+	 * Force the stored array into the registry's shape: known paths keep their
+	 * stored value, missing ones fall back to the default, and anything the
+	 * registry does not declare is dropped.
+	 *
+	 * Walking the registry rather than array_replace_recursive() matters for the
+	 * list-valued fields: a recursive merge of two lists pairs them up by index,
+	 * so a stored header list shorter than the default would inherit stale rows
+	 * off the end instead of replacing it.
+	 */
+	private static function hydrate( array $stored ): array {
+		$out = array();
+
+		foreach ( FieldRegistry::all() as $path => $field ) {
+			$value = self::dig( $stored, $path );
+
+			self::plant( $out, $path, null === $value ? $field['default'] : $value );
+		}
+
+		return $out;
+	}
+
+	/**
+	 * @param string $path     Dot path, e.g. `otp.ttl`.
+	 * @param mixed  $fallback Value to use when the path is unknown.
 	 * @return mixed
 	 */
-	public static function get( string $key, $fallback = null ) {
-		$all = self::all();
+	public static function get( string $path, $fallback = null ) {
+		$value = self::dig( self::all(), $path );
 
-		$value = array_key_exists( $key, $all ) ? $all[ $key ] : $fallback;
+		if ( null === $value ) {
+			$value = $fallback;
+		}
 
 		/**
 		 * Filter a single setting value at read time.
 		 *
 		 * @param mixed  $value
-		 * @param string $key
+		 * @param string $path
 		 */
-		return apply_filters( 'smart_login_setting', $value, $key );
+		return apply_filters( 'smart_login_setting', $value, $path );
+	}
+
+	public static function get_int( string $path, int $fallback = 0 ): int {
+		return (int) self::get( $path, $fallback );
+	}
+
+	public static function is_on( string $path ): bool {
+		return (bool) self::get_int( $path );
 	}
 
 	/**
-	 * @param string $key      Setting key.
-	 * @param int    $fallback Value to use when the key is unknown.
+	 * @param array $values Dot path => value.
 	 */
-	public static function get_int( string $key, int $fallback = 0 ): int {
-		return (int) self::get( $key, $fallback );
-	}
-
-	public static function is_on( string $key ): bool {
-		return (bool) self::get_int( $key );
-	}
-
 	public static function update( array $values ): void {
-		$merged = array_merge( self::all(), $values );
-		update_option( self::OPTION, $merged );
+		$all = self::all();
+
+		foreach ( $values as $path => $value ) {
+			self::plant( $all, (string) $path, $value );
+		}
+
+		update_option( self::OPTION, $all );
+
 		self::$cache = null;
 	}
 
@@ -194,32 +125,84 @@ class Settings {
 	 * Whether phone can be used as an identifier.
 	 */
 	public static function phone_enabled(): bool {
-		return in_array( self::get( 'id_mode' ), array( 'phone_only', 'both' ), true );
+		return in_array( self::get( 'identity.mode' ), array( 'phone_only', 'both' ), true );
 	}
 
 	/**
 	 * Whether email can be used as an identifier.
 	 */
 	public static function email_enabled(): bool {
-		return in_array( self::get( 'id_mode' ), array( 'email_only', 'both' ), true );
+		return in_array( self::get( 'identity.mode' ), array( 'email_only', 'both' ), true );
+	}
+
+	// -----------------------------------------------------------------
+	// Saving
+	// -----------------------------------------------------------------
+
+	/**
+	 * Clean one submitted tab and merge it onto what is already stored.
+	 *
+	 * The old version rebuilt the whole option from every default on every save,
+	 * which forced each tab to carry the other tabs' values in hidden inputs —
+	 * gateway credentials included, printed into the DOM of screens that had no
+	 * business showing them. It also meant a key that no tab actually drew got
+	 * silently reset, because an absent key and an unchecked checkbox look
+	 * identical in $_POST.
+	 *
+	 * Both problems have the same fix. Only the fields belonging to the posted
+	 * tab are considered, and every one of those was definitely rendered — so
+	 * "absent" really does mean "unchecked", and every other tab is left exactly
+	 * as it was.
+	 *
+	 * @param mixed $input Raw $_POST slice for this option.
+	 */
+	public static function sanitize( $input ): array {
+		$input = is_array( $input ) ? $input : array();
+		$clean = self::all();
+
+		self::absorb_provider_secrets( $input );
+
+		foreach ( self::posted_fields( $input ) as $path => $field ) {
+			self::plant( $clean, $path, self::sanitize_field( $field, self::dig( $input, $path ) ) );
+		}
+
+		self::$cache = null;
+
+		return $clean;
 	}
 
 	/**
-	 * Strip unknown keys and coerce types. Used by the settings page.
+	 * Which fields this save is allowed to write.
+	 *
+	 * An unrecognised or missing tab writes nothing rather than everything: a
+	 * save that cannot say where it came from has no business rewriting the
+	 * whole option.
+	 *
+	 * @return array<string,array>
 	 */
-	public static function sanitize( array $input ): array {
-		foreach (
-			array(
-				'google' => array(
-					'secret' => 'google_client_secret',
-					'clear'  => 'google_clear_secret',
-				),
-				'zalo'   => array(
-					'secret' => 'zalo_app_secret',
-					'clear'  => 'zalo_clear_secret',
-				),
-			) as $provider => $fields
-		) {
+	private static function posted_fields( array $input ): array {
+		$tab = isset( $input[ self::TAB_FIELD ] ) ? sanitize_key( (string) $input[ self::TAB_FIELD ] ) : '';
+
+		return isset( FieldRegistry::tabs()[ $tab ] ) ? FieldRegistry::for_tab( $tab ) : array();
+	}
+
+	/**
+	 * Provider secrets are encrypted at rest and never round-trip through the
+	 * form, so they are handled outside the registry.
+	 */
+	private static function absorb_provider_secrets( array &$input ): void {
+		$providers = array(
+			'google' => array(
+				'secret' => 'google_client_secret',
+				'clear'  => 'google_clear_secret',
+			),
+			'zalo'   => array(
+				'secret' => 'zalo_app_secret',
+				'clear'  => 'zalo_clear_secret',
+			),
+		);
+
+		foreach ( $providers as $provider => $fields ) {
 			if ( ! empty( $input[ $fields['clear'] ] ) ) {
 				\SmartLogin\Auth\Providers\ProviderCredentials::clear_secret( $provider );
 			} elseif ( '' !== trim( (string) ( $input[ $fields['secret'] ] ?? '' ) ) ) {
@@ -227,6 +210,7 @@ class Settings {
 					$provider,
 					(string) $input[ $fields['secret'] ]
 				);
+
 				if ( ! $stored && function_exists( 'add_settings_error' ) ) {
 					add_settings_error(
 						self::OPTION,
@@ -236,97 +220,88 @@ class Settings {
 					);
 				}
 			}
+
 			unset( $input[ $fields['secret'] ], $input[ $fields['clear'] ] );
 		}
+	}
 
-		$defaults = self::defaults();
-		$ints     = self::int_fields();
-		$clean    = array();
-
-		foreach ( $defaults as $key => $default ) {
-			if ( ! array_key_exists( $key, $input ) ) {
-				// Unchecked checkboxes never appear in $_POST.
-				$clean[ $key ] = in_array( $key, $ints, true ) && is_int( $default ) ? 0 : $default;
-				continue;
-			}
-
-			$value = $input[ $key ];
-
-			if ( in_array( $key, $ints, true ) ) {
-				$clean[ $key ] = max( 0, (int) $value );
-				continue;
-			}
-
-			switch ( $key ) {
-				case 'id_mode':
-					$clean[ $key ] = in_array( $value, array( 'phone_only', 'email_only', 'both' ), true ) ? $value : 'phone_only';
-					break;
-
-				case 'webhook_method':
-					$clean[ $key ] = in_array( strtoupper( (string) $value ), array( 'POST', 'GET' ), true ) ? strtoupper( (string) $value ) : 'POST';
-					break;
-
-				case 'webhook_content_type':
-					$clean[ $key ] = in_array( $value, array( 'application/json', 'application/x-www-form-urlencoded' ), true ) ? $value : 'application/json';
-					break;
-
-				case 'webhook_url':
-					$clean[ $key ] = esc_url_raw( trim( (string) $value ) );
-					break;
-
-				case 'webhook_idempotency_header':
-					$header        = trim( (string) $value );
-					$clean[ $key ] = preg_match( '/^[A-Za-z0-9-]+$/', $header ) ? $header : '';
-					break;
-
-				case 'redirect_after_register':
-				case 'redirect_after_login':
-				case 'terms_url':
-					$clean[ $key ] = esc_url_raw( trim( (string) $value ) );
-					break;
-
-				case 'default_country_code':
-					$clean[ $key ] = preg_replace( '/[^0-9]/', '', (string) $value ) ?: '84';
-					break;
-
-				case 'synthetic_email_domain':
-					$clean[ $key ] = strtolower( preg_replace( '/[^a-z0-9.\-]/i', '', (string) $value ) ) ?: 'phone.invalid';
-					break;
-
-				case 'email_from_address':
-					$clean[ $key ] = is_email( $value ) ? sanitize_email( $value ) : '';
-					break;
-
-				case 'webhook_headers':
-					$clean[ $key ] = self::sanitize_headers( $value );
-					break;
-
-				case 'webhook_body':
-					// Raw JSON/form template. Only admins can save it; keep it verbatim
-					// minus control characters so the payload stays valid JSON.
-					$clean[ $key ] = preg_replace( '/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', (string) $value );
-					break;
-
-				case 'email_body':
-					$clean[ $key ] = wp_kses_post( (string) $value );
-					break;
-
-				default:
-					$clean[ $key ] = sanitize_text_field( (string) $value );
-			}
+	/**
+	 * @param array $field Registry row.
+	 * @param mixed $raw   Submitted value, or null when absent.
+	 * @return mixed
+	 */
+	private static function sanitize_field( array $field, $raw ) {
+		if ( isset( $field['sanitize'] ) ) {
+			return self::sanitize_special( (string) $field['sanitize'], $raw, $field );
 		}
 
-		// Guard rails so a typo cannot brick the flow.
-		$clean['otp_length']          = min( 8, max( 4, (int) $clean['otp_length'] ) );
-		$clean['otp_ttl']             = min( 3600, max( 60, (int) $clean['otp_ttl'] ) );
-		$clean['otp_max_attempts']    = min( 10, max( 1, (int) $clean['otp_max_attempts'] ) );
-		$clean['otp_resend_cooldown'] = min( 600, max( 15, (int) $clean['otp_resend_cooldown'] ) );
-		$clean['min_password_length'] = min( 64, max( 6, (int) $clean['min_password_length'] ) );
-		$clean['webhook_timeout']     = min( 30, max( 3, (int) $clean['webhook_timeout'] ) );
+		switch ( $field['type'] ?? 'text' ) {
+			case 'checkbox':
+				return empty( $raw ) ? 0 : 1;
 
-		self::$cache = null;
+			case 'number':
+				$value = (int) $raw;
 
-		return $clean;
+				if ( isset( $field['min'] ) ) {
+					$value = max( (int) $field['min'], $value );
+				}
+
+				if ( isset( $field['max'] ) ) {
+					$value = min( (int) $field['max'], $value );
+				}
+
+				return $value;
+
+			case 'select':
+				$choices = array_map( 'strval', array_keys( $field['choices'] ?? array() ) );
+
+				return in_array( (string) $raw, $choices, true ) ? (string) $raw : $field['default'];
+
+			case 'url':
+				return esc_url_raw( trim( (string) $raw ) );
+
+			case 'email':
+				return is_email( $raw ) ? sanitize_email( $raw ) : '';
+
+			default:
+				return sanitize_text_field( (string) $raw );
+		}
+	}
+
+	/**
+	 * @param string $rule  Named sanitiser from the registry row.
+	 * @param mixed  $raw   Submitted value, or null when absent.
+	 * @param array  $field Registry row, for its default.
+	 * @return mixed
+	 */
+	private static function sanitize_special( string $rule, $raw, array $field ) {
+		switch ( $rule ) {
+			case 'country_code':
+				return preg_replace( '/[^0-9]/', '', (string) $raw ) ?: $field['default'];
+
+			case 'domain':
+				return strtolower( preg_replace( '/[^a-z0-9.\-]/i', '', (string) $raw ) ) ?: $field['default'];
+
+			case 'header_name':
+				$header = trim( (string) $raw );
+
+				return preg_match( '/^[A-Za-z0-9-]+$/', $header ) ? $header : '';
+
+			case 'raw_template':
+				// A JSON/form template saved verbatim by an administrator. Only the
+				// control characters go, because they are what would make the
+				// payload invalid; everything else is deliberate.
+				return preg_replace( '/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', (string) $raw );
+
+			case 'rich_text':
+				return wp_kses_post( (string) $raw );
+
+			case 'headers':
+				return self::sanitize_headers( $raw );
+
+			default:
+				return sanitize_text_field( (string) $raw );
+		}
 	}
 
 	/**
@@ -339,16 +314,20 @@ class Settings {
 
 		if ( is_string( $raw ) ) {
 			$rows = array();
+
 			foreach ( preg_split( '/\r\n|\r|\n/', $raw ) as $line ) {
 				if ( false === strpos( $line, ':' ) ) {
 					continue;
 				}
-				list( $k, $v ) = explode( ':', $line, 2 );
-				$rows[]        = array(
-					'key'   => $k,
-					'value' => $v,
+
+				list( $key, $value ) = explode( ':', $line, 2 );
+
+				$rows[] = array(
+					'key'   => $key,
+					'value' => $value,
 				);
 			}
+
 			$raw = $rows;
 		}
 
@@ -360,25 +339,68 @@ class Settings {
 			if ( ! is_array( $row ) ) {
 				continue;
 			}
-			$key = sanitize_text_field( $row['key'] ?? '' );
-			$val = sanitize_text_field( $row['value'] ?? '' );
 
-			if ( '' === $key ) {
-				continue;
-			}
+			$key   = sanitize_text_field( $row['key'] ?? '' );
+			$value = sanitize_text_field( $row['value'] ?? '' );
 
-			// Header names must not contain separators/control chars.
+			// Header names must not contain separators or control characters.
 			$key = preg_replace( '/[^A-Za-z0-9\-_]/', '', $key );
+
 			if ( '' === $key ) {
 				continue;
 			}
 
 			$out[] = array(
 				'key'   => $key,
-				'value' => str_replace( array( "\r", "\n" ), '', $val ),
+				'value' => str_replace( array( "\r", "\n" ), '', $value ),
 			);
 		}
 
 		return $out;
+	}
+
+	// -----------------------------------------------------------------
+	// Dot paths
+	// -----------------------------------------------------------------
+
+	/**
+	 * @param array $source
+	 * @return mixed Null when the path is not present.
+	 */
+	private static function dig( array $source, string $path ) {
+		$node = $source;
+
+		foreach ( explode( '.', $path ) as $segment ) {
+			if ( ! is_array( $node ) || ! array_key_exists( $segment, $node ) ) {
+				return null;
+			}
+
+			$node = $node[ $segment ];
+		}
+
+		return $node;
+	}
+
+	/**
+	 * @param array  $target Array to write into, by reference.
+	 * @param string $path   Dot path.
+	 * @param mixed  $value
+	 */
+	private static function plant( array &$target, string $path, $value ): void {
+		$segments = explode( '.', $path );
+		$leaf     = array_pop( $segments );
+		$node     = &$target;
+
+		foreach ( $segments as $segment ) {
+			if ( ! isset( $node[ $segment ] ) || ! is_array( $node[ $segment ] ) ) {
+				$node[ $segment ] = array();
+			}
+
+			$node = &$node[ $segment ];
+		}
+
+		$node[ $leaf ] = $value;
+
+		unset( $node );
 	}
 }

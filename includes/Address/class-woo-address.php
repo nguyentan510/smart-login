@@ -197,7 +197,7 @@ class WooAddress {
 
 		// Vietnamese ecommerce does not use postcodes; removing the field is
 		// cleaner than leaving an optional box nobody fills in.
-		if ( Settings::is_on( 'address_hide_postcode' ) ) {
+		if ( Settings::is_on( 'address.hide_postcode' ) ) {
 			unset( $fields['billing_postcode'], $fields['shipping_postcode'], $fields['postcode'] );
 		}
 

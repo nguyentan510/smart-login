@@ -32,12 +32,12 @@ use SmartLogin\Settings;
 
 Settings::update(
 	array(
-		'id_mode'             => 'both',
-		'google_enabled'      => 1,
-		'zalo_enabled'        => 0,
-		'address_enabled'     => 1,
-		'otp_length'          => 6,
-		'min_password_length' => 8,
+		'identity.mode'              => 'both',
+		'providers.google.enabled'   => 1,
+		'providers.zalo.enabled'     => 0,
+		'address.enabled'            => 1,
+		'otp.length'                 => 6,
+		'signup.min_password_length' => 8,
 	)
 );
 

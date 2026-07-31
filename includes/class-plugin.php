@@ -52,7 +52,7 @@ final class Plugin {
 		$this->services['assets']    = new Assets();
 		$this->services['codes']     = new Shortcodes();
 
-		if ( Settings::is_on( 'address_enabled' ) ) {
+		if ( Settings::is_on( 'address.enabled' ) ) {
 			$this->services['address_rest'] = new AddressRest();
 		}
 
@@ -66,7 +66,7 @@ final class Plugin {
 			$this->services['woo'] = new WooIntegration();
 			$this->services['woo']->register();
 
-			if ( Settings::is_on( 'address_enabled' ) ) {
+			if ( Settings::is_on( 'address.enabled' ) ) {
 				$this->services['woo_address'] = new WooAddress();
 				$this->services['woo_address']->register();
 			}

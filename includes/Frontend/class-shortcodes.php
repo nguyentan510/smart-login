@@ -34,7 +34,7 @@ class Shortcodes {
 	 * belong to whoever is embedding it.
 	 */
 	public function render_address( $atts = array() ): string {
-		if ( ! Settings::is_on( 'address_enabled' ) ) {
+		if ( ! Settings::is_on( 'address.enabled' ) ) {
 			return '';
 		}
 
@@ -117,8 +117,8 @@ class Shortcodes {
 					'form-signup',
 					$common + array(
 						'grant'        => (string) Flow::data( 'grant', '' ),
-						'terms_url'    => (string) Settings::get( 'terms_url', '' ),
-						'min_password' => max( 6, Settings::get_int( 'min_password_length', 8 ) ),
+						'terms_url'    => (string) Settings::get( 'signup.terms_url', '' ),
+						'min_password' => max( 6, Settings::get_int( 'signup.min_password_length', 8 ) ),
 					)
 				);
 
@@ -156,7 +156,7 @@ class Shortcodes {
 	private function identify_args( array $atts ): array {
 		return array(
 			'mode'      => 'register' === ( $atts['mode'] ?? '' ) ? 'register' : 'login',
-			'terms_url' => (string) Settings::get( 'terms_url', '' ),
+			'terms_url' => (string) Settings::get( 'signup.terms_url', '' ),
 		);
 	}
 
@@ -173,7 +173,7 @@ class Shortcodes {
 			'user'          => $user_id > 0 ? get_userdata( $user_id ) : wp_get_current_user(),
 			'fields'        => is_array( $fields ) ? $fields : $profiles->onboarding_fields( $user_id ),
 			'redirect'      => (string) Flow::data( 'redirect', \SmartLogin\Auth\LoginHandler::post_login_redirect() ),
-			'address'       => Settings::is_on( 'address_enabled' )
+			'address'       => Settings::is_on( 'address.enabled' )
 				? AddressFields::get_for_user( $user_id )
 				: array(),
 			// Onboarding has no email input — changing one needs its own OTP
@@ -214,7 +214,7 @@ class Shortcodes {
 			'expires_in'   => (int) $expires_in,
 			'resend_after' => $resend_after,
 			'transport'    => $transport,
-			'otp_length'   => min( 8, max( 4, Settings::get_int( 'otp_length', 6 ) ) ),
+			'otp_length'   => min( 8, max( 4, Settings::get_int( 'otp.length', 6 ) ) ),
 			'dev_code'     => (string) Flow::data( 'dev_code', '' ),
 			'has_session'  => (bool) PendingSession::token(),
 		);

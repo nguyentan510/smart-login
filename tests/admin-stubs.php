@@ -1,0 +1,77 @@
+<?php
+/**
+ * The extra WordPress surface the admin screens touch.
+ *
+ * Kept apart from stubs.php and template-stubs.php so the pure-logic and
+ * front-end suites do not pay for the settings API, the submit button helpers
+ * or the environment probes.
+ *
+ * @package SmartLogin
+ */
+
+if ( ! defined( 'SMART_LOGIN_VERSION' ) ) {
+	define( 'SMART_LOGIN_VERSION', '1.0.1-test' );
+}
+
+if ( ! defined( 'SMART_LOGIN_BASENAME' ) ) {
+	define( 'SMART_LOGIN_BASENAME', 'smart-login/smart-login.php' );
+}
+
+function admin_url( $path = '', $scheme = 'admin' ) {
+	return 'https://example.test/wp-admin/' . ltrim( (string) $path, '/' );
+}
+
+function current_user_can( $capability, ...$args ) {
+	return true;
+}
+
+function wp_get_environment_type() {
+	return 'local';
+}
+
+function settings_fields( $group ) {
+	printf(
+		'<input type="hidden" name="option_page" value="%s" /><input type="hidden" name="action" value="update" />',
+		esc_attr( $group )
+	);
+}
+
+function submit_button( $text = null, $type = 'primary', $name = 'submit', $wrap = true, $other = null ) {
+	printf( '<p class="submit"><button type="submit" class="button button-%s">%s</button></p>', esc_attr( $type ), esc_html( (string) $text ) );
+}
+
+function add_settings_error( $setting, $code, $message, $type = 'error' ) {
+	$GLOBALS['sl_settings_errors'][] = compact( 'setting', 'code', 'message', 'type' );
+}
+
+function wp_next_scheduled( $hook, $args = array() ) {
+	return $GLOBALS['sl_next_scheduled'] ?? false;
+}
+
+function wp_die( $message = '', $title = '', $args = array() ) {
+	throw new RuntimeException( 'wp_die: ' . ( is_string( $message ) ? $message : '' ) );
+}
+
+function add_action( $hook, $callback, $priority = 10, $accepted = 1 ) {
+	return true;
+}
+
+function add_filter( $hook, $callback, $priority = 10, $accepted = 1 ) {
+	return true;
+}
+
+function add_menu_page( ...$args ) {
+	return 'toplevel_page_smart-login';
+}
+
+function add_submenu_page( ...$args ) {
+	return 'smart-login_page_stub';
+}
+
+function register_setting( $group, $option, $args = array() ) {
+	return true;
+}
+
+function wp_localize_script( $handle, $name, $data ) {
+	return true;
+}

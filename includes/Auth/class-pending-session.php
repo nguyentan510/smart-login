@@ -32,7 +32,7 @@ class PendingSession {
 			)
 		);
 
-		self::set_cookie( self::sign( $value ), time() + Settings::get_int( 'otp_ttl', 300 ) + self::GRACE );
+		self::set_cookie( self::sign( $value ), time() + Settings::get_int( 'otp.ttl', 300 ) + self::GRACE );
 	}
 
 	/**

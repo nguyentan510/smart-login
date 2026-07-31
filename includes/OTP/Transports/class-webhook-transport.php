@@ -20,7 +20,7 @@ class WebhookTransport implements TransportInterface {
 	}
 
 	public function is_available(): bool {
-		return Settings::is_on( 'webhook_enabled' ) && '' !== trim( (string) Settings::get( 'webhook_url', '' ) );
+		return Settings::is_on( 'sms.enabled' ) && '' !== trim( (string) Settings::get( 'sms.url', '' ) );
 	}
 
 	/**
@@ -56,15 +56,15 @@ class WebhookTransport implements TransportInterface {
 		$delivery_id        = bin2hex( random_bytes( 16 ) );
 		$ctx['delivery_id'] = $delivery_id;
 		$map                = Placeholders::build( $destination, $code, $ctx );
-		$method             = strtoupper( (string) Settings::get( 'webhook_method', 'POST' ) );
-		$content_type       = (string) Settings::get( 'webhook_content_type', 'application/json' );
-		$timeout            = Settings::get_int( 'webhook_timeout', 10 );
+		$method             = strtoupper( (string) Settings::get( 'sms.method', 'POST' ) );
+		$content_type       = (string) Settings::get( 'sms.content_type', 'application/json' );
+		$timeout            = Settings::get_int( 'sms.timeout', 10 );
 		$is_json            = ( 'application/json' === $content_type );
 
 		// The URL itself may contain placeholders (common for GET-based gateways).
-		$url = Placeholders::render( (string) Settings::get( 'webhook_url', '' ), $map, 'rawurlencode' );
+		$url = Placeholders::render( (string) Settings::get( 'sms.url', '' ), $map, 'rawurlencode' );
 
-		$body_template = (string) Settings::get( 'webhook_body', '' );
+		$body_template = (string) Settings::get( 'sms.body', '' );
 
 		// GET always builds a query string, so JSON escaping never applies there.
 		$escaper = ( $is_json && 'GET' !== $method )
@@ -74,14 +74,14 @@ class WebhookTransport implements TransportInterface {
 		$body = Placeholders::render( $body_template, $map, $escaper );
 
 		$headers = array();
-		foreach ( (array) Settings::get( 'webhook_headers', array() ) as $row ) {
+		foreach ( (array) Settings::get( 'sms.headers', array() ) as $row ) {
 			if ( empty( $row['key'] ) ) {
 				continue;
 			}
 			$headers[ $row['key'] ] = Placeholders::render( (string) ( $row['value'] ?? '' ), $map );
 		}
 
-		$idempotency_header = trim( (string) Settings::get( 'webhook_idempotency_header', '' ) );
+		$idempotency_header = trim( (string) Settings::get( 'sms.idempotency_header', '' ) );
 
 		if ( '' !== $idempotency_header ) {
 			$headers[ $idempotency_header ] = $delivery_id;
@@ -125,7 +125,7 @@ class WebhookTransport implements TransportInterface {
 
 		$has_idempotency = '' !== $idempotency_header
 			&& ! empty( $args['headers'][ $idempotency_header ] );
-		$attempts        = Settings::is_on( 'webhook_retry' ) && $has_idempotency ? 2 : 1;
+		$attempts        = Settings::is_on( 'sms.retry' ) && $has_idempotency ? 2 : 1;
 		$started         = microtime( true );
 		$response        = null;
 
@@ -180,7 +180,7 @@ class WebhookTransport implements TransportInterface {
 			return false;
 		}
 
-		$path = trim( (string) Settings::get( 'webhook_success_path', '' ) );
+		$path = trim( (string) Settings::get( 'sms.success_path', '' ) );
 
 		if ( '' === $path ) {
 			return true;
@@ -193,7 +193,7 @@ class WebhookTransport implements TransportInterface {
 		}
 
 		$actual   = $this->dig( $decoded, $path );
-		$expected = (string) Settings::get( 'webhook_success_value', '' );
+		$expected = (string) Settings::get( 'sms.success_value', '' );
 
 		return null !== $actual && (string) $actual === $expected;
 	}
@@ -222,13 +222,13 @@ class WebhookTransport implements TransportInterface {
 			return sprintf( __( 'Gateway trả về HTTP %d.', 'smart-login' ), $status );
 		}
 
-		$path = trim( (string) Settings::get( 'webhook_success_path', '' ) );
+		$path = trim( (string) Settings::get( 'sms.success_path', '' ) );
 
 		return sprintf(
 			/* translators: 1: JSON path, 2: expected value. */
 			__( 'HTTP 2xx nhưng điều kiện thành công không khớp (cần "%1$s" = "%2$s").', 'smart-login' ),
 			$path,
-			(string) Settings::get( 'webhook_success_value', '' )
+			(string) Settings::get( 'sms.success_value', '' )
 		);
 	}
 

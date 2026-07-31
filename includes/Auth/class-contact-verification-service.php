@@ -156,7 +156,7 @@ final class ContactVerificationService {
 		if ( 'phone' === $type ) {
 			update_user_meta( $user_id, UserManager::META_PHONE, $destination );
 			update_user_meta( $user_id, UserManager::META_PHONE_VERIFIED, $now );
-			if ( Settings::is_on( 'woo_sync_billing_phone' ) ) {
+			if ( Settings::is_on( 'woo.sync_billing_phone' ) ) {
 				// Seed, not overwrite: changing the login phone must not silently
 				// change where the customer's orders get delivered.
 				ProfileSeeder::seed_if_empty( $user_id, 'billing_phone', Phone::to_local( $destination ) );
