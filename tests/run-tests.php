@@ -588,6 +588,30 @@ check( 'signup step does not collect gender', false, false !== strpos( $signup_t
 check( 'signup step does not collect referral code', false, false !== strpos( $signup_template, 'name="referral_code"' ) );
 
 // The welcome screen asks and accepts no for an answer.
+/*
+ * Registration must redirect before the welcome screen renders, and this is a
+ * correctness rule rather than a style one.
+ *
+ * Drawing the welcome screen straight into the sign-in response mints its nonce
+ * in the same request that set the auth cookie. wp_get_session_token() reads
+ * that cookie out of $_COOKIE, which setcookie() does not populate until the
+ * browser sends it back, so the nonce is bound to an empty session token and the
+ * first submit on the welcome screen fails with "Phiên làm việc đã hết hạn".
+ *
+ * Found by registering on a real site; no suite here can reproduce it, because
+ * none of them has a WordPress session. So what is asserted instead is the shape
+ * of the fix: after_registration() hands over to a redirect and does not set a
+ * step for the same request to render.
+ */
+$form_controller = file_get_contents( dirname( __DIR__ ) . '/includes/Frontend/class-form-controller.php' );
+
+preg_match( '/private function after_registration\(.*?\n\t\}/s', $form_controller, $after_registration );
+$after_registration_src = $after_registration[0] ?? '';
+
+check( 'after_registration was located', true, '' !== $after_registration_src );
+check( 'registration redirects rather than rendering in the POST response', true, false !== strpos( $after_registration_src, '$this->redirect(' ) );
+check( 'registration does not render the welcome screen inline', false, false !== strpos( $after_registration_src, 'Flow::set(' ) );
+
 check( 'onboarding always offers a way out', true, false !== strpos( $onboard_template, 'name="sl_skip"' ) );
 check( 'onboarding never asks for a password', false, false !== strpos( $onboard_template, 'partials/password-field' ) );
 check( 'onboarding never embeds contact verification', false, false !== strpos( $onboard_template, 'data-sl-contact' ) );

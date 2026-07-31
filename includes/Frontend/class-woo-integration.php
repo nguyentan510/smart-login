@@ -134,11 +134,11 @@ class WooIntegration {
 	}
 
 	/**
-	 * A freshly registered visitor sent here by PostAuthRedirector.
+	 * A freshly registered visitor, sent here by the redirect that follows
+	 * registration or by PostAuthRedirector after an OAuth signup.
 	 */
 	private function is_welcome_request(): bool {
-		// phpcs:ignore WordPress.Security.NonceVerification -- read-only presentation switch.
-		return is_user_logged_in() && ! empty( $_GET['smartlogin_welcome'] );
+		return Shortcodes::is_welcome_request();
 	}
 
 	private function take_over_account_content(): void {

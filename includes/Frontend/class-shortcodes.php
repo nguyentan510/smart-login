@@ -87,6 +87,13 @@ class Shortcodes {
 
 		$step = Flow::step( $default_step );
 
+		// A just-registered member arrives back here by redirect carrying the
+		// welcome flag. Both the native flow and an OAuth signup land this way, so
+		// this is the only place that decides to show onboarding.
+		if ( self::is_welcome_request() ) {
+			$step = Flow::STEP_ONBOARD;
+		}
+
 		// STEP_ONBOARD renders for a user who has just been signed in, so it is
 		// the one authenticated step this box may show.
 		if ( is_user_logged_in() && ! in_array( $step, array( Flow::STEP_DONE, Flow::STEP_ONBOARD ), true ) ) {
@@ -164,15 +171,32 @@ class Shortcodes {
 	 * Arguments for the welcome screen, whether it was reached in place after a
 	 * registration or by landing on the account page with ?smartlogin_welcome=1.
 	 */
+	/**
+	 * Whether this request is a member returning from registration.
+	 */
+	public static function is_welcome_request(): bool {
+		// phpcs:ignore WordPress.Security.NonceVerification -- read-only presentation switch.
+		return is_user_logged_in() && ! empty( $_GET['smartlogin_welcome'] );
+	}
+
 	public static function onboarding_args(): array {
 		$user_id  = (int) Flow::data( 'user_id', get_current_user_id() );
 		$profiles = new \SmartLogin\Auth\ProfileCompletionService();
 		$fields   = Flow::data( 'fields', null );
 
+		// Marked here rather than before the redirect that brought us: the welcome
+		// counts as delivered once it is actually on screen.
+		if ( $user_id > 0 && ! $profiles->has_seen( $user_id ) ) {
+			$profiles->mark_seen( $user_id, 'otp' );
+		}
+
 		return array(
 			'user'          => $user_id > 0 ? get_userdata( $user_id ) : wp_get_current_user(),
 			'fields'        => is_array( $fields ) ? $fields : $profiles->onboarding_fields( $user_id ),
-			'redirect'      => (string) Flow::data( 'redirect', \SmartLogin\Auth\LoginHandler::post_login_redirect() ),
+			// Where "Hoàn tất" and "Để sau" both lead. post_register_redirect()
+			// honours signup.redirect_register for a new account and is side-effect
+			// free once the welcome has been marked seen just above.
+			'redirect'      => (string) Flow::data( 'redirect', \SmartLogin\Auth\RegisterHandler::post_register_redirect( $user_id ) ),
 			'address'       => Settings::is_on( 'address.enabled' )
 				? AddressFields::get_for_user( $user_id )
 				: array(),

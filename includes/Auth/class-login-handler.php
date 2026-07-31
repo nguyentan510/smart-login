@@ -181,13 +181,20 @@ class LoginHandler {
 
 	/**
 	 * Identical message whether the account exists or the password was wrong.
+	 *
+	 * The identifier is named from the same place the form labels it. This used
+	 * to branch on phone_enabled() alone, which meant a site accepting both told
+	 * somebody who had just typed an email address that their *phone number* was
+	 * wrong — noticed while signing in with an email on a `both` site.
 	 */
 	private function generic_failure(): WP_Error {
 		return new WP_Error(
 			'smart_login_invalid_credentials',
-			Settings::phone_enabled()
-				? __( 'Số điện thoại hoặc mật khẩu không đúng.', 'smart-login' )
-				: __( 'Email hoặc mật khẩu không đúng.', 'smart-login' )
+			sprintf(
+				/* translators: %s: identifier label, e.g. "Số điện thoại hoặc Email". */
+				__( '%s hoặc mật khẩu không đúng.', 'smart-login' ),
+				RegisterHandler::identifier_label()
+			)
 		);
 	}
 

@@ -260,7 +260,7 @@ class FormController {
 			return;
 		}
 
-		$this->after_registration( (int) $user_id );
+		$this->after_registration();
 	}
 
 	/**
@@ -285,26 +285,39 @@ class FormController {
 	}
 
 	/**
-	 * The account exists and the user is signed in. Show the welcome screen in
-	 * place rather than redirecting to a profile form.
+	 * The account exists and the user is signed in. Send them back to the page
+	 * they are on, flagged for the welcome screen.
+	 *
+	 * This has to be a redirect, and the reason is not style. Rendering the
+	 * welcome screen straight into the sign-in response mints its nonce during
+	 * the same request that set the auth cookie — and wp_get_session_token()
+	 * reads that cookie out of $_COOKIE, which setcookie() does not populate
+	 * until the browser sends it back. So the nonce is bound to an empty session
+	 * token, and the first thing the new member does on the welcome screen fails
+	 * with "Phiên làm việc đã hết hạn".
+	 *
+	 * Post/Redirect/Get is the right shape here anyway: the welcome screen is a
+	 * form, and a form that lives inside a POST response re-submits the
+	 * registration on refresh.
 	 */
-	private function after_registration( int $user_id ): void {
-		$profiles = new ProfileCompletionService();
+	private function after_registration(): void {
+		// Not marked seen here. The redirect below carries the flag that shows the
+		// screen, and marking it before it has actually rendered would lose the
+		// welcome entirely if the redirect went astray.
+		$this->redirect( self::welcome_url() );
+	}
 
-		// Mark it seen now, because it is being shown now. This also settles what
-		// post_register_redirect() returns below: with the welcome already
-		// delivered it resolves to the ordinary destination instead of looping
-		// back to the profile page.
-		$profiles->mark_seen( $user_id, 'otp' );
+	/**
+	 * The current page, flagged so whatever renders it shows the welcome screen.
+	 *
+	 * Registration always happens on a page that hosts the form — the Woo account
+	 * page or a page carrying the shortcode — so coming back to it always lands
+	 * somewhere that knows how to draw onboarding.
+	 */
+	public static function welcome_url(): string {
+		$here = remove_query_arg( array( 'smart_login_step', 'smartlogin_welcome' ) );
 
-		Flow::set(
-			Flow::STEP_ONBOARD,
-			array(
-				'user_id'  => $user_id,
-				'fields'   => $profiles->onboarding_fields( $user_id ),
-				'redirect' => RegisterHandler::post_register_redirect( $user_id ),
-			)
-		);
+		return add_query_arg( 'smartlogin_welcome', '1', $here );
 	}
 
 	/**
@@ -495,7 +508,7 @@ class FormController {
 			return;
 		}
 
-		$this->after_registration( (int) $result['user_id'] );
+		$this->after_registration();
 	}
 
 	private function finish_reset_verification( string $token, string $code ): void {
