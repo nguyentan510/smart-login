@@ -118,6 +118,96 @@ foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
 }
 
 // ---------------------------------------------------------------------
+sl_section( 'The overview screen renders and reports blockers' );
+
+$overview = sl_capture(
+	static function (): void {
+		( new \SmartLogin\Admin\Screens\OverviewScreen() )->render();
+	}
+);
+
+sl_assert( 'overview renders', null === $overview['error'], (string) $overview['error'] );
+sl_assert(
+	'overview emits no PHP notice',
+	array() === $overview['warnings'],
+	implode( ' | ', array_slice( $overview['warnings'], 0, 3 ) )
+);
+sl_assert( 'overview produces markup', '' !== trim( $overview['html'] ) );
+
+$readiness = new \SmartLogin\Admin\Readiness();
+$statuses  = array( \SmartLogin\Admin\Readiness::OK, \SmartLogin\Admin\Readiness::WARN, \SmartLogin\Admin\Readiness::FAIL, \SmartLogin\Admin\Readiness::OFF );
+$malformed = array();
+
+foreach ( $readiness->checks() as $check ) {
+	foreach ( array( 'key', 'label', 'status', 'detail', 'action', 'action_label' ) as $required ) {
+		if ( ! isset( $check[ $required ] ) ) {
+			$malformed[] = ( $check['key'] ?? '?' ) . ':' . $required;
+		}
+	}
+
+	if ( ! in_array( $check['status'] ?? '', $statuses, true ) ) {
+		$malformed[] = ( $check['key'] ?? '?' ) . ':status';
+	}
+}
+
+sl_check( 'every check is well formed', array(), $malformed );
+
+/*
+ * The default install cannot send a code: identity.mode is phone-only and
+ * sms.enabled is off, so the SMS transport is unavailable and nothing can reach
+ * a phone number. That combination shipped with no warning anywhere in the
+ * admin, and the first visitor to press Đăng ký was the one who found out.
+ */
+Settings::update(
+	array(
+		'identity.mode' => 'phone_only',
+		'sms.enabled'   => 0,
+		'sms.url'       => '',
+		'email.enabled' => 1,
+	)
+);
+
+$delivery = null;
+
+foreach ( ( new \SmartLogin\Admin\Readiness() )->checks() as $check ) {
+	if ( 'delivery' === $check['key'] ) {
+		$delivery = $check;
+	}
+}
+
+sl_check(
+	'a phone-only site with no SMS channel is reported as blocking',
+	\SmartLogin\Admin\Readiness::FAIL,
+	$delivery['status'] ?? 'missing'
+);
+
+// Deliberately not asserting is_ready() here. Under these stubs the table check
+// also fails, so the aggregate would come back false whether or not the delivery
+// check worked — a test that passes for a reason it is not testing.
+
+// Configuring the webhook clears it.
+Settings::update(
+	array(
+		'sms.enabled' => 1,
+		'sms.url'     => 'https://gateway.example.test/send',
+	)
+);
+
+$delivery_after = null;
+
+foreach ( ( new \SmartLogin\Admin\Readiness() )->checks() as $check ) {
+	if ( 'delivery' === $check['key'] ) {
+		$delivery_after = $check;
+	}
+}
+
+sl_check(
+	'configuring the gateway clears the blocker',
+	\SmartLogin\Admin\Readiness::OK,
+	$delivery_after['status'] ?? 'missing'
+);
+
+// ---------------------------------------------------------------------
 sl_section( 'An unknown tab falls back rather than fataling' );
 
 $fallback = sl_capture(

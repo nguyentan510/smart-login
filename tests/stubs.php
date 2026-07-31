@@ -220,6 +220,7 @@ class SmartLoginStubWpdb {
 	public $prefix = 'wp_';
 	public $users = 'wp_users';
 	public $usermeta = 'wp_usermeta';
+	public $posts = 'wp_posts';
 	public $last_error = '';
 	public $insert_id = 1;
 

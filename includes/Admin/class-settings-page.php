@@ -14,6 +14,7 @@
 namespace SmartLogin\Admin;
 
 use SmartLogin\Admin\Screens\AuditScreen;
+use SmartLogin\Admin\Screens\OverviewScreen;
 use SmartLogin\Admin\Screens\SettingsScreen;
 use SmartLogin\FieldRegistry;
 use SmartLogin\Settings;
@@ -25,6 +26,9 @@ class SettingsPage {
 	const SLUG       = 'smart-login';
 	const AUDIT_SLUG = 'smart-login-audit';
 	const GROUP      = 'smart_login_group';
+
+	/** The readiness screen. It holds no fields, so it is not a registry tab. */
+	const OVERVIEW = 'overview';
 
 	public function register(): void {
 		add_action( 'admin_menu', array( $this, 'add_menu' ) );
@@ -132,13 +136,31 @@ class SettingsPage {
 	// Routing
 	// -----------------------------------------------------------------
 
+	/**
+	 * Overview is the default and the fallback. An unrecognised tab lands on the
+	 * screen that says what is wrong rather than on an arbitrary settings page.
+	 */
 	public function render(): void {
 		self::require_capability();
 
 		// phpcs:ignore WordPress.Security.NonceVerification -- read-only tab switch.
 		$requested = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : '';
 
-		( new SettingsScreen() )->render( $requested );
+		if ( isset( FieldRegistry::tabs()[ $requested ] ) ) {
+			( new SettingsScreen() )->render( $requested );
+			return;
+		}
+
+		( new OverviewScreen() )->render();
+	}
+
+	/**
+	 * Every screen in the strip, readiness first.
+	 *
+	 * @return array<string,string>
+	 */
+	public static function tabs(): array {
+		return array( self::OVERVIEW => __( 'Tổng quan', 'smart-login' ) ) + FieldRegistry::tabs();
 	}
 
 	public function render_audit(): void {
@@ -153,7 +175,7 @@ class SettingsPage {
 	public static function nav( string $active ): void {
 		?>
 		<nav class="nav-tab-wrapper">
-			<?php foreach ( FieldRegistry::tabs() as $slug => $label ) : ?>
+			<?php foreach ( self::tabs() as $slug => $label ) : ?>
 				<a
 					href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::SLUG . '&tab=' . $slug ) ); ?>"
 					class="nav-tab <?php echo $slug === $active ? 'nav-tab-active' : ''; ?>"

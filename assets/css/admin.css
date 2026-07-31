@@ -201,9 +201,84 @@
 	margin-bottom: 8px;
 }
 
+/* ---------- Readiness overview ---------- */
+
+.smart-login-admin .sl-readiness-banner {
+	margin: 16px 0;
+	padding: 16px 20px;
+	border-left: 4px solid #6b7280;
+	border-radius: 3px;
+	background: #fff;
+}
+
+.smart-login-admin .sl-readiness-banner h2 {
+	margin: 0 0 4px;
+	font-size: 16px;
+}
+
+.smart-login-admin .sl-readiness-banner p {
+	margin: 0;
+	color: #50575e;
+}
+
+.smart-login-admin .sl-readiness-banner.is-ready {
+	border-left-color: #128a4c;
+}
+
+.smart-login-admin .sl-readiness-banner.is-blocked {
+	border-left-color: #b42318;
+}
+
+.smart-login-admin .sl-readiness {
+	max-width: 900px;
+}
+
+/* The glyph is decorative — the row also carries a screen-reader status label,
+   so the state does not depend on colour or on the symbol alone. */
+.smart-login-admin .sl-readiness__mark {
+	width: 34px;
+	font-size: 16px;
+	font-weight: 700;
+	text-align: center;
+}
+
+.smart-login-admin .sl-readiness__row.is-ok .sl-readiness__mark {
+	color: #128a4c;
+}
+
+.smart-login-admin .sl-readiness__row.is-fail .sl-readiness__mark {
+	color: #b42318;
+}
+
+.smart-login-admin .sl-readiness__row.is-warn .sl-readiness__mark {
+	color: #8a5a0c;
+}
+
+.smart-login-admin .sl-readiness__row.is-off .sl-readiness__mark {
+	color: #9ca3af;
+}
+
+.smart-login-admin .sl-readiness__label {
+	width: 190px;
+}
+
+.smart-login-admin .sl-readiness__detail {
+	color: #50575e;
+}
+
+.smart-login-admin .sl-readiness__action {
+	width: 190px;
+	text-align: right;
+}
+
 @media screen and (max-width: 782px) {
 	.smart-login-admin .sl-provider-grid {
 		grid-template-columns: 1fr;
+	}
+
+	.smart-login-admin .sl-readiness__label,
+	.smart-login-admin .sl-readiness__action {
+		width: auto;
 	}
 
 	.smart-login-admin .sl-provider-card__header {
