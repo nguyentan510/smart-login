@@ -61,6 +61,14 @@ $suites = array(
 		'file' => 'identity/run-fitness-tests.php',
 		'kind' => 'required',
 	),
+	array(
+		// Actually renders every template. Added after a deleted class survived
+		// in two templates for four phases and fatalled the My Account page,
+		// because no other suite executes template code.
+		'name' => 'Template rendering',
+		'file' => 'identity/run-template-tests.php',
+		'kind' => 'required',
+	),
 );
 
 $results  = array();

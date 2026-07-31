@@ -467,6 +467,44 @@ an untargeted test suite will notice.
 
 ---
 
+## Postscript: a fatal that four gates missed
+
+After the merge, `/my-account/` fatalled on every load:
+
+```
+Uncaught Error: Class "SmartLogin\Identity\IdentityResolver" not found
+  templates/form-auth.php:79
+```
+
+Phase 3 deleted `IdentityResolver` and cleaned up its callers in `includes/` —
+but never grepped `templates/`. Five references survived across two files.
+
+Why each gate let it through, which is the useful part:
+
+| Gate | Why it missed |
+| --- | --- |
+| `php -l`, 139 files | Syntax only. PHP resolves class names at **run** time |
+| Contract suite | Asserted the class was *gone*; never that nothing *referenced* it |
+| 163 regression tests | Inspect template source as strings, never execute it |
+| Integration gate | Exercises REST and provisioning; renders no template |
+
+Two gates were added, and both were demonstrated to fail before the fix rather
+than assumed to work:
+
+1. **Fitness**: every `SmartLogin\…` reference — `use` statements and inline
+   calls — must resolve to a file, using the autoloader's own naming rule. Run
+   against the broken tree it named both files exactly.
+2. **`tests/identity/run-template-tests.php`**: renders all 11 templates with
+   fixtures, failing on a throw, on a PHP notice, or on empty output. Verified by
+   temporarily renaming a method to one that does not exist — which the fitness
+   rule *cannot* catch, since the class still exists. That gap is the reason the
+   smoke test exists as well as the rule.
+
+The general lesson, now recorded because it has bitten three times in this
+refactor: rules of the form "the old thing is gone" are half a rule. The other
+half is "nothing points at the old thing", and neither half is worth much for
+code that no test ever executes.
+
 ## Risks
 
 | Risk | Mitigation |
