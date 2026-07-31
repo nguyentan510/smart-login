@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-07-30 14:34+0000\n"
+"POT-Creation-Date: 2026-07-31 15:40+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -12,12 +12,31 @@ msgstr ""
 "X-Generator: bin/build-pot.php\n"
 "X-Domain: smart-login\n"
 
+#. translators: %s: identifier label, e.g. "Số điện thoại hoặc Email".
+#: includes/Auth/class-login-handler.php:195
+msgid "%s hoặc mật khẩu không đúng."
+msgstr ""
+
 #. translators: %s: identifier label, e.g. "Số điện thoại".
-#: includes/Auth/class-register-handler.php:257
+#: includes/Auth/class-register-handler.php:419
+#: includes/Frontend/class-form-controller.php:318
 msgid "%s không hợp lệ."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:1010
+#. translators: %s: Số điện thoại or Email.
+#: templates/partials/account/contact.php:109
+msgid "%s mới"
+msgstr ""
+
+#: templates/partials/account/profile.php:34
+msgid "(bắt buộc)"
+msgstr ""
+
+#: templates/form-auth.php:84
+msgid "0969 789 475"
+msgstr ""
+
+#: includes/Admin/Screens/class-settings-screen.php:254
 msgid "0969789475"
 msgstr ""
 
@@ -25,7 +44,7 @@ msgstr ""
 msgid "Biểu mẫu đã hết hạn. Vui lòng tải lại trang."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:613
+#: includes/class-field-registry.php:402
 msgid "Body"
 msgstr ""
 
@@ -33,19 +52,32 @@ msgstr ""
 msgid "Body template không tạo ra JSON hợp lệ. Kiểm tra lại dấu ngoặc kép và dấu phẩy."
 msgstr ""
 
-#: templates/profile-summary.php:53
+#: includes/class-gateway-presets.php:62
+msgid "Brandname đã đăng ký"
+msgstr ""
+
+#. translators: 1: current step number, 2: total steps.
+#: templates/partials/steps.php:46
+msgid "Bước %1$d trên %2$d"
+msgstr ""
+
+#: templates/partials/account/status.php:51
 msgid "Bạn có thể bổ sung thêm"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:684
+#: includes/Admin/class-provider-cards.php:32
 msgid "Bạn có thể cấu hình trực tiếp tại đây. Client secret được <strong>mã hóa trước khi lưu</strong> và không bao giờ hiển thị lại. Nếu website đã khai báo credentials trong <code>wp-config.php</code> hoặc biến môi trường, cấu hình triển khai đó sẽ được ưu tiên."
+msgstr ""
+
+#: templates/onboarding.php:167
+msgid "Bạn có thể thêm email trong trang hồ sơ bất cứ lúc nào — việc này cần một mã xác thực riêng nên không nằm ở đây."
 msgstr ""
 
 #: includes/Frontend/class-rest-controller.php:131
 msgid "Bạn cần đăng nhập để thay đổi thông tin liên hệ."
 msgstr ""
 
-#: includes/Frontend/class-form-controller.php:113
+#: includes/Frontend/class-form-controller.php:243
 msgid "Bạn cần đăng nhập để thực hiện việc này."
 msgstr ""
 
@@ -53,13 +85,8 @@ msgstr ""
 msgid "Bạn không có quyền thực hiện thao tác này."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:144
-#: includes/Admin/class-settings-page.php:1052
+#: includes/Admin/class-settings-page.php:190
 msgid "Bạn không có quyền truy cập trang này."
-msgstr ""
-
-#: templates/registered-success.php:40
-msgid "Bạn sẽ được chuyển tới trang hồ sơ để bổ sung thông tin."
 msgstr ""
 
 #: includes/Security/class-request-guard.php:106
@@ -77,6 +104,7 @@ msgid "Bạn đã nhập sai quá số lần cho phép. Vui lòng yêu cầu mã
 msgstr ""
 
 #. translators: %s: site name.
+#: templates/onboarding.php:54
 #: templates/registered-success.php:29
 msgid "Bạn đã trở thành hội viên của %s!"
 msgstr ""
@@ -85,35 +113,60 @@ msgstr ""
 msgid "Bạn đã yêu cầu quá nhiều mã xác thực. Vui lòng thử lại sau 1 giờ."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:1030
+#: includes/Admin/Screens/class-settings-screen.php:274
 msgid "Bảng OTP"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:1031
+#: includes/Admin/class-readiness.php:280
+#: includes/Admin/class-readiness.php:285
+msgid "Bảng dữ liệu"
+msgstr ""
+
+#: includes/Admin/Screens/class-settings-screen.php:275
 msgid "Bảng nhật ký"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:1029
+#: includes/Frontend/class-account-form.php:87
+msgid "Bảo mật"
+msgstr ""
+
+#: includes/class-field-registry.php:47
+msgid "Bảo mật đăng nhập"
+msgstr ""
+
+#: includes/Admin/Screens/class-settings-screen.php:273
 msgid "Bật"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:415
+#: includes/class-field-registry.php:533
 msgid "Bật bộ chọn Tỉnh/Thành phố → Phường/Xã"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:534
+#: includes/class-field-registry.php:332
 msgid "Bật kênh gửi SMS qua webhook"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:664
+#: includes/class-field-registry.php:455
 msgid "Bật kênh gửi email"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:417
+#: includes/Admin/class-readiness.php:171
+msgid "Bật tích hợp WooCommerce"
+msgstr ""
+
+#: includes/class-field-registry.php:540
 msgid "Bắt buộc ở hồ sơ"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:427
+#: templates/onboarding.php:65
+msgid "Bắt đầu khám phá"
+msgstr ""
+
+#: templates/form-signup.php:55
+msgid "Bắt đầu lại"
+msgstr ""
+
+#: includes/class-field-registry.php:574
 msgid "Bỏ bắt buộc nhập email ở trang thanh toán"
 msgstr ""
 
@@ -121,54 +174,62 @@ msgstr ""
 msgid "Bỏ liên kết"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:418
+#: includes/class-field-registry.php:549
 msgid "Bỏ trường Mã bưu điện khỏi form địa chỉ và thanh toán"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:606
+#: includes/Admin/class-field-renderer.php:292
 msgid "Bỏ trống dòng không dùng. Giá trị chứa từ khoá bảo mật sẽ được che khi hiển thị kết quả gửi thử."
 msgstr ""
 
-#: templates/profile-summary.php:55
+#: templates/partials/account/status.php:54
 msgid "Bổ sung thông tin"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:991
+#: includes/Admin/Screens/class-settings-screen.php:220
 msgid "Bộ chọn địa chỉ sẽ không hiển thị gì cho tới khi bạn sinh dữ liệu bằng lệnh sau:"
+msgstr ""
+
+#: includes/Admin/class-readiness.php:221
+msgid "Bộ chọn địa chỉ đang bật nhưng chưa có dữ liệu, nên sẽ không hiển thị gì."
+msgstr ""
+
+#: includes/Admin/class-readiness.php:211
+msgid "Bộ chọn địa chỉ đang tắt."
 msgstr ""
 
 #: templates/registered-success.php:23
 msgid "CHÚC MỪNG"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:1030
-#: includes/Admin/class-settings-page.php:1031
+#: includes/Admin/Screens/class-settings-screen.php:274
+#: includes/Admin/Screens/class-settings-screen.php:275
 msgid "CHƯA TẠO"
 msgstr ""
 
 #. translators: %s: the OTP code.
-#: templates/form-otp.php:65
+#: templates/form-otp.php:84
 msgid "CHẾ ĐỘ DEV — mã xác thực: %s"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:822
+#: includes/Admin/class-provider-cards.php:143
 msgid "Callback URL"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:1075
+#: includes/class-field-registry.php:132
+msgid "Campuchia (+855)"
+msgstr ""
+
+#: includes/Admin/Screens/class-audit-screen.php:45
 msgid "Chi tiết"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:416
-msgid "Cho phép gõ thẳng tên phường/xã để tự điền cả hai ô"
+#. translators: %s: the member's first name.
+#: templates/onboarding.php:74
+msgid "Chào %s! Thêm chút thông tin nữa để nhận đầy đủ ưu đãi hội viên — hoặc để sau cũng được."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:133
-msgid "Chung"
-msgstr ""
-
-#: templates/profile-summary.php:39
-#: templates/woocommerce/form-edit-account.php:48
+#: templates/partials/account/status.php:37
 msgid "Chào mừng bạn! Hãy bổ sung thông tin để nhận đầy đủ ưu đãi hội viên."
 msgstr ""
 
@@ -176,7 +237,7 @@ msgstr ""
 msgid "Chính"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:714
+#: includes/class-field-registry.php:49
 msgid "Chính sách liên kết tài khoản"
 msgstr ""
 
@@ -184,20 +245,43 @@ msgstr ""
 msgid "Chúng tôi cần xác thực thiết bị mới của bạn."
 msgstr ""
 
-#: templates/profile-summary.php:130
+#: templates/form-signup.php:47
+msgid "Chúng tôi đã xác thực được bạn. Chỉ còn hai thông tin nữa là tài khoản sẵn sàng."
+msgstr ""
+
+#: includes/Admin/class-readiness.php:248
+msgid "Chưa bật Google hoặc Zalo. Không bắt buộc."
+msgstr ""
+
+#: includes/Admin/Screens/class-overview-screen.php:36
+msgid "Chưa chạy được"
+msgstr ""
+
+#: templates/profile-summary.php:49
 msgid "Chưa cung cấp"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:1080
+#: includes/Admin/Screens/class-audit-screen.php:50
 msgid "Chưa có bản ghi nào."
 msgstr ""
 
-#. translators: 1: province count, 2: ward count.
-#: includes/Admin/class-settings-page.php:990
+#: includes/Admin/Screens/class-settings-screen.php:219
 msgid "Chưa có dữ liệu hành chính."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:741
+#: templates/partials/account/contact.php:56
+msgid "Chưa có email"
+msgstr ""
+
+#: templates/partials/account/contact.php:47
+msgid "Chưa có số điện thoại"
+msgstr ""
+
+#: includes/Admin/class-readiness.php:169
+msgid "Chưa có trang nào chứa [smart_auth], và tích hợp My Account đang tắt."
+msgstr ""
+
+#: includes/Admin/class-provider-cards.php:61
 msgid "Chưa cấu hình"
 msgstr ""
 
@@ -205,47 +289,60 @@ msgstr ""
 msgid "Chưa cấu hình kênh gửi mã xác thực."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:1034
+#. translators: %s: comma-separated transport names.
+#: includes/Admin/class-readiness.php:132
+msgid "Chưa cấu hình: %s. Người dùng sẽ không nhận được mã xác thực."
+msgstr ""
+
+#: includes/Admin/Screens/class-settings-screen.php:278
 msgid "Chưa lên lịch"
 msgstr ""
 
-#: templates/form-otp.php:120
+#: templates/form-otp.php:139
 msgid "Chưa nhận được mã."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:428
+#: includes/Auth/class-register-handler.php:288
+msgid "Chưa đủ thông tin để tạo tài khoản."
+msgstr ""
+
+#: includes/class-field-registry.php:581
 msgid "Chặn email ảo"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:945
+#: includes/class-otp-presets.php:40
+msgid "Chặt — ưu tiên an toàn"
+msgstr ""
+
+#: includes/Admin/class-readiness.php:298
+#: includes/Admin/class-readiness.php:303
+#: includes/class-field-registry.php:621
 msgid "Chế độ DEV"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:123
+#: includes/Admin/class-settings-page.php:131
 msgid "Chế độ DEV đang bật — mã OTP được hiển thị trực tiếp trên màn hình. Hãy tắt trước khi đưa lên môi trường thật."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:353
+#: includes/Admin/class-readiness.php:87
+#: includes/class-field-registry.php:119
 msgid "Chỉ email"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:362
-msgid "Chỉ nhập chữ số, ví dụ <code>84</code>. Số nhập dạng <code>0969789475</code> sẽ được chuẩn hoá thành <code>84969789475</code>."
-msgstr ""
-
-#: includes/Admin/class-settings-page.php:352
+#: includes/Admin/class-readiness.php:86
+#: includes/class-field-registry.php:118
 msgid "Chỉ số điện thoại"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:720
+#: includes/class-field-registry.php:254
 msgid "Chỉ tự liên kết khi provider xác nhận email đã verified, email trùng chính xác với một tài khoản duy nhất và tài khoản đó không dùng email giả lập."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:567
+#: includes/class-field-registry.php:446
 msgid "Chỉ điền khi gateway cam kết chống gửi trùng, ví dụ <code>Idempotency-Key</code>. Plugin gửi cùng một <code>{{delivery_id}}</code> cho cả hai lần thử."
 msgstr ""
 
-#: templates/profile-summary.php:138
+#: templates/profile-summary.php:57
 msgid "Chỉnh sửa thông tin"
 msgstr ""
 
@@ -257,79 +354,100 @@ msgstr ""
 msgid "Chọn Tỉnh/Thành phố"
 msgstr ""
 
-#: templates/form-auth.php:36
-msgid "Chọn hình thức tài khoản"
+#: includes/class-field-registry.php:268
+msgid "Chọn một mức và sáu giá trị bên dưới được đặt theo. Chọn <em>Tuỳ chỉnh</em> để tự điều chỉnh."
 msgstr ""
 
-#: templates/partials/address-fields.php:48
-msgid "Chọn một gợi ý để tự điền cả Tỉnh/Thành phố và Phường/Xã."
+#: includes/class-field-registry.php:341
+msgid "Chọn nhà cung cấp và chỉ cần điền thông tin xác thực; URL, Body và điều kiện thành công được sinh tự động."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:471
+#: includes/class-field-registry.php:306
 msgid "Chờ giữa 2 lần gửi (giây)"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:44
-#: includes/Admin/class-settings-page.php:45
-#: includes/Admin/class-settings-page.php:100
+#: includes/Admin/class-settings-page.php:54
+#: includes/Admin/class-settings-page.php:55
+#: includes/Admin/class-settings-page.php:110
 msgid "Cài đặt"
 msgstr ""
 
-#: templates/woocommerce/form-edit-account.php:197
-msgid "Các thông tin dưới đây không bắt buộc và có thể bổ sung sau."
+#: includes/Admin/Screens/class-settings-screen.php:156
+msgid "Các giá trị này do lựa chọn ở trên sinh ra. Chọn “Tuỳ chỉnh” nếu bạn cần tự đặt."
 msgstr ""
 
+#: includes/Frontend/class-account-form.php:88
 #: templates/partials/linked-identities.php:27
 msgid "Cách đăng nhập của bạn"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:535
+#: includes/class-otp-presets.php:28
+msgid "Cân bằng — khuyến nghị"
+msgstr ""
+
+#: includes/Frontend/class-assets.php:107
+msgid "Có thay đổi chưa lưu"
+msgstr ""
+
+#: includes/class-field-registry.php:363
 msgid "Có thể chứa placeholder, ví dụ <code>https://api.gateway.vn/send?to={{phone_local}}</code>."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:354
+#: includes/class-field-registry.php:120
 msgid "Cả hai"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:868
+#: includes/Admin/Screens/class-overview-screen.php:99
+msgid "Cảnh báo"
+msgstr ""
+
+#: includes/Admin/class-provider-cards.php:189
 msgid "Cấu hình OAuth consent screen; nếu ứng dụng đang ở Testing, thêm các tài khoản thử nghiệm vào Test users."
 msgstr ""
 
-#: templates/woocommerce/form-edit-account.php:306
-#: templates/woocommerce/form-edit-account.php:307
+#. translators: %s: comma-separated transport names.
+#: includes/Admin/class-readiness.php:136
+msgid "Cấu hình ngay"
+msgstr ""
+
+#: templates/account.php:48
+#: templates/woocommerce/form-edit-account.php:54
+#: templates/woocommerce/form-edit-account.php:55
 msgid "Cập nhật"
 msgstr ""
 
-#: templates/profile-summary.php:49
+#: templates/partials/account/status.php:46
 msgid "Cập nhật ngay"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:367
+#: includes/class-field-registry.php:152
 msgid "Domain email ảo"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:368
+#: includes/class-field-registry.php:154
 msgid "Dùng cho tài khoản chỉ có số điện thoại. Nên giữ đuôi <code>.invalid</code> — theo RFC 2606 domain này không bao giờ phân giải được, nên không thể phát sinh email bounce."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:669
-msgid "Dùng chung bộ placeholder với tab Push OTP."
+#: includes/class-field-registry.php:496
+msgid "Dùng chung bộ placeholder với phần Gửi qua SMS."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:659
-msgid "Dùng hàm wp_mail() của WordPress, nên tự động chạy qua plugin SMTP nếu website đã cài."
-msgstr ""
-
-#: includes/Admin/class-settings-page.php:1032
+#: includes/Admin/Screens/class-settings-screen.php:276
 msgid "Dọn dẹp tiếp theo"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:136
-#: includes/Auth/class-profile-completion-service.php:42
-#: includes/Auth/class-register-handler.php:290
+#: includes/Admin/class-readiness.php:209
+#: includes/Admin/class-readiness.php:219
+#: includes/Admin/class-readiness.php:229
+msgid "Dữ liệu hành chính"
+msgstr ""
+
+#: includes/Admin/class-readiness.php:113
+#: includes/Auth/class-profile-completion-service.php:69
+#: includes/Auth/class-register-handler.php:452
 #: includes/Identity/Channels/class-mail-channel.php:63
-#: templates/profile-summary.php:127
-#: templates/woocommerce/form-edit-account.php:104
+#: templates/partials/account/contact.php:51
+#: templates/profile-summary.php:46
 msgid "Email"
 msgstr ""
 
@@ -337,23 +455,19 @@ msgstr ""
 msgid "Email của nhà cung cấp đã thuộc về tài khoản khác."
 msgstr ""
 
-#: includes/Auth/class-login-handler.php:190
-msgid "Email hoặc mật khẩu không đúng."
-msgstr ""
-
-#: includes/Admin/class-settings-page.php:427
+#: includes/class-field-registry.php:573
 msgid "Email khi thanh toán"
 msgstr ""
 
-#: templates/woocommerce/form-edit-account.php:158
-msgid "Email mới"
+#: includes/class-field-registry.php:508
+msgid "Email không bắt buộc"
 msgstr ""
 
-#: includes/Frontend/class-woo-integration.php:175
+#: includes/Frontend/class-woo-integration.php:229
 msgid "Email mới phải được xác thực bằng mã OTP trước khi lưu."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:666
+#: includes/class-field-registry.php:470
 msgid "Email người gửi"
 msgstr ""
 
@@ -362,7 +476,7 @@ msgid "Email nhận mã (rỗng nếu gửi SMS)"
 msgstr ""
 
 #: includes/Auth/class-contact-verification-service.php:81
-#: includes/Auth/class-contact-verification-service.php:142
+#: includes/Auth/class-contact-verification-service.php:195
 msgid "Email này đã thuộc về tài khoản khác."
 msgstr ""
 
@@ -370,50 +484,52 @@ msgstr ""
 msgid "Email đang thuộc về nhiều tài khoản. Không thể tự động liên kết."
 msgstr ""
 
+#: includes/Admin/class-readiness.php:148
+#: includes/Admin/class-readiness.php:158
+#: includes/Admin/class-readiness.php:167
+msgid "Form đăng nhập"
+msgstr ""
+
 #. translators: %d: HTTP status code.
 #: includes/OTP/Transports/class-webhook-transport.php:222
 msgid "Gateway trả về HTTP %d."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:916
+#: includes/class-field-registry.php:594
 msgid "Ghi nhật ký"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:1065
+#: includes/Admin/Screens/class-audit-screen.php:34
 msgid "Ghi nhật ký đang tắt. Bật ở tab Nâng cao để bắt đầu ghi."
 msgstr ""
 
-#: templates/form-auth.php:111
+#: templates/form-password.php:59
 msgid "Ghi nhớ đăng nhập"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:578
+#: includes/Admin/class-field-renderer.php:264
 msgid "Giá trị"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:647
+#: includes/class-field-registry.php:428
 msgid "Giá trị mong đợi"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:792
-msgid "Giá trị triển khai đang được ưu tiên; ô này là cấu hình dự phòng."
+#: includes/Admin/class-provider-cards.php:113
+msgid "Giá trị triển khai đang được ưu tiên; các ô trên là cấu hình dự phòng."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:482
-msgid "Giới hạn tần suất"
-msgstr ""
-
-#: includes/Admin/class-settings-page.php:387
-#: includes/Auth/class-profile-completion-service.php:58
-#: templates/woocommerce/form-edit-account.php:201
+#: includes/Auth/class-profile-completion-service.php:85
+#: includes/class-field-registry.php:524
+#: templates/partials/account/profile.php:66
 msgid "Giới tính"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:929
+#: includes/class-field-registry.php:613
 msgid "Giữ bản ghi OTP (ngày)"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:919
+#: includes/class-field-registry.php:604
 msgid "Giữ nhật ký (ngày)"
 msgstr ""
 
@@ -421,71 +537,61 @@ msgstr ""
 msgid "Google"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:743
+#: includes/class-field-registry.php:232
 msgid "Google Client ID"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:744
+#: includes/Admin/class-provider-cards.php:64
 msgid "Google Client Secret"
 msgstr ""
 
 #: includes/Auth/Providers/class-google-id-token-verifier.php:110
-#: includes/Auth/Providers/class-google-provider.php:103
+#: includes/Auth/Providers/class-google-provider.php:106
 msgid "Google ID token không đạt điều kiện xác thực."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:697
+#: includes/Admin/class-provider-cards.php:40
 msgid "Google Login"
 msgstr ""
 
-#: includes/Auth/Providers/class-google-provider.php:54
+#: includes/Auth/Providers/class-google-provider.php:57
 msgid "Google Login chưa được cấu hình."
 msgstr ""
 
-#: includes/Auth/Providers/class-google-provider.php:85
+#: includes/Auth/Providers/class-google-provider.php:88
 msgid "Google không trả về ID token."
 msgstr ""
 
-#: includes/Auth/Providers/class-google-provider.php:60
+#: includes/Auth/Providers/class-google-provider.php:63
 msgid "Google không trả về mã xác thực hợp lệ."
 msgstr ""
 
-#: includes/Auth/Providers/class-google-provider.php:108
+#: includes/Auth/Providers/class-google-provider.php:111
 msgid "Google không trả về định danh tài khoản."
 msgstr ""
 
-#: includes/Auth/Providers/class-google-provider.php:136
+#: includes/Auth/Providers/class-google-provider.php:139
 msgid "Google từ chối yêu cầu đăng nhập."
 msgstr ""
 
-#: templates/partials/address-fields.php:39
-msgid "Gõ tên phường/xã, ví dụ: cau giay"
+#: templates/form-signup.php:46
+msgid "Gần xong rồi!"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:563
+#: includes/class-field-registry.php:437
 msgid "Gọi lại 1 lần sau 2 giây. Chỉ hoạt động khi đã cấu hình header idempotency bên dưới."
 msgstr ""
 
-#: templates/woocommerce/form-edit-account.php:144
-#: templates/woocommerce/form-edit-account.php:161
-msgid "Gửi OTP"
-msgstr ""
-
-#: includes/Admin/class-settings-page.php:657
-msgid "Gửi OTP qua email"
-msgstr ""
-
-#: includes/Admin/class-settings-page.php:668
+#: includes/class-field-registry.php:486
 msgid "Gửi dưới dạng HTML"
 msgstr ""
 
 #: includes/Frontend/class-assets.php:96
-#: templates/form-otp.php:126
+#: templates/form-otp.php:145
 msgid "Gửi lại"
 msgstr ""
 
-#: templates/woocommerce/form-edit-account.php:152
-#: templates/woocommerce/form-edit-account.php:169
+#: templates/partials/account/contact.php:137
 msgid "Gửi lại mã"
 msgstr ""
 
@@ -494,8 +600,21 @@ msgstr ""
 msgid "Gửi lại sau %ds"
 msgstr ""
 
+#: includes/class-field-registry.php:36
+#: templates/partials/account/contact.php:120
+msgid "Gửi mã"
+msgstr ""
+
 #: templates/form-forgot.php:47
 msgid "Gửi mã xác thực"
+msgstr ""
+
+#: includes/class-field-registry.php:51
+msgid "Gửi qua SMS"
+msgstr ""
+
+#: includes/class-field-registry.php:52
+msgid "Gửi qua email"
 msgstr ""
 
 #. translators: 1: normalised number, 2: duration in ms.
@@ -503,9 +622,9 @@ msgstr ""
 msgid "Gửi thành công tới %1$s (%2$dms). Kiểm tra điện thoại của bạn."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:89
-#: includes/Admin/class-settings-page.php:997
-#: includes/Admin/class-settings-page.php:1012
+#: includes/Admin/Screens/class-settings-screen.php:241
+#: includes/Admin/Screens/class-settings-screen.php:256
+#: includes/Admin/class-settings-page.php:99
 msgid "Gửi thử"
 msgstr ""
 
@@ -514,46 +633,57 @@ msgstr ""
 msgid "HTTP 2xx nhưng điều kiện thành công không khớp (cần \"%1$s\" = \"%2$s\")."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:566
+#: includes/Frontend/class-form-controller.php:216
+msgid "Hai mật khẩu mới không khớp."
+msgstr ""
+
+#: includes/class-field-registry.php:444
 msgid "Header idempotency"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:572
+#: includes/class-field-registry.php:393
 msgid "Headers"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:946
+#: includes/class-field-registry.php:622
 msgid "Hiển thị mã OTP ngay trên màn hình. Chỉ có tác dụng khi <code>WP_DEBUG</code> bật <strong>và</strong> môi trường không phải <code>production</code>."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:777
-msgid "Hiển thị nút đăng nhập khi provider có đủ credentials."
-msgstr ""
-
-#: includes/Admin/class-settings-page.php:386
-#: includes/Admin/class-settings-page.php:387
-#: includes/Admin/class-settings-page.php:388
-msgid "Hiển thị trong phần Thông tin bổ sung của hồ sơ; không hiển thị khi đăng ký."
+#: includes/class-field-registry.php:517
+#: includes/class-field-registry.php:525
+msgid "Hiển thị ở màn hình chào mừng và trong hồ sơ; không hiển thị khi đăng ký."
 msgstr ""
 
 #: includes/Frontend/class-assets.php:101
-#: templates/partials/password-field.php:52
+#: templates/partials/password-field.php:55
 msgid "Hiện mật khẩu"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:451
+#: includes/class-field-registry.php:286
 msgid "Hiệu lực (giây)"
+msgstr ""
+
+#: includes/class-field-registry.php:139
+msgid "Hoa Kỳ / Canada (+1)"
+msgstr ""
+
+#: templates/onboarding.php:155
+msgid "Hoàn tất"
+msgstr ""
+
+#: templates/form-signup.php:123
+msgid "Hoàn tất đăng ký"
 msgstr ""
 
 #: templates/form-forgot.php:50
 msgid "Hoặc"
 msgstr ""
 
-#: templates/form-auth.php:243
+#: templates/form-auth.php:100
 msgid "Hoặc tiếp tục nhanh với"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:770
+#: includes/Admin/class-provider-cards.php:98
 msgid "Hướng dẫn"
 msgstr ""
 
@@ -561,10 +691,10 @@ msgstr ""
 msgid "Hệ thống ghi nhận quá nhiều yêu cầu từ thiết bị của bạn. Vui lòng thử lại sau."
 msgstr ""
 
-#: includes/Auth/class-profile-completion-service.php:38
-#: templates/form-auth.php:131
-#: templates/profile-summary.php:119
-#: templates/woocommerce/form-edit-account.php:74
+#: includes/Auth/class-profile-completion-service.php:65
+#: templates/form-signup.php:67
+#: templates/partials/account/profile.php:32
+#: templates/profile-summary.php:38
 msgid "Họ tên"
 msgstr ""
 
@@ -572,37 +702,61 @@ msgstr ""
 msgid "Họ tên người dùng (nếu có)"
 msgstr ""
 
-#: templates/profile-summary.php:35
-#: templates/woocommerce/form-edit-account.php:44
+#: includes/class-field-registry.php:37
+msgid "Hồ sơ & Địa chỉ"
+msgstr ""
+
+#: templates/partials/account/status.php:33
 msgid "Hồ sơ của bạn đã đầy đủ. Bạn có thể tiếp tục sử dụng hệ thống."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:1074
+#: templates/onboarding.php:63
+msgid "Hồ sơ của bạn đã đầy đủ. Không còn gì phải điền cả."
+msgstr ""
+
+#: includes/Admin/Screens/class-audit-screen.php:44
 msgid "IP"
 msgstr ""
 
-#: templates/woocommerce/form-edit-account.php:206
-msgid "Khác"
+#: includes/class-field-registry.php:138
+msgid "Indonesia (+62)"
 msgstr ""
 
-#. translators: %s: site name.
-#: templates/registered-success.php:36
-msgid "Khám phá ngay"
+#. translators: %s: linked terms and conditions label.
+#: templates/form-auth.php:123
+msgid "Khi tiếp tục, bạn đồng ý với %s."
+msgstr ""
+
+#: templates/onboarding.php:141
+#: templates/partials/account/profile.php:71
+msgid "Khác"
 msgstr ""
 
 #: includes/Auth/Providers/class-google-id-token-verifier.php:73
 msgid "Khóa xác thực của Google không hợp lệ."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:1027
+#: includes/Admin/class-field-renderer.php:244
+msgid "Không bao giờ được hiển thị lại sau khi lưu."
+msgstr ""
+
+#: includes/Auth/class-contact-verification-service.php:131
+msgid "Không còn mã nào đang chờ xác thực. Hãy gửi mã mới."
+msgstr ""
+
+#: includes/Admin/Screens/class-settings-screen.php:271
 msgid "Không có"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:874
+#: includes/Admin/Screens/class-overview-screen.php:102
+msgid "Không dùng"
+msgstr ""
+
+#: includes/Admin/class-provider-cards.php:195
 msgid "Không dùng JavaScript origin thay cho redirect URI. Google yêu cầu URI callback phải khớp chính xác với URI đã khai báo."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:428
+#: includes/class-field-registry.php:582
 msgid "Không gửi bất kỳ email nào tới địa chỉ ảo (khuyến nghị bật)"
 msgstr ""
 
@@ -614,7 +768,7 @@ msgstr ""
 msgid "Không gửi được mã xác thực. Vui lòng thử lại sau ít phút."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:90
+#: includes/Admin/class-settings-page.php:100
 msgid "Không kết nối được tới máy chủ."
 msgstr ""
 
@@ -626,15 +780,15 @@ msgstr ""
 msgid "Không thể bỏ — đây là cách đăng nhập duy nhất"
 msgstr ""
 
-#: includes/Auth/class-contact-verification-service.php:152
+#: includes/Auth/class-contact-verification-service.php:205
 msgid "Không thể cập nhật thông tin liên hệ."
 msgstr ""
 
-#: includes/Auth/Providers/class-google-provider.php:131
+#: includes/Auth/Providers/class-google-provider.php:134
 msgid "Không thể kết nối tới Google. Vui lòng thử lại."
 msgstr ""
 
-#: includes/Auth/Providers/class-zalo-provider.php:121
+#: includes/Auth/Providers/class-zalo-provider.php:124
 msgid "Không thể kết nối tới Zalo. Vui lòng thử lại."
 msgstr ""
 
@@ -646,7 +800,7 @@ msgstr ""
 msgid "Không thể lưu liên kết tài khoản nhà cung cấp."
 msgstr ""
 
-#: includes/class-settings.php:233
+#: includes/class-settings.php:276
 msgid "Không thể mã hóa secret của provider. Cấu hình cũ được giữ nguyên."
 msgstr ""
 
@@ -662,7 +816,7 @@ msgstr ""
 msgid "Không thể tự động liên kết tài khoản hiện có."
 msgstr ""
 
-#: includes/Auth/class-register-handler.php:275
+#: includes/Auth/class-register-handler.php:437
 msgid "Không thể đăng ký với thông tin này."
 msgstr ""
 
@@ -676,8 +830,9 @@ msgstr ""
 #: includes/Auth/class-password-reset-handler.php:92
 #: includes/Auth/class-password-reset-handler.php:130
 #: includes/Auth/class-session-issuer.php:28
-#: includes/Frontend/class-form-controller.php:272
-#: includes/Frontend/class-form-controller.php:393
+#: includes/Frontend/class-form-controller.php:208
+#: includes/Frontend/class-form-controller.php:654
+#: includes/Frontend/class-form-controller.php:781
 #: includes/Frontend/class-rest-controller.php:205
 #: includes/Frontend/class-rest-controller.php:288
 msgid "Không tìm thấy tài khoản."
@@ -687,7 +842,7 @@ msgstr ""
 msgid "Không tạo được mã xác thực. Vui lòng thử lại."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:546
+#: includes/class-field-registry.php:381
 msgid "Kiểu dữ liệu"
 msgstr ""
 
@@ -707,28 +862,49 @@ msgstr ""
 msgid "Kênh email đang tắt. Hãy bật và lưu cấu hình trước."
 msgstr ""
 
+#: includes/Admin/class-readiness.php:119
+#: includes/Admin/class-readiness.php:128
+msgid "Kênh gửi mã"
+msgstr ""
+
 #: includes/OTP/class-placeholders.php:99
 msgid "Kênh gửi: sms / email"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:415
-#: includes/Admin/class-settings-page.php:534
-#: includes/Admin/class-settings-page.php:664
-#: includes/Admin/class-settings-page.php:777
+#: includes/class-field-registry.php:104
+msgid "Kênh định danh được bật"
+msgstr ""
+
+#: includes/class-field-registry.php:331
+#: includes/class-field-registry.php:454
+#: includes/class-field-registry.php:532
 msgid "Kích hoạt"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:900
+#: includes/class-field-registry.php:225
+msgid "Kích hoạt Google"
+msgstr ""
+
+#: includes/class-field-registry.php:239
+msgid "Kích hoạt Zalo"
+msgstr ""
+
+#: includes/Admin/class-provider-cards.php:221
 msgid "Kích hoạt sản phẩm Zalo Login và khai báo domain website theo yêu cầu của ứng dụng."
 msgstr ""
 
 #. translators: %d: digit position.
-#: templates/form-otp.php:91
+#: templates/form-otp.php:110
 msgid "Ký tự thứ %d của mã OTP"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:389
+#: includes/class-field-registry.php:170
 msgid "Link điều kiện áp dụng"
+msgstr ""
+
+#. translators: %s: provider name, e.g. Google.
+#: templates/partials/account/providers.php:59
+msgid "Liên kết %s"
 msgstr ""
 
 #: includes/Auth/class-identity-link-service.php:130
@@ -739,35 +915,45 @@ msgstr ""
 msgid "Liên kết tài khoản không còn hợp lệ."
 msgstr ""
 
-#: templates/profile-summary.php:102
-#: templates/woocommerce/form-edit-account.php:178
-msgid "Liên kết đăng nhập nhanh"
+#: includes/class-field-registry.php:133
+msgid "Lào (+856)"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:1003
+#: includes/Admin/Screens/class-settings-screen.php:247
 msgid "Lưu cấu hình trước, sau đó gửi một mã thật tới email của bạn để kiểm tra."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:1002
+#: includes/Admin/Screens/class-settings-screen.php:246
 msgid "Lưu cấu hình trước, sau đó gửi một mã thật tới số điện thoại của bạn để kiểm tra."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:916
+#: includes/class-field-registry.php:595
 msgid "Lưu lại các sự kiện đăng nhập / xác thực"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:192
+#: includes/Admin/Screens/class-settings-screen.php:67
 msgid "Lưu thay đổi"
 msgstr ""
 
+#: includes/class-field-registry.php:136
+msgid "Malaysia (+60)"
+msgstr ""
+
+#: includes/class-otp-presets.php:29
+msgid "Mã 6 số, hiệu lực 5 phút, tối đa 5 mã mỗi số mỗi giờ."
+msgstr ""
+
 #: includes/OTP/class-placeholders.php:97
-#: templates/woocommerce/form-edit-account.php:149
-#: templates/woocommerce/form-edit-account.php:166
+#: templates/partials/account/contact.php:133
 msgid "Mã OTP"
 msgstr ""
 
+#: includes/Admin/class-readiness.php:305
+msgid "Mã OTP đang hiển thị thẳng trên màn hình. Tắt trước khi chạy thật."
+msgstr ""
+
 #. translators: %s: masked phone number or email address.
-#: includes/Frontend/class-assets.php:107
+#: includes/Frontend/class-assets.php:104
 msgid "Mã OTP đã được gửi tới %s."
 msgstr ""
 
@@ -775,16 +961,19 @@ msgstr ""
 msgid "Mã giao nhận ổn định giữa các lần retry"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:388
-#: templates/woocommerce/form-edit-account.php:235
-msgid "Mã giới thiệu"
+#: includes/class-otp-presets.php:41
+msgid "Mã hết hạn sau 2 phút và giới hạn gửi thấp hơn. Giảm chi phí SMS, nhưng người dùng chậm tay sẽ phải xin mã mới."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:361
+#: includes/class-field-registry.php:129
 msgid "Mã quốc gia mặc định"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:436
+#: includes/class-otp-presets.php:53
+msgid "Mã sống 10 phút và cho gửi lại nhiều hơn. Dễ dùng hơn ở nơi sóng yếu, đổi lại hoá đơn SMS cao hơn."
+msgstr ""
+
+#: includes/class-field-registry.php:50
 msgid "Mã xác thực"
 msgstr ""
 
@@ -807,7 +996,7 @@ msgstr ""
 msgid "Mã xác thực đã được sử dụng. Vui lòng yêu cầu mã mới."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:930
+#: includes/class-field-registry.php:614
 msgid "Mã đã dùng hoặc hết hạn sẽ bị xoá sau khoảng thời gian này."
 msgstr ""
 
@@ -816,26 +1005,21 @@ msgstr ""
 msgid "Mã đã hết hạn"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:1028
+#: includes/Admin/Screens/class-settings-screen.php:272
 msgid "Môi trường"
 msgstr ""
 
-#: templates/form-auth.php:100
-#: templates/form-auth.php:172
+#: templates/form-password.php:48
+#: templates/form-signup.php:87
 msgid "Mật khẩu"
 msgstr ""
 
-#. translators: %d: minimum password length.
-#: templates/form-auth.php:191
-msgid "Mật khẩu cần có ít nhất %d ký tự."
-msgstr ""
-
-#: templates/form-auth.php:217
-msgid "Mật khẩu của bạn được bảo vệ an toàn."
-msgstr ""
-
-#: templates/woocommerce/form-edit-account.php:275
+#: templates/partials/account/password.php:42
 msgid "Mật khẩu hiện tại"
+msgstr ""
+
+#: includes/Frontend/class-form-controller.php:212
+msgid "Mật khẩu hiện tại không đúng."
 msgstr ""
 
 #: includes/Auth/class-identity-link-service.php:194
@@ -843,7 +1027,7 @@ msgid "Mật khẩu không đúng."
 msgstr ""
 
 #: templates/form-reset.php:54
-#: templates/woocommerce/form-edit-account.php:285
+#: templates/partials/account/password.php:57
 msgid "Mật khẩu mới"
 msgstr ""
 
@@ -853,7 +1037,6 @@ msgid "Mật khẩu mới cần tối thiểu %d ký tự."
 msgstr ""
 
 #: includes/Auth/class-password-policy.php:55
-#: includes/Frontend/class-assets.php:104
 msgid "Mật khẩu nhập lại không khớp."
 msgstr ""
 
@@ -862,73 +1045,95 @@ msgstr ""
 msgid "Mật khẩu phải có ít nhất %d ký tự."
 msgstr ""
 
-#: includes/Frontend/class-assets.php:103
-msgid "Mật khẩu đã khớp."
-msgstr ""
-
-#: includes/Admin/class-settings-page.php:452
+#: includes/class-field-registry.php:287
 msgid "Mặc định 300 giây (5 phút)."
 msgstr ""
 
 #. translators: %s: Google Cloud Console URL.
-#: includes/Admin/class-settings-page.php:855
+#: includes/Admin/class-provider-cards.php:176
 msgid "Mở <a href=\"%s\" target=\"_blank\" rel=\"noopener noreferrer\">Google Cloud Console → Clients</a>, chọn đúng project."
 msgstr ""
 
 #. translators: %s: Zalo Developers URL.
-#: includes/Admin/class-settings-page.php:887
+#: includes/Admin/class-provider-cards.php:208
 msgid "Mở <a href=\"%s\" target=\"_blank\" rel=\"noopener noreferrer\">Zalo Developers</a>, tạo hoặc chọn ứng dụng."
+msgstr ""
+
+#: includes/Admin/class-readiness.php:318
+msgid "Mở cài đặt"
 msgstr ""
 
 #: includes/OTP/class-placeholders.php:98
 msgid "Mục đích: register / login / recover / add_identity"
 msgstr ""
 
-#: templates/woocommerce/form-edit-account.php:205
+#: includes/class-field-registry.php:266
+msgid "Mức bảo mật"
+msgstr ""
+
+#: templates/onboarding.php:140
+#: templates/partials/account/profile.php:70
 msgid "Nam"
 msgstr ""
 
 #. translators: %s: credential source.
-#: includes/Admin/class-settings-page.php:754
+#: includes/Admin/class-provider-cards.php:82
 msgid "Nguồn: %s"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:386
-#: includes/Auth/class-profile-completion-service.php:54
-#: templates/woocommerce/form-edit-account.php:219
+#: includes/Auth/class-profile-completion-service.php:81
+#: includes/class-field-registry.php:516
+#: templates/partials/account/profile.php:50
 msgid "Ngày sinh"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:638
-msgid "Nhiều gateway trả về HTTP 200 kèm mã lỗi trong body. Khai báo ở đây để plugin phân biệt được gửi thành công thật sự."
+#: includes/Admin/Screens/class-overview-screen.php:34
+msgid "Người dùng có thể đăng ký và đăng nhập ngay bây giờ."
+msgstr ""
+
+#: includes/class-field-registry.php:48
+#: includes/class-field-registry.php:339
+msgid "Nhà cung cấp"
 msgstr ""
 
 #: includes/Auth/class-account-provisioner.php:43
 msgid "Nhà cung cấp không trả về định danh hợp lệ."
 msgstr ""
 
-#: templates/woocommerce/form-edit-account.php:115
-msgid "Nhập email"
+#: templates/form-auth.php:50
+msgid "Nhập email của bạn để tiếp tục. Chúng tôi sẽ tự nhận ra bạn đã có tài khoản hay chưa."
 msgstr ""
 
-#: templates/form-auth.php:202
-msgid "Nhập lại mật khẩu"
+#: includes/Admin/class-field-renderer.php:238
+msgid "Nhập giá trị"
 msgstr ""
 
 #: templates/form-reset.php:63
-#: templates/woocommerce/form-edit-account.php:295
+#: templates/partials/account/password.php:68
 msgid "Nhập lại mật khẩu mới"
+msgstr ""
+
+#: templates/form-password.php:24
+msgid "Nhập mật khẩu"
 msgstr ""
 
 #: templates/partials/linked-identities.php:56
 msgid "Nhập mật khẩu để xác nhận"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:808
+#: includes/Admin/class-provider-cards.php:129
 msgid "Nhập secret"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:91
+#: templates/form-auth.php:48
+msgid "Nhập số điện thoại của bạn để tiếp tục. Chúng tôi sẽ tự nhận ra bạn đã có tài khoản hay chưa."
+msgstr ""
+
+#: templates/form-auth.php:52
+msgid "Nhập số điện thoại hoặc email của bạn để tiếp tục. Chúng tôi sẽ tự nhận ra bạn đã có tài khoản hay chưa."
+msgstr ""
+
+#: includes/Admin/class-settings-page.php:101
 msgid "Nhập số điện thoại hoặc email để gửi thử."
 msgstr ""
 
@@ -936,20 +1141,24 @@ msgstr ""
 msgid "Nhập thông tin tài khoản của bạn. Chúng tôi sẽ gửi mã xác thực để bạn đặt lại mật khẩu."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:53
-#: includes/Admin/class-settings-page.php:54
+#: includes/Admin/class-settings-page.php:63
+#: includes/Admin/class-settings-page.php:64
 msgid "Nhật ký"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:913
+#: includes/class-field-registry.php:56
 msgid "Nhật ký & dọn dẹp"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:1062
+#: includes/Admin/Screens/class-audit-screen.php:30
 msgid "Nhật ký Smart Login"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:138
+#: includes/Admin/Screens/class-overview-screen.php:37
+msgid "Những mục màu đỏ bên dưới đang chặn luồng đăng nhập. Sửa xong là dùng được."
+msgstr ""
+
+#: includes/class-field-registry.php:38
 msgid "Nâng cao"
 msgstr ""
 
@@ -957,27 +1166,28 @@ msgstr ""
 msgid "Nếu thông tin hợp lệ, mã xác thực sẽ được gửi tới bạn."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:903
+#: includes/Admin/class-provider-cards.php:224
 msgid "Nếu ứng dụng Zalo còn ở chế độ phát triển, chỉ các tài khoản được cấp quyền thử nghiệm có thể đăng nhập."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:669
+#: includes/class-field-registry.php:494
 msgid "Nội dung"
 msgstr ""
 
-#: templates/woocommerce/form-edit-account.php:204
+#: templates/onboarding.php:139
+#: templates/partials/account/profile.php:69
 msgid "Nữ"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:134
-msgid "OTP"
-msgstr ""
-
-#: includes/Admin/class-settings-page.php:515
+#: includes/class-field-registry.php:212
 msgid "OTP cho thiết bị lạ"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:1026
+#: includes/class-field-registry.php:137
+msgid "Philippines (+63)"
+msgstr ""
+
+#: includes/Admin/Screens/class-settings-screen.php:270
 msgid "Phiên bản plugin"
 msgstr ""
 
@@ -985,19 +1195,20 @@ msgstr ""
 msgid "Phiên liên kết tài khoản không còn hợp lệ."
 msgstr ""
 
+#: includes/Frontend/class-form-controller.php:152
 #: includes/Security/class-request-guard.php:70
 msgid "Phiên làm việc đã hết hạn. Vui lòng tải lại trang và thử lại."
 msgstr ""
 
-#: includes/Frontend/class-form-controller.php:118
+#: includes/Frontend/class-form-controller.php:248
 #: includes/Frontend/class-rest-controller.php:117
 msgid "Phiên làm việc đã hết hạn. Vui lòng tải lại trang."
 msgstr ""
 
 #: includes/Auth/class-password-reset-handler.php:124
-#: includes/Auth/class-register-handler.php:118
+#: includes/Auth/class-register-handler.php:166
 #: includes/Auth/class-session-issuer.php:37
-#: includes/Frontend/class-form-controller.php:220
+#: includes/Frontend/class-form-controller.php:601
 #: includes/Frontend/class-rest-controller.php:230
 #: includes/OTP/class-otp-service.php:211
 msgid "Phiên xác thực không hợp lệ."
@@ -1007,19 +1218,24 @@ msgstr ""
 msgid "Phiên xác thực không hợp lệ. Vui lòng bắt đầu lại."
 msgstr ""
 
-#: includes/Auth/class-contact-verification-service.php:123
-#: includes/Frontend/class-rest-controller.php:398
+#: includes/Auth/class-contact-verification-service.php:176
+#: includes/Frontend/class-rest-controller.php:411
 msgid "Phiên xác thực thông tin liên hệ không hợp lệ."
 msgstr ""
 
-#: includes/Frontend/class-form-controller.php:197
-#: includes/Frontend/class-form-controller.php:305
-#: includes/Frontend/class-rest-controller.php:429
+#: includes/Frontend/class-form-controller.php:578
+#: includes/Frontend/class-form-controller.php:687
+#: includes/Frontend/class-rest-controller.php:442
 msgid "Phiên xác thực đã hết hạn. Vui lòng thực hiện lại."
 msgstr ""
 
-#: templates/form-otp.php:35
+#: templates/form-otp.php:54
 msgid "Phiên xác thực đã kết thúc. Vui lòng thực hiện lại."
+msgstr ""
+
+#: includes/Auth/class-register-handler.php:214
+#: templates/form-signup.php:53
+msgid "Phiên đăng ký đã hết hạn. Vui lòng thực hiện lại."
 msgstr ""
 
 #: includes/Auth/class-o-auth-transaction-store.php:39
@@ -1042,11 +1258,11 @@ msgstr ""
 msgid "Phiên đặt lại mật khẩu đã hết hạn. Vui lòng thực hiện lại."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:940
+#: includes/class-field-registry.php:57
 msgid "Phát triển"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:538
+#: includes/class-field-registry.php:370
 msgid "Phương thức"
 msgstr ""
 
@@ -1057,29 +1273,17 @@ msgstr ""
 
 #: includes/Address/class-woo-address.php:106
 #: includes/Address/class-woo-address.php:174
-#: templates/partials/address-fields.php:78
+#: templates/partials/address-fields.php:54
 msgid "Phường/Xã"
 msgstr ""
 
-#: includes/Address/class-address-fields.php:143
+#: includes/Address/class-address-fields.php:142
 #: includes/Address/class-woo-address.php:348
 msgid "Phường/Xã không thuộc Tỉnh/Thành phố đã chọn. Vui lòng chọn lại."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:620
-msgid "Placeholder"
-msgstr ""
-
-#: includes/Admin/class-settings-page.php:529
-msgid "Plugin sẽ gọi HTTP tới địa chỉ bạn cấu hình mỗi khi cần gửi mã qua SMS/ZNS. Dùng được với mọi gateway, n8n, Make hoặc Zapier mà không cần viết code."
-msgstr ""
-
-#: includes/Admin/class-settings-page.php:135
-msgid "Push OTP"
-msgstr ""
-
-#: templates/form-otp.php:37
-#: templates/form-otp.php:114
+#: templates/form-otp.php:56
+#: templates/form-otp.php:133
 msgid "Quay lại"
 msgstr ""
 
@@ -1087,57 +1291,62 @@ msgstr ""
 msgid "Quay lại đăng nhập"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:356
-msgid "Quyết định trường định danh trên form đăng ký và đăng nhập."
+#: includes/class-field-registry.php:122
+msgid "Quyết định trường định danh trên màn hình đăng nhập/đăng ký."
 msgstr ""
 
 #: templates/form-forgot.php:19
 msgid "Quên mật khẩu"
 msgstr ""
 
-#: templates/form-auth.php:114
+#: templates/form-password.php:62
 msgid "Quên mật khẩu?"
 msgstr ""
 
-#: templates/woocommerce/form-edit-account.php:252
-msgid "Quốc gia"
+#: includes/Admin/class-readiness.php:109
+msgid "SMS"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:902
+#: includes/Admin/class-provider-cards.php:223
 msgid "Sao chép App ID và App Secret vào các ô tương ứng, bật Kích hoạt rồi Lưu thay đổi."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:871
+#: includes/Admin/class-provider-cards.php:192
 msgid "Sao chép Client ID và Client Secret vào các ô tương ứng, bật Kích hoạt rồi Lưu thay đổi."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:831
+#: includes/Admin/class-provider-cards.php:152
 msgid "Sao chép chính xác URL này sang cấu hình ứng dụng của provider."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:1099
+#: includes/Admin/Screens/class-audit-screen.php:69
 msgid "Sau"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:398
+#: includes/class-field-registry.php:178
 msgid "Sau khi đăng ký"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:404
+#: includes/class-field-registry.php:186
 msgid "Sau khi đăng nhập"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:811
+#: includes/Admin/class-provider-cards.php:132
 msgid "Secret chỉ dùng khi lưu; plugin không đưa secret hiện có trở lại HTML."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:740
+#: includes/Admin/class-provider-cards.php:60
 msgid "Settings đã mã hóa"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:33
-#: includes/Admin/class-settings-page.php:34
-#: includes/Admin/class-settings-page.php:153
+#: includes/class-field-registry.php:134
+msgid "Singapore (+65)"
+msgstr ""
+
+#: includes/Admin/Screens/class-overview-screen.php:27
+#: includes/Admin/Screens/class-settings-screen.php:41
+#: includes/Admin/class-settings-page.php:43
+#: includes/Admin/class-settings-page.php:44
 msgid "Smart Login"
 msgstr ""
 
@@ -1145,7 +1354,7 @@ msgstr ""
 msgid "Smart Login yêu cầu PHP 8.0 trở lên. Plugin đang tạm dừng hoạt động."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:122
+#: includes/Admin/class-settings-page.php:130
 msgid "Smart Login:"
 msgstr ""
 
@@ -1161,8 +1370,12 @@ msgstr ""
 msgid "SĐT dạng quốc tế — +84969789475"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:761
+#: includes/Admin/class-provider-cards.php:89
 msgid "Sẵn sàng"
+msgstr ""
+
+#: includes/Admin/Screens/class-overview-screen.php:33
+msgid "Sẵn sàng hoạt động"
 msgstr ""
 
 #. translators: %s: normalised number.
@@ -1170,52 +1383,54 @@ msgstr ""
 msgid "Số %s không khớp đầu số hợp lệ. Kiểm tra lại mã quốc gia trong tab Chung."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:441
+#: includes/class-field-registry.php:277
 msgid "Số ký tự"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:461
+#: includes/class-field-registry.php:296
 msgid "Số lần nhập sai tối đa"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:495
+#: includes/class-field-registry.php:196
 msgid "Số lần sai trước khi khoá"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:486
+#: includes/class-field-registry.php:323
 msgid "Số mã tối đa / IP / giờ"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:485
+#: includes/class-field-registry.php:314
 msgid "Số mã tối đa / số ĐT / giờ"
 msgstr ""
 
 #: includes/Address/class-woo-address.php:169
-#: templates/partials/address-fields.php:109
+#: templates/partials/address-fields.php:85
 msgid "Số nhà, tên đường"
 msgstr ""
 
-#: includes/Auth/class-register-handler.php:290
+#: includes/class-field-registry.php:145
+msgid "Số nhập dạng <code>0969789475</code> sẽ được chuẩn hoá thành <code>84969789475</code>."
+msgstr ""
+
+#: includes/Auth/class-register-handler.php:452
 #: includes/Identity/Channels/class-phone-channel.php:48
-#: templates/profile-summary.php:123
-#: templates/woocommerce/form-edit-account.php:89
+#: templates/form-otp.php:39
+#: templates/form-signup.php:38
+#: templates/partials/account/contact.php:42
+#: templates/profile-summary.php:42
 msgid "Số điện thoại"
 msgstr ""
 
-#: includes/Auth/class-register-handler.php:287
+#: includes/Auth/class-register-handler.php:449
 msgid "Số điện thoại hoặc Email"
 msgstr ""
 
-#: templates/woocommerce/form-edit-account.php:124
-msgid "Số điện thoại hoặc email mới chỉ được lưu sau khi mã OTP hợp lệ."
+#: includes/Admin/class-readiness.php:88
+msgid "Số điện thoại hoặc email"
 msgstr ""
 
 #: includes/OTP/class-placeholders.php:92
 msgid "Số điện thoại hoặc email nhận mã"
-msgstr ""
-
-#: includes/Auth/class-login-handler.php:189
-msgid "Số điện thoại hoặc mật khẩu không đúng."
 msgstr ""
 
 #: includes/Admin/class-webhook-tester.php:69
@@ -1223,52 +1438,36 @@ msgstr ""
 msgid "Số điện thoại không hợp lệ."
 msgstr ""
 
-#: templates/woocommerce/form-edit-account.php:141
-msgid "Số điện thoại mới"
-msgstr ""
-
-#: includes/Frontend/class-woo-integration.php:333
+#: includes/Frontend/class-woo-integration.php:378
 msgid "Số điện thoại người nhận"
 msgstr ""
 
 #: includes/Auth/class-contact-verification-service.php:80
-#: includes/Auth/class-contact-verification-service.php:141
+#: includes/Auth/class-contact-verification-service.php:194
 msgid "Số điện thoại này đã thuộc về tài khoản khác."
 msgstr ""
 
-#: templates/woocommerce/form-edit-account.php:98
-msgid "Số điện thoại đã xác thực, không thể tự thay đổi."
-msgstr ""
-
-#: includes/Admin/class-settings-page.php:1072
+#: includes/Admin/Screens/class-audit-screen.php:42
 msgid "Sự kiện"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:425
+#: includes/class-field-registry.php:557
 msgid "Thay form My Account"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:425
+#: includes/class-field-registry.php:558
 msgid "Thay thế form đăng nhập/đăng ký mặc định của WooCommerce"
 msgstr ""
 
-#: templates/woocommerce/form-edit-account.php:123
-msgid "Thay đổi thông tin liên hệ"
-msgstr ""
-
-#: includes/Frontend/class-form-controller.php:424
+#: includes/Frontend/class-form-controller.php:812
 msgid "Thiết bị mới được phát hiện. Vui lòng nhập mã xác thực vừa gửi cho bạn."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:767
+#: includes/Admin/class-provider-cards.php:95
 msgid "Thiết lập"
 msgstr ""
 
-#: templates/form-auth.php:165
-msgid "Thiết lập mật khẩu"
-msgstr ""
-
-#: includes/Admin/class-settings-page.php:761
+#: includes/Admin/class-provider-cards.php:89
 msgid "Thiếu credentials"
 msgstr ""
 
@@ -1276,21 +1475,43 @@ msgstr ""
 msgid "Thiếu số điện thoại hoặc email nhận mã."
 msgstr ""
 
-#: includes/Identity/class-user-manager.php:104
+#: includes/Identity/class-user-manager.php:102
 msgid "Thiếu thông tin định danh."
 msgstr ""
 
-#: templates/profile-summary.php:45
+#. translators: %s: comma-separated table names.
+#: includes/Admin/class-readiness.php:289
+msgid "Thiếu: %s. Hãy tắt rồi bật lại plugin."
+msgstr ""
+
+#: includes/class-otp-presets.php:52
+msgid "Thoáng — ưu tiên thuận tiện"
+msgstr ""
+
+#: includes/class-field-registry.php:135
+msgid "Thái Lan (+66)"
+msgstr ""
+
+#: templates/partials/account/contact.php:48
+#: templates/partials/account/contact.php:57
+msgid "Thêm"
+msgstr ""
+
+#: templates/partials/account/providers.php:48
+msgid "Thêm một cách đăng nhập nhanh:"
+msgstr ""
+
+#: templates/form-otp.php:41
+#: templates/form-signup.php:40
+msgid "Thông tin"
+msgstr ""
+
+#: templates/partials/account/status.php:43
 msgid "Thông tin bắt buộc còn thiếu"
 msgstr ""
 
-#. translators: %s: comma-separated list of field labels.
-#: templates/woocommerce/form-edit-account.php:57
-msgid "Thông tin bắt buộc còn thiếu: %s"
-msgstr ""
-
-#: templates/woocommerce/form-edit-account.php:196
-msgid "Thông tin bổ sung"
+#: includes/Frontend/class-account-form.php:84
+msgid "Thông tin cá nhân"
 msgstr ""
 
 #: includes/Auth/class-password-reset-handler.php:57
@@ -1299,13 +1520,13 @@ msgstr ""
 
 #: includes/Auth/class-contact-verification-service.php:54
 #: includes/Auth/class-contact-verification-service.php:64
-#: includes/Auth/class-contact-verification-service.php:116
-#: includes/Auth/class-contact-verification-service.php:132
+#: includes/Auth/class-contact-verification-service.php:169
+#: includes/Auth/class-contact-verification-service.php:185
 msgid "Thông tin liên hệ không hợp lệ."
 msgstr ""
 
 #. translators: %s: masked phone number or email address.
-#: includes/Frontend/class-assets.php:108
+#: includes/Frontend/class-assets.php:105
 msgid "Thông tin liên hệ đã được xác thực."
 msgstr ""
 
@@ -1313,20 +1534,25 @@ msgstr ""
 msgid "Thông tin này chưa được đăng ký. Vui lòng kiểm tra lại hoặc tạo tài khoản mới."
 msgstr ""
 
-#: includes/Auth/class-register-handler.php:271
+#: includes/Auth/class-register-handler.php:433
 msgid "Thông tin này đã được đăng ký. Vui lòng đăng nhập."
 msgstr ""
 
+#: includes/class-field-registry.php:348
+msgid "Thông tin xác thực"
+msgstr ""
+
 #: includes/Auth/class-identity-link-service.php:119
-#: includes/Auth/class-register-handler.php:133
+#: includes/Auth/class-register-handler.php:181
+#: includes/Auth/class-register-handler.php:221
 msgid "Thông tin định danh không hợp lệ."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:1071
+#: includes/Admin/Screens/class-audit-screen.php:41
 msgid "Thời gian (UTC)"
 msgstr ""
 
-#: templates/form-otp.php:102
+#: templates/form-otp.php:121
 msgid "Thời gian còn lại:"
 msgstr ""
 
@@ -1338,7 +1564,7 @@ msgstr ""
 msgid "Thời gian hiệu lực tính bằng phút"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:505
+#: includes/class-field-registry.php:205
 msgid "Thời gian khoá (phút)"
 msgstr ""
 
@@ -1346,20 +1572,26 @@ msgstr ""
 msgid "Thời điểm hết hạn"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:563
+#: includes/class-field-registry.php:436
 #: templates/form-reset.php:29
 msgid "Thử lại"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:555
+#: includes/class-field-registry.php:413
 msgid "Timeout (giây)"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:667
+#: includes/class-field-registry.php:478
 msgid "Tiêu đề"
 msgstr ""
 
-#: templates/form-otp.php:109
+#: templates/partials/steps.php:27
+msgid "Tiến độ đăng ký"
+msgstr ""
+
+#: templates/form-auth.php:95
+#: templates/form-otp.php:128
+#: templates/registered-success.php:36
 msgid "Tiếp tục"
 msgstr ""
 
@@ -1371,20 +1603,32 @@ msgstr ""
 msgid "Tiếp tục với Zalo"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:870
+#: includes/Admin/class-provider-cards.php:191
 msgid "Trong Authorized redirect URIs, dán chính xác Callback URL ở tab Thiết lập."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:901
+#: includes/Admin/class-provider-cards.php:222
 msgid "Trong cấu hình callback/redirect URL, dán chính xác Callback URL ở tab Thiết lập."
 msgstr ""
 
-#: templates/partials/address-fields.php:102
+#: templates/partials/address-fields.php:78
 msgid "Trình duyệt đang tắt JavaScript: hãy chọn Tỉnh/Thành phố và bấm Cập nhật trước, sau đó danh sách Phường/Xã sẽ hiện ra để bạn chọn tiếp."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:1096
+#: includes/Admin/Screens/class-audit-screen.php:66
 msgid "Trước"
+msgstr ""
+
+#: includes/class-field-registry.php:53
+msgid "Trường hồ sơ"
+msgstr ""
+
+#: includes/class-otp-presets.php:64
+msgid "Tuỳ chỉnh"
+msgstr ""
+
+#: includes/class-gateway-presets.php:41
+msgid "Tuỳ chỉnh — tự khai báo mọi thứ"
 msgstr ""
 
 #: includes/Auth/class-account-provisioner.php:53
@@ -1401,18 +1645,22 @@ msgid "Tài khoản tạm thời bị khoá do đăng nhập sai nhiều lần. 
 msgstr ""
 
 #: includes/Auth/class-account-provisioner.php:150
-#: includes/Auth/class-register-handler.php:144
-#: includes/Identity/class-user-manager.php:109
-#: includes/Identity/class-user-manager.php:119
-#: includes/Identity/class-user-manager.php:151
+#: includes/Auth/class-register-handler.php:306
+#: includes/Identity/class-user-manager.php:107
+#: includes/Identity/class-user-manager.php:117
+#: includes/Identity/class-user-manager.php:149
 msgid "Tài khoản đã tồn tại."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:577
+#: includes/class-field-registry.php:509
+msgid "Tài khoản đăng ký bằng số điện thoại không bị coi là thiếu thông tin khi chưa có email. <strong>Tắt sẽ khiến mọi tài khoản chỉ có số điện thoại bị nhắc bổ sung email.</strong>"
+msgstr ""
+
+#: includes/Admin/class-field-renderer.php:263
 msgid "Tên"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:665
+#: includes/class-field-registry.php:462
 msgid "Tên người gửi"
 msgstr ""
 
@@ -1420,88 +1668,98 @@ msgstr ""
 msgid "Tên website"
 msgstr ""
 
-#: templates/partials/address-fields.php:32
-msgid "Tìm nhanh"
-msgstr ""
-
-#: includes/Admin/class-settings-page.php:956
+#: includes/Admin/Screens/class-settings-screen.php:188
 msgid "Tình trạng hệ thống"
 msgstr ""
 
 #. translators: %s: linked terms and conditions label.
-#: templates/form-auth.php:228
+#: templates/form-signup.php:112
 msgid "Tôi đồng ý với %s."
 msgstr ""
 
-#: templates/form-auth.php:233
+#: templates/form-signup.php:117
 msgid "Tôi đồng ý với các điều khoản áp dụng."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:869
+#: includes/Admin/class-provider-cards.php:190
 msgid "Tạo OAuth Client ID loại Web application."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:848
+#: includes/Admin/class-provider-cards.php:169
 msgid "Tạo OAuth Client trên Google Cloud"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:880
+#: templates/form-auth.php:40
+msgid "Tạo tài khoản"
+msgstr ""
+
+#: includes/Admin/class-provider-cards.php:201
 msgid "Tạo ứng dụng Zalo Login"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:1029
+#: includes/Admin/Screens/class-settings-screen.php:273
 msgid "Tắt"
+msgstr ""
+
+#: includes/Admin/class-readiness.php:307
+msgid "Tắt ngay"
 msgstr ""
 
 #: includes/Address/class-woo-address.php:102
 #: includes/Address/class-woo-address.php:178
-#: templates/partials/address-fields.php:54
+#: templates/partials/address-fields.php:30
 msgid "Tỉnh/Thành phố"
 msgstr ""
 
-#: includes/Address/class-address-fields.php:131
+#: includes/Address/class-address-fields.php:130
 msgid "Tỉnh/Thành phố không hợp lệ."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:442
-msgid "Từ 4 đến 8."
+#: includes/Admin/class-settings-page.php:163
+msgid "Tổng quan"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:719
+#: includes/class-field-registry.php:253
 msgid "Tự liên kết bằng email"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:535
+#: includes/class-otp-presets.php:65
+msgid "Tự đặt từng giá trị bên dưới."
+msgstr ""
+
+#: includes/class-field-registry.php:362
 msgid "URL"
 msgstr ""
 
-#: templates/woocommerce/form-edit-account.php:253
-msgid "Việt Nam"
+#: includes/class-gateway-presets.php:75
+msgid "URL nhận webhook"
 msgstr ""
 
-#: includes/Address/class-address-fields.php:135
+#: includes/class-field-registry.php:131
+msgid "Việt Nam (+84)"
+msgstr ""
+
+#: includes/Address/class-address-fields.php:134
 msgid "Vui lòng chọn Phường/Xã."
 msgstr ""
 
-#: includes/Address/class-address-fields.php:125
+#: includes/Address/class-address-fields.php:124
 msgid "Vui lòng chọn Tỉnh/Thành phố."
 msgstr ""
 
-#: includes/Address/class-address-fields.php:112
+#: includes/Address/class-address-fields.php:111
 msgid "Vui lòng chọn địa chỉ."
 msgstr ""
 
 #. translators: %s: identifier label.
 #: includes/Auth/class-password-reset-handler.php:46
+#: includes/Frontend/class-form-controller.php:300
 msgid "Vui lòng nhập %s."
 msgstr ""
 
 #: includes/Auth/class-register-handler.php:58
+#: includes/Auth/class-register-handler.php:227
 msgid "Vui lòng nhập họ tên."
-msgstr ""
-
-#: includes/Frontend/class-assets.php:105
-msgid "Vui lòng nhập lại mật khẩu."
 msgstr ""
 
 #: includes/OTP/class-otp-service.php:201
@@ -1520,30 +1778,31 @@ msgstr ""
 msgid "Vui lòng nhập số điện thoại hoặc email nhận thử."
 msgstr ""
 
-#: includes/Auth/class-register-handler.php:245
+#: includes/Auth/class-register-handler.php:407
 msgid "Vui lòng nhập số điện thoại."
 msgstr ""
 
 #. translators: %s: masked email address.
-#: templates/form-otp.php:47
+#: templates/form-otp.php:66
 msgid "Vui lòng nhập vào mã OTP đã được gửi đến email %s"
 msgstr ""
 
 #. translators: %s: masked phone number.
-#: templates/form-otp.php:53
+#: templates/form-otp.php:72
 msgid "Vui lòng nhập vào mã OTP đã được gửi đến số điện thoại %s"
 msgstr ""
 
-#: includes/Frontend/class-form-controller.php:351
+#: includes/Frontend/class-form-controller.php:740
 #: includes/Frontend/class-rest-controller.php:256
 msgid "Vui lòng nhập đầy đủ thông tin đăng nhập."
 msgstr ""
 
-#: includes/Auth/class-register-handler.php:246
+#: includes/Auth/class-register-handler.php:408
 msgid "Vui lòng nhập địa chỉ email."
 msgstr ""
 
 #: includes/Auth/class-register-handler.php:62
+#: includes/Auth/class-register-handler.php:231
 msgid "Vui lòng đồng ý với các điều kiện áp dụng."
 msgstr ""
 
@@ -1556,11 +1815,11 @@ msgstr ""
 msgid "Vào tài khoản"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:647
+#: includes/class-field-registry.php:429
 msgid "Ví dụ <code>100</code>."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:645
+#: includes/class-field-registry.php:421
 msgid "Ví dụ <code>CodeResult</code> hoặc <code>data.status</code>. Để trống thì chỉ cần HTTP 2xx là coi như thành công."
 msgstr ""
 
@@ -1568,20 +1827,24 @@ msgstr ""
 msgid "Ví dụ: 12 Trần Duy Hưng"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:462
+#: includes/class-field-registry.php:297
 msgid "Vượt quá thì mã bị huỷ và người dùng phải yêu cầu mã mới."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:551
+#: includes/class-field-registry.php:386
 msgid "Với GET, phần Body bên dưới được dùng làm query string."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:614
+#: includes/class-field-registry.php:404
 msgid "Với JSON, các giá trị thay thế được escape tự động nên nội dung luôn hợp lệ."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:1029
+#: includes/Admin/Screens/class-settings-screen.php:273
 msgid "WP_DEBUG"
+msgstr ""
+
+#: includes/class-gateway-presets.php:68
+msgid "Webhook JSON (n8n / Make / Zapier)"
 msgstr ""
 
 #: includes/Admin/class-webhook-tester.php:87
@@ -1592,16 +1855,32 @@ msgstr ""
 msgid "Webhook chưa được bật hoặc chưa có URL."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:422
-#: includes/Admin/class-settings-page.php:1027
+#: includes/Admin/Screens/class-settings-screen.php:271
+#: includes/class-field-registry.php:55
 msgid "WooCommerce"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:951
+#: includes/Admin/Screens/class-overview-screen.php:58
+msgid "Xem"
+msgstr ""
+
+#: includes/Admin/Screens/class-settings-screen.php:150
+msgid "Xem giá trị đang áp dụng"
+msgstr ""
+
+#: includes/Admin/class-readiness.php:223
+msgid "Xem hướng dẫn"
+msgstr ""
+
+#: includes/Admin/Screens/class-settings-screen.php:151
+msgid "Xem request sẽ được gửi"
+msgstr ""
+
+#: includes/class-field-registry.php:630
 msgid "Xoá bảng, tuỳ chọn và user meta khi gỡ plugin. <strong>Không thể hoàn tác.</strong>"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:950
+#: includes/class-field-registry.php:629
 msgid "Xoá dữ liệu khi gỡ"
 msgstr ""
 
@@ -1613,20 +1892,21 @@ msgstr ""
 msgid "Xác nhận bỏ liên kết"
 msgstr ""
 
-#: templates/woocommerce/form-edit-account.php:150
-#: templates/woocommerce/form-edit-account.php:167
+#: templates/form-otp.php:40
+#: templates/form-signup.php:39
+#: templates/partials/account/contact.php:135
 msgid "Xác thực"
 msgstr ""
 
-#: templates/form-otp.php:29
+#: templates/form-otp.php:48
 msgid "Xác thực OTP"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:816
+#: includes/Admin/class-provider-cards.php:137
 msgid "Xóa secret đã lưu khi bấm Lưu thay đổi"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:417
+#: includes/class-field-registry.php:541
 msgid "Yêu cầu chọn địa chỉ khi cập nhật hồ sơ"
 msgstr ""
 
@@ -1636,7 +1916,7 @@ msgstr ""
 msgid "Yêu cầu không hợp lệ."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:516
+#: includes/class-field-registry.php:213
 msgid "Yêu cầu nhập OTP khi đăng nhập từ thiết bị chưa từng thấy. <strong>Lưu ý chi phí SMS.</strong>"
 msgstr ""
 
@@ -1644,67 +1924,74 @@ msgstr ""
 msgid "Zalo"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:743
+#: includes/class-field-registry.php:246
 msgid "Zalo App ID"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:744
+#: includes/Admin/class-provider-cards.php:65
 msgid "Zalo App Secret"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:705
+#: includes/Admin/class-provider-cards.php:41
 msgid "Zalo Login"
 msgstr ""
 
-#: includes/Auth/Providers/class-zalo-provider.php:51
+#: includes/Auth/Providers/class-zalo-provider.php:54
 msgid "Zalo Login chưa được cấu hình."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:906
+#: includes/Admin/class-provider-cards.php:227
 msgid "Zalo Login và Zalo OA/ZNS là hai chức năng khác nhau. Phần này chỉ cấu hình đăng nhập; gửi OTP qua OA/ZNS thuộc kênh OTP riêng."
 msgstr ""
 
-#: includes/Auth/Providers/class-zalo-provider.php:80
+#: includes/Auth/Providers/class-zalo-provider.php:83
 msgid "Zalo không trả về access token."
 msgstr ""
 
-#: includes/Auth/Providers/class-zalo-provider.php:56
+#: includes/Auth/Providers/class-zalo-provider.php:59
 msgid "Zalo không trả về mã xác thực hợp lệ."
 msgstr ""
 
-#: includes/Auth/Providers/class-zalo-provider.php:93
+#: includes/Auth/Providers/class-zalo-provider.php:96
 msgid "Zalo không trả về định danh tài khoản."
 msgstr ""
 
-#: includes/Auth/Providers/class-zalo-provider.php:126
+#: includes/Auth/Providers/class-zalo-provider.php:129
 msgid "Zalo từ chối yêu cầu đăng nhập."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:1010
+#: includes/Admin/Screens/class-settings-screen.php:254
+#: templates/form-auth.php:84
 msgid "ban@example.com"
 msgstr ""
 
 #. translators: %s: linked terms and conditions label.
-#: templates/form-auth.php:229
+#: templates/form-auth.php:124
+#: templates/form-signup.php:113
 msgid "các điều khoản áp dụng"
 msgstr ""
 
-#: templates/woocommerce/form-edit-account.php:226
+#: templates/onboarding.php:126
+#: templates/partials/account/profile.php:57
 msgid "dd/mm/yyyy"
 msgstr ""
 
-#: templates/profile-summary.php:65
-#: templates/woocommerce/form-edit-account.php:132
+#: templates/partials/account/status.php:66
+#: templates/partials/account/status.php:73
 msgid "email"
 msgstr ""
 
+#: templates/partials/account/contact.php:67
+msgid "lưu riêng, không qua nút Cập nhật"
+msgstr ""
+
 #. translators: 1: contact type, 2: masked destination.
-#: templates/profile-summary.php:65
-#: templates/woocommerce/form-edit-account.php:132
+#: templates/partials/account/status.php:66
+#: templates/partials/account/status.php:73
 msgid "số điện thoại"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:739
+#: includes/Admin/class-provider-cards.php:59
 msgid "wp-config.php / Environment"
 msgstr ""
 
@@ -1712,51 +1999,64 @@ msgstr ""
 msgid "wp_mail() trả về false. Nguyên nhân thường gặp: máy chủ chưa cấu hình SMTP."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:416
-msgid "Ô tìm nhanh"
+#. translators: %d: minimum password length.
+#: templates/form-signup.php:99
+msgid "Ít nhất %d ký tự. Bấm vào biểu tượng con mắt để kiểm tra lại."
+msgstr ""
+
+#: includes/Admin/Screens/class-overview-screen.php:96
+msgid "Đang chặn"
 msgstr ""
 
 #. translators: 1: contact type, 2: masked destination.
-#: templates/woocommerce/form-edit-account.php:131
+#: templates/partials/account/status.php:72
 msgid "Đang chờ xác thực %1$s: %2$s. Bạn có thể gửi lại một mã mới bên dưới."
 msgstr ""
 
 #. translators: 1: contact type, 2: masked destination.
-#: templates/profile-summary.php:64
+#: templates/partials/account/status.php:65
 msgid "Đang chờ xác thực %1$s: %2$s. Mở trang chỉnh sửa hồ sơ để nhập mã OTP."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:88
+#: includes/Admin/class-settings-page.php:98
 #: includes/Frontend/class-assets.php:100
 msgid "Đang gửi…"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:1027
+#: includes/Admin/Screens/class-settings-screen.php:271
 msgid "Đang hoạt động"
+msgstr ""
+
+#: includes/Admin/class-readiness.php:150
+msgid "Đang thay form My Account của WooCommerce."
 msgstr ""
 
 #: includes/Frontend/class-assets.php:82
 msgid "Đang tải…"
 msgstr ""
 
+#: includes/Admin/class-readiness.php:298
+msgid "Đang tắt."
+msgstr ""
+
 #. translators: %s: masked phone number or email address.
-#: includes/Frontend/class-assets.php:109
+#: includes/Frontend/class-assets.php:106
 msgid "Đang xử lý…"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:393
-msgid "Điều hướng"
-msgstr ""
-
-#: includes/Admin/class-settings-page.php:636
-msgid "Điều kiện thành công"
+#: includes/class-field-registry.php:566
+msgid "Điền sẵn <code>billing_phone</code> từ số điện thoại đã xác thực khi ô đó còn trống"
 msgstr ""
 
 #: includes/Auth/class-identity-link-service.php:137
 msgid "Đây là cách đăng nhập duy nhất của bạn. Hãy thêm số điện thoại, email hoặc một liên kết khác trước khi bỏ liên kết này."
 msgstr ""
 
-#: includes/Frontend/class-form-controller.php:133
+#: templates/partials/account/address.php:35
+msgid "Đây là địa chỉ giao hàng mặc định, dùng chung với tab Địa chỉ — sửa ở đây là sửa cả hai."
+msgstr ""
+
+#: includes/Frontend/class-form-controller.php:263
 msgid "Đã bỏ liên kết."
 msgstr ""
 
@@ -1765,49 +2065,73 @@ msgstr ""
 msgid "Đã chuyển email cho WordPress gửi tới %s. Kiểm tra hộp thư (kể cả mục Spam)."
 msgstr ""
 
+#. translators: %d: province count.
+#: includes/Admin/class-readiness.php:233
+msgid "Đã cài %d tỉnh/thành."
+msgstr ""
+
 #. translators: 1: province count, 2: ward count.
-#: includes/Admin/class-settings-page.php:978
+#: includes/Admin/Screens/class-settings-screen.php:207
 msgid "Đã cài dữ liệu hành chính: %1$d tỉnh/thành, %2$d phường/xã."
 msgstr ""
 
-#: includes/Frontend/class-form-controller.php:322
+#: includes/Frontend/class-form-controller.php:704
 msgid "Đã gửi lại mã xác thực."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:808
+#: includes/Frontend/class-form-controller.php:181
+msgid "Đã lưu thông tin của bạn."
+msgstr ""
+
+#: includes/Admin/class-field-renderer.php:237
+#: includes/Admin/class-provider-cards.php:129
 msgid "Đã lưu — để trống để giữ nguyên"
 msgstr ""
 
-#: templates/form-auth.php:57
-#: templates/form-auth.php:238
-msgid "Đăng ký"
+#: includes/Admin/class-readiness.php:121
+msgid "Đã sẵn sàng cho mọi hình thức định danh đang bật."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:373
-msgid "Đăng ký và hồ sơ"
+#: includes/Admin/class-readiness.php:160
+msgid "Đã đặt shortcode trên một trang."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:490
-#: templates/form-auth.php:46
-#: templates/form-auth.php:118
+#: templates/onboarding.php:49
+msgid "ĐĂNG KÝ THÀNH CÔNG"
+msgstr ""
+
+#: includes/class-field-registry.php:46
+msgid "Đăng ký và điều hướng"
+msgstr ""
+
+#: templates/form-password.php:67
 msgid "Đăng nhập"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:350
+#: includes/Frontend/class-account-form.php:85
+msgid "Đăng nhập & liên hệ"
+msgstr ""
+
+#: includes/class-field-registry.php:34
+msgid "Đăng nhập & Đăng ký"
+msgstr ""
+
+#: includes/class-field-registry.php:116
 msgid "Đăng nhập bằng"
 msgstr ""
 
-#: templates/form-auth.php:34
+#: templates/form-auth.php:41
 msgid "Đăng nhập hoặc đăng ký"
 msgstr ""
 
-#: includes/Frontend/class-form-controller.php:381
+#: includes/Frontend/class-form-controller.php:769
 #: includes/Frontend/class-rest-controller.php:314
 msgid "Đăng nhập không thành công."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:137
-#: includes/Admin/class-settings-page.php:679
+#: includes/Admin/class-readiness.php:246
+#: includes/Admin/class-readiness.php:255
+#: includes/class-field-registry.php:35
 msgid "Đăng nhập nhanh"
 msgstr ""
 
@@ -1819,15 +2143,19 @@ msgstr ""
 msgid "Đăng xuất"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:644
-msgid "Đường dẫn JSON"
+#: includes/class-field-registry.php:420
+msgid "Đường dẫn JSON báo thành công"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:527
-msgid "Đẩy OTP ra hệ thống ngoài"
+#: includes/Admin/Screens/class-overview-screen.php:93
+msgid "Đạt"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:485
+#: includes/Admin/class-readiness.php:280
+msgid "Đầy đủ."
+msgstr ""
+
+#: includes/class-field-registry.php:315
 msgid "Đặt 0 để bỏ giới hạn (không khuyến nghị)."
 msgstr ""
 
@@ -1835,41 +2163,61 @@ msgstr ""
 msgid "Đặt lại mật khẩu"
 msgstr ""
 
-#: includes/Frontend/class-form-controller.php:492
+#: includes/Frontend/class-form-controller.php:880
 msgid "Đặt lại mật khẩu thành công. Vui lòng đăng nhập bằng mật khẩu mới."
 msgstr ""
 
-#: templates/woocommerce/form-edit-account.php:119
-msgid "Để thêm hoặc đổi email, hãy dùng bước xác thực OTP bên dưới."
+#: includes/Auth/class-profile-completion-service.php:44
+msgid "Để chúng tôi biết xưng hô với bạn thế nào"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:389
+#: includes/Auth/class-profile-completion-service.php:47
+msgid "Để gợi ý sản phẩm hợp với bạn hơn"
+msgstr ""
+
+#: includes/Auth/class-profile-completion-service.php:46
+msgid "Để nhận ưu đãi vào dịp sinh nhật"
+msgstr ""
+
+#: templates/onboarding.php:158
+msgid "Để sau"
+msgstr ""
+
+#: includes/class-field-registry.php:171
 msgid "Để trống nếu không có trang điều khoản riêng."
+msgstr ""
+
+#: templates/partials/account/password.php:33
+msgid "Để trống nếu không muốn thay đổi"
 msgstr ""
 
 #: includes/Security/class-request-guard.php:48
 msgid "Để trống ô này"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:666
+#: includes/class-field-registry.php:471
 msgid "Để trống để dùng cấu hình mặc định của WordPress."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:399
-#: includes/Admin/class-settings-page.php:405
+#: includes/class-field-registry.php:179
+#: includes/class-field-registry.php:187
 msgid "Để trống để dùng trang Tài khoản của WooCommerce."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:665
+#: includes/class-field-registry.php:463
 msgid "Để trống để dùng tên website."
 msgstr ""
 
-#: includes/Auth/class-profile-completion-service.php:47
-#: includes/Auth/class-profile-completion-service.php:50
+#: includes/Auth/class-profile-completion-service.php:45
+msgid "Để đơn hàng được giao đúng nơi, không phải nhập lại mỗi lần"
+msgstr ""
+
+#: includes/Auth/class-profile-completion-service.php:74
+#: includes/Auth/class-profile-completion-service.php:77
 msgid "Địa chỉ"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:411
+#: includes/class-field-registry.php:54
 msgid "Địa chỉ 2 cấp"
 msgstr ""
 
@@ -1878,12 +2226,17 @@ msgstr ""
 msgid "Địa chỉ email không hợp lệ."
 msgstr ""
 
+#: includes/Frontend/class-account-form.php:86
+msgid "Địa chỉ giao hàng"
+msgstr ""
+
 #: includes/OTP/class-placeholders.php:104
 msgid "Địa chỉ website"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:345
-#: includes/Admin/class-settings-page.php:1073
+#: includes/Admin/Screens/class-audit-screen.php:43
+#: includes/Admin/class-readiness.php:94
+#: includes/class-field-registry.php:45
 msgid "Định danh"
 msgstr ""
 
@@ -1891,27 +2244,33 @@ msgstr ""
 msgid "Định danh chính"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:668
+#: includes/class-field-registry.php:485
 msgid "Định dạng"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:426
+#: includes/class-field-registry.php:565
 msgid "Đồng bộ SĐT"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:426
-msgid "Đồng bộ hai chiều giữa số điện thoại đã xác thực và <code>billing_phone</code>"
+#: templates/form-password.php:29
+#: templates/partials/account/contact.php:48
+#: templates/partials/account/contact.php:57
+msgid "Đổi"
 msgstr ""
 
-#: templates/woocommerce/form-edit-account.php:268
-msgid "Đổi mật khẩu (để trống nếu không muốn thay đổi)"
+#: templates/partials/account/password.php:32
+msgid "Đổi mật khẩu"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:378
+#: includes/class-field-registry.php:163
 msgid "Độ dài mật khẩu tối thiểu"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:418
+#: templates/partials/account/contact.php:92
+msgid "đã xác thực"
+msgstr ""
+
+#: includes/class-field-registry.php:548
 msgid "Ẩn Mã bưu điện"
 msgstr ""
 
@@ -1920,12 +2279,16 @@ msgid "Ẩn mật khẩu"
 msgstr ""
 
 #: includes/Address/class-woo-address.php:245
-#: templates/partials/address-fields.php:92
+#: templates/partials/address-fields.php:68
 msgid "— Chọn Phường/Xã —"
 msgstr ""
 
-#: templates/partials/address-fields.php:67
+#: templates/partials/address-fields.php:43
 msgid "— Chọn Tỉnh/Thành phố —"
+msgstr ""
+
+#: includes/Admin/class-field-renderer.php:142
+msgid "— Mặc định —"
 msgstr ""
 
 #: includes/Admin/class-users-column.php:77

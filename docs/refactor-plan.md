@@ -21,9 +21,14 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 5 — Profile boundary**
 - [x] **Phase 6 — Provider lifecycle**
 - [x] **Phase 7 — Release preparation**
+- [ ] **Phase 8 — Account surface**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
+
+Phase 8 is a second body of work on top of a finished refactor: the identity
+model is right, the screen that exposes it is not. Its sub-phases are ordered by
+risk, not by visibility — the user-facing redesign is deliberately last.
 
 ---
 
@@ -505,6 +510,60 @@ refactor: rules of the form "the old thing is gone" are half a rule. The other
 half is "nothing points at the old thing", and neither half is worth much for
 code that no test ever executes.
 
+## Phase 8 — Account surface
+
+Normative spec: [`account-surface.md`](account-surface.md) — the problem, the
+ownership boundary between Smart Login and WooCommerce, the section contract, the
+layout, the CSS inventory and the field-level corrections all live there.
+
+Execution briefs: [`account-surface/`](account-surface/), one file per
+sub-phase. **Status lives here and only here** — the briefs carry no checkboxes,
+so a sub-phase cannot be marked done in one file and open in another. That is the
+same argument this tracker opens with, applied one level down.
+
+Short version: the identity model is right and the screen exposing it is not. The
+profile-status notice and the provider block each exist in two templates, one
+maintained and one not, which is why the live page renders a blue box containing
+the single word "Địa chỉ" and offers "link Google" to accounts that already have
+Google linked.
+
+---
+
+### Sub-phases
+
+- [x] **8.0** [Guard rails](account-surface/8.0-guard-rails.md) — the
+      duplication rule, proven red before the duplication is removed
+- [x] **8.1** [Stop the data loss](account-surface/8.1-stop-data-loss.md) — four
+      live defects, JS only, ships alone. `SMART_LOGIN_AUTH_INTEGRATION_OK` on
+      WordPress 7.0.2, fifteen server-side checks, three of four client checks
+      measured in a browser; two unrelated gate defects found and written down
+- [x] **8.2** [Section contract](account-surface/8.2-section-contract.md) — seven
+      partials and a renderer; live before/after diff shows only the declared
+      deltas. The Woo template is 330 lines → 65, and is now executed by a test
+      for the first time
+- [x] **8.3** [Owned save path](account-surface/8.3-owned-save-path.md) — profile
+      editing without WooCommerce. 16 checks green with WooCommerce genuinely
+      absent; the account-surface suite is now `required`, not `spec`
+- [x] **8.4** [Layout](account-surface/8.4-layout.md) — the redesign. Four
+      carded sections in wireframe order; the form is 680px in a 680px column
+      instead of a 460px strip inside it
+- [x] **Removal by request** — Mã giới thiệu and Tìm nhanh địa chỉ deleted from
+      the whole codebase, including `data/search-index.php` (312 KB) and the
+      build step behind it. Three fitness rules keep them gone
+- [ ] **8.5** [Address boundary](account-surface/8.5-address-boundary.md) — one
+      picker, two hosts
+- [ ] **8.6** [Interface language](account-surface/8.6-interface-language.md) —
+      a decision, declinable in writing
+
+---
+
+**Ordering rationale.** 8.1 ships alone and early because data loss outranks
+everything. 8.0 precedes 8.2 because a guard rail proven after the fact proves
+nothing. 8.2 changes no output, so it can be reviewed on behaviour rather than
+appearance. 8.3 is what makes the plugin whole without WooCommerce, and must land
+before 8.4 so the redesign has somewhere to live other than the Woo page. 8.5 and
+8.6 are independent and may be reordered or dropped.
+
 ## Risks
 
 | Risk | Mitigation |
@@ -513,3 +572,7 @@ code that no test ever executes.
 | `dbDelta` + `UNIQUE` on `VARCHAR(191)` utf8mb4 is 764/767 bytes | Already the width in use; the idempotency test catches divergent environments early |
 | Opaque `user_login` hinders admin support | Identity column + `user_search_columns` hook, both in Phase 3 |
 | Fitness greps produce false positives on legitimate code | Per-file allowlist declared inside the test, forcing any exception to be justified in writing |
+| Phase 8.2 silently changes rendered output while claiming not to | Acceptance is a diff of rendered HTML for a fixture user, not a reading of the code |
+| Taking over the Woo save path breaks third-party plugins invisibly | `WC_Form_Handler` keeps saving on the Woo page; the renderer emits all four `woocommerce_edit_account_form*` hooks |
+| The redesign lands on a page only reachable with WooCommerce active | 8.3 precedes 8.4, so the standalone surface exists before it is redesigned |
+| 8.6 repeats the Phase 4 / Phase 7 rename failure at 445× the scale | Sequenced last, gated on a dangling-string scan, and declinable in writing |

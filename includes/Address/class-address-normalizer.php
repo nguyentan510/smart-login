@@ -205,21 +205,4 @@ class AddressNormalizer {
 
 		return $slug;
 	}
-
-	/**
-	 * The haystack stored in the search index for one ward.
-	 *
-	 * Holds the full name, the name without its prefix and the province name,
-	 * so a single `strpos` covers every way a person might type it.
-	 */
-	public static function index_key( string $ward_name, string $province_name ): string {
-		$ward          = self::slug( $ward_name );
-		$bare          = self::strip_prefix( $ward );
-		$province      = self::slug( $province_name );
-		$province_bare = self::strip_prefix( $province );
-
-		$parts = array_unique( array_filter( array( $ward, $bare, $province, $province_bare ) ) );
-
-		return implode( '|', $parts );
-	}
 }

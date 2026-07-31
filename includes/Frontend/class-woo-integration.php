@@ -23,8 +23,22 @@ class WooIntegration {
 			add_filter( 'woocommerce_locate_template', array( $this, 'swap_template' ), 10, 3 );
 		}
 
-		// Runs before WC_Form_Handler::save_account_details (template_redirect @20).
-		add_action( 'template_redirect', array( $this, 'prepare_account_post' ), 10 );
+		/*
+		 * Priority 5, and the reason is worth writing down.
+		 *
+		 * This used to say "runs before WC_Form_Handler::save_account_details
+		 * (template_redirect @20)". WooCommerce 10.9.4 registers it with
+		 * `add_action( 'template_redirect', … )` and no priority at all, so it
+		 * runs at 10 — the same priority this had. Equal priorities fall back to
+		 * registration order, and WooCommerce registers during plugins_loaded
+		 * while this registers later, so WooCommerce validated the request
+		 * before the field names had been translated for it.
+		 *
+		 * Priority 5 makes the ordering a property of the code instead of an
+		 * accident of load order. FormController::dispatch() already uses 5 for
+		 * the same reason.
+		 */
+		add_action( 'template_redirect', array( $this, 'prepare_account_post' ), 5 );
 
 		add_action( 'woocommerce_save_account_details', array( $this, 'save_account_details' ), 10, 1 );
 		add_filter( 'woocommerce_save_account_details_errors', array( $this, 'block_unverified_email_change' ), 10, 2 );
@@ -171,12 +185,20 @@ class WooIntegration {
 			return;
 		}
 
-		if ( empty( $_POST['account_email'] ) ) {
-			$user = wp_get_current_user();
-
-			if ( UserManager::is_synthetic_email( $user->user_email ) ) {
-				$_POST['account_email'] = $user->user_email;
-			}
+		/*
+		 * The account form cannot change an email — that only moves through the
+		 * OTP flow, and block_unverified_email_change() rejects every other
+		 * route. Since 8.4 the address is not even an input on the page, it is
+		 * text with a "Đổi" beside it, so nothing posts account_email at all and
+		 * WooCommerce reported "Email address is a required field" on every save.
+		 *
+		 * Supplying the address already on file is therefore the whole truth of
+		 * what this form is submitting. It also covers the synthetic case this
+		 * branch originally existed for: a placeholder address is still the
+		 * current address.
+		 */
+		if ( ! isset( $_POST['account_email'] ) || '' === trim( (string) $_POST['account_email'] ) ) {
+			$_POST['account_email'] = wp_get_current_user()->user_email;
 		}
 
 		if ( isset( $_POST['smartlogin_full_name'] ) ) {
@@ -233,15 +255,6 @@ class WooIntegration {
 			}
 		}
 
-		if ( isset( $_POST['smartlogin_referral_code'] ) ) {
-			$referral = sanitize_text_field( wp_unslash( $_POST['smartlogin_referral_code'] ) );
-
-			if ( '' === $referral ) {
-				delete_user_meta( $user_id, UserManager::META_REFERRAL );
-			} else {
-				update_user_meta( $user_id, UserManager::META_REFERRAL, $referral );
-			}
-		}
 		// phpcs:enable WordPress.Security.NonceVerification
 
 		$this->save_account_address( $user_id );

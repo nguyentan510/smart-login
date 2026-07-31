@@ -104,6 +104,7 @@ class Assets {
 					'contactSent' => __( 'Mã OTP đã được gửi tới %s.', 'smart-login' ),
 					'contactDone' => __( 'Thông tin liên hệ đã được xác thực.', 'smart-login' ),
 					'contactWait' => __( 'Đang xử lý…', 'smart-login' ),
+					'unsaved'     => __( 'Có thay đổi chưa lưu', 'smart-login' ),
 				),
 			)
 		);

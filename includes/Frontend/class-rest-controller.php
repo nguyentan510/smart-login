@@ -391,7 +391,20 @@ class RestController {
 	}
 
 	public function handle_contact_resend( WP_REST_Request $request ) {
-		$token        = (string) $request->get_param( 'token' );
+		$token = (string) $request->get_param( 'token' );
+		$type  = sanitize_key( (string) $request->get_param( 'type' ) );
+
+		// A reload loses the token, which only ever existed in the browser. The
+		// pending row on the server did not, so the client may ask by type
+		// instead and let the service find what is in flight.
+		if ( '' === $token && '' !== $type ) {
+			$result = ( new ContactVerificationService( $this->otp() ) )->resend( get_current_user_id(), $type );
+
+			return is_wp_error( $result )
+				? $this->error( $result )
+				: $this->success( $this->public_otp_payload( $result, OtpService::INTENT_ADD_IDENTITY ) );
+		}
+
 		$row          = $this->otp()->peek( $token );
 		$valid_intent = $row && in_array( (string) $row['intent'], array( OtpService::INTENT_ADD_IDENTITY ), true );
 		if ( ! $valid_intent || (int) ( $row['payload']['user_id'] ?? 0 ) !== get_current_user_id() ) {

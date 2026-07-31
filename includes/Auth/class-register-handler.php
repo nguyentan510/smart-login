@@ -63,13 +63,12 @@ class RegisterHandler {
 		}
 
 		$payload = array(
-			'channel'       => $claim->channel(),
-			'subject'       => $claim->subject(),
-			'pass_hash'     => wp_hash_password( $password ),
-			'full_name'     => $full_name,
-			'dob'           => self::parse_dob( (string) ( $input['dob'] ?? '' ) ),
-			'gender'        => in_array( $input['gender'] ?? '', array( 'male', 'female', 'other' ), true ) ? $input['gender'] : '',
-			'referral_code' => sanitize_text_field( wp_unslash( $input['referral_code'] ?? '' ) ),
+			'channel'   => $claim->channel(),
+			'subject'   => $claim->subject(),
+			'pass_hash' => wp_hash_password( $password ),
+			'full_name' => $full_name,
+			'dob'       => self::parse_dob( (string) ( $input['dob'] ?? '' ) ),
+			'gender'    => in_array( $input['gender'] ?? '', array( 'male', 'female', 'other' ), true ) ? $input['gender'] : '',
 		);
 
 		/**
@@ -239,13 +238,12 @@ class RegisterHandler {
 		}
 
 		$payload = array(
-			'channel'       => $claim->channel(),
-			'subject'       => $claim->subject(),
-			'pass_hash'     => wp_hash_password( $password ),
-			'full_name'     => $full_name,
-			'dob'           => '',
-			'gender'        => '',
-			'referral_code' => '',
+			'channel'   => $claim->channel(),
+			'subject'   => $claim->subject(),
+			'pass_hash' => wp_hash_password( $password ),
+			'full_name' => $full_name,
+			'dob'       => '',
+			'gender'    => '',
 		);
 
 		/** This filter documented on start(); the deferred flow honours it too. */

@@ -105,6 +105,10 @@ class FakeLoginProvider implements LoginProviderInterface {
 		return strtoupper( $this->provider_id );
 	}
 
+	public function name(): string {
+		return ucfirst( $this->provider_id );
+	}
+
 	public function is_available(): bool {
 		return $this->available;
 	}
@@ -471,11 +475,6 @@ check( 'strip_prefix dac khu', 'phu quoc', AddressNormalizer::strip_prefix( 'dac
 check( 'strip_prefix thanh pho', 'ha noi', AddressNormalizer::strip_prefix( 'thanh pho ha noi' ) );
 check( 'strip_prefix leaves other names alone', 'cau giay', AddressNormalizer::strip_prefix( 'cau giay' ) );
 
-$key = AddressNormalizer::index_key( 'Phường Cầu Giấy', 'Thành phố Hà Nội' );
-check( 'index_key holds the full ward name', true, false !== strpos( $key, 'phuong cau giay' ) );
-check( 'index_key holds the bare ward name', true, false !== strpos( $key, '|cau giay' ) );
-check( 'index_key holds the province', true, false !== strpos( $key, 'ha noi' ) );
-
 // ---------------------------------------------------------------------
 section( 'AddressRepository — dataset' );
 
@@ -513,35 +512,6 @@ if ( ! AddressRepository::is_dataset_installed() ) {
 	check( 'is_valid_pair accepts a real pair', true, AddressRepository::is_valid_pair( $first_ward, $first_province ) );
 	check( 'is_valid_pair rejects a crossed pair', false, AddressRepository::is_valid_pair( $first_ward, $other_province ) );
 	check( 'unknown ward code is rejected', false, AddressRepository::is_valid_pair( '99999', $first_province ) );
-}
-
-// ---------------------------------------------------------------------
-section( 'AddressRepository::search' );
-
-check( 'empty query returns nothing', array(), AddressRepository::search( '' ) );
-check( 'single character returns nothing', array(), AddressRepository::search( 'c' ) );
-check( 'punctuation-only returns nothing', array(), AddressRepository::search( '!!' ) );
-
-if ( AddressRepository::is_dataset_installed() ) {
-	$hits = AddressRepository::search( 'cau giay' );
-
-	check( 'accent-free query finds something', true, count( $hits ) > 0 );
-
-	if ( $hits ) {
-		check(
-			'top hit mentions Cầu Giấy',
-			true,
-			false !== mb_stripos( $hits[0]['ward_name'], 'Cầu Giấy' )
-		);
-
-		$accented = AddressRepository::search( 'Cầu Giấy' );
-		check( 'accented query gives the same top hit', $hits[0]['ward_code'], $accented[0]['ward_code'] ?? '' );
-
-		check( 'result carries a province code', true, '' !== $hits[0]['province_code'] );
-		check( 'result carries a province name', true, '' !== $hits[0]['province_name'] );
-	}
-
-	check( 'limit is honoured', true, count( AddressRepository::search( 'xa', 5 ) ) <= 5 );
 }
 
 // ---------------------------------------------------------------------
@@ -620,9 +590,13 @@ check( 'success screen no longer redirects on a timer', false, false !== strpos(
 
 check( 'OAuth providers render below the entry form', true, strrpos( $auth_template, 'sl-provider-buttons' ) > strrpos( $auth_template, '</form>' ) );
 check( 'OAuth login buttons expose stable browser selectors', true, false !== strpos( $auth_template, 'data-sl-provider=' ) && false !== strpos( $auth_template, 'data-sl-provider-mode="login"' ) );
-check( 'profile provider buttons expose link mode selectors', true, false !== strpos( $profile_form, 'data-sl-provider-mode="link"' ) );
+// 8.2 moved this block out of the WooCommerce template and into the section
+// partial that now owns it. The selector is the contract this assertion
+// protects, so it follows the markup rather than the file it used to live in.
+$profile_providers = file_get_contents( dirname( __DIR__ ) . '/templates/partials/account/providers.php' );
+
+check( 'profile provider buttons expose link mode selectors', true, false !== strpos( $profile_providers, 'data-sl-provider-mode="link"' ) );
 check( 'a repeat submit cannot fire a second SMS', true, false !== strpos( $auth_script, 'initSubmitGuard' ) );
-check( 'referral code moved to optional profile form', true, false !== strpos( $profile_form, 'name="smartlogin_referral_code"' ) );
 // ---------------------------------------------------------------------
 section( 'Every tabbed setting is actually rendered' );
 

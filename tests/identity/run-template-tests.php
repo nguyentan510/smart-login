@@ -48,7 +48,25 @@ Settings::update(
  * which this runner turns into a failure — an undeclared variable in a template
  * is a bug whether or not it happens to render.
  */
+// The WooCommerce account template resolves its own account rather than taking
+// one as an argument, because Woo calls it with no arguments at all.
+$GLOBALS['sl_logged_in']      = true;
+$GLOBALS['sl_current_user_id'] = 7;
+
 $fixtures = array(
+	// Was excluded from this suite until 8.2, on the grounds that it needed a
+	// WooCommerce runtime. It no longer does: it is an adapter over partials that
+	// are rendered here anyway. That exclusion is why the most complex template in
+	// the plugin went six phases without any test executing it, which is where the
+	// account-surface drift accumulated.
+	'woocommerce/form-edit-account'  => array(),
+	// The same renderer and the same six partials as the Woo template; only the
+	// wrapper differs, because FormController saves this one and WC_Form_Handler
+	// saves the other.
+	'account'                        => array(
+		'sl_form' => new \SmartLogin\Frontend\AccountForm( 7, \SmartLogin\Frontend\AccountForm::CONTEXT_STANDALONE ),
+		'notices' => array(),
+	),
 	'form-auth'                      => array(
 		'notices'   => array(),
 		'mode'      => 'login',
@@ -158,10 +176,71 @@ $fixtures = array(
 			'street'        => '12 Trần Duy Hưng',
 		),
 		'required'     => true,
-		'quick_search' => true,
 		'provinces'    => array( '01' => array( 'name' => 'Thành phố Hà Nội', 'short' => 'Hà Nội', 'type' => 'thanh-pho' ) ),
 		'wards'        => array( '00076' => array( 'name' => 'Phường Cầu Giấy', 'type' => 'phuong' ) ),
 	),
+	'partials/account/status'        => array(
+		'sl_status'   => array(
+			'complete'            => false,
+			'required_missing'    => array( array( 'key' => 'full_name', 'label' => 'Họ tên' ) ),
+			'recommended_missing' => array( array( 'key' => 'dob', 'label' => 'Ngày sinh' ) ),
+		),
+		'sl_pending'  => array( 'type' => 'email', 'masked' => 'ng•••@example.test' ),
+		'sl_welcome'  => false,
+		'sl_edit_url' => 'https://example.test/my-account/edit-account/',
+	),
+	'partials/account/contact'       => array(
+		'sl_user'       => new WP_User( 7, 'Nguyễn Như' ),
+		'sl_phone'      => '84969789475',
+		'sl_synthetic'  => false,
+		'sl_pending'    => array( 'type' => 'email', 'masked' => 'ng•••@example.test' ),
+		'sl_otp_length' => 6,
+		'sl_providers'  => array(
+			'sl_identities'     => array(),
+			'sl_can_unlink'     => false,
+			'sl_redirect'       => 'https://example.test/my-account/',
+			'sl_link_providers' => array(),
+		),
+	),
+	'partials/account/providers'     => array(
+		'sl_identities'     => array(
+			array(
+				'channel'     => 'google',
+				'subject'     => 'sub-1',
+				'masked'      => 'sub-••••••',
+				'label'       => 'Google',
+				'federated'   => true,
+				'is_primary'  => true,
+				'linked_by'   => 'oauth',
+				'verified_at' => '2026-07-30 08:00:00',
+				'removable'   => true,
+			),
+		),
+		'sl_can_unlink'     => true,
+		'sl_redirect'       => 'https://example.test/my-account/',
+		// Deliberately empty: the "everything is already linked" case is the one
+		// the WooCommerce copy got wrong for six phases.
+		'sl_link_providers' => array(),
+	),
+	'partials/account/profile'       => array(
+		'sl_user'     => new WP_User( 7, 'Nguyễn Như' ),
+		'sl_gender'   => 'female',
+		'sl_dob'      => '05/10/1994',
+		// Empty on purpose: the input renders only when there is no code yet,
+		// and the input is what the regression suite greps for.
+		'sl_referral' => '',
+	),
+	'partials/account/address'       => array(
+		'sl_values'   => array(
+			'province_code' => '01',
+			'province_name' => 'Thành phố Hà Nội',
+			'ward_code'     => '00076',
+			'ward_name'     => 'Phường Cầu Giấy',
+			'street'        => '12 Trần Duy Hưng',
+		),
+		'sl_required' => false,
+	),
+	'partials/account/password'      => array(),
 	'partials/linked-identities'     => array(
 		'sl_identities' => array(
 			array(
@@ -245,6 +324,58 @@ foreach ( $fixtures as $template => $args ) {
 		'Rendered empty, which usually means an early return on a missing variable.'
 	);
 }
+
+// ---------------------------------------------------------------------
+sl_section( 'Every template on disk is either rendered here or excluded in writing' );
+
+/*
+ * Without this, adding a template adds no coverage and nobody notices. That is
+ * how a deleted class survived in two templates for four phases.
+ *
+ * Phase 8.2 extracts six section partials under partials/account/. Each one
+ * fails this check the moment it lands and passes once it has a fixture above,
+ * which is the mechanism that makes "extend the smoke test" automatic rather
+ * than remembered.
+ */
+$sl_uncovered_ok = array(
+	// Documented shims. README points theme authors at form-auth.php; these two
+	// are never loaded, which the assertions below this section keep true.
+	'form-login'                 => 'shim, never loaded — asserted below',
+	'form-register'              => 'shim, never loaded — asserted below',
+
+	// form-edit-account was here until 8.2 and now has a fixture instead.
+	'woocommerce/form-login'     => 'needs a WooCommerce runtime',
+);
+
+$sl_on_disk = array();
+
+foreach ( new RecursiveIteratorIterator( new RecursiveDirectoryIterator( $root, FilesystemIterator::SKIP_DOTS ) ) as $sl_file ) {
+	if ( ! $sl_file->isFile() || 'php' !== strtolower( $sl_file->getExtension() ) ) {
+		continue;
+	}
+
+	$sl_relative  = str_replace( '\\', '/', substr( $sl_file->getPathname(), strlen( $root ) ) );
+	$sl_on_disk[] = substr( $sl_relative, 0, -4 );
+}
+
+sort( $sl_on_disk );
+
+$sl_missing_fixture = array_diff( $sl_on_disk, array_keys( $fixtures ), array_keys( $sl_uncovered_ok ) );
+
+sl_assert(
+	'every template has a fixture or a written-down exclusion',
+	array() === $sl_missing_fixture,
+	'No fixture, so it is never executed: ' . implode( ', ', $sl_missing_fixture )
+);
+
+// The exclusion list must not outlive what it excludes.
+$sl_stale = array_diff( array_keys( $sl_uncovered_ok ), $sl_on_disk );
+
+sl_assert(
+	'the exclusion list names no template that is gone',
+	array() === $sl_stale,
+	'Stale entries hide the next real gap: ' . implode( ', ', $sl_stale )
+);
 
 // ---------------------------------------------------------------------
 sl_section( 'The shims that are documented as unused really are unused' );

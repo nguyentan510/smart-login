@@ -524,15 +524,6 @@ final class FieldRegistry {
 				'label'   => __( 'Giới tính', 'smart-login' ),
 				'help'    => __( 'Hiển thị ở màn hình chào mừng và trong hồ sơ; không hiển thị khi đăng ký.', 'smart-login' ),
 			),
-			'profile.referral'            => array(
-				'type'    => 'checkbox',
-				'default' => 1,
-				'tab'     => 'profile',
-				'section' => 'fields',
-				'label'   => __( 'Mã giới thiệu', 'smart-login' ),
-				'help'    => __( 'Hiển thị trong hồ sơ; không hiển thị khi đăng ký.', 'smart-login' ),
-			),
-
 			'address.enabled'             => array(
 				'type'    => 'checkbox',
 				'default' => 1,
@@ -540,14 +531,6 @@ final class FieldRegistry {
 				'section' => 'address',
 				'label'   => __( 'Kích hoạt', 'smart-login' ),
 				'help'    => __( 'Bật bộ chọn Tỉnh/Thành phố → Phường/Xã', 'smart-login' ),
-			),
-			'address.quick_search'        => array(
-				'type'    => 'checkbox',
-				'default' => 1,
-				'tab'     => 'profile',
-				'section' => 'address',
-				'label'   => __( 'Ô tìm nhanh', 'smart-login' ),
-				'help'    => __( 'Cho phép gõ thẳng tên phường/xã để tự điền cả hai ô', 'smart-login' ),
 			),
 			'address.required_in_profile' => array(
 				'type'    => 'checkbox',

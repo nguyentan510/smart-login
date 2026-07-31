@@ -194,6 +194,47 @@ function sl_forbid_pattern( string $label, string $pattern, array $allowed_files
 }
 
 /**
+ * Fail when a section marker appears in more than one template.
+ *
+ * Scoped to templates/ deliberately: the service layer may name a concept as
+ * often as it likes, but a block of markup that renders it belongs to exactly
+ * one file. Two copies is how the profile-status notice ended up rendering a
+ * sentence in one template and a bare implode() in the other.
+ *
+ * Zero owners passes. A marker for a partial that has not been extracted yet is
+ * a to-do, not a violation, and 8.0 lands before the partials exist.
+ */
+function sl_require_single_template( string $label, string $pattern, string $hint = '' ): void {
+	$owners = array();
+
+	foreach ( sl_plugin_sources() as $relative => $contents ) {
+		if ( 0 !== strpos( $relative, 'templates/' ) ) {
+			continue;
+		}
+
+		if ( preg_match( $pattern, $contents ) ) {
+			$owners[] = $relative;
+		}
+	}
+
+	if ( count( $owners ) <= 1 ) {
+		++$GLOBALS['sl_harness']['passed'];
+		return;
+	}
+
+	++$GLOBALS['sl_harness']['failed'];
+	printf( "  FAIL     %s\n", $label );
+
+	if ( '' !== $hint ) {
+		printf( "           %s\n", $hint );
+	}
+
+	foreach ( $owners as $owner ) {
+		printf( "           → %s\n", $owner );
+	}
+}
+
+/**
  * Fail when files matching $must_contain_pattern do not also reference $required.
  *
  * Used to tie a dangerous call site to its mandatory helper, e.g. every

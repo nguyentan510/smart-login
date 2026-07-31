@@ -53,22 +53,6 @@ class AddressRest {
 				),
 			)
 		);
-
-		register_rest_route(
-			self::REST_NAMESPACE,
-			'/address/search',
-			array(
-				'methods'             => 'GET',
-				'callback'            => array( $this, 'get_search' ),
-				'permission_callback' => '__return_true',
-				'args'                => array(
-					'q' => array(
-						'required'          => true,
-						'sanitize_callback' => 'sanitize_text_field',
-					),
-				),
-			)
-		);
 	}
 
 	public function get_provinces(): WP_REST_Response {
@@ -99,14 +83,6 @@ class AddressRest {
 		return $this->cacheable( $out, 'wards-' . $province );
 	}
 
-	public function get_search( WP_REST_Request $request ): WP_REST_Response {
-		$query   = (string) $request->get_param( 'q' );
-		$results = AddressRepository::search( $query, 20 );
-
-		// Search results are still a pure function of the static dataset, so
-		// they cache too — keyed by the query itself.
-		return $this->cacheable( $results, 'search-' . md5( $query ) );
-	}
 
 	/**
 	 * Attach long-lived cache headers and a dataset-stamped ETag.

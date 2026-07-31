@@ -36,7 +36,7 @@ Có hai cách, dùng được đồng thời:
 
 Không còn cặp tab Đăng nhập / Đăng ký: người dùng hiếm khi biết mình thuộc nhánh nào, nên server tra định danh và tự quyết định. `[smart_register]` vẫn dùng được và mở cùng màn hình đó, chỉ đổi tiêu đề. Các shortcode khác: `[smart_verify_otp]`, `[smart_forgot_password]`, `[smart_profile]`.
 
-Form đăng ký thu thập Họ tên và Mật khẩu **sau** bước OTP, mỗi màn một việc. Không có ô "Nhập lại mật khẩu" — nút hiện/ẩn mật khẩu đã làm đúng việc mà ô đó sinh ra để làm. Ngày sinh, Giới tính, Mã giới thiệu nằm ở màn hình chào mừng và ở hồ sơ, đều không bắt buộc.
+Form đăng ký thu thập Họ tên và Mật khẩu **sau** bước OTP, mỗi màn một việc. Không có ô "Nhập lại mật khẩu" — nút hiện/ẩn mật khẩu đã làm đúng việc mà ô đó sinh ra để làm. Ngày sinh và Giới tính nằm ở màn hình chào mừng và ở hồ sơ, đều không bắt buộc.
 
 ---
 
@@ -130,10 +130,16 @@ add_filter( 'smart_login_dispatch_otp', function ( $handled, $destination, $code
     return true; // hoặc new WP_Error(...) nếu thất bại
 }, 10, 4 );
 
-// Xử lý mã giới thiệu / cộng điểm sau khi tài khoản được tạo.
+// Thêm một trường của riêng bạn vào hồ sơ đăng ký, rồi xử lý sau khi tài khoản
+// được tạo. Plugin không tự thu thập trường nào ngoài những gì nó hiển thị.
+add_filter( 'smart_login_registration_payload', function ( $payload, $input ) {
+    $payload['my_campaign'] = sanitize_text_field( $input['my_campaign'] ?? '' );
+    return $payload;
+}, 10, 2 );
+
 add_action( 'smart_login_user_registered', function ( $user_id, $payload ) {
-    if ( ! empty( $payload['referral_code'] ) ) {
-        my_loyalty_apply_referral( $user_id, $payload['referral_code'] );
+    if ( ! empty( $payload['my_campaign'] ) ) {
+        my_loyalty_apply_campaign( $user_id, $payload['my_campaign'] );
     }
 }, 10, 2 );
 
@@ -175,7 +181,7 @@ php bin/build-address-data.php duong/dan/toi/source.json
 
 Script tự nhận diện các cách đặt tên trường phổ biến (`code`/`Code`/`id`, `name`/`full_name`/`name_with_type`, `wards`/`communes`/`children`…) và sẽ **từ chối ghi** nếu số lượng không khớp mô hình 2 cấp — đó là lưới an toàn chống việc vô tình dùng bộ dữ liệu 3 cấp cũ.
 
-Kết quả: `data/provinces.php`, `data/wards/{mã tỉnh}.php`, `data/search-index.php`.
+Kết quả: `data/provinces.php`, `data/wards/{mã tỉnh}.php`.
 
 Trang **Smart Login → Cài đặt → Chung** hiển thị trạng thái dữ liệu đã cài kèm số lượng thực tế.
 
@@ -243,7 +249,7 @@ Namespace `smart-login/v1`. Mọi endpoint dùng `POST` và cần header `X-WP-N
 
 | Endpoint | Tham số |
 |---|---|
-| `/register` | `identity`, `password`, `full_name`, `dob`, `gender`, `referral_code`, `terms` |
+| `/register` | `identity`, `password`, `full_name`, `dob`, `gender`, `terms` |
 | `/verify` | `code` (và `token` + `purpose` nếu client không dùng cookie) |
 | `/resend` | — |
 | `/login` | `identity`, `password`, `redirect_to` |

@@ -72,13 +72,12 @@ class AddressFields {
 		return TemplateLoader::render(
 			'partials/address-fields',
 			array(
-				'values'       => $values,
-				'required'     => $args['required'] ?? true,
-				'quick_search' => Settings::is_on( 'address.quick_search' ),
-				'provinces'    => AddressRepository::provinces(),
+				'values'    => $values,
+				'required'  => $args['required'] ?? true,
+				'provinces' => AddressRepository::provinces(),
 				// Only the selected province's wards are needed for the initial
 				// render; the rest arrive over REST when the user picks one.
-				'wards'        => '' !== $values['province_code'] ? AddressRepository::wards( $values['province_code'] ) : array(),
+				'wards'     => '' !== $values['province_code'] ? AddressRepository::wards( $values['province_code'] ) : array(),
 			)
 		);
 	}

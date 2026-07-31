@@ -27,6 +27,9 @@ final class ZaloProvider implements LoginProviderInterface {
 	public function label(): string {
 		return __( 'Tiếp tục với Zalo', 'smart-login' ); }
 
+	public function name(): string {
+		return 'Zalo'; }
+
 	public function is_available(): bool {
 		return Settings::is_on( 'providers.zalo.enabled' )
 			&& ProviderCredentials::is_configured( $this->id() );

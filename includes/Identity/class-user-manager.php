@@ -22,7 +22,6 @@ class UserManager {
 	const META_EMAIL_VERIFIED = 'smartlogin_email_verified_at';
 	const META_DOB            = 'smartlogin_dob';
 	const META_GENDER         = 'smartlogin_gender';
-	const META_REFERRAL       = 'smartlogin_referral_code';
 	const META_SYNTHETIC      = 'smartlogin_synthetic_email';
 
 	/**
@@ -91,7 +90,6 @@ class UserManager {
 	 *     @type string $full_name
 	 *     @type string $dob
 	 *     @type string $gender
-	 *     @type string $referral_code
 	 * }
 	 * @return int|WP_Error New user ID.
 	 */
@@ -180,10 +178,6 @@ class UserManager {
 
 		if ( ! empty( $data['gender'] ) ) {
 			update_user_meta( $user_id, self::META_GENDER, sanitize_key( $data['gender'] ) );
-		}
-
-		if ( ! empty( $data['referral_code'] ) ) {
-			update_user_meta( $user_id, self::META_REFERRAL, sanitize_text_field( $data['referral_code'] ) );
 		}
 
 		if ( '' !== $names['first'] ) {
