@@ -10,6 +10,7 @@
  * @var int    $minlength
  * @var string $describedby
  * @var bool   $disabled
+ * @var bool   $autofocus
  *
  * @package SmartLogin
  */
@@ -22,6 +23,7 @@ $sl_autocomplete = $autocomplete ?? ( 'password' === $name ? 'current-password' 
 $sl_minlength    = isset( $minlength ) ? max( 0, (int) $minlength ) : 0;
 $sl_describedby  = isset( $describedby ) ? trim( (string) $describedby ) : '';
 $sl_disabled     = ! empty( $disabled );
+$sl_autofocus    = ! empty( $autofocus );
 ?>
 <div class="sl-field sl-field--password">
 	<label class="sl-label" for="<?php echo esc_attr( $sl_id ); ?>">
@@ -48,6 +50,7 @@ $sl_disabled     = ! empty( $disabled );
 				aria-describedby="<?php echo esc_attr( $sl_describedby ); ?>"<?php endif; ?>
 			<?php echo $sl_disabled ? 'disabled' : ''; ?>
 			<?php echo $sl_required ? 'required' : ''; ?>
+			<?php echo $sl_autofocus ? 'autofocus' : ''; ?>
 		/>
 		<button type="button" class="sl-toggle-password" aria-label="<?php esc_attr_e( 'Hiện mật khẩu', 'smart-login' ); ?>" data-target="<?php echo esc_attr( $sl_id ); ?>">
 			<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">

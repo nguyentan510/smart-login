@@ -100,23 +100,36 @@ do_action( 'woocommerce_before_edit_account_form' );
 		<?php endif; ?>
 
 		<div class="sl-field">
-			<label class="sl-label" for="account_email">
-				<?php esc_html_e( 'Email', 'smart-login' ); ?>
-				<?php if ( ! Settings::is_on( 'field_email_optional' ) ) : ?>
-					<span class="sl-required">*</span>
-				<?php endif; ?>
-			</label>
+			<?php
+			/*
+			 * Readonly, because an email may only become a verified contact
+			 * through the OTP flow below — block_unverified_email_change()
+			 * rejects every other route. It also used to carry a red asterisk
+			 * whenever field_email_optional was off, which told the visitor that
+			 * a box they cannot type in was required of them. The asterisk is
+			 * gone and the prompt now points at the control that works.
+			 */
+			?>
+			<label class="sl-label" for="account_email"><?php esc_html_e( 'Email', 'smart-login' ); ?></label>
 			<input
 				type="email"
 				class="sl-input"
 				name="account_email"
 				id="account_email"
 				value="<?php echo $sl_synthetic ? '' : esc_attr( $sl_user->user_email ); ?>"
-				placeholder="<?php esc_attr_e( 'Nhập email', 'smart-login' ); ?>"
+				placeholder="<?php esc_attr_e( 'Chưa có email', 'smart-login' ); ?>"
 				autocomplete="email"
 				readonly
 			/>
-			<p class="sl-hint"><?php esc_html_e( 'Để thêm hoặc đổi email, hãy dùng bước xác thực OTP bên dưới.', 'smart-login' ); ?></p>
+			<p class="sl-hint">
+				<?php if ( $sl_synthetic ) : ?>
+					<a class="sl-link" href="#sl-contact-email"><?php esc_html_e( 'Thêm email', 'smart-login' ); ?></a>
+					<?php esc_html_e( '— cần một mã xác thực để xác nhận địa chỉ là của bạn.', 'smart-login' ); ?>
+				<?php else : ?>
+					<a class="sl-link" href="#sl-contact-email"><?php esc_html_e( 'Đổi email', 'smart-login' ); ?></a>
+					<?php esc_html_e( '— địa chỉ mới chỉ được lưu sau khi nhập đúng mã xác thực.', 'smart-login' ); ?>
+				<?php endif; ?>
+			</p>
 		</div>
 
 		<hr class="sl-separator" />

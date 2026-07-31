@@ -30,6 +30,53 @@ Bản này viết lại tầng định danh. Chi tiết thiết kế ở
   và chỉ ba factory ở tầng chứng minh tạo được, nên "không có chứng minh thì
   không có phiên" là lỗi kiểu chứ không còn là quy ước review.
 
+### Trải nghiệm người dùng
+
+- **Luồng vào theo định danh trước (identifier-first).** Cặp tab Đăng nhập /
+  Đăng ký bị gỡ. Màn hình đầu hỏi đúng một ô, `IdentityDirectory` tra và tự rẽ
+  nhánh. Người dùng hiếm khi biết mình đã có tài khoản hay chưa; bắt họ đoán
+  trước rồi báo lỗi là bắt họ gõ lại từ đầu.
+- **Họ tên và mật khẩu được hỏi sau bước OTP, không phải trước.** Bản cũ bắt điền
+  5 trường rồi mới gửi mã, nên ai bỏ cuộc ở màn OTP thì site vừa mất tiền SMS
+  vừa không có tài khoản nào được tạo. Định danh đã chứng minh được giữ ở server
+  sau một *signup grant* dùng một lần; mật khẩu bị từ chối thì được cấp grant
+  mới, không phải làm lại OTP.
+- **Bỏ ô "Nhập lại mật khẩu".** Ô mật khẩu vốn đã có nút hiện/ẩn, tức là đã có
+  cách kiểm tra mình gõ đúng chưa. Ô thứ hai chỉ còn là một chỗ nữa để gõ sai.
+- **Màn hình chào mừng riêng, hiện ngay tại chỗ.** Trước đây màn "CHÚC MỪNG" tự
+  chuyển trang sau 6 giây (nút ghi "Khám phá ngay" nhưng dẫn tới form sửa hồ sơ)
+  rồi thả người vừa đăng ký vào form tài khoản đầy đủ: khoảng 15 control, trong
+  đó có 2 widget xác thực OTP và 3 ô đổi mật khẩu. Nay là một màn hỏi tối đa 3
+  mục, mỗi mục kèm lý do vì sao đáng điền, và luôn có nút **Để sau**.
+- **Bỏ hẳn cổng chặn hồ sơ.** `smartlogin_gate` được đặt vào URL và
+  `_smartlogin_profile_gate` được ghi vào meta, nhưng không đoạn mã nào đọc
+  chúng. Giao diện nói "bắt buộc" trong khi không có gì cưỡng chế — vị trí tệ
+  nhất trong ba lựa chọn. Nay chỉ còn lời mời.
+- **Chỉ báo tiến độ** ở hai bước giữa của luồng đăng ký.
+- Nhãn trường chuyển từ xám 13px sang màu chữ đầy đủ 14px; nhãn cũ dưới ngưỡng
+  tương phản và trông như placeholder.
+- Ô định danh dùng `type="tel"` khi site chỉ nhận số điện thoại và `type="email"`
+  khi chỉ nhận email, thay vì luôn là `text`.
+- Submit lặp không còn bắn được tin SMS thứ hai.
+
+### Đã sửa (giao diện quản trị)
+
+- **`field_email_optional` không còn tự tắt mỗi khi lưu tab Chung.** Khoá này
+  được khai báo thuộc tab Chung nhưng không được vẽ ở đâu cả, nên nó vắng mặt cả
+  ở hidden input lẫn `$_POST`, và `Settings::sanitize()` hiểu sự vắng mặt đó là
+  một checkbox chưa tick rồi lưu `0`. Hậu quả dây chuyền: mọi tài khoản đăng ký
+  bằng số điện thoại bị coi là thiếu thông tin bắt buộc (Email) và bị đẩy về
+  trang hồ sơ — nơi ô Email là `readonly`. Khoá này nay có checkbox thật, và bộ
+  test chặn mọi khoá được khai báo thuộc một tab mà tab đó không vẽ.
+- **`require_verification` bị xoá.** Không nơi nào đọc nó; đó là một công tắc
+  không nối vào đâu, lại cũng tự về `0` theo đúng cơ chế trên.
+- Ô Email ở trang sửa hồ sơ không còn vừa gắn dấu `*` vừa `readonly` — một ô
+  không gõ được thì không thể "bắt buộc" người dùng điền. Nay có liên kết trỏ
+  thẳng tới bước xác thực OTP tương ứng.
+- Nút **Gửi lại** trên màn OTP hiển thị đúng thời gian chờ còn lại sau một lần
+  nhập sai. Trước đây nó được đặt về 0 nên trông như bấm được ngay, trong khi
+  `RateLimiter` vẫn giữ cooldown và trả về lỗi.
+
 ### Đã thêm
 
 - Bảng `smartlogin_identities` (chỉ số quyền, `UNIQUE (channel, subject)`) và

@@ -11,12 +11,47 @@ defined( 'ABSPATH' ) || exit;
 
 class Flow {
 
+	/** One field: the phone number or email. Both signing in and signing up start here. */
+	const STEP_IDENTIFY = 'identify';
+
+	/** The identifier is already registered — ask for the password. */
+	const STEP_PASSWORD = 'password';
+
+	/** OTP proved a new identifier; collect the name and password before creating the account. */
+	const STEP_SIGNUP = 'signup';
+
+	/** Post-registration: ask for what the profile is still missing, with a way out. */
+	const STEP_ONBOARD = 'onboard';
+
+	const STEP_OTP    = 'otp';
+	const STEP_FORGOT = 'forgot';
+	const STEP_RESET  = 'reset';
+	const STEP_DONE   = 'done';
+
+	/**
+	 * Retained so existing links, shortcodes and theme overrides keep working.
+	 * Identifier-first has no separate login and register screens, so both
+	 * resolve to STEP_IDENTIFY.
+	 */
 	const STEP_LOGIN    = 'login';
 	const STEP_REGISTER = 'register';
-	const STEP_OTP      = 'otp';
-	const STEP_FORGOT   = 'forgot';
-	const STEP_RESET    = 'reset';
-	const STEP_DONE     = 'done';
+
+	/**
+	 * Steps a visitor may ask for by URL.
+	 *
+	 * STEP_PASSWORD, STEP_SIGNUP and STEP_ONBOARD are deliberately absent: each
+	 * one only means something in the presence of server-side state (a resolved
+	 * identifier, a signup grant, a signed-in user). Reaching them by typing a
+	 * query string would render a form with nothing behind it.
+	 */
+	private const PUBLIC_STEPS = array(
+		self::STEP_IDENTIFY,
+		self::STEP_LOGIN,
+		self::STEP_REGISTER,
+		self::STEP_OTP,
+		self::STEP_FORGOT,
+		self::STEP_RESET,
+	);
 
 	/** @var string|null */
 	private static $step = null;
@@ -28,23 +63,30 @@ class Flow {
 	private static $old = array();
 
 	public static function set( string $step, array $data = array() ): void {
-		self::$step = $step;
+		self::$step = self::canonical( $step );
 		self::$data = $data;
 	}
 
 	/**
 	 * @param string $fallback Step to use when nothing has been set.
 	 */
-	public static function step( string $fallback = self::STEP_LOGIN ): string {
+	public static function step( string $fallback = self::STEP_IDENTIFY ): string {
 		if ( null !== self::$step ) {
 			return self::$step;
 		}
 
 		$requested = isset( $_GET['smart_login_step'] ) ? sanitize_key( wp_unslash( $_GET['smart_login_step'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 
-		$allowed = array( self::STEP_LOGIN, self::STEP_REGISTER, self::STEP_OTP, self::STEP_FORGOT, self::STEP_RESET );
+		return in_array( $requested, self::PUBLIC_STEPS, true ) ? self::canonical( $requested ) : self::canonical( $fallback );
+	}
 
-		return in_array( $requested, $allowed, true ) ? $requested : $fallback;
+	/**
+	 * Collapse the legacy login/register steps onto the single entry screen.
+	 */
+	public static function canonical( string $step ): string {
+		return in_array( $step, array( self::STEP_LOGIN, self::STEP_REGISTER ), true )
+			? self::STEP_IDENTIFY
+			: $step;
 	}
 
 	/**

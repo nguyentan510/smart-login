@@ -94,25 +94,57 @@ class WooIntegration {
 	/**
 	 * Registration signs the user in during template_redirect, so by render time
 	 * WooCommerce considers them logged in and would show the dashboard. Take
-	 * over the account content for this one request to show the success screen.
+	 * over the account content for this one request.
+	 *
+	 * Two cases land here. A registration that finished on this page renders its
+	 * own step. And a visitor arriving with `smartlogin_welcome=1` — which is how
+	 * a Google or Zalo signup gets here, since OAuth returns through a redirect
+	 * and cannot render anything in place — gets the same welcome screen the
+	 * native flow shows inline. Before this, that second case landed on the full
+	 * account editing form, which is not a welcome.
 	 */
 	public function render_registration_success(): void {
-		if ( Flow::STEP_DONE !== Flow::step( '' ) ) {
+		$step = Flow::step( '' );
+
+		if ( Flow::STEP_DONE === $step ) {
+			$this->take_over_account_content();
+
+			TemplateLoader::output(
+				'registered-success',
+				array(
+					'notices'  => Notices::all(),
+					'redirect' => (string) Flow::data( 'redirect', wc_get_account_endpoint_url( 'edit-account' ) ),
+					'user_id'  => (int) Flow::data( 'user_id', 0 ),
+				)
+			);
+
 			return;
 		}
 
+		if ( Flow::STEP_ONBOARD !== $step && ! $this->is_welcome_request() ) {
+			return;
+		}
+
+		$this->take_over_account_content();
+
+		TemplateLoader::output(
+			'onboarding',
+			array( 'notices' => Notices::all() ) + Shortcodes::onboarding_args()
+		);
+	}
+
+	/**
+	 * A freshly registered visitor sent here by PostAuthRedirector.
+	 */
+	private function is_welcome_request(): bool {
+		// phpcs:ignore WordPress.Security.NonceVerification -- read-only presentation switch.
+		return is_user_logged_in() && ! empty( $_GET['smartlogin_welcome'] );
+	}
+
+	private function take_over_account_content(): void {
 		remove_action( 'woocommerce_account_content', 'woocommerce_account_content' );
 
 		Assets::enqueue();
-
-		TemplateLoader::output(
-			'registered-success',
-			array(
-				'notices'  => Notices::all(),
-				'redirect' => (string) Flow::data( 'redirect', wc_get_account_endpoint_url( 'edit-account' ) ),
-				'user_id'  => (int) Flow::data( 'user_id', 0 ),
-			)
-		);
 	}
 
 	// -----------------------------------------------------------------

@@ -103,11 +103,60 @@ class RegisterHandler {
 	}
 
 	/**
-	 * Step 2: check the code, create the account and sign the user in.
+	 * Identifier-first step 1: the visitor has typed one identifier and nothing
+	 * else. Check it is registerable and send a code straight away.
 	 *
-	 * @return int|WP_Error New user ID.
+	 * The name, password and terms are collected *after* verification by
+	 * finish_signup(). Nothing is persisted until then, so an abandoned signup
+	 * leaves no row behind — exactly as in the collect-everything-first flow.
+	 *
+	 * @param array $input Raw (still slashed) request data.
+	 * @return array|WP_Error Result of OtpService::issue().
 	 */
-	public function complete( string $token, string $code ) {
+	public function start_identity( array $input ) {
+		$claim = $this->validate_identity( $input );
+
+		if ( is_wp_error( $claim ) ) {
+			return $claim;
+		}
+
+		AuditLog::record(
+			AuditLog::REGISTER_STARTED,
+			RateLimiter::mask_identity( $claim->subject() ),
+			array( 'channel' => $claim->channel() )
+		);
+
+		$result = $this->otp->issue(
+			$claim->subject(),
+			OtpService::INTENT_REGISTER,
+			array(
+				'channel' => $claim->channel(),
+				'subject' => $claim->subject(),
+			)
+		);
+
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		PendingSession::start( $result['token'], OtpService::INTENT_REGISTER );
+
+		return $result;
+	}
+
+	/**
+	 * Step 2: check the code.
+	 *
+	 * Two shapes come back, because two flows share this OTP intent. When the
+	 * pending payload already carries a password hash the registration was
+	 * started by start() and everything needed is present, so the account is
+	 * created here and `user_id` is returned. When it does not, the code was
+	 * issued by start_identity() and the caller still has to collect a name and
+	 * a password: `grant` comes back instead, to be handed to finish_signup().
+	 *
+	 * @return array{user_id:int}|array{grant:string}|WP_Error
+	 */
+	public function verify( string $token, string $code ) {
 		$row = $this->otp->verify( $token, $code, OtpService::INTENT_REGISTER );
 
 		if ( is_wp_error( $row ) ) {
@@ -133,6 +182,121 @@ class RegisterHandler {
 			return new WP_Error( 'smart_login_bad_identity', __( 'Thông tin định danh không hợp lệ.', 'smart-login' ) );
 		}
 
+		if ( '' !== (string) ( $payload['pass_hash'] ?? '' ) ) {
+			$user_id = $this->provision( $claim, $payload );
+
+			return is_wp_error( $user_id ) ? $user_id : array( 'user_id' => (int) $user_id );
+		}
+
+		// The proof stands on its own from here; the OTP row is spent.
+		PendingSession::clear();
+
+		return array(
+			'grant' => PendingSession::grant_signup(
+				array(
+					'channel' => $claim->channel(),
+					'subject' => $claim->subject(),
+				)
+			),
+		);
+	}
+
+	/**
+	 * Identifier-first step 3: name and password against a verified identifier.
+	 *
+	 * @return int|WP_Error New user ID.
+	 */
+	public function finish_signup( string $grant, array $input ) {
+		$proven = PendingSession::consume_signup( $grant );
+
+		if ( null === $proven ) {
+			return new WP_Error(
+				'smart_login_grant_expired',
+				__( 'Phiên đăng ký đã hết hạn. Vui lòng thực hiện lại.', 'smart-login' )
+			);
+		}
+
+		$claim = $this->directory->channels()->claim( $proven['channel'], $proven['subject'] );
+
+		if ( $claim->is_empty() ) {
+			return new WP_Error( 'smart_login_bad_identity', __( 'Thông tin định danh không hợp lệ.', 'smart-login' ) );
+		}
+
+		$full_name = sanitize_text_field( wp_unslash( $input['full_name'] ?? '' ) );
+
+		if ( '' === trim( $full_name ) ) {
+			return $this->retry_signup( 'smart_login_no_name', __( 'Vui lòng nhập họ tên.', 'smart-login' ), $proven );
+		}
+
+		if ( empty( $input['terms'] ) ) {
+			return $this->retry_signup( 'smart_login_no_terms', __( 'Vui lòng đồng ý với các điều kiện áp dụng.', 'smart-login' ), $proven );
+		}
+
+		$password = $this->validate_password( $input );
+
+		if ( is_wp_error( $password ) ) {
+			return $this->retry_signup( $password->get_error_code(), $password->get_error_message(), $proven );
+		}
+
+		$payload = array(
+			'channel'       => $claim->channel(),
+			'subject'       => $claim->subject(),
+			'pass_hash'     => wp_hash_password( $password ),
+			'full_name'     => $full_name,
+			'dob'           => '',
+			'gender'        => '',
+			'referral_code' => '',
+		);
+
+		/** This filter documented on start(); the deferred flow honours it too. */
+		$payload = (array) apply_filters( 'smart_login_registration_payload', $payload, $input );
+
+		return $this->provision( $claim, $payload );
+	}
+
+	/**
+	 * The grant was spent by consume_signup(), so a rejected form has to be given
+	 * a fresh one. Otherwise a mistyped password would cost the visitor another
+	 * SMS and another round through the OTP screen.
+	 */
+	private function retry_signup( string $code, string $message, array $proven ): WP_Error {
+		return new WP_Error(
+			$code,
+			$message,
+			array( 'grant' => PendingSession::grant_signup( $proven ) )
+		);
+	}
+
+	/**
+	 * Step 2 (collect-everything-first): check the code and create the account.
+	 *
+	 * @return int|WP_Error New user ID.
+	 */
+	public function complete( string $token, string $code ) {
+		$result = $this->verify( $token, $code );
+
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		if ( isset( $result['user_id'] ) ) {
+			return (int) $result['user_id'];
+		}
+
+		// Reached only if a caller pairs start_identity() with complete(); the two
+		// halves belong to different flows.
+		return new WP_Error(
+			'smart_login_signup_incomplete',
+			__( 'Chưa đủ thông tin để tạo tài khoản.', 'smart-login' )
+		);
+	}
+
+	/**
+	 * Create the account behind a just-proven claim and sign the user in.
+	 *
+	 * @return int|WP_Error New user ID.
+	 */
+	private function provision( Claim $claim, array $payload ) {
 		// The OTP proved control of this subject just now.
 		$verified = VerifiedClaim::from( $claim, VerifiedClaim::PROOF_OTP );
 
@@ -162,7 +326,7 @@ class RegisterHandler {
 
 		AuditLog::record(
 			AuditLog::USER_REGISTERED,
-			RateLimiter::mask_identity( $row['destination'] ),
+			RateLimiter::mask_identity( $claim->subject() ),
 			array( 'channel' => $claim->channel() ),
 			$user_id
 		);

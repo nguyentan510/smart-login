@@ -545,9 +545,13 @@ if ( AddressRepository::is_dataset_installed() ) {
 }
 
 // ---------------------------------------------------------------------
-section( 'All-in-one authentication UI contract' );
+section( 'Identifier-first authentication UI contract' );
 
-$auth_template = file_get_contents( dirname( __DIR__ ) . '/templates/form-auth.php' );
+$auth_template     = file_get_contents( dirname( __DIR__ ) . '/templates/form-auth.php' );
+$password_template = file_get_contents( dirname( __DIR__ ) . '/templates/form-password.php' );
+$signup_template   = file_get_contents( dirname( __DIR__ ) . '/templates/form-signup.php' );
+$onboard_template  = file_get_contents( dirname( __DIR__ ) . '/templates/onboarding.php' );
+$success_template  = file_get_contents( dirname( __DIR__ ) . '/templates/registered-success.php' );
 $auth_script   = file_get_contents( dirname( __DIR__ ) . '/assets/js/smart-login.js' );
 $profile_form  = file_get_contents( dirname( __DIR__ ) . '/templates/woocommerce/form-edit-account.php' );
 $template_loader = file_get_contents( dirname( __DIR__ ) . '/includes/Frontend/class-template-loader.php' );
@@ -555,24 +559,98 @@ $settings_page = file_get_contents( dirname( __DIR__ ) . '/includes/Admin/class-
 $admin_script  = file_get_contents( dirname( __DIR__ ) . '/assets/js/admin.js' );
 $provider_controller = file_get_contents( dirname( __DIR__ ) . '/includes/Auth/class-provider-auth-controller.php' );
 
-check( 'auth box exposes login and register tabs', 2, substr_count( $auth_template, 'data-sl-auth-tab=' ) );
 check( 'template loader does not shadow partial name arguments', true, false !== strpos( $template_loader, 'render( string $template_name' ) );
-check( 'auth box uses one HTML form', 1, substr_count( $auth_template, '<form ' ) );
-check( 'auth box keeps action-specific guards', true, false !== strpos( $auth_template, "RequestGuard::fields( 'login', 'login_' )" ) && false !== strpos( $auth_template, "RequestGuard::fields( 'register', 'register_' )" ) );
-check( 'login and registration password fields are namespaced', true, false !== strpos( $auth_template, "name'         => 'login_password'" ) && false !== strpos( $auth_template, "name'         => 'register_password'" ) );
-check( 'registration submits password confirmation', true, false !== strpos( $auth_template, "=> 'register_password_confirm'" ) );
-check( 'registration does not collect date of birth', false, false !== strpos( $auth_template, 'name="dob"' ) );
-check( 'registration does not collect gender', false, false !== strpos( $auth_template, 'name="gender"' ) );
-check( 'registration does not collect referral code', false, false !== strpos( $auth_template, 'name="referral_code"' ) );
-check( 'OAuth providers render below both auth panels', true, strrpos( $auth_template, 'sl-provider-buttons' ) > strrpos( $auth_template, 'sl-panel-register' ) );
+
+// Step 1 asks one question. The login/register tab pair that used to live here
+// made the visitor declare which one they needed before the site would say.
+check( 'entry screen offers no login/register choice', false, false !== strpos( $auth_template, 'data-sl-auth-tab' ) );
+check( 'entry screen uses one HTML form', 1, substr_count( $auth_template, '<form ' ) );
+check( 'entry screen collects exactly one identifier', 1, substr_count( $auth_template, 'name="identity"' ) );
+check( 'entry screen collects no password', false, false !== strpos( $auth_template, 'partials/password-field' ) );
+check( 'entry screen carries its own guard', true, false !== strpos( $auth_template, "RequestGuard::fields( 'identify' )" ) );
+check( 'entry screen posts the identify action', true, false !== strpos( $auth_template, 'value="identify"' ) );
+
+// Step 2a: a known identifier. The guard stays the login guard, because this
+// is still a login — only the field order changed.
+check( 'password step guards as a login', true, false !== strpos( $password_template, "RequestGuard::fields( 'login', 'login_' )" ) );
+check( 'password step echoes the identifier back', true, false !== strpos( $password_template, 'name="identity"' ) );
+check( 'password step marks its origin so failures return to it', true, false !== strpos( $password_template, 'name="sl_from_password"' ) );
+check( 'password step offers a way to correct the identifier', true, false !== strpos( $password_template, 'STEP_IDENTIFY' ) );
+
+// Step 3: one password box. The show/hide toggle already does what a second
+// box was there for, and every extra field on this screen costs completions.
+check( 'signup step asks for one password, not two', 1, substr_count( $signup_template, "'partials/password-field'" ) );
+check( 'signup step has no confirmation field', false, false !== strpos( $signup_template, 'password_confirm' ) );
+check( 'signup step requires the terms', true, false !== strpos( $signup_template, 'name="terms"' ) );
+check( 'signup step carries the grant rather than the identity', true, false !== strpos( $signup_template, 'name="grant"' ) && false === strpos( $signup_template, 'name="identity"' ) );
+check( 'signup step does not collect date of birth', false, false !== strpos( $signup_template, 'name="dob"' ) );
+check( 'signup step does not collect gender', false, false !== strpos( $signup_template, 'name="gender"' ) );
+check( 'signup step does not collect referral code', false, false !== strpos( $signup_template, 'name="referral_code"' ) );
+
+// The welcome screen asks and accepts no for an answer.
+check( 'onboarding always offers a way out', true, false !== strpos( $onboard_template, 'name="sl_skip"' ) );
+check( 'onboarding never asks for a password', false, false !== strpos( $onboard_template, 'partials/password-field' ) );
+check( 'onboarding never embeds contact verification', false, false !== strpos( $onboard_template, 'data-sl-contact' ) );
+check( 'onboarding states why each field is worth giving', true, false !== strpos( $onboard_template, 'sl-hint--reason' ) );
+check( 'success screen no longer redirects on a timer', false, false !== strpos( $success_template, 'setTimeout' ) );
+
+check( 'OAuth providers render below the entry form', true, strrpos( $auth_template, 'sl-provider-buttons' ) > strrpos( $auth_template, '</form>' ) );
 check( 'OAuth login buttons expose stable browser selectors', true, false !== strpos( $auth_template, 'data-sl-provider=' ) && false !== strpos( $auth_template, 'data-sl-provider-mode="login"' ) );
 check( 'profile provider buttons expose link mode selectors', true, false !== strpos( $profile_form, 'data-sl-provider-mode="link"' ) );
-check( 'client password confirmation blocks mismatch', true, false !== strpos( $auth_script, 'Passwords do not match.' ) );
-check( 'password guidance starts hidden', true, false !== strpos( $auth_template, 'data-sl-password-guidance' ) && false !== strpos( $auth_template, 'hidden' ) );
-check( 'password guidance only appears for short input', true, false !== strpos( $auth_script, 'input.value.length < minimum' ) );
-check( 'registration passwords share one trust block', true, false !== strpos( $auth_template, 'class="sl-password-block"' ) );
-check( 'password security note is present', true, false !== strpos( $auth_template, 'Mật khẩu của bạn được bảo vệ an toàn.' ) );
+check( 'a repeat submit cannot fire a second SMS', true, false !== strpos( $auth_script, 'initSubmitGuard' ) );
 check( 'referral code moved to optional profile form', true, false !== strpos( $profile_form, 'name="smartlogin_referral_code"' ) );
+// ---------------------------------------------------------------------
+section( 'Every tabbed setting is actually rendered' );
+
+/*
+ * The settings screen posts the whole option array on every save. Keys outside
+ * the open tab survive as hidden inputs; keys claimed by the open tab are
+ * expected to come back from its own fields. So a key listed in tab_fields()
+ * but never rendered is not merely invisible — it is absent from $_POST, and
+ * Settings::sanitize() reads that absence as an unchecked checkbox and stores
+ * a zero.
+ *
+ * This is not hypothetical. `field_email_optional` defaulted to 1, was claimed
+ * by the Chung tab, and was drawn nowhere. The first time an admin pressed Lưu
+ * on that tab it flipped to 0, and every phone-only account started reporting a
+ * missing required Email — one they could not supply, because the Email box on
+ * the profile form is readonly by design. `require_verification` had the same
+ * defect and has since been deleted as dead.
+ *
+ * The rule: a key belongs to a tab only if that tab draws it.
+ */
+preg_match( '/private function tab_fields\(\): array \{(.*?)\n\t\}/s', $settings_page, $tab_fields_body );
+$tab_fields_src = $tab_fields_body[1] ?? '';
+$rest_of_page   = str_replace( $tab_fields_src, '', $settings_page );
+
+check( 'the tab map was located', true, '' !== $tab_fields_src );
+
+preg_match_all( "/'([a-z0-9_]+)'/", $tab_fields_src, $tab_keys );
+
+$unrendered = array();
+
+foreach ( array_unique( $tab_keys[1] ?? array() ) as $tab_key ) {
+	// Tab slugs are the array keys, not settings; they name a render method.
+	if ( in_array( $tab_key, array( 'general', 'otp', 'webhook', 'email', 'providers', 'advanced' ), true ) ) {
+		continue;
+	}
+
+	if ( false === strpos( $rest_of_page, "'" . $tab_key . "'" ) ) {
+		$unrendered[] = $tab_key;
+	}
+}
+
+check( 'no tab claims a setting it never draws', array(), $unrendered );
+
+foreach ( array( 'field_email_optional', 'id_mode', 'min_password_length' ) as $must_render ) {
+	check( sprintf( '%s has a control', $must_render ), true, false !== strpos( $rest_of_page, "'" . $must_render . "'" ) );
+}
+
+check( 'the dead require_verification switch is gone', false, false !== strpos( $settings_page, 'require_verification' ) );
+
+// ---------------------------------------------------------------------
+section( 'Provider settings UI' );
+
 check( 'provider settings render one card per provider', 2, substr_count( $settings_page, '$this->provider_setup_card(' ) );
 check( 'provider settings expose inline docs tabs', true, false !== strpos( $settings_page, 'data-provider-tab="docs"' ) );
 check( 'provider settings expose secret inputs without stored values', true, false !== strpos( $settings_page, "'google_client_secret'" ) && false !== strpos( $settings_page, "'zalo_app_secret'" ) && false !== strpos( $settings_page, 'value=""' ) );

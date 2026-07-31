@@ -88,6 +88,61 @@ class PendingSession {
 	}
 
 	/**
+	 * Short-lived grant issued once an OTP has proved a *new* identifier.
+	 *
+	 * Identifier-first collects the name and password after verification rather
+	 * than before it, so something has to carry the proven subject across that
+	 * extra request. It cannot be a hidden form field: the browser would then be
+	 * naming the identity the account gets created under. The grant is an opaque
+	 * random key, and the subject it stands for is only ever read server-side.
+	 *
+	 * @param array{channel:string,subject:string} $claim The proven identity.
+	 */
+	public static function grant_signup( array $claim ): string {
+		$grant = bin2hex( random_bytes( 32 ) );
+
+		set_transient(
+			'smart_login_signup_' . $grant,
+			array(
+				'channel' => (string) ( $claim['channel'] ?? '' ),
+				'subject' => (string) ( $claim['subject'] ?? '' ),
+			),
+			15 * MINUTE_IN_SECONDS
+		);
+
+		return $grant;
+	}
+
+	/**
+	 * @return array{channel:string,subject:string}|null Null when unknown/expired.
+	 */
+	public static function consume_signup( string $grant ): ?array {
+		$grant = preg_replace( '/[^a-f0-9]/', '', $grant );
+
+		if ( '' === $grant ) {
+			return null;
+		}
+
+		$key   = 'smart_login_signup_' . $grant;
+		$claim = get_transient( $key );
+
+		if ( ! is_array( $claim ) || empty( $claim['subject'] ) ) {
+			return null;
+		}
+
+		// Delete before returning: a grant that survived its own use would let a
+		// replayed request create a second account on the same proof.
+		if ( ! delete_transient( $key ) ) {
+			return null;
+		}
+
+		return array(
+			'channel' => (string) $claim['channel'],
+			'subject' => (string) $claim['subject'],
+		);
+	}
+
+	/**
 	 * @return int User ID, or 0 when the grant is unknown/expired.
 	 */
 	public static function consume_password_reset( string $grant ): int {

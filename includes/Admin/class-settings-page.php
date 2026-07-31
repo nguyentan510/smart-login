@@ -198,10 +198,19 @@ class SettingsPage {
 
 	/**
 	 * Which settings belong to which tab, so the others can be preserved.
+	 *
+	 * A key listed here must also be rendered by that tab's method. Listing one
+	 * without rendering it is silent data loss: the key is skipped by
+	 * render_hidden_for_other_tabs() because it "belongs to this tab", never
+	 * reaches $_POST because nothing draws it, and Settings::sanitize() then
+	 * treats the absence as an unchecked checkbox and stores 0. That is exactly
+	 * what happened to `field_email_optional`, which flipped itself off the first
+	 * time an admin saved this tab and pushed every phone-only account into a
+	 * "missing required information" state. It now has a checkbox above.
 	 */
 	private function tab_fields(): array {
 		return array(
-			'general'   => array( 'id_mode', 'default_country_code', 'synthetic_email_domain', 'require_verification', 'min_password_length', 'field_dob', 'field_gender', 'field_referral', 'field_email_optional', 'redirect_after_register', 'redirect_after_login', 'terms_url', 'address_enabled', 'address_quick_search', 'address_hide_postcode', 'address_required_in_profile', 'woo_replace_login_form', 'woo_relax_billing_email', 'woo_block_synthetic_emails', 'woo_sync_billing_phone' ),
+			'general'   => array( 'id_mode', 'default_country_code', 'synthetic_email_domain', 'min_password_length', 'field_dob', 'field_gender', 'field_referral', 'field_email_optional', 'redirect_after_register', 'redirect_after_login', 'terms_url', 'address_enabled', 'address_quick_search', 'address_hide_postcode', 'address_required_in_profile', 'woo_replace_login_form', 'woo_relax_billing_email', 'woo_block_synthetic_emails', 'woo_sync_billing_phone' ),
 			'otp'       => array( 'otp_length', 'otp_ttl', 'otp_max_attempts', 'otp_resend_cooldown', 'otp_max_per_destination_hour', 'otp_max_per_ip_hour', 'login_otp_new_device', 'login_max_attempts', 'login_lockout_minutes' ),
 			'webhook'   => array( 'webhook_enabled', 'webhook_url', 'webhook_method', 'webhook_content_type', 'webhook_headers', 'webhook_body', 'webhook_timeout', 'webhook_success_path', 'webhook_success_value', 'webhook_retry', 'webhook_idempotency_header' ),
 			'email'     => array( 'email_enabled', 'email_from_name', 'email_from_address', 'email_subject', 'email_body', 'email_is_html' ),
@@ -382,6 +391,11 @@ class SettingsPage {
 					'min' => 6,
 					'max' => 64,
 				)
+			);
+			$this->checkbox(
+				'field_email_optional',
+				__( 'Email không bắt buộc', 'smart-login' ),
+				__( 'Tài khoản đăng ký bằng số điện thoại không bị coi là thiếu thông tin khi chưa có email. <strong>Tắt sẽ khiến mọi tài khoản chỉ có số điện thoại bị nhắc bổ sung email.</strong>', 'smart-login' )
 			);
 			$this->checkbox( 'field_dob', __( 'Ngày sinh', 'smart-login' ), __( 'Hiển thị trong phần Thông tin bổ sung của hồ sơ; không hiển thị khi đăng ký.', 'smart-login' ) );
 			$this->checkbox( 'field_gender', __( 'Giới tính', 'smart-login' ), __( 'Hiển thị trong phần Thông tin bổ sung của hồ sơ; không hiển thị khi đăng ký.', 'smart-login' ) );

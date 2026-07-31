@@ -26,7 +26,9 @@ class Settings {
 			'id_mode'                      => 'phone_only', // phone_only | email_only | both.
 			'default_country_code'         => '84',
 			'synthetic_email_domain'       => 'phone.invalid',
-			'require_verification'         => 1,
+			// `require_verification` used to live here. Nothing ever read it —
+			// every flow verifies unconditionally — so it was a switch wired to
+			// nothing, and one that quietly zeroed itself on save.
 			'min_password_length'          => 8,
 			'field_dob'                    => 1,
 			'field_gender'                 => 1,
@@ -99,7 +101,6 @@ class Settings {
 	 */
 	public static function int_fields(): array {
 		return array(
-			'require_verification',
 			'min_password_length',
 			'field_dob',
 			'field_gender',

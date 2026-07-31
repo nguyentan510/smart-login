@@ -197,6 +197,16 @@ function wp_unique_id( $prefix = '' ) {
 	return $prefix . ++$id;
 }
 
+/*
+ * A template that renders the address picker reaches Assets::enqueue_address()
+ * on the way — onboarding.php is the first one to do so. Enqueueing is a no-op
+ * here; what matters is that the call resolves rather than fatalling, which is
+ * precisely the class of bug this suite exists to catch.
+ */
+function wp_enqueue_style( $handle, $src = '', $deps = array(), $ver = false, $media = 'all' ) {}
+
+function wp_enqueue_script( $handle, $src = '', $deps = array(), $ver = false, $args = array() ) {}
+
 function sanitize_html_class( $class_name, $fallback = '' ) {
 	$sanitized = preg_replace( '/[^A-Za-z0-9_-]/', '', (string) $class_name );
 

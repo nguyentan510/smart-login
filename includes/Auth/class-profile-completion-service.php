@@ -17,9 +17,36 @@ final class ProfileCompletionService {
 
 	const META_SEEN      = '_smartlogin_onboarding_seen_at';
 	const META_SOURCE    = '_smartlogin_onboarding_source';
-	const META_GATE      = '_smartlogin_profile_gate';
 	const META_NOTICE    = '_smartlogin_profile_notice_version';
 	const NOTICE_VERSION = '1';
+
+	/**
+	 * How many things onboarding may ask for at once.
+	 *
+	 * A first screen that lists everything missing is a form, not a welcome. Three
+	 * is the point where it still reads as a short ask.
+	 */
+	const ONBOARDING_LIMIT = 3;
+
+	/**
+	 * Order the onboarding screen asks in, and why each field is worth giving.
+	 *
+	 * The reason is not decoration: a field labelled "Ngày sinh" is a demand, and
+	 * the same field labelled "để nhận quà sinh nhật" is an offer. Only fields
+	 * listed here can appear in onboarding — `email` deliberately does not, since
+	 * changing it needs its own OTP round-trip and that does not belong on a
+	 * welcome screen.
+	 *
+	 * @return array<string,string>
+	 */
+	public static function onboarding_reasons(): array {
+		return array(
+			'full_name' => __( 'Để chúng tôi biết xưng hô với bạn thế nào', 'smart-login' ),
+			'address'   => __( 'Để đơn hàng được giao đúng nơi, không phải nhập lại mỗi lần', 'smart-login' ),
+			'dob'       => __( 'Để nhận ưu đãi vào dịp sinh nhật', 'smart-login' ),
+			'gender'    => __( 'Để gợi ý sản phẩm hợp với bạn hơn', 'smart-login' ),
+		);
+	}
 
 	public function status( int $user_id ): array {
 		$user        = get_userdata( $user_id );
@@ -67,16 +94,45 @@ final class ProfileCompletionService {
 		return (array) apply_filters( 'smart_login_profile_status', $status, $user_id );
 	}
 
-	public function needs_gate( int $user_id, bool $is_new_user ): bool {
-		$missing = ! empty( $this->status( $user_id )['required_missing'] );
-		if ( $is_new_user && $missing ) {
-			update_user_meta( $user_id, self::META_GATE, 1 );
+	/**
+	 * What the onboarding screen should actually ask for, in priority order.
+	 *
+	 * Required gaps come first, then recommended ones, capped at ONBOARDING_LIMIT.
+	 * Anything with no input on the onboarding form — email, which needs its own
+	 * verification round-trip — is filtered out here rather than in the template,
+	 * so "there is nothing to ask" is a question the caller can answer before
+	 * deciding to render at all.
+	 *
+	 * @return array<int,array{key:string,label:string,reason:string}>
+	 */
+	public function onboarding_fields( int $user_id ): array {
+		$status  = $this->status( $user_id );
+		$reasons = self::onboarding_reasons();
+		$fields  = array();
+
+		foreach ( array_merge( $status['required_missing'], $status['recommended_missing'] ) as $item ) {
+			$key = (string) ( $item['key'] ?? '' );
+
+			if ( ! isset( $reasons[ $key ] ) || isset( $fields[ $key ] ) ) {
+				continue;
+			}
+
+			$fields[ $key ] = array(
+				'key'    => $key,
+				'label'  => (string) $item['label'],
+				'reason' => $reasons[ $key ],
+			);
 		}
-		if ( ! $missing ) {
-			delete_user_meta( $user_id, self::META_GATE );
-			return false;
-		}
-		return $is_new_user || (bool) get_user_meta( $user_id, self::META_GATE, true );
+
+		/**
+		 * Adjust what a new account is asked for on the welcome screen.
+		 *
+		 * @param array $fields
+		 * @param int   $user_id
+		 */
+		$fields = (array) apply_filters( 'smart_login_onboarding_fields', array_values( $fields ), $user_id );
+
+		return array_slice( $fields, 0, self::ONBOARDING_LIMIT );
 	}
 
 	public function has_seen( int $user_id ): bool {

@@ -32,21 +32,21 @@ $sl_site = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
 		?>
 	</h2>
 
-	<a class="sl-btn sl-btn--primary" href="<?php echo esc_url( $redirect ); ?>">
-		<?php esc_html_e( 'Khám phá ngay', 'smart-login' ); ?>
+	<a class="sl-btn sl-btn--primary sl-btn--block" href="<?php echo esc_url( $redirect ); ?>">
+		<?php esc_html_e( 'Tiếp tục', 'smart-login' ); ?>
 	</a>
-
-	<p class="sl-hint">
-		<?php esc_html_e( 'Bạn sẽ được chuyển tới trang hồ sơ để bổ sung thông tin.', 'smart-login' ); ?>
-	</p>
-
-	<?php
-	// Belt and braces: move on automatically if the visitor does nothing.
-	wp_print_inline_script_tag(
-		sprintf(
-			'setTimeout(function(){window.location.href=%s;},6000);',
-			wp_json_encode( esc_url_raw( $redirect ) )
-		)
-	);
-	?>
 </div>
+<?php
+/*
+ * Two things used to happen here and neither survived review.
+ *
+ * The button said "Khám phá ngay" and led to the account editing form, which is
+ * not exploring anything. And a six-second timer moved the visitor on whether
+ * or not they had finished reading — a redirect nobody asked for, on a screen
+ * whose only job was to be read.
+ *
+ * The flow this template belongs to now ends on onboarding.php instead, which
+ * says what it wants and waits to be told. This file stays because the REST
+ * registration path still resolves to STEP_DONE.
+ */
+

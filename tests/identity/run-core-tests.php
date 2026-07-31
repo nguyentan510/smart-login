@@ -532,7 +532,30 @@ sl_check( 'get_int defaults to zero', 0, Settings::get_int( 'no_such_key' ) );
 
 sl_check( 'Flow::data falls back', 'none', \SmartLogin\Frontend\Flow::data( 'no_such_key', 'none' ) );
 sl_check( 'Flow::old falls back', 'empty', \SmartLogin\Frontend\Flow::old( 'no_such_key', 'empty' ) );
-sl_check( 'Flow::step falls back', 'register', \SmartLogin\Frontend\Flow::step( 'register' ) );
+sl_check( 'Flow::step falls back', 'otp', \SmartLogin\Frontend\Flow::step( 'otp' ) );
+
+// Identifier-first has no separate login and register screens. The two legacy
+// step names survive so existing links and shortcodes keep resolving, and both
+// land on the single entry screen rather than on a step that no longer exists.
+sl_check( 'the legacy login step collapses onto the entry screen', 'identify', \SmartLogin\Frontend\Flow::step( 'login' ) );
+sl_check( 'the legacy register step collapses onto the entry screen', 'identify', \SmartLogin\Frontend\Flow::step( 'register' ) );
+
+// Steps that only mean something alongside server-side state must not be
+// reachable by typing a query string. Rendering the signup form to somebody
+// with no verified identifier behind it would be a form with nothing under it.
+$_GET['smart_login_step'] = 'otp';
+sl_check( 'a public step can be requested by URL', 'otp', \SmartLogin\Frontend\Flow::step( 'identify' ) );
+
+foreach ( array( 'password', 'signup', 'onboard' ) as $sl_private_step ) {
+	$_GET['smart_login_step'] = $sl_private_step;
+	sl_check(
+		sprintf( 'the %s step cannot be reached by URL', $sl_private_step ),
+		'identify',
+		\SmartLogin\Frontend\Flow::step( 'identify' )
+	);
+}
+
+unset( $_GET['smart_login_step'] );
 
 // ---------------------------------------------------------------------
 sl_summary( 'Identity core' );
