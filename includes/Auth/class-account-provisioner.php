@@ -83,7 +83,7 @@ final class AccountProvisioner {
 			);
 		}
 
-		if ( Settings::is_on( 'provider_auto_link_email' ) && $identity->email_verified && '' !== $identity->email ) {
+		if ( Settings::is_on( 'providers.auto_link_email' ) && $identity->email_verified && '' !== $identity->email ) {
 			global $wpdb;
 			$ids = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- no core API matches an email across users case-insensitively, and the answer decides account linking so it must not be cached.
 				$wpdb->prepare(

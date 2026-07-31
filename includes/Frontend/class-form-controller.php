@@ -10,19 +10,24 @@
 
 namespace SmartLogin\Frontend;
 
+use SmartLogin\Address\AddressFields;
 use SmartLogin\Auth\LoginHandler;
+use SmartLogin\Auth\AuthAction;
 use SmartLogin\Auth\AuthContext;
 use SmartLogin\Auth\AuthProof;
 use SmartLogin\Auth\IdentityLinkService;
 use SmartLogin\Auth\PostAuthRedirector;
+use SmartLogin\Auth\ProfileCompletionService;
 use SmartLogin\Auth\SessionIssuer;
 use SmartLogin\Auth\PasswordResetHandler;
 use SmartLogin\Auth\PendingSession;
 use SmartLogin\Auth\RegisterHandler;
+use SmartLogin\Identity\IdentityDirectory;
 use SmartLogin\Identity\UserManager;
 use SmartLogin\OTP\OtpService;
 use SmartLogin\Security\RateLimiter;
 use SmartLogin\Security\RequestGuard;
+use SmartLogin\Settings;
 use WP_Error;
 use WP_User;
 
@@ -72,6 +77,18 @@ class FormController {
 		$post = wp_unslash( $_POST );
 
 		switch ( $action ) {
+			case 'identify':
+				$this->handle_identify( $post );
+				break;
+
+			case 'signup':
+				$this->handle_signup( $post );
+				break;
+
+			case 'onboard':
+				$this->handle_onboard( $post );
+				break;
+
 			case 'register':
 				$this->handle_register( $post );
 				break;
@@ -135,6 +152,244 @@ class FormController {
 
 		$redirect = (string) ( $post['_redirect'] ?? '' );
 		$this->redirect( '' !== $redirect ? $redirect : home_url( '/' ) );
+	}
+
+	// -----------------------------------------------------------------
+	// Identifier-first
+	// -----------------------------------------------------------------
+
+	/**
+	 * Step 1: one identifier, and the flow works out the rest.
+	 *
+	 * A registered subject goes to the password screen; anything else starts a
+	 * registration. The visitor is never asked to declare up front whether they
+	 * already have an account — they usually do not know, and getting it wrong
+	 * used to mean an error message and a retyped form.
+	 */
+	private function handle_identify( array $post ): void {
+		$identity = trim( (string) ( $post['identity'] ?? '' ) );
+
+		Flow::remember( array( 'identity' => $identity ) );
+
+		$guard = RequestGuard::verify( 'identify', $post );
+
+		if ( is_wp_error( $guard ) ) {
+			$this->fail( $guard, Flow::STEP_IDENTIFY );
+			return;
+		}
+
+		if ( '' === $identity ) {
+			$this->fail(
+				new WP_Error(
+					'smart_login_no_identity',
+					sprintf(
+						/* translators: %s: identifier label, e.g. "số điện thoại". */
+						__( 'Vui lòng nhập %s.', 'smart-login' ),
+						mb_strtolower( RegisterHandler::identifier_label() )
+					)
+				),
+				Flow::STEP_IDENTIFY
+			);
+			return;
+		}
+
+		$directory = new IdentityDirectory();
+		$claim     = $directory->channels()->claim_any( $identity );
+
+		if ( $claim->is_empty() ) {
+			$this->fail(
+				new WP_Error(
+					'smart_login_bad_identity',
+					sprintf(
+						/* translators: %s: identifier label, e.g. "Số điện thoại". */
+						__( '%s không hợp lệ.', 'smart-login' ),
+						RegisterHandler::identifier_label()
+					)
+				),
+				Flow::STEP_IDENTIFY
+			);
+			return;
+		}
+
+		$decision = AuthAction::for_resolution( AuthAction::LOGIN, $directory->resolve( $claim ) );
+
+		if ( AuthAction::ISSUE_SESSION === $decision ) {
+			$this->password_step( $identity );
+			return;
+		}
+
+		// Anything else means there is nothing to sign in to. NO_ACCOUNT covers
+		// both "never seen" and "the previous owner gave this subject up", and
+		// both are a new account here. REJECT is unreachable — resolve() cannot
+		// return CONFLICT — and start_identity() refuses it in any case, so the
+		// fall-through is not load-bearing.
+		$result = ( new RegisterHandler( $this->otp() ) )->start_identity( array( 'identity' => $identity ) );
+
+		if ( is_wp_error( $result ) ) {
+			$this->fail( $result, Flow::STEP_IDENTIFY );
+			return;
+		}
+
+		Flow::set( Flow::STEP_OTP, $result + array( 'intent' => OtpService::INTENT_REGISTER ) );
+	}
+
+	private function password_step( string $identity ): void {
+		Flow::set( Flow::STEP_PASSWORD, array( 'identity' => $identity ) );
+	}
+
+	/**
+	 * Step 3 of a registration: name and password, against an already-proven
+	 * identifier held server-side behind the grant.
+	 */
+	private function handle_signup( array $post ): void {
+		Flow::remember( $post );
+
+		$grant = (string) ( $post['grant'] ?? '' );
+		$guard = RequestGuard::verify( 'signup', $post );
+
+		if ( is_wp_error( $guard ) ) {
+			// The grant was not consumed, so it is still good for the retry.
+			$this->fail_signup( $guard, $grant );
+			return;
+		}
+
+		$user_id = ( new RegisterHandler( $this->otp() ) )->finish_signup( $grant, $post );
+
+		if ( is_wp_error( $user_id ) ) {
+			$this->fail_signup( $user_id, '' );
+			return;
+		}
+
+		$this->after_registration( (int) $user_id );
+	}
+
+	/**
+	 * @param WP_Error $error          Carries a fresh grant when one was issued.
+	 * @param string   $fallback_grant Used when the failure happened before the
+	 *                                 grant was spent, so no fresh one exists.
+	 */
+	private function fail_signup( WP_Error $error, string $fallback_grant ): void {
+		Notices::add_wp_error( $error );
+
+		$data  = $error->get_error_data();
+		$grant = is_array( $data ) && ! empty( $data['grant'] ) ? (string) $data['grant'] : $fallback_grant;
+
+		if ( '' === $grant ) {
+			// No proof left to build an account on; the identifier must be
+			// verified again from the start.
+			Flow::set( Flow::STEP_IDENTIFY );
+			return;
+		}
+
+		Flow::set( Flow::STEP_SIGNUP, array( 'grant' => $grant ) );
+	}
+
+	/**
+	 * The account exists and the user is signed in. Show the welcome screen in
+	 * place rather than redirecting to a profile form.
+	 */
+	private function after_registration( int $user_id ): void {
+		$profiles = new ProfileCompletionService();
+
+		// Mark it seen now, because it is being shown now. This also settles what
+		// post_register_redirect() returns below: with the welcome already
+		// delivered it resolves to the ordinary destination instead of looping
+		// back to the profile page.
+		$profiles->mark_seen( $user_id, 'otp' );
+
+		Flow::set(
+			Flow::STEP_ONBOARD,
+			array(
+				'user_id'  => $user_id,
+				'fields'   => $profiles->onboarding_fields( $user_id ),
+				'redirect' => RegisterHandler::post_register_redirect( $user_id ),
+			)
+		);
+	}
+
+	/**
+	 * Save whatever the welcome screen collected, then get out of the way.
+	 *
+	 * Every field here is optional by construction: "Để sau" posts the same form
+	 * with nothing filled in, and that is a valid outcome rather than a
+	 * validation error.
+	 */
+	private function handle_onboard( array $post ): void {
+		$redirect = wp_validate_redirect( (string) ( $post['redirect_to'] ?? '' ), '' );
+		$redirect = '' !== $redirect ? $redirect : LoginHandler::post_login_redirect();
+
+		if ( ! is_user_logged_in() ) {
+			$this->redirect( $redirect );
+			return;
+		}
+
+		// "Để sau" writes nothing, so it is let through without the form guard.
+		// RequestGuard enforces a two-second minimum fill time, and somebody who
+		// decides immediately is exactly who that button is for — failing them
+		// for answering too quickly would be the opposite of taking no for an
+		// answer.
+		if ( ! empty( $post['sl_skip'] ) ) {
+			$this->redirect( $redirect );
+			return;
+		}
+
+		$guard = RequestGuard::verify( 'onboard', $post );
+
+		if ( is_wp_error( $guard ) ) {
+			// Stay on the screen rather than redirecting: a redirect here would
+			// throw away everything they had just typed.
+			Notices::add_wp_error( $guard );
+			Flow::set( Flow::STEP_ONBOARD, array( 'redirect' => $redirect ) );
+			return;
+		}
+
+		$this->save_onboarding( get_current_user_id(), $post );
+
+		$this->redirect( $redirect );
+	}
+
+	private function save_onboarding( int $user_id, array $post ): void {
+		$full_name = sanitize_text_field( (string) ( $post['full_name'] ?? '' ) );
+
+		if ( '' !== trim( $full_name ) ) {
+			$names = UserManager::split_name( $full_name );
+
+			wp_update_user(
+				array(
+					'ID'           => $user_id,
+					'first_name'   => $names['first'],
+					'last_name'    => '' !== $names['last'] ? $names['last'] : $names['first'],
+					'display_name' => $full_name,
+				)
+			);
+		}
+
+		$dob = RegisterHandler::parse_dob( (string) ( $post['dob'] ?? '' ) );
+
+		if ( '' !== $dob ) {
+			update_user_meta( $user_id, UserManager::META_DOB, $dob );
+		}
+
+		$gender = sanitize_key( (string) ( $post['gender'] ?? '' ) );
+
+		if ( in_array( $gender, array( 'male', 'female', 'other' ), true ) ) {
+			update_user_meta( $user_id, UserManager::META_GENDER, $gender );
+		}
+
+		if ( ! isset( $post[ AddressFields::FIELD_PROVINCE ] ) ) {
+			return;
+		}
+
+		// Never required on this screen, whatever address_required_in_profile
+		// says: a welcome that can be failed is not a welcome.
+		$address = AddressFields::validate( $post, false );
+
+		if ( is_wp_error( $address ) ) {
+			Notices::flash( $address->get_error_message(), 'error' );
+			return;
+		}
+
+		AddressFields::save_for_user( $user_id, $address );
 	}
 
 	// -----------------------------------------------------------------
@@ -223,23 +478,24 @@ class FormController {
 		}
 	}
 
+	/**
+	 * The code checked out. Either the account can be created right now, or the
+	 * name and password are still to come — see RegisterHandler::verify().
+	 */
 	private function finish_registration( string $token, string $code ): void {
-		$handler = new RegisterHandler( $this->otp() );
-		$user_id = $handler->complete( $token, $code );
+		$result = ( new RegisterHandler( $this->otp() ) )->verify( $token, $code );
 
-		if ( is_wp_error( $user_id ) ) {
-			$this->fail_otp( $user_id, $token );
+		if ( is_wp_error( $result ) ) {
+			$this->fail_otp( $result, $token );
 			return;
 		}
 
-		// Mirrors the "CHÚC MỪNG" screen: confirm first, then on to the profile.
-		Flow::set(
-			Flow::STEP_DONE,
-			array(
-				'user_id'  => $user_id,
-				'redirect' => RegisterHandler::post_register_redirect( $user_id ),
-			)
-		);
+		if ( isset( $result['grant'] ) ) {
+			Flow::set( Flow::STEP_SIGNUP, array( 'grant' => (string) $result['grant'] ) );
+			return;
+		}
+
+		$this->after_registration( (int) $result['user_id'] );
 	}
 
 	private function finish_reset_verification( string $token, string $code ): void {
@@ -335,22 +591,28 @@ class FormController {
 
 		Flow::remember( array( 'identity' => $post['identity'] ?? '' ) );
 
+		$identity = trim( (string) ( $post['identity'] ?? '' ) );
+
+		// Identifier-first posts from the password screen, which already knows the
+		// identifier is registered. A rejected password must land back there
+		// rather than throwing the visitor out to step 1 to retype it.
+		$fail_step = empty( $post['sl_from_password'] ) ? Flow::STEP_IDENTIFY : Flow::STEP_PASSWORD;
+		$fail_data = Flow::STEP_PASSWORD === $fail_step ? array( 'identity' => $identity ) : array();
+
 		$guard = RequestGuard::verify( 'login', $post, 'login_' );
 
 		if ( is_wp_error( $guard ) ) {
-			$this->fail( $guard, Flow::STEP_LOGIN );
+			Notices::add_wp_error( $guard );
+			Flow::set( $fail_step, $fail_data );
 			return;
 		}
 
-		$identity = trim( (string) ( $post['identity'] ?? '' ) );
 		$password = (string) ( $post['password'] ?? '' );
 		$remember = ! empty( $post['remember'] );
 
 		if ( '' === $identity || '' === $password ) {
-			$this->fail(
-				new WP_Error( 'smart_login_empty', __( 'Vui lòng nhập đầy đủ thông tin đăng nhập.', 'smart-login' ) ),
-				Flow::STEP_LOGIN
-			);
+			Notices::add( __( 'Vui lòng nhập đầy đủ thông tin đăng nhập.', 'smart-login' ) );
+			Flow::set( $fail_step, $fail_data );
 			return;
 		}
 
@@ -377,10 +639,10 @@ class FormController {
 			return;
 		}
 
-		$this->fail(
-			$user instanceof WP_Error ? $user : new WP_Error( 'smart_login_failed', __( 'Đăng nhập không thành công.', 'smart-login' ) ),
-			Flow::STEP_LOGIN
+		Notices::add_wp_error(
+			$user instanceof WP_Error ? $user : new WP_Error( 'smart_login_failed', __( 'Đăng nhập không thành công.', 'smart-login' ) )
 		);
+		Flow::set( $fail_step, $fail_data );
 	}
 
 	/**
@@ -570,10 +832,26 @@ class FormController {
 				'intent'       => $intent,
 				'masked'       => RateLimiter::mask_identity( $row['destination'] ),
 				'expires_in'   => $this->otp()->seconds_left( $row ),
-				'resend_after' => 0,
+				// Derived from when the code actually went out, not reset to zero.
+				// Showing an enabled "Gửi lại" while RateLimiter still holds the
+				// cooldown open only buys the visitor an error message.
+				'resend_after' => $this->resend_wait( $row ),
 				'transport'    => $row['transport'],
 			)
 		);
+	}
+
+	/**
+	 * Seconds left on the resend cooldown for a pending code.
+	 */
+	private function resend_wait( array $row ): int {
+		$sent_at = strtotime( ( $row['created_at'] ?? '' ) . ' UTC' );
+
+		if ( ! $sent_at ) {
+			return 0;
+		}
+
+		return max( 0, Settings::get_int( 'otp.resend_cooldown', 60 ) - ( time() - $sent_at ) );
 	}
 
 	private function redirect( string $url ): void {

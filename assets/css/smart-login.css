@@ -35,7 +35,7 @@
 	text-align: center;
 }
 
-.smart-login--register .sl-title,
+.smart-login--signup .sl-title,
 .smart-login--otp .sl-title {
 	text-align: left;
 }
@@ -44,47 +44,110 @@
 	color: var(--sl-accent);
 }
 
-.smart-login--auth {
-	max-width: 560px;
+/* ---------- Step indicator ---------- */
+
+.sl-steps {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin: 0 0 24px;
+	padding: 0;
+	list-style: none;
 }
 
-.sl-auth-tabs {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	margin-bottom: 24px;
-	overflow: hidden;
-	border-radius: var(--sl-radius);
-	background: #f1f2f4;
-}
-
-.sl-auth-tab {
-	padding: 14px 18px;
-	color: var(--sl-text);
-	font-size: 16px;
-	font-weight: 600;
+.sl-step {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	position: relative;
+	color: var(--sl-muted);
+	font-size: 12px;
 	text-align: center;
-	text-decoration: none;
-	transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.sl-auth-tab:hover {
-	color: var(--sl-text);
+/* The connector sits behind the dots rather than between list items, so the
+   row keeps working when a label wraps onto two lines. */
+.sl-step + .sl-step::before {
+	content: "";
+	position: absolute;
+	top: 11px;
+	right: 50%;
+	left: -50%;
+	height: 2px;
+	background: var(--sl-border);
 }
 
-.sl-auth-tab:focus-visible {
+.sl-step.is-done + .sl-step::before,
+.sl-step.is-current::before {
+	background: var(--sl-accent);
+}
+
+.sl-step__dot {
 	position: relative;
 	z-index: 1;
-	outline: 3px solid rgba(227, 6, 19, 0.28);
-	outline-offset: -3px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	border: 2px solid var(--sl-border);
+	border-radius: 50%;
+	background: #fff;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1;
 }
 
-.sl-auth-tab.is-active {
+.sl-step.is-current .sl-step__dot,
+.sl-step.is-done .sl-step__dot {
+	border-color: var(--sl-accent);
 	background: var(--sl-accent);
 	color: #fff;
 }
 
-.sl-auth-panel[hidden] {
-	display: none;
+.sl-step.is-current .sl-step__label {
+	color: var(--sl-text);
+	font-weight: 600;
+}
+
+/* ---------- Entry screen ---------- */
+
+.smart-login--identify,
+.smart-login--password,
+.smart-login--signup {
+	max-width: 460px;
+}
+
+.sl-input--lg {
+	padding: 15px 16px;
+	font-size: 17px;
+}
+
+/* What the visitor typed on step 1, echoed back so the password screen has a
+   subject. Not a form field — there is nothing to edit here, only to correct. */
+.sl-identity-chip {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	margin: 0 0 20px;
+	padding: 11px 14px;
+	border: 1px solid var(--sl-border);
+	border-radius: var(--sl-radius);
+	background: #f7f8fa;
+	font-size: 15px;
+}
+
+.sl-identity-chip__value {
+	font-weight: 600;
+	word-break: break-all;
+}
+
+.sl-terms-note {
+	margin-top: 18px;
+	text-align: center;
 }
 
 .sl-login-options {
@@ -125,11 +188,20 @@
 	padding: 0;
 }
 
+/* 13px muted grey was under the contrast floor against white and read as
+   placeholder text rather than a label. Full text colour, one size up. */
 .sl-label {
 	display: block;
 	margin-bottom: 6px;
-	font-size: 13px;
-	color: var(--sl-muted);
+	color: var(--sl-text);
+	font-size: 14px;
+	font-weight: 500;
+}
+
+/* Why a field is worth filling in, directly under its label. Onboarding leans
+   on this: "Ngày sinh" is a demand, "để nhận ưu đãi sinh nhật" is an offer. */
+.sl-hint--reason {
+	margin: -3px 0 8px;
 }
 
 .sl-required {
@@ -208,49 +280,12 @@
 	text-align: center;
 }
 
-.smart-login--auth .sl-terms span {
+.smart-login--signup .sl-terms span {
 	text-align: left;
 }
 
-.sl-password-guidance {
+#sl-password-guidance {
 	margin: -10px 0 16px;
-}
-
-.sl-password-block {
-	margin: 4px 0 20px;
-	padding: 14px 16px 12px;
-	border: 1px solid var(--sl-border);
-	border-radius: 10px;
-	background: #fbfcfe;
-}
-
-.sl-password-block__title {
-	padding: 0 6px;
-	color: var(--sl-text);
-	font-size: 14px;
-	font-weight: 600;
-}
-
-.sl-password-block .sl-field {
-	margin-bottom: 12px;
-}
-
-.sl-password-block .sl-password-guidance {
-	margin: -4px 0 12px;
-}
-
-.sl-password-match {
-	min-height: 20px;
-	margin: -4px 0 12px;
-	font-size: 13px;
-}
-
-.sl-password-match.is-error {
-	color: #b42318;
-}
-
-.sl-password-match.is-success {
-	color: #15803d;
 }
 
 .sl-input[aria-invalid="true"] {
@@ -259,24 +294,6 @@
 
 .sl-input[aria-invalid="true"]:focus {
 	outline-color: rgba(180, 35, 24, 0.28);
-}
-
-.sl-password-security {
-	display: flex;
-	align-items: flex-start;
-	gap: 7px;
-	margin: 4px 0 0;
-	padding-top: 10px;
-	border-top: 1px solid #e7eaf0;
-	color: var(--sl-muted);
-	font-size: 12px;
-	line-height: 1.45;
-}
-
-.sl-password-security svg {
-	flex: 0 0 auto;
-	margin-top: 1px;
-	color: #15803d;
 }
 
 /* Honeypot: off-screen but not display:none, which some bots skip. */
@@ -332,6 +349,30 @@
 	color: var(--sl-accent);
 }
 
+/* "Để sau" on the welcome screen. Quiet, but a real button at full width —
+   an opt-out hidden in small print is not an opt-out. */
+.sl-btn--ghost {
+	background: none;
+	border-color: transparent;
+	color: var(--sl-muted);
+	font-weight: 500;
+}
+
+.sl-btn--ghost:hover {
+	background: #f3f4f6;
+	color: var(--sl-text);
+}
+
+.sl-btn--block {
+	display: block;
+	width: 100%;
+}
+
+.sl-form.is-submitting .sl-btn--primary {
+	opacity: 0.72;
+	cursor: progress;
+}
+
 .sl-links {
 	margin: 0 0 16px;
 	text-align: center;
@@ -385,7 +426,7 @@
 	margin-bottom: 18px;
 }
 
-.smart-login--auth .sl-provider-buttons {
+.smart-login--identify .sl-provider-buttons {
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
@@ -676,6 +717,56 @@
 	font-weight: 600;
 }
 
+/* ---------- Welcome / onboarding ---------- */
+
+.smart-login--onboard {
+	max-width: 520px;
+}
+
+/* The celebration is a band at the top of the working screen rather than a
+   page of its own. It used to be a full screen that redirected itself after
+   six seconds; this keeps the moment and gives back the six seconds. */
+.sl-congrats {
+	margin-bottom: 24px;
+	padding: 20px 16px 4px;
+	border-radius: 10px;
+	background: #eefaf3;
+	text-align: center;
+}
+
+.sl-congrats__mark {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
+	background: #128a4c;
+	color: #fff;
+}
+
+.sl-congrats .sl-congrats-label {
+	margin: 10px 0 6px;
+}
+
+.sl-congrats .sl-congrats-title {
+	margin-bottom: 18px;
+	font-size: 18px;
+}
+
+.sl-onboard-group {
+	margin-bottom: 16px;
+}
+
+.sl-onboard-actions {
+	margin-top: 24px;
+}
+
+.sl-onboard-email {
+	margin-top: 4px;
+	text-align: center;
+}
+
 /* ---------- Profile ---------- */
 
 .sl-profile-list {
@@ -710,11 +801,17 @@
 		font-size: 18px;
 	}
 
-	.smart-login--auth .sl-provider-buttons {
+	.smart-login--identify .sl-provider-buttons {
 		grid-template-columns: 1fr;
 	}
 
 	.sl-login-options {
 		align-items: center;
+	}
+
+	/* Numbers stay, words go: three wrapped labels cost more vertical space
+	   than the progress they communicate is worth on a phone. */
+	.sl-step__label {
+		display: none;
 	}
 }

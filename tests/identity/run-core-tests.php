@@ -156,7 +156,7 @@ sl_check( 'malformed meta_json degrades to an empty array', array(), IdentityRec
 // ---------------------------------------------------------------------
 sl_section( 'PhoneChannel' );
 
-Settings::update( array( 'id_mode' => 'both', 'default_country_code' => '84' ) );
+Settings::update( array( 'identity.mode' => 'both', 'identity.country_code' => '84' ) );
 
 $phone = new PhoneChannel();
 
@@ -234,19 +234,19 @@ sl_check( 'claim_any() routes a phone number', 'phone:84969789475', $registry->c
 sl_check( 'claim_any() routes an email address', 'email:nhu@example.com', $registry->claim_any( 'NHU@example.com' )->key() );
 sl_check( 'claim_any() rejects nonsense', true, $registry->claim_any( '???' )->is_empty() );
 
-Settings::update( array( 'id_mode' => 'phone_only', 'google_enabled' => 0, 'zalo_enabled' => 0 ) );
+Settings::update( array( 'identity.mode' => 'phone_only', 'providers.google.enabled' => 0, 'providers.zalo.enabled' => 0 ) );
 $enabled = ( new ChannelRegistry() )->enabled();
 sl_check( 'legacy id_mode=phone_only enables one channel', array( 'phone' ), array_keys( $enabled ) );
 sl_check( 'a disabled channel is not claimable through claim_any()', true, ( new ChannelRegistry() )->claim_any( 'nhu@example.com' )->is_empty() );
 
-Settings::update( array( 'channels_enabled' => array( 'email', 'google' ) ) );
+Settings::update( array( 'channels.enabled' => array( 'email', 'google' ) ) );
 sl_check(
 	'an explicit channels_enabled list overrides the legacy flags',
 	array( 'email', 'google' ),
 	array_keys( ( new ChannelRegistry() )->enabled() )
 );
 
-Settings::update( array( 'channels_enabled' => null, 'id_mode' => 'both' ) );
+Settings::update( array( 'channels.enabled' => null, 'identity.mode' => 'both' ) );
 
 // ---------------------------------------------------------------------
 sl_section( 'OpaqueLogin — the structural half of Invariant 1' );
@@ -316,7 +316,7 @@ sl_check(
 // ---------------------------------------------------------------------
 sl_section( 'Password policy reaches every path that sets a password (Phase 4)' );
 
-Settings::update( array( 'min_password_length' => 8 ) );
+Settings::update( array( 'signup.min_password_length' => 8 ) );
 
 sl_check( 'a short password is refused', true, is_wp_error( \SmartLogin\Auth\PasswordPolicy::validate( 'abc' ) ) );
 sl_check( 'an empty password is refused', 'smart_login_no_password', \SmartLogin\Auth\PasswordPolicy::validate( '' )->get_error_code() );
@@ -324,9 +324,9 @@ sl_check( 'a mismatched confirmation is refused', 'smart_login_password_mismatch
 sl_check( 'a good password passes', true, \SmartLogin\Auth\PasswordPolicy::validate( 'correct-horse', 'correct-horse' ) );
 sl_check( 'the configured minimum is honoured', 8, \SmartLogin\Auth\PasswordPolicy::min_length() );
 
-Settings::update( array( 'min_password_length' => 2 ) );
+Settings::update( array( 'signup.min_password_length' => 2 ) );
 sl_check( 'the absolute floor overrides a too-low setting', 6, \SmartLogin\Auth\PasswordPolicy::min_length() );
-Settings::update( array( 'min_password_length' => 8 ) );
+Settings::update( array( 'signup.min_password_length' => 8 ) );
 
 // ---------------------------------------------------------------------
 sl_section( 'smart_login_phone_is_valid reaches Vietnamese numbers (Phase 4)' );
@@ -522,17 +522,46 @@ sl_section( 'Settings and Flow fallbacks actually fall back' );
 // variable their own signature no longer declared. PHP treats that as null, so
 // php -l passed and every default silently became null. Nothing existing covered
 // the fallback path, which is why it got through.
-Settings::update( array( 'otp_length' => 6 ) );
+Settings::update( array( 'otp.length' => 6 ) );
 
-sl_check( 'a known key returns its value', 6, Settings::get( 'otp_length' ) );
-sl_check( 'an unknown key returns the fallback', 'fallback-value', Settings::get( 'no_such_key', 'fallback-value' ) );
-sl_check( 'an unknown key with no fallback returns null', null, Settings::get( 'no_such_key' ) );
-sl_check( 'get_int falls back too', 42, Settings::get_int( 'no_such_key', 42 ) );
-sl_check( 'get_int defaults to zero', 0, Settings::get_int( 'no_such_key' ) );
+sl_check( 'a known path returns its value', 6, Settings::get( 'otp.length' ) );
+sl_check( 'an unknown path returns the fallback', 'fallback-value', Settings::get( 'no.such.path', 'fallback-value' ) );
+sl_check( 'an unknown path with no fallback returns null', null, Settings::get( 'no.such.path' ) );
+sl_check( 'get_int falls back too', 42, Settings::get_int( 'no.such.path', 42 ) );
+sl_check( 'get_int defaults to zero', 0, Settings::get_int( 'no.such.path' ) );
+
+// A path that stops short of a leaf must not hand back the branch: callers
+// expect a scalar, and returning the whole subtree would make is_on() true for
+// any group that happens to be non-empty.
+sl_check( 'a partial path returns the branch it names', true, is_array( Settings::get( 'otp' ) ) );
+sl_check( 'a flat legacy key no longer resolves', null, Settings::get( 'otp_length' ) );
 
 sl_check( 'Flow::data falls back', 'none', \SmartLogin\Frontend\Flow::data( 'no_such_key', 'none' ) );
 sl_check( 'Flow::old falls back', 'empty', \SmartLogin\Frontend\Flow::old( 'no_such_key', 'empty' ) );
-sl_check( 'Flow::step falls back', 'register', \SmartLogin\Frontend\Flow::step( 'register' ) );
+sl_check( 'Flow::step falls back', 'otp', \SmartLogin\Frontend\Flow::step( 'otp' ) );
+
+// Identifier-first has no separate login and register screens. The two legacy
+// step names survive so existing links and shortcodes keep resolving, and both
+// land on the single entry screen rather than on a step that no longer exists.
+sl_check( 'the legacy login step collapses onto the entry screen', 'identify', \SmartLogin\Frontend\Flow::step( 'login' ) );
+sl_check( 'the legacy register step collapses onto the entry screen', 'identify', \SmartLogin\Frontend\Flow::step( 'register' ) );
+
+// Steps that only mean something alongside server-side state must not be
+// reachable by typing a query string. Rendering the signup form to somebody
+// with no verified identifier behind it would be a form with nothing under it.
+$_GET['smart_login_step'] = 'otp';
+sl_check( 'a public step can be requested by URL', 'otp', \SmartLogin\Frontend\Flow::step( 'identify' ) );
+
+foreach ( array( 'password', 'signup', 'onboard' ) as $sl_private_step ) {
+	$_GET['smart_login_step'] = $sl_private_step;
+	sl_check(
+		sprintf( 'the %s step cannot be reached by URL', $sl_private_step ),
+		'identify',
+		\SmartLogin\Frontend\Flow::step( 'identify' )
+	);
+}
+
+unset( $_GET['smart_login_step'] );
 
 // ---------------------------------------------------------------------
 sl_summary( 'Identity core' );

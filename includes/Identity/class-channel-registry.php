@@ -79,7 +79,7 @@ final class ChannelRegistry {
 
 	public function is_enabled( string $id ): bool {
 		$id         = sanitize_key( $id );
-		$configured = Settings::get( 'channels_enabled', null );
+		$configured = Settings::get( 'channels.enabled', null );
 
 		if ( is_array( $configured ) ) {
 			$enabled = in_array( $id, $configured, true );
@@ -94,10 +94,10 @@ final class ChannelRegistry {
 					$enabled = Settings::email_enabled();
 					break;
 				case 'google':
-					$enabled = Settings::is_on( 'google_enabled' );
+					$enabled = Settings::is_on( 'providers.google.enabled' );
 					break;
 				case 'zalo':
-					$enabled = Settings::is_on( 'zalo_enabled' );
+					$enabled = Settings::is_on( 'providers.zalo.enabled' );
 					break;
 				default:
 					// A channel registered by third-party code has no legacy flag

@@ -41,180 +41,38 @@
 	}
 
 	// ---------------------------------------------------------------
-	// All-in-one authentication tabs
+	// Submit feedback
+	//
+	// Step 1 sends an SMS, so a double submit costs the site money and the
+	// visitor a wasted code. Disabling on submit is the cheapest guard, and it
+	// doubles as the "something is happening" signal on a slow network.
 	// ---------------------------------------------------------------
 
-	function initAuthTabs( root ) {
-		var tabs = Array.prototype.slice.call( root.querySelectorAll( '[data-sl-auth-tab]' ) );
-		var panels = Array.prototype.slice.call( root.querySelectorAll( '[data-sl-auth-panel]' ) );
-		var form = root.querySelector( '[data-sl-auth-form]' );
-		var action = root.querySelector( '[data-sl-auth-action]' );
+	function initSubmitGuard( root ) {
+		root.querySelectorAll( 'form.sl-form' ).forEach( function ( form ) {
+			var submitted = false;
 
-		if ( ! tabs.length || ! panels.length ) {
-			return;
-		}
-
-		function activate( name, focus ) {
-			tabs.forEach( function ( tab ) {
-				var selected = tab.getAttribute( 'data-sl-auth-tab' ) === name;
-
-				tab.classList.toggle( 'is-active', selected );
-				tab.setAttribute( 'aria-selected', selected ? 'true' : 'false' );
-				tab.setAttribute( 'tabindex', selected ? '0' : '-1' );
-
-				if ( selected && focus ) {
-					tab.focus();
-				}
-			} );
-
-			panels.forEach( function ( panel ) {
-				var selected = panel.getAttribute( 'data-sl-auth-panel' ) === name;
-
-				panel.hidden = ! selected;
-				panel.classList.toggle( 'is-active', selected );
-
-				panel.querySelectorAll( 'input, button, select, textarea' ).forEach( function ( control ) {
-					control.disabled = ! selected;
-				} );
-			} );
-
-			if ( action ) {
-				action.value = name;
-			}
-
-			if ( form ) {
-				form.querySelectorAll( '[data-sl-auth-submit]' ).forEach( function ( submit ) {
-					submit.disabled = submit.getAttribute( 'data-sl-auth-submit' ) !== name;
-				} );
-			}
-
-			root.setAttribute( 'data-active-tab', name );
-		}
-
-		tabs.forEach( function ( tab, index ) {
-			tab.addEventListener( 'click', function ( event ) {
-				event.preventDefault();
-				activate( tab.getAttribute( 'data-sl-auth-tab' ), false );
-			} );
-
-			tab.addEventListener( 'keydown', function ( event ) {
-				var next;
-
-				if ( event.key === 'ArrowRight' ) {
-					next = ( index + 1 ) % tabs.length;
-				} else if ( event.key === 'ArrowLeft' ) {
-					next = ( index - 1 + tabs.length ) % tabs.length;
-				} else {
+			form.addEventListener( 'submit', function ( event ) {
+				// Let the browser's own required-field checks win first.
+				if ( form.checkValidity && ! form.checkValidity() ) {
 					return;
 				}
 
-				event.preventDefault();
-				activate( tabs[ next ].getAttribute( 'data-sl-auth-tab' ), true );
-			} );
-		} );
-
-		activate( root.getAttribute( 'data-active-tab' ) || 'login', false );
-	}
-
-	// ---------------------------------------------------------------
-	// Registration password confirmation
-	// ---------------------------------------------------------------
-
-	function initPasswordConfirmation( root ) {
-		var form = root.querySelector( '[data-sl-auth-form]' );
-		var action = root.querySelector( '[data-sl-auth-action]' );
-
-		if ( ! form ) {
-			return;
-		}
-
-		var password = form.querySelector( '#sl-reg-password' );
-		var confirmation = form.querySelector( '#sl-reg-password-confirm' );
-		var status = form.querySelector( '#sl-password-match' );
-
-		if ( ! password || ! confirmation || ! status ) {
-			return;
-		}
-
-		function validate( showEmpty ) {
-			var hasConfirmation = confirmation.value.length > 0;
-			var matches = hasConfirmation && password.value === confirmation.value;
-
-			status.classList.remove( 'is-error', 'is-success' );
-			confirmation.removeAttribute( 'aria-invalid' );
-
-			if ( ! hasConfirmation ) {
-				confirmation.setCustomValidity( showEmpty ? ( i18n.passConfirm || 'Please confirm your password.' ) : '' );
-				status.textContent = showEmpty ? ( i18n.passConfirm || 'Please confirm your password.' ) : '';
-				status.hidden = ! showEmpty;
-
-				if ( showEmpty ) {
-					status.classList.add( 'is-error' );
-					confirmation.setAttribute( 'aria-invalid', 'true' );
+				if ( submitted ) {
+					event.preventDefault();
+					return;
 				}
 
-				return false;
-			}
+				submitted = true;
+				form.classList.add( 'is-submitting' );
 
-			if ( ! matches ) {
-				confirmation.setCustomValidity( i18n.passMismatch || 'Passwords do not match.' );
-				confirmation.setAttribute( 'aria-invalid', 'true' );
-				status.textContent = i18n.passMismatch || 'Passwords do not match.';
-				status.classList.add( 'is-error' );
-				status.hidden = false;
-				return false;
-			}
-
-			confirmation.setCustomValidity( '' );
-			status.textContent = i18n.passMatch || 'Passwords match.';
-			status.classList.add( 'is-success' );
-			status.hidden = false;
-			return true;
-		}
-
-		password.addEventListener( 'input', function () {
-			if ( confirmation.value ) {
-				validate( false );
-			}
-		} );
-
-		confirmation.addEventListener( 'input', function () {
-			validate( false );
-		} );
-
-		form.addEventListener( 'submit', function ( event ) {
-			if ( action && action.value !== 'register' ) {
-				return;
-			}
-
-			if ( ! validate( true ) ) {
-				event.preventDefault();
-				confirmation.focus();
-			}
-		} );
-	}
-
-	// ---------------------------------------------------------------
-	// Password length guidance
-	// ---------------------------------------------------------------
-
-	function initPasswordLengthGuidance( root ) {
-		root.querySelectorAll( '[data-sl-password-guidance]' ).forEach( function ( guidance ) {
-			var inputId = guidance.getAttribute( 'aria-controls' ) || 'sl-reg-password';
-			var input = document.getElementById( inputId );
-			var minimum = parseInt( guidance.getAttribute( 'data-minlength' ), 10 );
-
-			if ( ! input || isNaN( minimum ) ) {
-				return;
-			}
-
-			function update() {
-				guidance.hidden = input.value.length > 0 && input.value.length < minimum ? false : true;
-			}
-
-			input.setAttribute( 'aria-describedby', guidance.id );
-			input.addEventListener( 'input', update );
-			update();
+				// Deliberately not `disabled`: the onboarding form carries two
+				// submit buttons and the one that was pressed has to keep its
+				// name in the payload for "Để sau" to be distinguishable.
+				form.querySelectorAll( 'button[type="submit"]' ).forEach( function ( button ) {
+					button.setAttribute( 'aria-busy', 'true' );
+				} );
+			} );
 		} );
 	}
 
@@ -554,9 +412,7 @@
 	ready( function () {
 		document.querySelectorAll( '.smart-login' ).forEach( function ( root ) {
 			initPasswordToggles( root );
-			initAuthTabs( root );
-			initPasswordConfirmation( root );
-			initPasswordLengthGuidance( root );
+			initSubmitGuard( root );
 			initOtpBoxes( root );
 			initCountdown( root );
 			initResend( root );

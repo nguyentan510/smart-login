@@ -8,7 +8,7 @@
 
 1. Copy thư mục `smart-login` vào `wp-content/plugins/`.
 2. Kích hoạt plugin trong **Plugins → Installed Plugins**. Lúc kích hoạt plugin tạo 3 bảng và lên lịch dọn dẹp hằng ngày.
-3. Vào **Smart Login → Cài đặt** để cấu hình.
+3. Vào **Smart Login → Tổng quan** để xem còn thiếu gì.
 
 Yêu cầu: WordPress 6.0+, PHP 8.0+. WooCommerce là tuỳ chọn.
 
@@ -16,76 +16,64 @@ Yêu cầu: WordPress 6.0+, PHP 8.0+. WooCommerce là tuỳ chọn.
 
 ## Cấu hình tối thiểu để chạy
 
-### 1. Tab **Chung**
+Sau khi kích hoạt, mở **Smart Login → Tổng quan**. Màn hình này liệt kê mọi điều kiện để plugin chạy được, mục nào **đỏ** là đang chặn, và mỗi mục có nút đi thẳng tới chỗ sửa. Bản cài mặc định sẽ đỏ ở **Kênh gửi mã** — đó là chủ ý: `Chỉ số điện thoại` cộng với webhook chưa bật thì không có đường nào gửi mã tới một số điện thoại.
+
+### 1. Tab **Đăng nhập & Đăng ký**
 - **Đăng nhập bằng**: `Chỉ số điện thoại` (mặc định).
-- **Mã quốc gia mặc định**: `84`.
+- **Mã quốc gia mặc định**: chọn từ danh sách, mặc định `Việt Nam (+84)`.
 - **Domain email ảo**: giữ nguyên `phone.invalid`. Phần trước `@` là mã nội bộ, không phải số điện thoại — xem mục Bảo mật.
 
-### 2. Tab **Push OTP**
-Bật **Kích hoạt**, điền URL gateway và Body, rồi bấm **Gửi thử**. Xem ví dụ cấu hình bên dưới.
+### 2. Tab **Gửi mã**
+Chọn **Nhà cung cấp**, điền các ô thông tin xác thực mà nhà cung cấp đó yêu cầu, bật **Kích hoạt**, rồi bấm **Gửi thử**. URL, Body và điều kiện thành công được sinh tự động — mở `Xem request sẽ được gửi` nếu muốn kiểm chứng.
+
+Chọn `Tuỳ chỉnh` nếu gateway của bạn chưa có preset; khi đó mọi trường mở khoá và không bao giờ bị ghi đè.
 
 ### 3. Đặt form lên trang
 Có hai cách, dùng được đồng thời:
 
-- **WooCommerce**: bật *Thay form My Account* ở tab Chung. Trang `/my-account/` sẽ tự dùng form của plugin.
-- **Shortcode**: đặt `[smart_auth]` hoặc `[smart_login]` vào bất kỳ trang nào. Box hiển thị hai tab **Đăng nhập / Đăng ký**, dùng chung OAuth Google/Zalo ở phía dưới và bao trọn cả luồng OTP → chúc mừng.
+- **WooCommerce**: bật *Thay form My Account* ở tab Hồ sơ & Địa chỉ. Trang `/my-account/` sẽ tự dùng form của plugin.
+- **Shortcode**: đặt `[smart_auth]` hoặc `[smart_login]` vào bất kỳ trang nào. Box hỏi **một ô định danh duy nhất** rồi tự phân nhánh, kèm OAuth Google/Zalo phía dưới, và bao trọn cả luồng cho tới màn hình chào mừng.
 
-`[smart_register]` mở cùng Box tại tab Đăng ký. Form đăng ký chỉ thu thập Họ tên, Số điện thoại/Email, Mật khẩu, Xác nhận mật khẩu và Điều khoản; Ngày sinh, Giới tính, Mã giới thiệu được để ở phần Thông tin bổ sung của hồ sơ và không bắt buộc. Các shortcode khác: `[smart_verify_otp]`, `[smart_forgot_password]`, `[smart_profile]`.
+Không còn cặp tab Đăng nhập / Đăng ký: người dùng hiếm khi biết mình thuộc nhánh nào, nên server tra định danh và tự quyết định. `[smart_register]` vẫn dùng được và mở cùng màn hình đó, chỉ đổi tiêu đề. Các shortcode khác: `[smart_verify_otp]`, `[smart_forgot_password]`, `[smart_profile]`.
+
+Form đăng ký thu thập Họ tên và Mật khẩu **sau** bước OTP, mỗi màn một việc. Không có ô "Nhập lại mật khẩu" — nút hiện/ẩn mật khẩu đã làm đúng việc mà ô đó sinh ra để làm. Ngày sinh, Giới tính, Mã giới thiệu nằm ở màn hình chào mừng và ở hồ sơ, đều không bắt buộc.
 
 ---
 
-## Cấu hình webhook cho vài gateway phổ biến
+## Gateway
 
 > Sau khi lưu, luôn dùng nút **Gửi thử** — nó hiển thị đúng request đã gửi và response nhận về, đã che secret.
 
-### eSMS.vn
+Preset có sẵn ở tab **Gửi mã**:
 
-| Trường | Giá trị |
+| Nhà cung cấp | Cần điền |
 |---|---|
-| URL | `https://rest.esms.vn/MainService.svc/json/SendMultipleMessage_V4_post_json/` |
-| Method | `POST` |
-| Kiểu dữ liệu | `application/json` |
-| Đường dẫn JSON | `CodeResult` |
-| Giá trị mong đợi | `100` |
+| **eSMS.vn** | ApiKey, SecretKey, Brandname |
+| **Webhook JSON** (n8n / Make / Zapier) | URL nhận webhook |
+| **Tuỳ chỉnh** | tự khai báo URL, Method, Body, điều kiện thành công |
 
-Body:
-```json
-{
-  "ApiKey": "API_KEY_CUA_BAN",
-  "SecretKey": "SECRET_KEY_CUA_BAN",
-  "Brandname": "BRANDNAME",
-  "SmsType": "2",
-  "Phone": "{{phone_local}}",
-  "Content": "{{code}} la ma xac thuc cua ban tai {{site_name}}. Ma co hieu luc {{ttl_minutes}} phut."
-}
+Preset chỉ gồm những gateway mà tham số đã được kiểm chứng trong dự án này. Một preset sai tên tham số còn tệ hơn không có preset, vì nó trông đáng tin trong khi vẫn hỏng — nên gateway khác dùng `Tuỳ chỉnh`, hoặc thêm một preset bằng filter:
+
+```php
+add_filter( 'smart_login_gateway_presets', function ( array $presets ): array {
+    $presets['my_gateway'] = array(
+        'label'         => 'Gateway của tôi',
+        'url'           => 'https://api.example.vn/send',
+        'method'        => 'POST',
+        'content_type'  => 'application/json',
+        'body'          => '{"key":"{{cred:api_key}}","to":"{{phone_local}}","text":"{{code}}"}',
+        'success_path'  => 'status',
+        'success_value' => 'ok',
+        'credentials'   => array(
+            'api_key' => array( 'label' => 'API key', 'secret' => true ),
+        ),
+    );
+
+    return $presets;
+} );
 ```
 
-### Twilio
-
-| Trường | Giá trị |
-|---|---|
-| URL | `https://api.twilio.com/2010-04-01/Accounts/ACxxxx/Messages.json` |
-| Method | `POST` |
-| Kiểu dữ liệu | `application/x-www-form-urlencoded` |
-| Header | `Authorization` = `Basic <base64(SID:TOKEN)>` |
-
-Body:
-```
-To={{phone_plus}}&From=%2B1XXXXXXXXXX&Body={{code}} is your verification code
-```
-
-### n8n / Make / Zapier
-
-| Trường | Giá trị |
-|---|---|
-| URL | URL webhook do nền tảng cấp |
-| Method | `POST` |
-| Kiểu dữ liệu | `application/json` |
-
-Body:
-```json
-{"phone":"{{phone_plus}}","code":"{{code}}","intent":"{{intent}}","expires_at":"{{expires_at}}"}
-```
+`{{cred:tên}}` được thay bằng giá trị admin nhập, ngay lúc lưu. Ô nào đánh dấu `'secret' => true` sẽ không bao giờ được hiển thị lại và được che trong phần xem trước request.
 
 ### Danh sách placeholder
 
@@ -101,12 +89,27 @@ Retry webhook mặc định bị tắt để tránh gửi trùng khi gateway đ�
 
 ## Cách hệ thống hoạt động
 
+### Bước 1 dùng chung: một ô định danh
+
+Người dùng nhập SĐT (hoặc email). Plugin chuẩn hoá về E.164 (`0969789475` → `84969789475`), tra `IdentityDirectory` và rẽ nhánh:
+
+- **Đã có chủ sở hữu** → màn hình nhập mật khẩu.
+- **Chưa có, hoặc chủ cũ đã từ bỏ số này** → bắt đầu đăng ký.
+
+Việc rẽ nhánh có tiết lộ một định danh đã được đăng ký hay chưa. Đây là đánh đổi có chủ ý: form đăng ký cũ vốn đã tiết lộ điều đó qua thông báo lỗi, và `RateLimiter` chặn dò quét theo IP lẫn theo đích đến.
+
 ### Đăng ký
-1. Người dùng nhập SĐT, mật khẩu, họ tên (và ngày sinh / giới tính / mã giới thiệu nếu bật).
-2. Plugin chuẩn hoá SĐT về E.164 (`0969789475` → `84969789475`), kiểm tra trùng, hash mật khẩu.
-3. **Chưa tạo tài khoản.** Toàn bộ dữ liệu nằm trong một bản ghi OTP tạm, mật khẩu đã được hash.
-4. Gửi mã 6 số, hiệu lực 5 phút. Nếu gửi thất bại, bản ghi bị xoá và người dùng nhận thông báo rõ ràng — không bao giờ mắc kẹt ở màn hình chờ mã không tồn tại.
-5. Nhập đúng mã → tạo `wp_users` với `user_login` = SĐT, `user_email` = email ảo → tự động đăng nhập → màn hình chúc mừng → chuyển tới trang hồ sơ.
+1. Gửi mã 6 số, hiệu lực 5 phút. **Chưa tạo tài khoản** — chỉ có một bản ghi OTP tạm giữ đúng định danh. Nếu gửi thất bại, bản ghi bị xoá và người dùng nhận thông báo rõ ràng, không bao giờ mắc kẹt ở màn hình chờ mã không tồn tại.
+2. Nhập đúng mã → đổi lấy một *signup grant* dùng một lần (transient 15 phút). Định danh đã chứng minh chỉ nằm ở phía server; trình duyệt chỉ cầm một chuỗi ngẫu nhiên.
+3. Màn hình cuối hỏi Họ tên, Mật khẩu và Điều khoản. Hỏi ở đây chứ không phải ở bước 1 là chủ đích: tại thời điểm này người dùng đã bỏ công vào luồng, nên tỉ lệ hoàn tất cao hơn hẳn so với việc hỏi một người lạ. Sai mật khẩu thì được cấp grant mới — không phải làm lại OTP, không tốn thêm một tin SMS.
+4. Tạo `wp_users` với `user_login` = SĐT, `user_email` = email ảo → tự động đăng nhập → màn hình chào mừng.
+
+### Màn hình chào mừng
+Hiện ngay tại chỗ, không chuyển trang. Chỉ hỏi những gì hồ sơ còn thiếu, tối đa 3 mục, mỗi mục kèm lý do vì sao đáng điền, và luôn có nút **Để sau**.
+
+Không có rào chắn nào ở đây. Bản trước đặt cờ `smartlogin_gate` mà không nơi nào đọc, nên giao diện nói "bắt buộc" trong khi chẳng có gì cưỡng chế; cờ đó đã bị gỡ bỏ thay vì được cưỡng chế.
+
+Đăng nhập qua Google/Zalo quay về bằng redirect nên không hiện tại chỗ được — luồng đó tới `/my-account/edit-account/?smartlogin_welcome=1`, và trang đó hiển thị đúng màn hình chào mừng này thay vì form sửa hồ sơ đầy đủ.
 
 ### Đăng nhập
 Số điện thoại (hoặc email) + mật khẩu. Cắm vào filter `authenticate` của WordPress nên hoạt động ở cả `wp-login.php`, WooCommerce và form của plugin. Sai 5 lần → khoá 15 phút theo cặp IP + tài khoản.

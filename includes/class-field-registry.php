@@ -1,0 +1,687 @@
+<?php
+/**
+ * Every setting this plugin understands, declared exactly once.
+ *
+ * The old schema lived in four places that had to be kept in step by hand:
+ * Settings::defaults() held the values, Settings::int_fields() held the types,
+ * SettingsPage::tab_fields() held the tab membership, and the tab_*() methods
+ * held the actual controls. Nothing checked that the four agreed, and when they
+ * disagreed the failure was silent — `field_email_optional` was claimed by the
+ * Chung tab and drawn by nothing, so it vanished from both the hidden inputs and
+ * $_POST, and sanitize() read that absence as an unchecked box and stored 0.
+ *
+ * Here the same array decides the default, the type, the sanitiser, the tab, and
+ * the control that gets drawn. A key cannot belong to a tab it is not rendered
+ * on, because membership and rendering read the same row. That class of bug is
+ * not guarded against; it is unrepresentable.
+ *
+ * This lives in the core namespace rather than under Admin because it is the
+ * schema, not the screen. Settings reads it on every request; Admin only borrows
+ * it to draw things.
+ *
+ * @package SmartLogin
+ */
+
+namespace SmartLogin;
+
+defined( 'ABSPATH' ) || exit;
+
+final class FieldRegistry {
+
+	/** Tabs that hold fields. The overview screen has none and is not listed. */
+	public static function tabs(): array {
+		return array(
+			'auth'      => __( 'Đăng nhập & Đăng ký', 'smart-login' ),
+			'providers' => __( 'Đăng nhập nhanh', 'smart-login' ),
+			'delivery'  => __( 'Gửi mã', 'smart-login' ),
+			'profile'   => __( 'Hồ sơ & Địa chỉ', 'smart-login' ),
+			'advanced'  => __( 'Nâng cao', 'smart-login' ),
+		);
+	}
+
+	/** Section headings, in render order within their tab. */
+	public static function sections(): array {
+		return array(
+			'identity' => __( 'Định danh', 'smart-login' ),
+			'signup'   => __( 'Đăng ký và điều hướng', 'smart-login' ),
+			'login'    => __( 'Bảo mật đăng nhập', 'smart-login' ),
+			'provider' => __( 'Nhà cung cấp', 'smart-login' ),
+			'linking'  => __( 'Chính sách liên kết tài khoản', 'smart-login' ),
+			'otp'      => __( 'Mã xác thực', 'smart-login' ),
+			'sms'      => __( 'Gửi qua SMS', 'smart-login' ),
+			'email'    => __( 'Gửi qua email', 'smart-login' ),
+			'fields'   => __( 'Trường hồ sơ', 'smart-login' ),
+			'address'  => __( 'Địa chỉ 2 cấp', 'smart-login' ),
+			'woo'      => __( 'WooCommerce', 'smart-login' ),
+			'audit'    => __( 'Nhật ký & dọn dẹp', 'smart-login' ),
+			'dev'      => __( 'Phát triển', 'smart-login' ),
+		);
+	}
+
+	/**
+	 * The schema. Keys are dot paths into the stored option.
+	 *
+	 * Recognised per-field keys:
+	 *   type     text|number|select|checkbox|textarea|url|email|headers
+	 *   default  the value used when nothing is stored
+	 *   tab      which tab draws it (must exist in tabs())
+	 *   section  which heading it sits under (must exist in sections())
+	 *   label    the control's label
+	 *   help     description below the control, may contain inline HTML
+	 *   choices  select only
+	 *   min/max  number only — used for BOTH the input attributes and the clamp,
+	 *            so the browser hint and the server rule cannot drift apart
+	 *   sanitize names a special-case sanitiser; otherwise the type decides
+	 *   rows     textarea only
+	 */
+	public static function all(): array {
+		return array_merge(
+			self::auth_fields(),
+			self::provider_fields(),
+			self::delivery_fields(),
+			self::profile_fields(),
+			self::advanced_fields(),
+			self::programmatic_fields()
+		);
+	}
+
+	/**
+	 * Settings no form draws, set by code or a filter instead.
+	 *
+	 * They still belong in the registry: Settings hydrates the stored option
+	 * strictly against these paths, so a value absent from here would be dropped
+	 * on the next read. What keeps them clear of the defect this class exists to
+	 * prevent is the empty `tab` — a save only ever writes the fields carried by
+	 * the tab it came from, and no tab carries these, so nothing can zero them.
+	 */
+	private static function programmatic_fields(): array {
+		return array(
+			'channels.enabled' => array(
+				'type'    => 'passthrough',
+				'default' => null,
+				'tab'     => '',
+				'section' => '',
+				'label'   => __( 'Kênh định danh được bật', 'smart-login' ),
+			),
+		);
+	}
+
+	private static function auth_fields(): array {
+		return array(
+			'identity.mode'              => array(
+				'type'    => 'select',
+				'default' => 'phone_only',
+				'tab'     => 'auth',
+				'section' => 'identity',
+				'label'   => __( 'Đăng nhập bằng', 'smart-login' ),
+				'choices' => array(
+					'phone_only' => __( 'Chỉ số điện thoại', 'smart-login' ),
+					'email_only' => __( 'Chỉ email', 'smart-login' ),
+					'both'       => __( 'Cả hai', 'smart-login' ),
+				),
+				'help'    => __( 'Quyết định trường định danh trên màn hình đăng nhập/đăng ký.', 'smart-login' ),
+			),
+			'identity.country_code'      => array(
+				'type'     => 'select',
+				'default'  => '84',
+				'tab'      => 'auth',
+				'section'  => 'identity',
+				'label'    => __( 'Mã quốc gia mặc định', 'smart-login' ),
+				'choices'  => array(
+					'84'  => __( 'Việt Nam (+84)', 'smart-login' ),
+					'855' => __( 'Campuchia (+855)', 'smart-login' ),
+					'856' => __( 'Lào (+856)', 'smart-login' ),
+					'65'  => __( 'Singapore (+65)', 'smart-login' ),
+					'66'  => __( 'Thái Lan (+66)', 'smart-login' ),
+					'60'  => __( 'Malaysia (+60)', 'smart-login' ),
+					'63'  => __( 'Philippines (+63)', 'smart-login' ),
+					'62'  => __( 'Indonesia (+62)', 'smart-login' ),
+					'1'   => __( 'Hoa Kỳ / Canada (+1)', 'smart-login' ),
+				),
+				// Kept as a fallback for a value arriving from anywhere but the
+				// form: the select cannot produce a bad code, but a filter or a
+				// direct update() still can.
+				'sanitize' => 'country_code',
+				'help'     => __( 'Số nhập dạng <code>0969789475</code> sẽ được chuẩn hoá thành <code>84969789475</code>.', 'smart-login' ),
+			),
+			'identity.synthetic_domain'  => array(
+				'type'     => 'text',
+				'default'  => 'phone.invalid',
+				'tab'      => 'auth',
+				'section'  => 'identity',
+				'label'    => __( 'Domain email ảo', 'smart-login' ),
+				'sanitize' => 'domain',
+				'help'     => __( 'Dùng cho tài khoản chỉ có số điện thoại. Nên giữ đuôi <code>.invalid</code> — theo RFC 2606 domain này không bao giờ phân giải được, nên không thể phát sinh email bounce.', 'smart-login' ),
+			),
+			'signup.min_password_length' => array(
+				'type'    => 'number',
+				'default' => 8,
+				'min'     => 6,
+				'max'     => 64,
+				'tab'     => 'auth',
+				'section' => 'signup',
+				'label'   => __( 'Độ dài mật khẩu tối thiểu', 'smart-login' ),
+			),
+			'signup.terms_url'           => array(
+				'type'    => 'page',
+				'default' => '',
+				'tab'     => 'auth',
+				'section' => 'signup',
+				'label'   => __( 'Link điều kiện áp dụng', 'smart-login' ),
+				'help'    => __( 'Để trống nếu không có trang điều khoản riêng.', 'smart-login' ),
+			),
+			'signup.redirect_register'   => array(
+				'type'    => 'page',
+				'default' => '',
+				'tab'     => 'auth',
+				'section' => 'signup',
+				'label'   => __( 'Sau khi đăng ký', 'smart-login' ),
+				'help'    => __( 'Để trống để dùng trang Tài khoản của WooCommerce.', 'smart-login' ),
+			),
+			'signup.redirect_login'      => array(
+				'type'    => 'page',
+				'default' => '',
+				'tab'     => 'auth',
+				'section' => 'signup',
+				'label'   => __( 'Sau khi đăng nhập', 'smart-login' ),
+				'help'    => __( 'Để trống để dùng trang Tài khoản của WooCommerce.', 'smart-login' ),
+			),
+			'login.max_attempts'         => array(
+				'type'    => 'number',
+				'default' => 5,
+				'min'     => 0,
+				'max'     => 20,
+				'tab'     => 'auth',
+				'section' => 'login',
+				'label'   => __( 'Số lần sai trước khi khoá', 'smart-login' ),
+			),
+			'login.lockout_minutes'      => array(
+				'type'    => 'number',
+				'default' => 15,
+				'min'     => 1,
+				'max'     => 1440,
+				'tab'     => 'auth',
+				'section' => 'login',
+				'label'   => __( 'Thời gian khoá (phút)', 'smart-login' ),
+			),
+			'login.otp_new_device'       => array(
+				'type'    => 'checkbox',
+				'default' => 0,
+				'tab'     => 'auth',
+				'section' => 'login',
+				'label'   => __( 'OTP cho thiết bị lạ', 'smart-login' ),
+				'help'    => __( 'Yêu cầu nhập OTP khi đăng nhập từ thiết bị chưa từng thấy. <strong>Lưu ý chi phí SMS.</strong>', 'smart-login' ),
+			),
+		);
+	}
+
+	private static function provider_fields(): array {
+		return array(
+			'providers.google.enabled'   => array(
+				'type'    => 'checkbox',
+				'default' => 0,
+				'tab'     => 'providers',
+				'section' => 'provider',
+				'label'   => __( 'Kích hoạt Google', 'smart-login' ),
+			),
+			'providers.google.client_id' => array(
+				'type'    => 'text',
+				'default' => '',
+				'tab'     => 'providers',
+				'section' => 'provider',
+				'label'   => __( 'Google Client ID', 'smart-login' ),
+			),
+			'providers.zalo.enabled'     => array(
+				'type'    => 'checkbox',
+				'default' => 0,
+				'tab'     => 'providers',
+				'section' => 'provider',
+				'label'   => __( 'Kích hoạt Zalo', 'smart-login' ),
+			),
+			'providers.zalo.app_id'      => array(
+				'type'    => 'text',
+				'default' => '',
+				'tab'     => 'providers',
+				'section' => 'provider',
+				'label'   => __( 'Zalo App ID', 'smart-login' ),
+			),
+			'providers.auto_link_email'  => array(
+				'type'    => 'checkbox',
+				'default' => 1,
+				'tab'     => 'providers',
+				'section' => 'linking',
+				'label'   => __( 'Tự liên kết bằng email', 'smart-login' ),
+				'help'    => __( 'Chỉ tự liên kết khi provider xác nhận email đã verified, email trùng chính xác với một tài khoản duy nhất và tài khoản đó không dùng email giả lập.', 'smart-login' ),
+			),
+		);
+	}
+
+	private static function delivery_fields(): array {
+		return array(
+			'otp.preset'                   => array(
+				'type'    => 'select',
+				'default' => 'balanced',
+				'tab'     => 'delivery',
+				'section' => 'otp',
+				'label'   => __( 'Mức bảo mật', 'smart-login' ),
+				'choices' => OtpPresets::choices(),
+				'help'    => __( 'Chọn một mức và sáu giá trị bên dưới được đặt theo. Chọn <em>Tuỳ chỉnh</em> để tự điều chỉnh.', 'smart-login' ),
+			),
+			'otp.length'                   => array(
+				'type'    => 'number',
+				'default' => 6,
+				'min'     => 4,
+				'max'     => 8,
+				'tab'     => 'delivery',
+				'section' => 'otp',
+				'label'   => __( 'Số ký tự', 'smart-login' ),
+			),
+			'otp.ttl'                      => array(
+				'type'    => 'number',
+				'default' => 300,
+				'min'     => 60,
+				'max'     => 3600,
+				'tab'     => 'delivery',
+				'section' => 'otp',
+				'label'   => __( 'Hiệu lực (giây)', 'smart-login' ),
+				'help'    => __( 'Mặc định 300 giây (5 phút).', 'smart-login' ),
+			),
+			'otp.max_attempts'             => array(
+				'type'    => 'number',
+				'default' => 5,
+				'min'     => 1,
+				'max'     => 10,
+				'tab'     => 'delivery',
+				'section' => 'otp',
+				'label'   => __( 'Số lần nhập sai tối đa', 'smart-login' ),
+				'help'    => __( 'Vượt quá thì mã bị huỷ và người dùng phải yêu cầu mã mới.', 'smart-login' ),
+			),
+			'otp.resend_cooldown'          => array(
+				'type'    => 'number',
+				'default' => 60,
+				'min'     => 15,
+				'max'     => 600,
+				'tab'     => 'delivery',
+				'section' => 'otp',
+				'label'   => __( 'Chờ giữa 2 lần gửi (giây)', 'smart-login' ),
+			),
+			'otp.max_per_destination_hour' => array(
+				'type'    => 'number',
+				'default' => 5,
+				'min'     => 0,
+				'tab'     => 'delivery',
+				'section' => 'otp',
+				'label'   => __( 'Số mã tối đa / số ĐT / giờ', 'smart-login' ),
+				'help'    => __( 'Đặt 0 để bỏ giới hạn (không khuyến nghị).', 'smart-login' ),
+			),
+			'otp.max_per_ip_hour'          => array(
+				'type'    => 'number',
+				'default' => 10,
+				'min'     => 0,
+				'tab'     => 'delivery',
+				'section' => 'otp',
+				'label'   => __( 'Số mã tối đa / IP / giờ', 'smart-login' ),
+			),
+
+			'sms.enabled'                  => array(
+				'type'    => 'checkbox',
+				'default' => 0,
+				'tab'     => 'delivery',
+				'section' => 'sms',
+				'label'   => __( 'Kích hoạt', 'smart-login' ),
+				'help'    => __( 'Bật kênh gửi SMS qua webhook', 'smart-login' ),
+			),
+			'sms.preset'                   => array(
+				'type'    => 'select',
+				'default' => GatewayPresets::CUSTOM,
+				'tab'     => 'delivery',
+				'section' => 'sms',
+				'label'   => __( 'Nhà cung cấp', 'smart-login' ),
+				'choices' => GatewayPresets::choices(),
+				'help'    => __( 'Chọn nhà cung cấp và chỉ cần điền thông tin xác thực; URL, Body và điều kiện thành công được sinh tự động.', 'smart-login' ),
+			),
+			'sms.credentials'              => array(
+				'type'        => 'credentials',
+				'default'     => array(),
+				'tab'         => 'delivery',
+				'section'     => 'sms',
+				'label'       => __( 'Thông tin xác thực', 'smart-login' ),
+				'sanitize'    => 'credentials',
+				// Which inputs exist — and whether there are any at all — depends
+				// on the gateway chosen above. "Tuỳ chỉnh" asks for none, so this
+				// row legitimately draws nothing. Declared here so the admin gate
+				// can tell that apart from a field nobody remembered to render,
+				// which is the failure this schema exists to prevent.
+				'conditional' => true,
+			),
+			'sms.url'                      => array(
+				'type'    => 'url',
+				'default' => '',
+				'tab'     => 'delivery',
+				'section' => 'sms',
+				'label'   => __( 'URL', 'smart-login' ),
+				'help'    => __( 'Có thể chứa placeholder, ví dụ <code>https://api.gateway.vn/send?to={{phone_local}}</code>.', 'smart-login' ),
+			),
+			'sms.method'                   => array(
+				'type'    => 'select',
+				'default' => 'POST',
+				'tab'     => 'delivery',
+				'section' => 'sms',
+				'label'   => __( 'Phương thức', 'smart-login' ),
+				'choices' => array(
+					'POST' => 'POST',
+					'GET'  => 'GET',
+				),
+			),
+			'sms.content_type'             => array(
+				'type'    => 'select',
+				'default' => 'application/json',
+				'tab'     => 'delivery',
+				'section' => 'sms',
+				'label'   => __( 'Kiểu dữ liệu', 'smart-login' ),
+				'choices' => array(
+					'application/json'                  => 'application/json',
+					'application/x-www-form-urlencoded' => 'application/x-www-form-urlencoded',
+				),
+				'help'    => __( 'Với GET, phần Body bên dưới được dùng làm query string.', 'smart-login' ),
+			),
+			'sms.headers'                  => array(
+				'type'     => 'headers',
+				'default'  => array(),
+				'tab'      => 'delivery',
+				'section'  => 'sms',
+				'label'    => __( 'Headers', 'smart-login' ),
+				'sanitize' => 'headers',
+			),
+			'sms.body'                     => array(
+				'type'     => 'textarea',
+				'rows'     => 7,
+				'default'  => '{"phone":"{{phone_local}}","content":"{{code}} la ma xac thuc cua ban tai {{site_name}}. Ma co hieu luc {{ttl_minutes}} phut."}',
+				'tab'      => 'delivery',
+				'section'  => 'sms',
+				'label'    => __( 'Body', 'smart-login' ),
+				'sanitize' => 'raw_template',
+				'help'     => __( 'Với JSON, các giá trị thay thế được escape tự động nên nội dung luôn hợp lệ.', 'smart-login' ),
+			),
+			'sms.timeout'                  => array(
+				'type'    => 'number',
+				'default' => 10,
+				'min'     => 3,
+				'max'     => 30,
+				'tab'     => 'delivery',
+				'section' => 'sms',
+				'label'   => __( 'Timeout (giây)', 'smart-login' ),
+			),
+			'sms.success_path'             => array(
+				'type'    => 'text',
+				'default' => '',
+				'tab'     => 'delivery',
+				'section' => 'sms',
+				'label'   => __( 'Đường dẫn JSON báo thành công', 'smart-login' ),
+				'help'    => __( 'Ví dụ <code>CodeResult</code> hoặc <code>data.status</code>. Để trống thì chỉ cần HTTP 2xx là coi như thành công.', 'smart-login' ),
+			),
+			'sms.success_value'            => array(
+				'type'    => 'text',
+				'default' => '',
+				'tab'     => 'delivery',
+				'section' => 'sms',
+				'label'   => __( 'Giá trị mong đợi', 'smart-login' ),
+				'help'    => __( 'Ví dụ <code>100</code>.', 'smart-login' ),
+			),
+			'sms.retry'                    => array(
+				'type'    => 'checkbox',
+				'default' => 0,
+				'tab'     => 'delivery',
+				'section' => 'sms',
+				'label'   => __( 'Thử lại', 'smart-login' ),
+				'help'    => __( 'Gọi lại 1 lần sau 2 giây. Chỉ hoạt động khi đã cấu hình header idempotency bên dưới.', 'smart-login' ),
+			),
+			'sms.idempotency_header'       => array(
+				'type'     => 'text',
+				'default'  => '',
+				'tab'      => 'delivery',
+				'section'  => 'sms',
+				'label'    => __( 'Header idempotency', 'smart-login' ),
+				'sanitize' => 'header_name',
+				'help'     => __( 'Chỉ điền khi gateway cam kết chống gửi trùng, ví dụ <code>Idempotency-Key</code>. Plugin gửi cùng một <code>{{delivery_id}}</code> cho cả hai lần thử.', 'smart-login' ),
+			),
+
+			'email.enabled'                => array(
+				'type'    => 'checkbox',
+				'default' => 1,
+				'tab'     => 'delivery',
+				'section' => 'email',
+				'label'   => __( 'Kích hoạt', 'smart-login' ),
+				'help'    => __( 'Bật kênh gửi email', 'smart-login' ),
+			),
+			'email.from_name'              => array(
+				'type'    => 'text',
+				'default' => '',
+				'tab'     => 'delivery',
+				'section' => 'email',
+				'label'   => __( 'Tên người gửi', 'smart-login' ),
+				'help'    => __( 'Để trống để dùng tên website.', 'smart-login' ),
+			),
+			'email.from_address'           => array(
+				'type'    => 'email',
+				'default' => '',
+				'tab'     => 'delivery',
+				'section' => 'email',
+				'label'   => __( 'Email người gửi', 'smart-login' ),
+				'help'    => __( 'Để trống để dùng cấu hình mặc định của WordPress.', 'smart-login' ),
+			),
+			'email.subject'                => array(
+				'type'    => 'text',
+				'default' => 'Mã xác thực {{code}} - {{site_name}}',
+				'tab'     => 'delivery',
+				'section' => 'email',
+				'label'   => __( 'Tiêu đề', 'smart-login' ),
+			),
+			'email.is_html'                => array(
+				'type'    => 'checkbox',
+				'default' => 0,
+				'tab'     => 'delivery',
+				'section' => 'email',
+				'label'   => __( 'Định dạng', 'smart-login' ),
+				'help'    => __( 'Gửi dưới dạng HTML', 'smart-login' ),
+			),
+			'email.body'                   => array(
+				'type'     => 'textarea',
+				'rows'     => 10,
+				'default'  => "Xin chào,\n\nMã xác thực của bạn là: {{code}}\nMã có hiệu lực trong {{ttl_minutes}} phút.\n\nNếu bạn không yêu cầu mã này, vui lòng bỏ qua email.\n\n{{site_name}}",
+				'tab'      => 'delivery',
+				'section'  => 'email',
+				'label'    => __( 'Nội dung', 'smart-login' ),
+				'sanitize' => 'rich_text',
+				'help'     => __( 'Dùng chung bộ placeholder với phần Gửi qua SMS.', 'smart-login' ),
+			),
+		);
+	}
+
+	private static function profile_fields(): array {
+		return array(
+			'profile.email_optional'      => array(
+				'type'    => 'checkbox',
+				'default' => 1,
+				'tab'     => 'profile',
+				'section' => 'fields',
+				'label'   => __( 'Email không bắt buộc', 'smart-login' ),
+				'help'    => __( 'Tài khoản đăng ký bằng số điện thoại không bị coi là thiếu thông tin khi chưa có email. <strong>Tắt sẽ khiến mọi tài khoản chỉ có số điện thoại bị nhắc bổ sung email.</strong>', 'smart-login' ),
+			),
+			'profile.dob'                 => array(
+				'type'    => 'checkbox',
+				'default' => 1,
+				'tab'     => 'profile',
+				'section' => 'fields',
+				'label'   => __( 'Ngày sinh', 'smart-login' ),
+				'help'    => __( 'Hiển thị ở màn hình chào mừng và trong hồ sơ; không hiển thị khi đăng ký.', 'smart-login' ),
+			),
+			'profile.gender'              => array(
+				'type'    => 'checkbox',
+				'default' => 1,
+				'tab'     => 'profile',
+				'section' => 'fields',
+				'label'   => __( 'Giới tính', 'smart-login' ),
+				'help'    => __( 'Hiển thị ở màn hình chào mừng và trong hồ sơ; không hiển thị khi đăng ký.', 'smart-login' ),
+			),
+			'profile.referral'            => array(
+				'type'    => 'checkbox',
+				'default' => 1,
+				'tab'     => 'profile',
+				'section' => 'fields',
+				'label'   => __( 'Mã giới thiệu', 'smart-login' ),
+				'help'    => __( 'Hiển thị trong hồ sơ; không hiển thị khi đăng ký.', 'smart-login' ),
+			),
+
+			'address.enabled'             => array(
+				'type'    => 'checkbox',
+				'default' => 1,
+				'tab'     => 'profile',
+				'section' => 'address',
+				'label'   => __( 'Kích hoạt', 'smart-login' ),
+				'help'    => __( 'Bật bộ chọn Tỉnh/Thành phố → Phường/Xã', 'smart-login' ),
+			),
+			'address.quick_search'        => array(
+				'type'    => 'checkbox',
+				'default' => 1,
+				'tab'     => 'profile',
+				'section' => 'address',
+				'label'   => __( 'Ô tìm nhanh', 'smart-login' ),
+				'help'    => __( 'Cho phép gõ thẳng tên phường/xã để tự điền cả hai ô', 'smart-login' ),
+			),
+			'address.required_in_profile' => array(
+				'type'    => 'checkbox',
+				'default' => 0,
+				'tab'     => 'profile',
+				'section' => 'address',
+				'label'   => __( 'Bắt buộc ở hồ sơ', 'smart-login' ),
+				'help'    => __( 'Yêu cầu chọn địa chỉ khi cập nhật hồ sơ', 'smart-login' ),
+			),
+			'address.hide_postcode'       => array(
+				'type'    => 'checkbox',
+				'default' => 0,
+				'tab'     => 'profile',
+				'section' => 'address',
+				'label'   => __( 'Ẩn Mã bưu điện', 'smart-login' ),
+				'help'    => __( 'Bỏ trường Mã bưu điện khỏi form địa chỉ và thanh toán', 'smart-login' ),
+			),
+
+			'woo.replace_login_form'      => array(
+				'type'    => 'checkbox',
+				'default' => 1,
+				'tab'     => 'profile',
+				'section' => 'woo',
+				'label'   => __( 'Thay form My Account', 'smart-login' ),
+				'help'    => __( 'Thay thế form đăng nhập/đăng ký mặc định của WooCommerce', 'smart-login' ),
+			),
+			'woo.sync_billing_phone'      => array(
+				'type'    => 'checkbox',
+				'default' => 1,
+				'tab'     => 'profile',
+				'section' => 'woo',
+				'label'   => __( 'Đồng bộ SĐT', 'smart-login' ),
+				'help'    => __( 'Điền sẵn <code>billing_phone</code> từ số điện thoại đã xác thực khi ô đó còn trống', 'smart-login' ),
+			),
+			'woo.relax_billing_email'     => array(
+				'type'    => 'checkbox',
+				'default' => 0,
+				'tab'     => 'profile',
+				'section' => 'woo',
+				'label'   => __( 'Email khi thanh toán', 'smart-login' ),
+				'help'    => __( 'Bỏ bắt buộc nhập email ở trang thanh toán', 'smart-login' ),
+			),
+			'woo.block_synthetic_emails'  => array(
+				'type'    => 'checkbox',
+				'default' => 1,
+				'tab'     => 'profile',
+				'section' => 'woo',
+				'label'   => __( 'Chặn email ảo', 'smart-login' ),
+				'help'    => __( 'Không gửi bất kỳ email nào tới địa chỉ ảo (khuyến nghị bật)', 'smart-login' ),
+			),
+		);
+	}
+
+	private static function advanced_fields(): array {
+		return array(
+			'advanced.audit_enabled'            => array(
+				'type'    => 'checkbox',
+				'default' => 1,
+				'tab'     => 'advanced',
+				'section' => 'audit',
+				'label'   => __( 'Ghi nhật ký', 'smart-login' ),
+				'help'    => __( 'Lưu lại các sự kiện đăng nhập / xác thực', 'smart-login' ),
+			),
+			'advanced.audit_retention_days'     => array(
+				'type'    => 'number',
+				'default' => 90,
+				'min'     => 1,
+				'max'     => 3650,
+				'tab'     => 'advanced',
+				'section' => 'audit',
+				'label'   => __( 'Giữ nhật ký (ngày)', 'smart-login' ),
+			),
+			'advanced.otp_retention_days'       => array(
+				'type'    => 'number',
+				'default' => 7,
+				'min'     => 1,
+				'max'     => 365,
+				'tab'     => 'advanced',
+				'section' => 'audit',
+				'label'   => __( 'Giữ bản ghi OTP (ngày)', 'smart-login' ),
+				'help'    => __( 'Mã đã dùng hoặc hết hạn sẽ bị xoá sau khoảng thời gian này.', 'smart-login' ),
+			),
+			'advanced.dev_mode'                 => array(
+				'type'    => 'checkbox',
+				'default' => 0,
+				'tab'     => 'advanced',
+				'section' => 'dev',
+				'label'   => __( 'Chế độ DEV', 'smart-login' ),
+				'help'    => __( 'Hiển thị mã OTP ngay trên màn hình. Chỉ có tác dụng khi <code>WP_DEBUG</code> bật <strong>và</strong> môi trường không phải <code>production</code>.', 'smart-login' ),
+			),
+			'advanced.delete_data_on_uninstall' => array(
+				'type'    => 'checkbox',
+				'default' => 0,
+				'tab'     => 'advanced',
+				'section' => 'dev',
+				'label'   => __( 'Xoá dữ liệu khi gỡ', 'smart-login' ),
+				'help'    => __( 'Xoá bảng, tuỳ chọn và user meta khi gỡ plugin. <strong>Không thể hoàn tác.</strong>', 'smart-login' ),
+			),
+		);
+	}
+
+	/**
+	 * @return array<string,array> The fields drawn on one tab, in declared order.
+	 */
+	public static function for_tab( string $tab ): array {
+		return array_filter(
+			self::all(),
+			static fn( array $field ): bool => ( $field['tab'] ?? '' ) === $tab
+		);
+	}
+
+	/**
+	 * @return array<string,array> One tab's fields grouped by section, sections in
+	 *                             the order sections() declares.
+	 */
+	public static function by_section( string $tab ): array {
+		$fields = self::for_tab( $tab );
+		$out    = array();
+
+		foreach ( array_keys( self::sections() ) as $section ) {
+			$in_section = array_filter(
+				$fields,
+				static fn( array $field ): bool => ( $field['section'] ?? '' ) === $section
+			);
+
+			if ( $in_section ) {
+				$out[ $section ] = $in_section;
+			}
+		}
+
+		return $out;
+	}
+
+	public static function get( string $path ): ?array {
+		return self::all()[ $path ] ?? null;
+	}
+}

@@ -34,7 +34,7 @@ class Shortcodes {
 	 * belong to whoever is embedding it.
 	 */
 	public function render_address( $atts = array() ): string {
-		if ( ! Settings::is_on( 'address_enabled' ) ) {
+		if ( ! Settings::is_on( 'address.enabled' ) ) {
 			return '';
 		}
 
@@ -59,11 +59,16 @@ class Shortcodes {
 	}
 
 	public function render_login( $atts = array() ): string {
-		return $this->render_flow( Flow::STEP_LOGIN, (array) $atts );
+		return $this->render_flow( Flow::STEP_IDENTIFY, (array) $atts );
 	}
 
+	/**
+	 * Identifier-first has no separate registration screen — the entry step
+	 * works out which one the visitor needs. The shortcode survives because
+	 * pages are already using it, and only changes the framing of step 1.
+	 */
 	public function render_register( $atts = array() ): string {
-		return $this->render_flow( Flow::STEP_REGISTER, (array) $atts );
+		return $this->render_flow( Flow::STEP_IDENTIFY, (array) $atts + array( 'mode' => 'register' ) );
 	}
 
 	public function render_otp( $atts = array() ): string {
@@ -82,7 +87,9 @@ class Shortcodes {
 
 		$step = Flow::step( $default_step );
 
-		if ( is_user_logged_in() && Flow::STEP_DONE !== $step ) {
+		// STEP_ONBOARD renders for a user who has just been signed in, so it is
+		// the one authenticated step this box may show.
+		if ( is_user_logged_in() && ! in_array( $step, array( Flow::STEP_DONE, Flow::STEP_ONBOARD ), true ) ) {
 			return TemplateLoader::render(
 				'logged-in',
 				array(
@@ -99,10 +106,20 @@ class Shortcodes {
 		);
 
 		switch ( $step ) {
-			case Flow::STEP_REGISTER:
+			case Flow::STEP_PASSWORD:
 				return TemplateLoader::render(
-					'form-auth',
-					$common + $this->register_args() + array( 'active_tab' => Flow::STEP_REGISTER )
+					'form-password',
+					$common + array( 'identity' => (string) Flow::data( 'identity', Flow::old( 'identity' ) ) )
+				);
+
+			case Flow::STEP_SIGNUP:
+				return TemplateLoader::render(
+					'form-signup',
+					$common + array(
+						'grant'        => (string) Flow::data( 'grant', '' ),
+						'terms_url'    => (string) Settings::get( 'signup.terms_url', '' ),
+						'min_password' => max( 6, Settings::get_int( 'signup.min_password_length', 8 ) ),
+					)
 				);
 
 			case Flow::STEP_OTP:
@@ -114,6 +131,9 @@ class Shortcodes {
 			case Flow::STEP_RESET:
 				return TemplateLoader::render( 'form-reset', $common + array( 'grant' => (string) Flow::data( 'grant', '' ) ) );
 
+			case Flow::STEP_ONBOARD:
+				return TemplateLoader::render( 'onboarding', $common + self::onboarding_args() );
+
 			case Flow::STEP_DONE:
 				return TemplateLoader::render(
 					'registered-success',
@@ -123,18 +143,42 @@ class Shortcodes {
 					)
 				);
 
-			case Flow::STEP_LOGIN:
+			case Flow::STEP_IDENTIFY:
 			default:
-				return TemplateLoader::render(
-					'form-auth',
-					$common + $this->register_args() + array( 'active_tab' => Flow::STEP_LOGIN )
-				);
+				return TemplateLoader::render( 'form-auth', $common + $this->identify_args( $atts ) );
 		}
 	}
 
-	private function register_args(): array {
+	/**
+	 * @param array $atts Shortcode attributes; `mode=register` only changes the
+	 *                    wording, never which form is shown.
+	 */
+	private function identify_args( array $atts ): array {
 		return array(
-			'terms_url' => (string) Settings::get( 'terms_url', '' ),
+			'mode'      => 'register' === ( $atts['mode'] ?? '' ) ? 'register' : 'login',
+			'terms_url' => (string) Settings::get( 'signup.terms_url', '' ),
+		);
+	}
+
+	/**
+	 * Arguments for the welcome screen, whether it was reached in place after a
+	 * registration or by landing on the account page with ?smartlogin_welcome=1.
+	 */
+	public static function onboarding_args(): array {
+		$user_id  = (int) Flow::data( 'user_id', get_current_user_id() );
+		$profiles = new \SmartLogin\Auth\ProfileCompletionService();
+		$fields   = Flow::data( 'fields', null );
+
+		return array(
+			'user'          => $user_id > 0 ? get_userdata( $user_id ) : wp_get_current_user(),
+			'fields'        => is_array( $fields ) ? $fields : $profiles->onboarding_fields( $user_id ),
+			'redirect'      => (string) Flow::data( 'redirect', \SmartLogin\Auth\LoginHandler::post_login_redirect() ),
+			'address'       => Settings::is_on( 'address.enabled' )
+				? AddressFields::get_for_user( $user_id )
+				: array(),
+			// Onboarding has no email input — changing one needs its own OTP
+			// round-trip — so the screen points at the profile page instead.
+			'email_missing' => UserManager::user_has_synthetic_email( $user_id ),
 		);
 	}
 
@@ -170,7 +214,7 @@ class Shortcodes {
 			'expires_in'   => (int) $expires_in,
 			'resend_after' => $resend_after,
 			'transport'    => $transport,
-			'otp_length'   => min( 8, max( 4, Settings::get_int( 'otp_length', 6 ) ) ),
+			'otp_length'   => min( 8, max( 4, Settings::get_int( 'otp.length', 6 ) ) ),
 			'dev_code'     => (string) Flow::data( 'dev_code', '' ),
 			'has_session'  => (bool) PendingSession::token(),
 		);

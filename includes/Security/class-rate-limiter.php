@@ -35,7 +35,7 @@ class RateLimiter {
 	 * @return true|WP_Error
 	 */
 	public function check_otp_send( string $destination, string $intent ) {
-		$cooldown = Settings::get_int( 'otp_resend_cooldown', 60 );
+		$cooldown = Settings::get_int( 'otp.resend_cooldown', 60 );
 		$last     = $this->repo->last_sent_at( $destination, $intent );
 
 		if ( $last > 0 && ( time() - $last ) < $cooldown ) {
@@ -52,7 +52,7 @@ class RateLimiter {
 			);
 		}
 
-		$per_dest = Settings::get_int( 'otp_max_per_destination_hour', 5 );
+		$per_dest = Settings::get_int( 'otp.max_per_destination_hour', 5 );
 		if ( $per_dest > 0 && $this->repo->count_recent_by_destination( $destination, HOUR_IN_SECONDS ) >= $per_dest ) {
 			return new WP_Error(
 				'smart_login_dest_limit',
@@ -61,7 +61,7 @@ class RateLimiter {
 			);
 		}
 
-		$per_ip = Settings::get_int( 'otp_max_per_ip_hour', 10 );
+		$per_ip = Settings::get_int( 'otp.max_per_ip_hour', 10 );
 		if ( $per_ip > 0 && $this->repo->count_recent_by_ip( Client::ip_binary(), HOUR_IN_SECONDS ) >= $per_ip ) {
 			return new WP_Error(
 				'smart_login_ip_limit',
@@ -114,7 +114,7 @@ class RateLimiter {
 	}
 
 	public function record_login_failure( string $identity ): void {
-		$max = Settings::get_int( 'login_max_attempts', 5 );
+		$max = Settings::get_int( 'login.max_attempts', 5 );
 
 		if ( $max <= 0 ) {
 			return;
@@ -129,10 +129,10 @@ class RateLimiter {
 
 		++$data['count'];
 
-		$window = max( HOUR_IN_SECONDS, Settings::get_int( 'login_lockout_minutes', 15 ) * MINUTE_IN_SECONDS );
+		$window = max( HOUR_IN_SECONDS, Settings::get_int( 'login.lockout_minutes', 15 ) * MINUTE_IN_SECONDS );
 
 		if ( $data['count'] >= $max ) {
-			$minutes              = max( 1, Settings::get_int( 'login_lockout_minutes', 15 ) );
+			$minutes              = max( 1, Settings::get_int( 'login.lockout_minutes', 15 ) );
 			$data['locked_until'] = time() + ( $minutes * MINUTE_IN_SECONDS );
 			$data['count']        = 0;
 			$window               = $minutes * MINUTE_IN_SECONDS;

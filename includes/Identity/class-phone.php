@@ -36,7 +36,7 @@ class Phone {
 	 * @return string Canonical digits, or '' when the input cannot be interpreted.
 	 */
 	public static function normalize( string $input, ?string $country_code = null ): string {
-		$cc = $country_code ?? (string) Settings::get( 'default_country_code', '84' );
+		$cc = $country_code ?? (string) Settings::get( 'identity.country_code', '84' );
 		$cc = preg_replace( '/[^0-9]/', '', $cc );
 
 		$raw = trim( $input );
@@ -99,7 +99,7 @@ class Phone {
 			return false;
 		}
 
-		$cc = preg_replace( '/[^0-9]/', '', (string) Settings::get( 'default_country_code', '84' ) );
+		$cc = preg_replace( '/[^0-9]/', '', (string) Settings::get( 'identity.country_code', '84' ) );
 
 		if ( '84' === $cc && 0 === strpos( $canonical, '84' ) ) {
 			// Carrier-prefix validation for Vietnamese numbers.
@@ -138,7 +138,7 @@ class Phone {
 	 * 84969789475 -> 0969789475
 	 */
 	public static function to_local( string $canonical ): string {
-		$cc = preg_replace( '/[^0-9]/', '', (string) Settings::get( 'default_country_code', '84' ) );
+		$cc = preg_replace( '/[^0-9]/', '', (string) Settings::get( 'identity.country_code', '84' ) );
 
 		if ( '' !== $cc && 0 === strpos( $canonical, $cc ) ) {
 			return '0' . substr( $canonical, strlen( $cc ) );

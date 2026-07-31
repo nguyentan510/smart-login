@@ -74,7 +74,7 @@ class AddressFields {
 			array(
 				'values'       => $values,
 				'required'     => $args['required'] ?? true,
-				'quick_search' => Settings::is_on( 'address_quick_search' ),
+				'quick_search' => Settings::is_on( 'address.quick_search' ),
 				'provinces'    => AddressRepository::provinces(),
 				// Only the selected province's wards are needed for the initial
 				// render; the rest arrive over REST when the user picks one.

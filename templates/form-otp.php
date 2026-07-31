@@ -22,9 +22,28 @@ use SmartLogin\Security\RequestGuard;
 
 defined( 'ABSPATH' ) || exit;
 
-$sl_back = OtpService::INTENT_REGISTER === $intent ? Flow::STEP_REGISTER : Flow::STEP_LOGIN;
+$sl_registering = OtpService::INTENT_REGISTER === $intent;
+// Identifier-first collapses login and register onto one entry screen, so
+// "back" is the same place either way.
+$sl_back = Flow::STEP_IDENTIFY;
 ?>
 <div class="smart-login smart-login--otp">
+
+	<?php
+	if ( $sl_registering ) {
+		TemplateLoader::output(
+			'partials/steps',
+			array(
+				'current' => 2,
+				'labels'  => array(
+					__( 'Số điện thoại', 'smart-login' ),
+					__( 'Xác thực', 'smart-login' ),
+					__( 'Thông tin', 'smart-login' ),
+				),
+			)
+		);
+	}
+	?>
 
 	<h2 class="sl-title"><?php esc_html_e( 'Xác thực OTP', 'smart-login' ); ?></h2>
 

@@ -24,7 +24,7 @@ final class PasswordPolicy {
 	const ABSOLUTE_MIN = 6;
 
 	public static function min_length(): int {
-		return max( self::ABSOLUTE_MIN, Settings::get_int( 'min_password_length', 8 ) );
+		return max( self::ABSOLUTE_MIN, Settings::get_int( 'signup.min_password_length', 8 ) );
 	}
 
 	/**

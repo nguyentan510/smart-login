@@ -27,7 +27,7 @@ final class GoogleProvider implements LoginProviderInterface {
 		return __( 'Tiếp tục với Google', 'smart-login' ); }
 
 	public function is_available(): bool {
-		return Settings::is_on( 'google_enabled' )
+		return Settings::is_on( 'providers.google.enabled' )
 			&& ProviderCredentials::is_configured( $this->id() );
 	}
 

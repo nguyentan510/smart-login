@@ -13,24 +13,17 @@ defined( 'ABSPATH' ) || exit;
 
 final class PostAuthRedirector {
 
+	/**
+	 * A new account goes to the welcome screen once; everybody else goes where
+	 * they were heading.
+	 *
+	 * There is deliberately no branch here that traps an account with an
+	 * incomplete profile. That used to exist — it set a `smartlogin_gate` flag
+	 * nothing ever read, so the UI said "bắt buộc" while nothing enforced it.
+	 * Onboarding asks, and takes no for an answer.
+	 */
 	public function redirect( AuthResult $result, string $requested = '' ): string {
 		$profiles = new ProfileCompletionService();
-
-		if ( $profiles->needs_gate( $result->user_id, $result->is_new_user ) ) {
-			if ( ! $profiles->has_seen( $result->user_id ) ) {
-				$profiles->mark_seen( $result->user_id, $result->auth_method );
-			}
-			$url                  = add_query_arg(
-				array(
-					'smartlogin_welcome' => '1',
-					'smartlogin_gate'    => '1',
-				),
-				self::profile_url()
-			);
-			$filtered             = (string) apply_filters( 'smart_login_post_register_redirect', $url, $result->user_id );
-			$result->redirect_url = $this->safe( $filtered, $url );
-			return $result->redirect_url;
-		}
 
 		if ( $result->is_new_user && ! $profiles->has_seen( $result->user_id ) ) {
 			$profiles->mark_seen( $result->user_id, $result->auth_method );
@@ -44,8 +37,21 @@ final class PostAuthRedirector {
 		if ( '' !== $requested ) {
 			$url = $requested;
 		} else {
-			$configured = trim( (string) Settings::get( 'redirect_after_login', '' ) );
-			$url        = '' !== $configured ? $configured : ( function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'myaccount' ) : home_url( '/' ) );
+			// A freshly registered account prefers the registration destination
+			// when one is configured. This setting had a control on the settings
+			// screen from the start and no reader anywhere, so an admin who filled
+			// it in got a page that was never visited — the same defect as
+			// `require_verification`, and the reason the schema is now declared in
+			// one place that both draws a control and is read.
+			$configured = $result->is_new_user
+				? trim( (string) Settings::get( 'signup.redirect_register', '' ) )
+				: '';
+
+			if ( '' === $configured ) {
+				$configured = trim( (string) Settings::get( 'signup.redirect_login', '' ) );
+			}
+
+			$url = '' !== $configured ? $configured : ( function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'myaccount' ) : home_url( '/' ) );
 		}
 
 		$filtered             = (string) apply_filters( 'smart_login_post_login_redirect', $url );

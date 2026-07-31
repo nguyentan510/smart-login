@@ -32,12 +32,12 @@ use SmartLogin\Settings;
 
 Settings::update(
 	array(
-		'id_mode'             => 'both',
-		'google_enabled'      => 1,
-		'zalo_enabled'        => 0,
-		'address_enabled'     => 1,
-		'otp_length'          => 6,
-		'min_password_length' => 8,
+		'identity.mode'              => 'both',
+		'providers.google.enabled'   => 1,
+		'providers.zalo.enabled'     => 0,
+		'address.enabled'            => 1,
+		'otp.length'                 => 6,
+		'signup.min_password_length' => 8,
 	)
 );
 
@@ -50,11 +50,55 @@ Settings::update(
  */
 $fixtures = array(
 	'form-auth'                      => array(
-		'notices'    => array(),
-		'active_tab' => 'login',
-		'terms_url'  => 'https://example.test/terms',
+		'notices'   => array(),
+		'mode'      => 'login',
+		'terms_url' => 'https://example.test/terms',
+	),
+	'form-password'                  => array(
+		'notices'  => array(),
+		'identity' => '0969789475',
+	),
+	'form-signup'                    => array(
+		'notices'      => array(),
+		'grant'        => 'signup-grant-token',
+		'terms_url'    => 'https://example.test/terms',
+		'min_password' => 8,
+	),
+	'onboarding'                     => array(
+		'notices'       => array(),
+		'user'          => new WP_User( 7, 'Nguyễn Như' ),
+		'fields'        => array(
+			array(
+				'key'    => 'address',
+				'label'  => 'Địa chỉ',
+				'reason' => 'Để đơn hàng được giao đúng nơi',
+			),
+			array(
+				'key'    => 'dob',
+				'label'  => 'Ngày sinh',
+				'reason' => 'Để nhận ưu đãi vào dịp sinh nhật',
+			),
+			array(
+				'key'    => 'gender',
+				'label'  => 'Giới tính',
+				'reason' => 'Để gợi ý sản phẩm hợp với bạn hơn',
+			),
+		),
+		'redirect'      => 'https://example.test/my-account/',
+		'address'       => array(
+			'province_code' => '',
+			'province_name' => '',
+			'ward_code'     => '',
+			'ward_name'     => '',
+			'street'        => '',
+		),
+		'email_missing' => true,
 	),
 	'form-forgot'                    => array( 'notices' => array() ),
+	'partials/steps'                 => array(
+		'current' => 2,
+		'labels'  => array( 'Số điện thoại', 'Xác thực', 'Thông tin' ),
+	),
 	'form-otp'                       => array(
 		'notices'      => array(),
 		'intent'       => 'register',

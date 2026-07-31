@@ -93,7 +93,7 @@ class OtpService {
 		}
 
 		$transport = $ctx['transport'] ?? $this->router->transport_for( $destination );
-		$ttl       = max( 60, Settings::get_int( 'otp_ttl', 300 ) );
+		$ttl       = max( 60, Settings::get_int( 'otp.ttl', 300 ) );
 		$code      = $this->generate_code();
 
 		// Only the newest code for a destination/intent may be redeemed.
@@ -176,7 +176,7 @@ class OtpService {
 			'masked'       => $this->mask( $destination ),
 			'destination'  => $this->mask( $destination ),
 			'expires_in'   => $ttl,
-			'resend_after' => Settings::get_int( 'otp_resend_cooldown', 60 ),
+			'resend_after' => Settings::get_int( 'otp.resend_cooldown', 60 ),
 			'transport'    => $transport,
 		);
 
@@ -223,7 +223,7 @@ class OtpService {
 			return new WP_Error( 'smart_login_otp_expired', __( 'Mã xác thực đã hết hạn. Vui lòng bấm "Gửi lại".', 'smart-login' ) );
 		}
 
-		$max = max( 1, Settings::get_int( 'otp_max_attempts', 5 ) );
+		$max = max( 1, Settings::get_int( 'otp.max_attempts', 5 ) );
 
 		if ( (int) $row['attempts'] >= $max ) {
 			$this->repo->mark_consumed( (int) $row['id'] );
@@ -354,7 +354,7 @@ class OtpService {
 	// -----------------------------------------------------------------
 
 	private function generate_code(): string {
-		$length = min( 8, max( 4, Settings::get_int( 'otp_length', 6 ) ) );
+		$length = min( 8, max( 4, Settings::get_int( 'otp.length', 6 ) ) );
 		$max    = (int) str_repeat( '9', $length );
 		$code   = str_pad( (string) random_int( 0, $max ), $length, '0', STR_PAD_LEFT );
 
@@ -383,7 +383,7 @@ class OtpService {
 	 * flipping the checkbox on a live site does nothing.
 	 */
 	public function dev_mode_active(): bool {
-		return Settings::is_on( 'dev_mode' )
+		return Settings::is_on( 'advanced.dev_mode' )
 			&& defined( 'WP_DEBUG' ) && WP_DEBUG
 			&& 'production' !== wp_get_environment_type();
 	}

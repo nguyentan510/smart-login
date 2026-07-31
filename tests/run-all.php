@@ -69,6 +69,15 @@ $suites = array(
 		'file' => 'identity/run-template-tests.php',
 		'kind' => 'required',
 	),
+	array(
+		// The same gate for the admin screens, which had the same exposure and
+		// no cover at all. It also asserts the property the settings rebuild
+		// exists to guarantee: every field a tab claims is a field that tab
+		// draws, checked against the rendered HTML.
+		'name' => 'Admin screens',
+		'file' => 'identity/run-admin-tests.php',
+		'kind' => 'required',
+	),
 );
 
 $results  = array();
