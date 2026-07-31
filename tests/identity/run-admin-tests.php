@@ -102,6 +102,13 @@ foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
 	$missing = array();
 
 	foreach ( FieldRegistry::for_tab( $tab ) as $path => $field ) {
+		// A conditional field may draw nothing depending on another setting.
+		// Those are covered by their own assertions below, where the condition
+		// is set up deliberately.
+		if ( ! empty( $field['conditional'] ) ) {
+			continue;
+		}
+
 		// Prefix, not exact: a repeater draws `…[sms][headers][0][key]`, so the
 		// base name is where its inputs start rather than the whole attribute.
 		// The trailing `]` in the base keeps `sms.url` from matching a
@@ -206,6 +213,101 @@ sl_check(
 	\SmartLogin\Admin\Readiness::OK,
 	$delivery_after['status'] ?? 'missing'
 );
+
+// ---------------------------------------------------------------------
+sl_section( 'Choosing a gateway replaces eleven fields with three' );
+
+// Through sanitize() and into the option, which is the path a real save takes —
+// update() plants values directly and would skip the preset derivation entirely.
+$saved_delivery = Settings::sanitize(
+	array(
+		Settings::TAB_FIELD => 'delivery',
+		'sms'               => array(
+			'enabled'     => 1,
+			'preset'      => 'esms',
+			'credentials' => array(
+				'api_key'    => 'public-api-key',
+				'secret_key' => 'secret-key-must-not-appear',
+				'brandname'  => 'SHOPTEST',
+			),
+		),
+		'otp'               => array( 'preset' => 'balanced' ),
+	)
+);
+
+update_option( Settings::OPTION, $saved_delivery );
+Settings::flush_cache();
+
+sl_check( 'saving a preset derives the gateway URL', 'https://rest.esms.vn/MainService.svc/json/SendMultipleMessage_V4_post_json/', Settings::get( 'sms.url' ) );
+sl_check( 'saving a preset derives the success condition', 'CodeResult', Settings::get( 'sms.success_path' ) );
+sl_check( 'saving a preset applies the OTP profile', 300, Settings::get_int( 'otp.ttl' ) );
+
+$delivery_html = sl_capture(
+	static function () use ( $screen ): void {
+		$screen->render( 'delivery' );
+	}
+)['html'];
+
+$missing_credentials = array();
+
+foreach ( array_keys( \SmartLogin\GatewayPresets::credentials( 'esms' ) ) as $credential ) {
+	if ( false === strpos( $delivery_html, 'name="' . \SmartLogin\Admin\FieldRenderer::name( 'sms.credentials' ) . '[' . $credential . ']"' ) ) {
+		$missing_credentials[] = $credential;
+	}
+}
+
+sl_check( 'the preset draws every credential it asks for', array(), $missing_credentials );
+
+sl_assert(
+	'the derived request is shown for checking',
+	false !== strpos( $delivery_html, 'rest.esms.vn' ),
+	'The administrator cannot verify what will be sent.'
+);
+
+sl_assert(
+	'a secret credential is never echoed into the form',
+	false === strpos( $delivery_html, 'secret-key-must-not-appear' ),
+	'The stored secret is present in the page source.'
+);
+
+sl_assert(
+	'a non-secret credential is shown so it can be corrected',
+	false !== strpos( $delivery_html, 'public-api-key' )
+);
+
+// The derivation itself: credentials in, a valid request out.
+$resolved = \SmartLogin\GatewayPresets::resolve(
+	'esms',
+	array(
+		'api_key'    => 'K',
+		'secret_key' => 'S',
+		'brandname'  => 'B',
+	)
+);
+
+sl_check( 'the derived URL comes from the preset', 'https://rest.esms.vn/MainService.svc/json/SendMultipleMessage_V4_post_json/', $resolved['sms.url'] );
+sl_assert( 'the derived body is valid JSON', null !== json_decode( $resolved['sms.body'], true ), $resolved['sms.body'] );
+sl_assert( 'the derived body still carries the code placeholder', false !== strpos( $resolved['sms.body'], '{{code}}' ) );
+sl_assert( 'no credential placeholder survives derivation', false === strpos( $resolved['sms.body'], '{{cred:' ) );
+sl_check( 'the success condition comes from the preset', '100', $resolved['sms.success_value'] );
+
+sl_check( 'the custom preset derives nothing', array(), \SmartLogin\GatewayPresets::resolve( \SmartLogin\GatewayPresets::CUSTOM, array() ) );
+
+$bodies_ok = array();
+
+foreach ( \SmartLogin\GatewayPresets::all() as $slug => $preset ) {
+	if ( \SmartLogin\GatewayPresets::is_custom( $slug ) || 'application/json' !== ( $preset['content_type'] ?? '' ) ) {
+		continue;
+	}
+
+	$filled = \SmartLogin\GatewayPresets::resolve( $slug, array_fill_keys( array_keys( $preset['credentials'] ), 'x' ) );
+
+	if ( null === json_decode( $filled['sms.body'], true ) ) {
+		$bodies_ok[] = $slug;
+	}
+}
+
+sl_check( 'every JSON preset produces a parseable body', array(), $bodies_ok );
 
 // ---------------------------------------------------------------------
 sl_section( 'An unknown tab falls back rather than fataling' );

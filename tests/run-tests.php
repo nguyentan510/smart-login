@@ -671,7 +671,26 @@ function sl_post_setting( array &$payload, string $path, $value ): void {
  *
  * @return mixed
  */
-function sl_sample_value( array $field ) {
+function sl_sample_value( string $path, array $field ) {
+	/*
+	 * The two preset selects are asked for their "custom" value on purpose.
+	 * Any other choice makes the save derive half of its own tab from the
+	 * preset, which is correct behaviour but means the derived fields cannot
+	 * round-trip. That derivation has its own assertions in the admin suite;
+	 * here the subject is the plumbing, so the presets are told to stand aside.
+	 */
+	if ( 'sms.preset' === $path ) {
+		return \SmartLogin\GatewayPresets::CUSTOM;
+	}
+
+	if ( 'otp.preset' === $path ) {
+		return \SmartLogin\OtpPresets::CUSTOM;
+	}
+
+	if ( 'credentials' === ( $field['type'] ?? '' ) ) {
+		return array( 'api_key' => 'sample-key' );
+	}
+
 	// A field with its own sanitiser needs a sample that sanitiser accepts,
 	// otherwise the round-trip measures the rule rather than the plumbing.
 	switch ( $field['sanitize'] ?? '' ) {
@@ -754,14 +773,23 @@ foreach ( array_keys( $registry_tabs ) as $registry_tab ) {
 	$payload = array( Settings::TAB_FIELD => $registry_tab );
 
 	foreach ( $tab_fields as $path => $field ) {
-		sl_post_setting( $payload, $path, sl_sample_value( $field ) );
+		sl_post_setting( $payload, $path, sl_sample_value( $path, $field ) );
 	}
 
 	$saved   = Settings::sanitize( $payload );
 	$dropped = array();
 
 	foreach ( $tab_fields as $path => $field ) {
-		if ( sl_dig_setting( $saved, $path ) !== sl_sample_value( $field ) ) {
+		// A conditional field has no control unless another setting calls for
+		// one, so there is nothing for it to round-trip here. `sms.credentials`
+		// is the case: under the custom gateway it draws no inputs and keeps
+		// whatever was stored. The admin suite covers it with a real preset
+		// selected, which is the only state in which it is editable.
+		if ( ! empty( $field['conditional'] ) ) {
+			continue;
+		}
+
+		if ( sl_dig_setting( $saved, $path ) !== sl_sample_value( $path, $field ) ) {
 			$dropped[] = $path;
 		}
 	}

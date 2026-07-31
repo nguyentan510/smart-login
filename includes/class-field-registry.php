@@ -122,13 +122,27 @@ final class FieldRegistry {
 				'help'    => __( 'Quyết định trường định danh trên màn hình đăng nhập/đăng ký.', 'smart-login' ),
 			),
 			'identity.country_code'      => array(
-				'type'     => 'text',
+				'type'     => 'select',
 				'default'  => '84',
 				'tab'      => 'auth',
 				'section'  => 'identity',
 				'label'    => __( 'Mã quốc gia mặc định', 'smart-login' ),
+				'choices'  => array(
+					'84'  => __( 'Việt Nam (+84)', 'smart-login' ),
+					'855' => __( 'Campuchia (+855)', 'smart-login' ),
+					'856' => __( 'Lào (+856)', 'smart-login' ),
+					'65'  => __( 'Singapore (+65)', 'smart-login' ),
+					'66'  => __( 'Thái Lan (+66)', 'smart-login' ),
+					'60'  => __( 'Malaysia (+60)', 'smart-login' ),
+					'63'  => __( 'Philippines (+63)', 'smart-login' ),
+					'62'  => __( 'Indonesia (+62)', 'smart-login' ),
+					'1'   => __( 'Hoa Kỳ / Canada (+1)', 'smart-login' ),
+				),
+				// Kept as a fallback for a value arriving from anywhere but the
+				// form: the select cannot produce a bad code, but a filter or a
+				// direct update() still can.
 				'sanitize' => 'country_code',
-				'help'     => __( 'Chỉ nhập chữ số, ví dụ <code>84</code>. Số nhập dạng <code>0969789475</code> sẽ được chuẩn hoá thành <code>84969789475</code>.', 'smart-login' ),
+				'help'     => __( 'Số nhập dạng <code>0969789475</code> sẽ được chuẩn hoá thành <code>84969789475</code>.', 'smart-login' ),
 			),
 			'identity.synthetic_domain'  => array(
 				'type'     => 'text',
@@ -149,7 +163,7 @@ final class FieldRegistry {
 				'label'   => __( 'Độ dài mật khẩu tối thiểu', 'smart-login' ),
 			),
 			'signup.terms_url'           => array(
-				'type'    => 'url',
+				'type'    => 'page',
 				'default' => '',
 				'tab'     => 'auth',
 				'section' => 'signup',
@@ -157,7 +171,7 @@ final class FieldRegistry {
 				'help'    => __( 'Để trống nếu không có trang điều khoản riêng.', 'smart-login' ),
 			),
 			'signup.redirect_register'   => array(
-				'type'    => 'url',
+				'type'    => 'page',
 				'default' => '',
 				'tab'     => 'auth',
 				'section' => 'signup',
@@ -165,7 +179,7 @@ final class FieldRegistry {
 				'help'    => __( 'Để trống để dùng trang Tài khoản của WooCommerce.', 'smart-login' ),
 			),
 			'signup.redirect_login'      => array(
-				'type'    => 'url',
+				'type'    => 'page',
 				'default' => '',
 				'tab'     => 'auth',
 				'section' => 'signup',
@@ -244,6 +258,15 @@ final class FieldRegistry {
 
 	private static function delivery_fields(): array {
 		return array(
+			'otp.preset'                   => array(
+				'type'    => 'select',
+				'default' => 'balanced',
+				'tab'     => 'delivery',
+				'section' => 'otp',
+				'label'   => __( 'Mức bảo mật', 'smart-login' ),
+				'choices' => OtpPresets::choices(),
+				'help'    => __( 'Chọn một mức và sáu giá trị bên dưới được đặt theo. Chọn <em>Tuỳ chỉnh</em> để tự điều chỉnh.', 'smart-login' ),
+			),
 			'otp.length'                   => array(
 				'type'    => 'number',
 				'default' => 6,
@@ -307,6 +330,29 @@ final class FieldRegistry {
 				'section' => 'sms',
 				'label'   => __( 'Kích hoạt', 'smart-login' ),
 				'help'    => __( 'Bật kênh gửi SMS qua webhook', 'smart-login' ),
+			),
+			'sms.preset'                   => array(
+				'type'    => 'select',
+				'default' => GatewayPresets::CUSTOM,
+				'tab'     => 'delivery',
+				'section' => 'sms',
+				'label'   => __( 'Nhà cung cấp', 'smart-login' ),
+				'choices' => GatewayPresets::choices(),
+				'help'    => __( 'Chọn nhà cung cấp và chỉ cần điền thông tin xác thực; URL, Body và điều kiện thành công được sinh tự động.', 'smart-login' ),
+			),
+			'sms.credentials'              => array(
+				'type'        => 'credentials',
+				'default'     => array(),
+				'tab'         => 'delivery',
+				'section'     => 'sms',
+				'label'       => __( 'Thông tin xác thực', 'smart-login' ),
+				'sanitize'    => 'credentials',
+				// Which inputs exist — and whether there are any at all — depends
+				// on the gateway chosen above. "Tuỳ chỉnh" asks for none, so this
+				// row legitimately draws nothing. Declared here so the admin gate
+				// can tell that apart from a field nobody remembered to render,
+				// which is the failure this schema exists to prevent.
+				'conditional' => true,
 			),
 			'sms.url'                      => array(
 				'type'    => 'url',

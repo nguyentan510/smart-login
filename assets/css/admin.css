@@ -289,3 +289,28 @@
 		width: auto;
 	}
 }
+
+/* ---------- Values a preset produced ---------- */
+
+.smart-login-admin .sl-derived {
+	max-width: 900px;
+	margin: 0 0 18px;
+	padding: 10px 14px;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	background: #f6f7f7;
+}
+
+.smart-login-admin .sl-derived summary {
+	cursor: pointer;
+	font-weight: 600;
+}
+
+.smart-login-admin .sl-derived .form-table {
+	margin-top: 0;
+}
+
+.smart-login-admin .sl-derived input[readonly] {
+	background: #fff;
+	color: #50575e;
+}

@@ -30,6 +30,30 @@ Bản này viết lại tầng định danh. Chi tiết thiết kế ở
   và chỉ ba factory ở tầng chứng minh tạo được, nên "không có chứng minh thì
   không có phiên" là lỗi kiểu chứ không còn là quy ước review.
 
+### Giao diện quản trị
+
+- **Màn hình Tổng quan.** Trả lời câu hỏi duy nhất mà admin có sau khi cài: đã
+  chạy được chưa. Bảy mục, đỏ là đang chặn, mỗi mục có nút đi thẳng tới chỗ sửa.
+  Đặt làm màn mặc định.
+- **Bản cài mặc định nay được cảnh báo là chưa chạy được.** `Chỉ số điện thoại`
+  cộng `webhook tắt` nghĩa là không có đường nào gửi mã tới một số điện thoại,
+  và `email bật` khiến nó trông như đã có kênh. Trước đây người đầu tiên phát
+  hiện ra là người dùng đầu tiên bấm Đăng ký.
+- **Preset gateway.** Chọn nhà cung cấp rồi chỉ điền ApiKey/Secret; URL, Body,
+  Headers và điều kiện thành công được sinh lúc lưu và hiển thị read-only để
+  kiểm chứng, với secret được che. Tab Gửi mã từ 11 trường xuống còn 3 ô. Chọn
+  `Tuỳ chỉnh` thì mở khoá toàn bộ và không bao giờ bị sinh đè. Thêm gateway mới
+  là một entry qua filter `smart_login_gateway_presets`.
+- **Preset bảo mật OTP** — Chặt / Cân bằng / Thoáng thay cho sáu ô số, số chi
+  tiết nằm trong khối gấp lại được.
+- **Bỏ ô text ở những chỗ vốn là danh sách hữu hạn**: mã quốc gia thành select;
+  link điều khoản và hai trang điều hướng thành bộ chọn trang.
+- **Mỗi tab lưu riêng phần của mình.** Kèm theo đó, hidden input mang toàn bộ
+  option biến mất — nghĩa là `Authorization: Bearer …` của gateway không còn nằm
+  trong page source của những tab không liên quan.
+- Trang settings tách thành màn hình + renderer + schema; `SettingsPage` còn lại
+  menu và định tuyến.
+
 ### Trải nghiệm người dùng
 
 - **Luồng vào theo định danh trước (identifier-first).** Cặp tab Đăng nhập /

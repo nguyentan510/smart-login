@@ -13,6 +13,7 @@
 
 namespace SmartLogin\Admin;
 
+use SmartLogin\GatewayPresets;
 use SmartLogin\Settings;
 
 defined( 'ABSPATH' ) || exit;
@@ -38,8 +39,18 @@ final class FieldRenderer {
 	public static function render( string $path, array $field ): void {
 		$type = $field['type'] ?? 'text';
 
+		if ( ! empty( $field['readonly'] ) ) {
+			self::derived( $path, $field );
+			return;
+		}
+
 		if ( 'headers' === $type ) {
 			self::headers( $path, $field );
+			return;
+		}
+
+		if ( 'credentials' === $type ) {
+			self::credentials( $path );
 			return;
 		}
 
@@ -61,6 +72,10 @@ final class FieldRenderer {
 
 					case 'textarea':
 						self::textarea( $path, $field );
+						break;
+
+					case 'page':
+						self::page( $path );
 						break;
 
 					default:
@@ -111,6 +126,41 @@ final class FieldRenderer {
 		<?php
 	}
 
+	/**
+	 * Pick a published page instead of typing a URL.
+	 *
+	 * The value stored is still a permalink, so nothing downstream changes and a
+	 * URL set by a filter or by wp-config keeps working — it simply appears as an
+	 * extra option so it is visible rather than silently overwritten.
+	 */
+	private static function page( string $path ): void {
+		$current = (string) Settings::get( $path, '' );
+		$pages   = get_pages( array( 'sort_column' => 'post_title' ) ) ?: array();
+		$known   = array();
+		?>
+		<select id="<?php echo esc_attr( self::id( $path ) ); ?>" name="<?php echo esc_attr( self::name( $path ) ); ?>">
+			<option value=""><?php esc_html_e( '— Mặc định —', 'smart-login' ); ?></option>
+			<?php
+			foreach ( $pages as $page ) {
+				$permalink = (string) get_permalink( $page->ID );
+				$known[]   = $permalink;
+				?>
+				<option value="<?php echo esc_attr( $permalink ); ?>" <?php selected( $current, $permalink ); ?>>
+					<?php echo esc_html( $page->post_title ); ?>
+				</option>
+				<?php
+			}
+
+			if ( '' !== $current && ! in_array( $current, $known, true ) ) :
+				?>
+				<option value="<?php echo esc_attr( $current ); ?>" selected>
+					<?php echo esc_html( $current ); ?>
+				</option>
+			<?php endif; ?>
+		</select>
+		<?php
+	}
+
 	private static function textarea( string $path, array $field ): void {
 		?>
 		<textarea
@@ -145,6 +195,58 @@ final class FieldRenderer {
 			</td>
 		</tr>
 		<?php
+	}
+
+	/**
+	 * The only inputs a preset-configured gateway asks for.
+	 *
+	 * Which inputs exist depends on the gateway chosen, so this reads the preset
+	 * rather than the registry. A secret is write-only, exactly like the provider
+	 * secrets: never echoed, blank means unchanged.
+	 */
+	private static function credentials( string $path ): void {
+		$slug  = (string) Settings::get( 'sms.preset', GatewayPresets::CUSTOM );
+		$specs = GatewayPresets::credentials( $slug );
+
+		if ( ! $specs ) {
+			return;
+		}
+
+		$stored = (array) Settings::get( $path, array() );
+
+		foreach ( $specs as $name => $spec ) {
+			$secret = ! empty( $spec['secret'] );
+			$id     = self::id( $path ) . '-' . $name;
+			?>
+			<tr>
+				<th scope="row">
+					<label for="<?php echo esc_attr( $id ); ?>"><?php echo esc_html( $spec['label'] ); ?></label>
+				</th>
+				<td>
+					<input
+						type="<?php echo $secret ? 'password' : 'text'; ?>"
+						id="<?php echo esc_attr( $id ); ?>"
+						name="<?php echo esc_attr( self::name( $path ) . '[' . $name . ']' ); ?>"
+						value="<?php echo $secret ? '' : esc_attr( (string) ( $stored[ $name ] ?? '' ) ); ?>"
+						class="regular-text<?php echo $secret ? '' : ' code'; ?>"
+						autocomplete="off"
+						<?php if ( $secret ) : ?>
+							placeholder="
+							<?php
+							echo '' !== (string) ( $stored[ $name ] ?? '' )
+								? esc_attr__( 'Đã lưu — để trống để giữ nguyên', 'smart-login' )
+								: esc_attr__( 'Nhập giá trị', 'smart-login' );
+							?>
+								"
+						<?php endif; ?>
+					/>
+					<?php if ( $secret ) : ?>
+						<p class="description"><?php esc_html_e( 'Không bao giờ được hiển thị lại sau khi lưu.', 'smart-login' ); ?></p>
+					<?php endif; ?>
+				</td>
+			</tr>
+			<?php
+		}
 	}
 
 	private static function headers( string $path, array $field ): void {
@@ -191,6 +293,74 @@ final class FieldRenderer {
 			</td>
 		</tr>
 		<?php
+	}
+
+	/**
+	 * A value the preset produced, shown so it can be checked but not edited.
+	 *
+	 * Still a real input carrying the real name, so the field is present in the
+	 * form like any other. Whatever it posts is discarded: Settings re-derives
+	 * these from the preset on every save of this tab.
+	 */
+	private static function derived( string $path, array $field ): void {
+		$value = Settings::get( $path, '' );
+		$value = is_array( $value ) ? self::flatten_headers( $value ) : (string) $value;
+		?>
+		<tr>
+			<th scope="row">
+				<label for="<?php echo esc_attr( self::id( $path ) ); ?>"><?php echo esc_html( $field['label'] ?? $path ); ?></label>
+			</th>
+			<td>
+				<input
+					type="text"
+					id="<?php echo esc_attr( self::id( $path ) ); ?>"
+					name="<?php echo esc_attr( self::name( $path ) ); ?>"
+					value="<?php echo esc_attr( self::mask_secrets( $value ) ); ?>"
+					class="large-text code"
+					readonly
+				/>
+			</td>
+		</tr>
+		<?php
+	}
+
+	/**
+	 * @param array<int,array{key:string,value:string}> $rows
+	 */
+	private static function flatten_headers( array $rows ): string {
+		$parts = array();
+
+		foreach ( $rows as $row ) {
+			if ( is_array( $row ) && ! empty( $row['key'] ) ) {
+				$parts[] = $row['key'] . ': ' . ( $row['value'] ?? '' );
+			}
+		}
+
+		return implode( ' · ', $parts );
+	}
+
+	/**
+	 * Blank out any secret credential that appears inside a derived value.
+	 *
+	 * The derived body legitimately contains the gateway's secret key, and this
+	 * screen exists so the administrator can check the request shape — not so the
+	 * secret ends up in a screenshot or a support ticket.
+	 */
+	private static function mask_secrets( string $value ): string {
+		$slug        = (string) Settings::get( 'sms.preset', GatewayPresets::CUSTOM );
+		$credentials = (array) Settings::get( 'sms.credentials', array() );
+
+		foreach ( GatewayPresets::credentials( $slug ) as $name => $spec ) {
+			$secret = (string) ( $credentials[ $name ] ?? '' );
+
+			if ( empty( $spec['secret'] ) || '' === $secret ) {
+				continue;
+			}
+
+			$value = str_replace( $secret, '••••••••', $value );
+		}
+
+		return $value;
 	}
 
 	private static function help( array $field ): void {

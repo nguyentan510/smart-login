@@ -162,13 +162,71 @@ class Settings {
 
 		self::absorb_provider_secrets( $input );
 
-		foreach ( self::posted_fields( $input ) as $path => $field ) {
+		$fields = self::posted_fields( $input );
+
+		foreach ( $fields as $path => $field ) {
 			self::plant( $clean, $path, self::sanitize_field( $field, self::dig( $input, $path ) ) );
+		}
+
+		// Presets are applied after the plain fields, because they overwrite some
+		// of them. Only when the tab that owns the preset was the one saved.
+		if ( isset( $fields['sms.preset'] ) ) {
+			self::apply_gateway_preset( $clean );
+		}
+
+		if ( isset( $fields['otp.preset'] ) ) {
+			foreach ( OtpPresets::resolve( (string) self::dig( $clean, 'otp.preset' ) ) as $path => $value ) {
+				self::plant( $clean, $path, $value );
+			}
 		}
 
 		self::$cache = null;
 
 		return $clean;
+	}
+
+	/**
+	 * Derive the webhook transport settings from the chosen gateway.
+	 *
+	 * The administrator fills in credentials; URL, body, headers and the success
+	 * condition come from GatewayPresets. Choosing "Tuỳ chỉnh" derives nothing,
+	 * so a hand-written configuration is never overwritten — which is the rule
+	 * that makes the whole arrangement predictable.
+	 *
+	 * @param array $clean Settings array being assembled, by reference.
+	 */
+	private static function apply_gateway_preset( array &$clean ): void {
+		$slug        = (string) self::dig( $clean, 'sms.preset' );
+		$credentials = (array) self::dig( $clean, 'sms.credentials' );
+		$stored      = (array) self::dig( self::all(), 'sms.credentials' );
+
+		// "Tuỳ chỉnh" draws no credential inputs, so the save carries none. That
+		// is not a reason to erase the ones already stored — switching to custom
+		// and back would otherwise cost the administrator their gateway keys.
+		if ( GatewayPresets::is_custom( $slug ) ) {
+			self::plant( $clean, 'sms.credentials', $stored );
+			return;
+		}
+
+		// A blank secret means "keep the stored one" — the form never echoes a
+		// saved secret back, so blank cannot be distinguished from unchanged any
+		// other way. Non-secret credentials are visible on screen, so a blank
+		// there really is a deletion.
+		foreach ( GatewayPresets::credentials( $slug ) as $name => $spec ) {
+			if ( empty( $spec['secret'] ) ) {
+				continue;
+			}
+
+			if ( '' === (string) ( $credentials[ $name ] ?? '' ) ) {
+				$credentials[ $name ] = (string) ( $stored[ $name ] ?? '' );
+			}
+		}
+
+		self::plant( $clean, 'sms.credentials', $credentials );
+
+		foreach ( GatewayPresets::resolve( $slug, $credentials ) as $path => $value ) {
+			self::plant( $clean, $path, $value );
+		}
 	}
 
 	/**
@@ -299,9 +357,38 @@ class Settings {
 			case 'headers':
 				return self::sanitize_headers( $raw );
 
+			case 'credentials':
+				return self::sanitize_credentials( $raw );
+
 			default:
 				return sanitize_text_field( (string) $raw );
 		}
+	}
+
+	/**
+	 * Gateway credentials: a flat name => value map, names constrained to the
+	 * shape `{{cred:name}}` accepts so a stored key can never fail to substitute.
+	 *
+	 * @param mixed $raw
+	 */
+	private static function sanitize_credentials( $raw ): array {
+		if ( ! is_array( $raw ) ) {
+			return array();
+		}
+
+		$out = array();
+
+		foreach ( $raw as $name => $value ) {
+			$name = preg_replace( '/[^a-z0-9_]/', '', strtolower( (string) $name ) );
+
+			if ( '' === $name || is_array( $value ) ) {
+				continue;
+			}
+
+			$out[ $name ] = sanitize_text_field( (string) $value );
+		}
+
+		return $out;
 	}
 
 	/**

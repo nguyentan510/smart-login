@@ -75,3 +75,20 @@ function register_setting( $group, $option, $args = array() ) {
 function wp_localize_script( $handle, $name, $data ) {
 	return true;
 }
+
+/**
+ * Two published pages, so the page picker has something to draw and the
+ * "keep an unrecognised stored URL as its own option" branch is reachable.
+ */
+function get_pages( $args = array() ) {
+	return $GLOBALS['sl_pages'] ?? array(
+		(object) array(
+			'ID'         => 11,
+			'post_title' => 'Điều khoản sử dụng',
+		),
+		(object) array(
+			'ID'         => 12,
+			'post_title' => 'Tài khoản',
+		),
+	);
+}

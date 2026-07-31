@@ -23,8 +23,10 @@ use SmartLogin\Admin\FieldRenderer;
 use SmartLogin\Admin\ProviderCards;
 use SmartLogin\Admin\SettingsPage;
 use SmartLogin\FieldRegistry;
+use SmartLogin\GatewayPresets;
 use SmartLogin\Installer;
 use SmartLogin\OTP\Placeholders;
+use SmartLogin\OtpPresets;
 use SmartLogin\Settings;
 
 defined( 'ABSPATH' ) || exit;
@@ -89,15 +91,80 @@ final class SettingsScreen {
 			return;
 		}
 
+		$derived = $this->derived_paths( $section );
+
 		echo '<table class="form-table" role="presentation">';
 
 		foreach ( $fields as $path => $field ) {
+			if ( isset( $derived[ $path ] ) ) {
+				continue;
+			}
+
 			FieldRenderer::render( $path, $field );
 		}
 
 		echo '</table>';
 
+		if ( $derived ) {
+			$this->derived_details( $section, array_intersect_key( $fields, $derived ) );
+		}
+
 		$this->after_section( $section );
+	}
+
+	/**
+	 * Fields a preset is currently producing, which must not be edited directly.
+	 *
+	 * Empty when the section has no preset or the preset is "Tuỳ chỉnh", in which
+	 * case every field renders as a normal control and nothing is derived.
+	 *
+	 * @return array<string,true>
+	 */
+	private function derived_paths( string $section ): array {
+		if ( 'sms' === $section && ! GatewayPresets::is_custom( (string) Settings::get( 'sms.preset', GatewayPresets::CUSTOM ) ) ) {
+			return array_fill_keys(
+				array( 'sms.url', 'sms.method', 'sms.content_type', 'sms.headers', 'sms.body', 'sms.success_path', 'sms.success_value' ),
+				true
+			);
+		}
+
+		if ( 'otp' === $section && ! OtpPresets::is_custom( (string) Settings::get( 'otp.preset', 'balanced' ) ) ) {
+			return array_fill_keys(
+				array( 'otp.length', 'otp.ttl', 'otp.max_attempts', 'otp.resend_cooldown', 'otp.max_per_destination_hour', 'otp.max_per_ip_hour' ),
+				true
+			);
+		}
+
+		return array();
+	}
+
+	/**
+	 * The derived values, collapsed. Present so a configuration can be checked,
+	 * folded away because reading it is not part of setting the plugin up.
+	 *
+	 * @param string              $section Section slug the fields belong to.
+	 * @param array<string,array> $fields  The derived rows, in registry order.
+	 */
+	private function derived_details( string $section, array $fields ): void {
+		$summary = 'otp' === $section
+			? __( 'Xem giá trị đang áp dụng', 'smart-login' )
+			: __( 'Xem request sẽ được gửi', 'smart-login' );
+		?>
+		<details class="sl-derived">
+			<summary><?php echo esc_html( $summary ); ?></summary>
+			<p class="description">
+				<?php esc_html_e( 'Các giá trị này do lựa chọn ở trên sinh ra. Chọn “Tuỳ chỉnh” nếu bạn cần tự đặt.', 'smart-login' ); ?>
+			</p>
+			<table class="form-table" role="presentation">
+				<?php
+				foreach ( $fields as $path => $field ) {
+					$field['readonly'] = true;
+					FieldRenderer::render( $path, $field );
+				}
+				?>
+			</table>
+		</details>
+		<?php
 	}
 
 	private function before_section( string $section ): void {
