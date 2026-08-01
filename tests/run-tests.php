@@ -30,6 +30,7 @@ use SmartLogin\Auth\Providers\ProviderRedirect;
 use SmartLogin\Auth\Providers\ProviderRegistry;
 use SmartLogin\Identity\Phone;
 use SmartLogin\Identity\UserManager;
+use SmartLogin\OTP\Transports\TransportRouter;
 use SmartLogin\OTP\Transports\WebhookTransport;
 use SmartLogin\OTP\OtpRepository;
 use SmartLogin\OTP\OtpService;
@@ -599,6 +600,129 @@ $second_id = $GLOBALS['sl_http_requests'][1]['args']['headers']['Idempotency-Key
 check( 'idempotent webhook may retry once', 2, count( $GLOBALS['sl_http_requests'] ) );
 check( 'retry carries a non-empty delivery id', true, '' !== $first_id );
 check( 'both delivery attempts share one id', $first_id, $second_id );
+
+// ---------------------------------------------------------------------
+section( 'Circuit breaker — a dead gateway stops costing workers (Phase 9.3)' );
+
+// A transport that always fails, and counts how often it was actually called.
+// The whole point of the breaker is that this counter stops rising.
+class SmartLoginDeadTransport implements \SmartLogin\OTP\Transports\TransportInterface {
+
+	public $calls = 0;
+
+	public function id(): string {
+		return 'sms';
+	}
+
+	public function is_available(): bool {
+		return true;
+	}
+
+	public function send( string $destination, string $code, array $ctx ) {
+		++$this->calls;
+
+		return new WP_Error( 'boom', 'gateway down' );
+	}
+}
+
+Settings::update(
+	array(
+		'security.breaker_threshold' => 3,
+		'security.breaker_cooldown'  => 300,
+	)
+);
+
+delete_transient( 'smart_login_breaker_sms' );
+$GLOBALS['sl_mails'] = array();
+
+$dead        = new SmartLoginDeadTransport();
+$dead_router = new TransportRouter( array( 'sms' => $dead ) );
+
+for ( $i = 0; $i < 3; $i++ ) {
+	$dead_router->send( '84969789475', '123456', array( 'transport' => 'sms' ) );
+}
+
+check( 'the transport is called until the threshold', 3, $dead->calls );
+
+$blocked = $dead_router->send( '84969789475', '123456', array( 'transport' => 'sms' ) );
+
+check( 'the next send is refused', true, is_wp_error( $blocked ) );
+check( 'and never reaches the transport', 3, $dead->calls );
+check( 'the refusal is the breaker, not the gateway', 'smart_login_transport_down', $blocked->get_error_code() );
+check( 'opening the breaker mails the admin once', 1, count( $GLOBALS['sl_mails'] ) );
+
+// Cooldown elapsed: exactly one probe goes through, and a single failure puts
+// the breaker straight back rather than waiting for another three.
+$breaker_state               = get_transient( 'smart_login_breaker_sms' );
+$breaker_state['open_until'] = time() - 1;
+set_transient( 'smart_login_breaker_sms', $breaker_state, 3600 );
+
+$dead_router->send( '84969789475', '123456', array( 'transport' => 'sms' ) );
+check( 'after the cooldown one probe is allowed through', 4, $dead->calls );
+
+$reblocked = $dead_router->send( '84969789475', '123456', array( 'transport' => 'sms' ) );
+check( 'a failed probe re-opens on one strike', true, is_wp_error( $reblocked ) );
+check( 'and the transport is spared again', 4, $dead->calls );
+
+// A success clears the history outright, so an intermittent gateway does not
+// accumulate its way to a permanent outage.
+class SmartLoginLiveTransport extends SmartLoginDeadTransport {
+
+	public function send( string $destination, string $code, array $ctx ) {
+		++$this->calls;
+
+		return true;
+	}
+}
+
+delete_transient( 'smart_login_breaker_sms' );
+$live        = new SmartLoginLiveTransport();
+$live_router = new TransportRouter( array( 'sms' => $live ) );
+
+$live_router->send( '84969789475', '123456', array( 'transport' => 'sms' ) );
+check( 'a success leaves no breaker state behind', false, get_transient( 'smart_login_breaker_sms' ) );
+
+// Threshold 0 disables the breaker entirely.
+Settings::update( array( 'security.breaker_threshold' => 0 ) );
+delete_transient( 'smart_login_breaker_sms' );
+$never = new SmartLoginDeadTransport();
+$never_router = new TransportRouter( array( 'sms' => $never ) );
+
+for ( $i = 0; $i < 6; $i++ ) {
+	$never_router->send( '84969789475', '123456', array( 'transport' => 'sms' ) );
+}
+
+check( 'threshold 0 disables the breaker', 6, $never->calls );
+
+Settings::update(
+	array(
+		'security.breaker_threshold' => 5,
+		'security.breaker_cooldown'  => 300,
+	)
+);
+delete_transient( 'smart_login_breaker_sms' );
+
+// ---------------------------------------------------------------------
+section( 'Webhook timeout — the ceiling that actually binds (Phase 9.3)' );
+
+// The registry clamp runs on save. A value stored under the old maximum of 30
+// survives until somebody re-saves that tab, so the read-time clamp is what
+// protects the sites that never do.
+Settings::update( array_merge( $webhook_options, array( 'sms.timeout' => 30 ) ) );
+$GLOBALS['sl_http_requests'] = array();
+( new WebhookTransport() )->dispatch( '84969789475', '123456', array( 'intent' => OtpService::INTENT_LOGIN ) );
+
+check(
+	'a stored timeout above the ceiling is clamped at read time',
+	WebhookTransport::MAX_TIMEOUT,
+	$GLOBALS['sl_http_requests'][0]['args']['timeout'] ?? 0
+);
+
+Settings::update( array_merge( $webhook_options, array( 'sms.timeout' => 4 ) ) );
+$GLOBALS['sl_http_requests'] = array();
+( new WebhookTransport() )->dispatch( '84969789475', '123456', array( 'intent' => OtpService::INTENT_LOGIN ) );
+
+check( 'a timeout under the ceiling is left alone', 4, $GLOBALS['sl_http_requests'][0]['args']['timeout'] ?? 0 );
 
 // ---------------------------------------------------------------------
 section( 'AddressNormalizer — Vietnamese diacritics' );

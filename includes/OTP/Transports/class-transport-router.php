@@ -94,6 +94,29 @@ class TransportRouter {
 			);
 		}
 
-		return $transport->send( $destination, $code, $ctx );
+		// The breaker sits here rather than inside WebhookTransport because a
+		// hanging SMTP server holds a worker exactly as a hanging HTTP gateway
+		// does, and this is the one place both go through. It also leaves the
+		// admin's "Gửi thử" button unguarded — that button calls dispatch()
+		// directly, and it is how an operator checks whether the gateway is back.
+		$breaker = new CircuitBreaker( $transport_id );
+
+		if ( $breaker->is_open() ) {
+			return new WP_Error(
+				'smart_login_transport_down',
+				__( 'Không gửi được mã xác thực. Vui lòng thử lại sau ít phút.', 'smart-login' ),
+				array( 'retry_after' => $breaker->opens_in() )
+			);
+		}
+
+		$result = $transport->send( $destination, $code, $ctx );
+
+		if ( is_wp_error( $result ) ) {
+			$breaker->record_failure();
+		} else {
+			$breaker->record_success();
+		}
+
+		return $result;
 	}
 }

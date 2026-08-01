@@ -84,6 +84,10 @@ add_filter( 'smart_login_gateway_presets', function ( array $presets ): array {
 
 Với `application/json`, mọi giá trị được escape tự động nên payload luôn là JSON hợp lệ kể cả khi tên website chứa dấu nháy kép.
 
+**Timeout bị chặn cứng ở 15 giây**, kể cả khi giá trị cũ trong CSDL lớn hơn. Mỗi lần gửi giữ một tiến trình PHP đúng bằng khoảng thời gian đó; ở 10 request/giây, timeout 10 giây chiếm 100 tiến trình trong khi một pool PHP-FPM điển hình chỉ có 20–50 — thứ sập là cả website chứ không riêng trang đăng nhập.
+
+**Ngắt mạch:** gateway lỗi liên tiếp đủ số lần (mặc định 5) thì plugin ngừng gọi nó trong 5 phút và trả lỗi ngay, thay vì giữ tiến trình để chờ một dịch vụ đã chết. Hết thời gian, đúng **một** lần gửi được cho đi thử; thất bại thì ngắt lại ngay. Admin nhận email khi mạch ngắt. Nút **Gửi thử** không bị ngắt mạch chặn — đó chính là cách bạn kiểm tra gateway đã sống lại chưa.
+
 Retry webhook mặc định bị tắt để tránh gửi trùng khi gateway đã nhận request nhưng response bị mất. Chỉ bật **Thử lại** khi gateway có cơ chế idempotency; điền tên header (ví dụ `Idempotency-Key`) ở trường **Header idempotency**. Plugin sẽ gửi cùng một `{{delivery_id}}` cho cả hai lần thử.
 
 ---

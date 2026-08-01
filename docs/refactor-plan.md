@@ -608,8 +608,12 @@ no limiter at all while the README says it does.
       "exactly one return path through the filter" rule caught the first version
       of this change adding a second exit — fixed by structure, not by weakening
       the rule. 217 → 226
-- [ ] **9.3** [Delivery limits](abuse-boundary/9.3-delivery-limits.md) — clamped
-      timeout, real backoff, circuit breaker; queueing rejected with reasons
+- [x] **9.3** [Delivery limits](abuse-boundary/9.3-delivery-limits.md) — clamped
+      timeout, real backoff, circuit breaker; queueing rejected with reasons.
+      Breaker landed in `TransportRouter`, not `WebhookTransport`, so it covers
+      SMTP too and leaves the admin's "Gửi thử" button outside it. Half-open is a
+      count, not a flag, so concurrent probes cannot race. Rule 3c had to be
+      rewritten: it was pinned to one spelling of the clamp. 226 → 238
 - [ ] **9.4** [Identify limit](abuse-boundary/9.4-identify-limit.md) — closes the
       enumeration oracle and makes the README true
 - [ ] **9.5** [Trusted proxy](abuse-boundary/9.5-trusted-proxy.md) — CIDR

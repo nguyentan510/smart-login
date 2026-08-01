@@ -55,6 +55,7 @@ final class FieldRegistry {
 			'address'  => __( 'Địa chỉ 2 cấp', 'smart-login' ),
 			'woo'      => __( 'WooCommerce', 'smart-login' ),
 			'budget'   => __( 'Trần gửi toàn site', 'smart-login' ),
+			'breaker'  => __( 'Ngắt mạch kênh gửi', 'smart-login' ),
 			'audit'    => __( 'Nhật ký & dọn dẹp', 'smart-login' ),
 			'dev'      => __( 'Phát triển', 'smart-login' ),
 		);
@@ -416,12 +417,13 @@ final class FieldRegistry {
 			),
 			'sms.timeout'                  => array(
 				'type'    => 'number',
-				'default' => 10,
-				'min'     => 3,
-				'max'     => 30,
+				'default' => 5,
+				'min'     => 2,
+				'max'     => 15,
 				'tab'     => 'delivery',
 				'section' => 'sms',
 				'label'   => __( 'Timeout (giây)', 'smart-login' ),
+				'help'    => __( 'Mỗi lần gửi giữ một tiến trình PHP trong đúng khoảng này. Đặt cao là cách nhanh nhất để một gateway chậm làm sập cả website, nên trần cứng là 15 giây kể cả khi giá trị cũ lớn hơn.', 'smart-login' ),
 			),
 			'sms.success_path'             => array(
 				'type'    => 'text',
@@ -632,6 +634,26 @@ final class FieldRegistry {
 				'section' => 'budget',
 				'label'   => __( 'Tạm dừng trong (phút)', 'smart-login' ),
 				'help'    => __( 'Sau khoảng thời gian này việc gửi mã tự mở lại.', 'smart-login' ),
+			),
+			'security.breaker_threshold' => array(
+				'type'    => 'number',
+				'default' => 5,
+				'min'     => 0,
+				'max'     => 50,
+				'tab'     => 'security',
+				'section' => 'breaker',
+				'label'   => __( 'Số lần lỗi liên tiếp trước khi ngắt', 'smart-login' ),
+				'help'    => __( 'Khi kênh gửi lỗi liên tiếp đủ số lần này, plugin ngừng gọi nó và trả lỗi ngay — không giữ tiến trình PHP để chờ một gateway đã chết. Đặt 0 để tắt.', 'smart-login' ),
+			),
+			'security.breaker_cooldown'  => array(
+				'type'    => 'number',
+				'default' => 300,
+				'min'     => 30,
+				'max'     => 3600,
+				'tab'     => 'security',
+				'section' => 'breaker',
+				'label'   => __( 'Ngắt trong (giây)', 'smart-login' ),
+				'help'    => __( 'Hết khoảng này, một lần gửi được cho đi thử. Thất bại thì ngắt lại ngay, không cần lỗi đủ số lần lần nữa.', 'smart-login' ),
 			),
 		);
 	}

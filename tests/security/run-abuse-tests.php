@@ -26,6 +26,7 @@ require __DIR__ . '/../harness.php';
 use SmartLogin\FieldRegistry;
 use SmartLogin\Identity\Phone;
 use SmartLogin\OTP\OtpRepository;
+use SmartLogin\OTP\Transports\WebhookTransport;
 use SmartLogin\Security\AuditLog;
 use SmartLogin\Security\Client;
 use SmartLogin\Security\RateLimiter;
@@ -108,10 +109,24 @@ sl_assert(
 
 $sl_dispatch = sl_method_body( sl_source( 'includes/OTP/Transports/class-webhook-transport.php' ), 'dispatch' );
 
+// Deliberately not pinned to one expression. The first version of this rule
+// matched `min( <digits>, Settings::get_int( 'sms.timeout'` and stayed red
+// against a working clamp written as
+// `min( self::MAX_TIMEOUT, max( 1, Settings::get_int( … ) ) )` — it was testing a
+// spelling, not a property. What matters is that the read is bounded by a named
+// ceiling; the behaviour itself is proved in run-tests.php, which drives a real
+// dispatch and reads the timeout off the outgoing request.
 sl_assert(
-	'3c — dispatch() clamps the timeout at read time, not only at save time',
-	1 === preg_match( "/min\(\s*\d+\s*,\s*(?:\(int\)\s*)?Settings::get_int\(\s*'sms\.timeout'/", $sl_dispatch ),
-	'Settings::sanitize() applies the registry clamp on save, so an install that already stored 30 keeps 30 after the maximum drops. Without a read-time clamp the tightening is advisory on exactly the sites that need it.'
+	'3c — a hard ceiling constant exists and is 15s or less',
+	defined( WebhookTransport::class . '::MAX_TIMEOUT' ) && WebhookTransport::MAX_TIMEOUT <= 15,
+	'The registry clamp runs on save. A site that stored 30 under the old maximum keeps it until somebody re-saves that tab, so the ceiling has to bind where the value is read.'
+);
+
+sl_assert(
+	'3c — dispatch() applies that ceiling to the setting it reads',
+	false !== strpos( $sl_dispatch, 'MAX_TIMEOUT' )
+		&& false !== strpos( $sl_dispatch, "Settings::get_int( 'sms.timeout'" ),
+	'Reading sms.timeout without bounding it against MAX_TIMEOUT puts the worker-exhaustion bug straight back.'
 );
 
 // =====================================================================
