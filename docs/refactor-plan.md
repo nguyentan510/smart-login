@@ -591,8 +591,12 @@ no limiter at all while the README says it does.
 
 ### Sub-phases
 
-- [ ] **9.0** [Guard rails](abuse-boundary/9.0-guard-rails.md) — eight rules,
-      landed red, seven for controls that do not exist yet
+- [x] **9.0** [Guard rails](abuse-boundary/9.0-guard-rails.md) — landed red as
+      intended: `4 passed, 11 failed, 0 pending`, no production file touched.
+      Needed two harness changes first — a `token_get_all()` method-body
+      extractor for the ordering and per-callback rules, and a real filter
+      registry in the stubs — the latter proven byte-identical across the other
+      eight suites. Rule 6 shows **1 of 11** REST callbacks reaching the guard
 - [ ] **9.1** [Site budget](abuse-boundary/9.1-site-budget.md) — the missing
       axis, plus the phase's single DB version bump
 - [ ] **9.2** [Country allowlist](abuse-boundary/9.2-country-allowlist.md) —

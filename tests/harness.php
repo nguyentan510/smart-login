@@ -269,3 +269,126 @@ function sl_require_companion( string $label, string $trigger_pattern, string $r
 		printf( "           → %s\n", $offender );
 	}
 }
+
+/**
+ * The source text of one method body, located by tokenising rather than matching.
+ *
+ * Every rule above answers "does this file contain X". Two kinds of rule cannot
+ * be expressed that way: an *ordering* property ("A is called before B") and a
+ * *per-callback* property ("each of these ten methods calls the guard"). A
+ * file-level regex reports green for both as soon as one method somewhere in the
+ * file satisfies it, which is precisely the failure being guarded against.
+ *
+ * A regex cannot do this reliably either — method bodies nest braces, and braces
+ * appear inside strings and comments. token_get_all() already knows the
+ * difference, so the brace counter only ever sees real ones.
+ *
+ * Comments are stripped from the returned body. Without that, the ordering rule
+ * for handle_identify() matches `resolve(` twice — once as the call and once in
+ * the sentence explaining it — and a rule that reads prose is a rule that goes
+ * green when somebody rewords a comment.
+ *
+ * @param string $source Full PHP source.
+ * @param string $method Method name, without parentheses.
+ * @return string The body between its outer braces, comments removed, or ''.
+ */
+function sl_method_body( string $source, string $method ): string {
+	if ( '' === $source ) {
+		return '';
+	}
+
+	$tokens = token_get_all( $source );
+	$count  = count( $tokens );
+
+	for ( $i = 0; $i < $count; $i++ ) {
+		if ( ! is_array( $tokens[ $i ] ) || T_FUNCTION !== $tokens[ $i ][0] ) {
+			continue;
+		}
+
+		// The name is the next T_STRING; whitespace and `&` may intervene.
+		$name = '';
+
+		for ( $j = $i + 1; $j < $count; $j++ ) {
+			if ( is_array( $tokens[ $j ] ) && T_STRING === $tokens[ $j ][0] ) {
+				$name = $tokens[ $j ][1];
+				break;
+			}
+
+			// A `(` before any name means a closure — not what is being looked for.
+			if ( '(' === $tokens[ $j ] ) {
+				break;
+			}
+		}
+
+		if ( $name !== $method ) {
+			continue;
+		}
+
+		// Walk to the opening brace of the body, stepping over the parameter
+		// list and any return type. An abstract or interface method ends at `;`
+		// and has no body to return.
+		$depth = 0;
+		$start = -1;
+
+		for ( $j = $i + 1; $j < $count; $j++ ) {
+			$text = is_array( $tokens[ $j ] ) ? $tokens[ $j ][1] : $tokens[ $j ];
+
+			if ( '(' === $text ) {
+				++$depth;
+				continue;
+			}
+
+			if ( ')' === $text ) {
+				--$depth;
+				continue;
+			}
+
+			if ( 0 === $depth && ';' === $text ) {
+				break;
+			}
+
+			if ( 0 === $depth && '{' === $text ) {
+				$start = $j;
+				break;
+			}
+		}
+
+		if ( -1 === $start ) {
+			continue;
+		}
+
+		$braces = 0;
+		$body   = '';
+
+		for ( $j = $start; $j < $count; $j++ ) {
+			$id   = is_array( $tokens[ $j ] ) ? $tokens[ $j ][0] : null;
+			$text = is_array( $tokens[ $j ] ) ? $tokens[ $j ][1] : $tokens[ $j ];
+
+			// `${` opens a brace that closes with a plain `}`. There is none in
+			// the tree today; counting it keeps the walker correct if one lands.
+			if ( '{' === $text || '${' === $text ) {
+				++$braces;
+
+				if ( 1 === $braces ) {
+					continue;
+				}
+			}
+
+			if ( '}' === $text ) {
+				--$braces;
+
+				if ( 0 === $braces ) {
+					return $body;
+				}
+			}
+
+			if ( T_COMMENT === $id || T_DOC_COMMENT === $id ) {
+				continue;
+			}
+
+			$body .= $text;
+		}
+	}
+
+	return '';
+}

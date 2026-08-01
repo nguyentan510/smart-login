@@ -88,6 +88,15 @@ $suites = array(
 		'file' => 'identity/run-account-surface-tests.php',
 		'kind' => 'required',
 	),
+	array(
+		// Phase 9. Lands `spec` and red on purpose: nine of its assertions
+		// describe controls that do not exist yet, and two describe a defect
+		// already in production. Promoted to `required` when green, for the same
+		// reason Phase 5 promoted the identity suites.
+		'name' => 'Abuse boundary',
+		'file' => 'security/run-abuse-tests.php',
+		'kind' => 'spec',
+	),
 );
 
 $results  = array();

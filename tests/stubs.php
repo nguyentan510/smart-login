@@ -56,7 +56,47 @@ function delete_transient( $name ) {
 	return true;
 }
 
-function apply_filters( $hook, $value ) {
+/**
+ * Registered filters, hook => list of callbacks.
+ *
+ * Before this existed, apply_filters() returned its input untouched, so a test
+ * could not exercise any branch a filter controls — Client::ip() reading proxy
+ * headers being the one that forced the change. An empty registry behaves
+ * exactly as the old stub did, which is what keeps the four suites that load
+ * this file unaffected.
+ */
+$GLOBALS['sl_filters'] = array();
+
+function add_filter( $hook, $callback, $priority = 10, $accepted_args = 1 ) {
+	$GLOBALS['sl_filters'][ $hook ][] = array(
+		'cb'   => $callback,
+		'args' => max( 1, (int) $accepted_args ),
+	);
+
+	return true;
+}
+
+function remove_all_filters( $hook = '' ) {
+	if ( '' === $hook ) {
+		$GLOBALS['sl_filters'] = array();
+		return true;
+	}
+
+	unset( $GLOBALS['sl_filters'][ $hook ] );
+
+	return true;
+}
+
+function has_filter( $hook, $callback = false ) {
+	return ! empty( $GLOBALS['sl_filters'][ $hook ] );
+}
+
+function apply_filters( $hook, $value, ...$args ) {
+	foreach ( $GLOBALS['sl_filters'][ $hook ] ?? array() as $filter ) {
+		$params = array_slice( array_merge( array( $value ), $args ), 0, $filter['args'] );
+		$value  = call_user_func_array( $filter['cb'], $params );
+	}
+
 	return $value;
 }
 
