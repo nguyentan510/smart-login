@@ -316,6 +316,13 @@ class FormController {
 			return;
 		}
 
+		$challenge = \SmartLogin\Security\Captcha::check( $post );
+
+		if ( is_wp_error( $challenge ) ) {
+			$this->fail( $challenge, Flow::STEP_IDENTIFY );
+			return;
+		}
+
 		$directory = new IdentityDirectory();
 		$claim     = $directory->channels()->claim_any( $identity );
 
@@ -847,6 +854,13 @@ class FormController {
 
 		if ( is_wp_error( $guard ) ) {
 			$this->fail( $guard, Flow::STEP_FORGOT );
+			return;
+		}
+
+		$challenge = \SmartLogin\Security\Captcha::check( $post );
+
+		if ( is_wp_error( $challenge ) ) {
+			$this->fail( $challenge, Flow::STEP_FORGOT );
 			return;
 		}
 

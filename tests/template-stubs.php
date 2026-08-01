@@ -37,9 +37,9 @@ if ( ! class_exists( 'WP_User' ) ) {
 	}
 }
 
-function esc_attr( $text ) {
-	return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' );
-}
+// esc_attr() moved to stubs.php in 9.8: Captcha::field_html() builds markup
+// outside the template layer, and run-tests.php does not load this file. This
+// one is always loaded after stubs.php, so a second declaration would fatal.
 
 function esc_url( $url ) {
 	return htmlspecialchars( (string) $url, ENT_QUOTES, 'UTF-8' );

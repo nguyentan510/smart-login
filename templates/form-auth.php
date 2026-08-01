@@ -58,6 +58,7 @@ $sl_email     = Settings::email_enabled();
 
 	<form method="post" class="sl-form sl-form--identify">
 		<?php RequestGuard::fields( 'identify' ); ?>
+		<?php echo \SmartLogin\Security\Captcha::field_html(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts. ?>
 		<input type="hidden" name="smart_login_action" value="identify" />
 		<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $sl_redirect ); ?>" />
 

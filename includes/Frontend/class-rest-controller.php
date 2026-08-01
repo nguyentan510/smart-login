@@ -152,7 +152,15 @@ class RestController {
 	public function handle_register( WP_REST_Request $request ) {
 		$params = $request->get_params();
 
-		// The guard runs in check_permission() for every route, this one included.
+		// The form guard runs in check_permission() for every route. The challenge
+		// does not: it belongs only on the routes that can cause a message to be
+		// sent, which is this one and /forgot.
+		$challenge = \SmartLogin\Security\Captcha::check( $params );
+
+		if ( is_wp_error( $challenge ) ) {
+			return $this->error( $challenge );
+		}
+
 		$handler = new RegisterHandler( $this->otp() );
 		$result  = $handler->start( $params );
 
@@ -324,6 +332,12 @@ class RestController {
 	}
 
 	public function handle_forgot( WP_REST_Request $request ) {
+		$challenge = \SmartLogin\Security\Captcha::check( $request->get_params() );
+
+		if ( is_wp_error( $challenge ) ) {
+			return $this->error( $challenge );
+		}
+
 		$handler = new PasswordResetHandler( $this->otp() );
 		$result  = $handler->start( $request->get_params() );
 

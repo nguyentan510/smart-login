@@ -304,6 +304,23 @@ Zalo OA/ZNS không thuộc Login Provider và chưa được triển khai trong 
 
 ---
 
+## Xác minh chống robot (captcha)
+
+Mặc định tắt. Bật ở tab **Chống lạm dụng → Xác minh chống robot**: chọn Cloudflare Turnstile hoặc hCaptcha, điền Site key và Secret key.
+
+**Chế độ mặc định là `Chỉ khi site đang bị ép`**, và đó là điểm thiết kế chứ không phải sự dè dặt. Trần gửi toàn site đã chặn được thiệt hại tối đa rồi, nên một thử thách bắt mọi khách vượt qua mỗi ngày mua thêm rất ít mà tốn tỉ lệ chuyển đổi mỗi ngày. Thử thách chỉ hiện khi:
+
+- ngân sách giờ đã tiêu quá **một nửa**, hoặc
+- kill switch đang bật, hoặc
+- kênh gửi đang bị ngắt mạch, hoặc
+- chính IP đó đã dùng quá nửa hạn mức tra cứu định danh
+
+Ngày thường khách **không thấy gì, và trình duyệt cũng không tải script của bên thứ ba** — một captcha vẫn tốn một request và một dấu vết riêng tư kể cả khi không ai nhìn tới nó.
+
+Secret được mã hoá trước khi lưu (AES-256-GCM, khoá dẫn xuất từ salt của chính site) và **không bao giờ hiển thị lại**. Để trống ô khi lưu nghĩa là giữ nguyên; muốn xoá phải tick ô xoá.
+
+---
+
 ## Site đứng sau Cloudflare hay proxy
 
 **Bắt buộc đọc nếu site của bạn dùng CDN.** Mặc định plugin chỉ tin `REMOTE_ADDR` — địa chỉ duy nhất client không giả mạo được. Sau Cloudflare, `REMOTE_ADDR` là IP máy chủ biên của Cloudflare, nên **mọi khách bị tính chung một địa chỉ**: giới hạn theo IP vừa chặn oan người thật vừa không chặn được kẻ tấn công, và nhật ký ghi lại IP vô dụng cho việc điều tra.

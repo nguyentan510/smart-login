@@ -37,6 +37,7 @@ use SmartLogin\OTP\OtpService;
 use SmartLogin\OTP\Placeholders;
 use SmartLogin\Installer;
 use SmartLogin\Security\AuditLog;
+use SmartLogin\Security\Captcha;
 use SmartLogin\Security\Client;
 use SmartLogin\Security\RateLimiter;
 use SmartLogin\Security\RequestGuard;
@@ -338,6 +339,84 @@ foreach ( array( '0969789475', '+84969789475', '096 978 9475', '096-978-9475' ) 
 }
 
 check( 'phone formatting variants share one lock key', 1, count( array_unique( $lock_keys ) ) );
+
+// ---------------------------------------------------------------------
+section( 'Captcha — adaptive means invisible on a quiet day (Phase 9.8)' );
+
+$GLOBALS['sl_transients'] = array();
+$GLOBALS['sl_options']    = $GLOBALS['sl_options'] ?? array();
+RateLimiter::resume();
+
+// Not configured: no challenge, whatever the mode says.
+Settings::update(
+	array(
+		'security.captcha_provider' => 'off',
+		'security.captcha_mode'     => 'always',
+	)
+);
+check( 'an unconfigured captcha never challenges', false, Captcha::is_required() );
+check( 'and check() lets the request through', true, Captcha::check( array() ) );
+
+// Configure it. store_secret() goes through SecretBox, so this also exercises
+// the encrypt/decrypt round trip the provider secrets have always used.
+Settings::update(
+	array(
+		'security.captcha_provider'  => 'turnstile',
+		'security.captcha_site_key'  => 'site-key',
+		'security.captcha_mode'      => 'adaptive',
+		'security.max_per_site_hour' => 100,
+	)
+);
+Captcha::store_secret( 'shhh' );
+
+check( 'the secret survives the encrypted round trip', 'shhh', Captcha::secret() );
+check( 'the captcha is now configured', true, Captcha::is_configured() );
+
+// The assertion that decides whether this is shippable: on a quiet day the
+// visitor sees nothing. A challenge on an ordinary Tuesday is a conversion bug.
+check( 'no pressure, no challenge', false, Captcha::under_pressure() );
+check( 'and no widget markup', '', Captcha::field_html() );
+check( 'and no third-party script', '', Captcha::script_url() );
+
+// Pressure signal 1: the kill switch is on.
+update_option( RateLimiter::HALT_OPTION, time() + 600, false );
+check( 'a halted site is under pressure', true, Captcha::under_pressure() );
+check( 'and the widget appears', true, false !== strpos( Captcha::field_html(), 'cf-turnstile' ) );
+check( 'and the script is offered', true, false !== strpos( Captcha::script_url(), 'challenges.cloudflare.com' ) );
+RateLimiter::resume();
+check( 'clearing the halt clears the pressure', false, Captcha::under_pressure() );
+
+// Pressure signal 2: this address has spent half its lookup allowance.
+Settings::update( array( 'security.max_identify_per_ip_hour' => 4 ) );
+$_SERVER['REMOTE_ADDR'] = '203.0.113.60';
+$pressure_limiter       = new RateLimiter( new OtpRepository() );
+$pressure_limiter->check_identify( '0969789301' );
+$pressure_limiter->check_identify( '0969789302' );
+check( 'half the identify allowance is pressure', true, Captcha::under_pressure() );
+
+$GLOBALS['sl_transients'] = array();
+check( 'and it subsides with the counter', false, Captcha::under_pressure() );
+
+// always mode ignores all of it.
+Settings::update( array( 'security.captcha_mode' => 'always' ) );
+check( 'always mode challenges regardless', true, Captcha::is_required() );
+
+// A required challenge with no token is refused before any HTTP call.
+check( 'a missing token is refused', 'smart_login_captcha_missing', Captcha::check( array() )->get_error_code() );
+
+// And a token that cannot be verified is refused too: the stub gateway answers
+// 500, which must read as "no" rather than "carry on".
+check( 'an unverifiable token is refused', 'smart_login_captcha_failed', Captcha::check( array( 'cf-turnstile-response' => 'token' ) )->get_error_code() );
+
+Captcha::clear_secret();
+Settings::update(
+	array(
+		'security.captcha_provider'        => 'off',
+		'security.captcha_mode'            => 'adaptive',
+		'security.max_identify_per_ip_hour' => 30,
+	)
+);
+$GLOBALS['sl_transients'] = array();
 
 // ---------------------------------------------------------------------
 section( 'RequestGuard::verify_rest — parity with the form path (Phase 9.7)' );
@@ -1398,6 +1477,20 @@ foreach ( array_keys( $registry_tabs ) as $registry_tab ) {
 		// whatever was stored. The admin suite covers it with a real preset
 		// selected, which is the only state in which it is editable.
 		if ( ! empty( $field['conditional'] ) ) {
+			continue;
+		}
+
+		// A `secret` field must not round-trip, and that is the point of it:
+		// Settings::sanitize() diverts the value into its own encrypted store and
+		// prunes it from the option array, so nothing can echo it back into a
+		// page later. Asserted below as an absence rather than skipped quietly.
+		if ( 'secret' === ( $field['type'] ?? '' ) ) {
+			// The registry still plants an empty default for the path, which is
+			// harmless. What must never appear there is the submitted value.
+			if ( '' !== (string) sl_dig_setting( $saved, $path ) ) {
+				$dropped[] = $path . ' (secret reached the option array)';
+			}
+
 			continue;
 		}
 

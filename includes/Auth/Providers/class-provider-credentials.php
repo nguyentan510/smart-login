@@ -7,6 +7,7 @@
 
 namespace SmartLogin\Auth\Providers;
 
+use SmartLogin\Security\SecretBox;
 use SmartLogin\Settings;
 
 defined( 'ABSPATH' ) || exit;
@@ -14,7 +15,13 @@ defined( 'ABSPATH' ) || exit;
 final class ProviderCredentials {
 
 	const SECRET_OPTION = 'smart_login_provider_secrets';
-	const CIPHER        = 'aes-256-gcm';
+
+	/**
+	 * Kept for anything still reading it. The cipher itself moved to SecretBox in
+	 * 9.8, together with the stored record shape, which did **not** change — a
+	 * secret sealed by the old code opens with the new.
+	 */
+	const CIPHER = SecretBox::CIPHER;
 
 	public static function client_id( string $provider ): string {
 		$provider = sanitize_key( $provider );
@@ -32,9 +39,7 @@ final class ProviderCredentials {
 			return $external;
 		}
 
-		$stored = get_option( self::SECRET_OPTION, array() );
-		$record = is_array( $stored ) ? ( $stored[ $provider ] ?? null ) : null;
-		return is_array( $record ) ? self::decrypt( $record ) : '';
+		return SecretBox::get( self::SECRET_OPTION, $provider );
 	}
 
 	public static function redirect_uri( string $provider ): string {
@@ -64,72 +69,19 @@ final class ProviderCredentials {
 
 	public static function store_secret( string $provider, string $secret ): bool {
 		$provider = sanitize_key( $provider );
-		$secret   = trim( $secret );
-		if ( ! in_array( $provider, array( 'google', 'zalo' ), true ) || '' === $secret ) {
+
+		if ( ! in_array( $provider, array( 'google', 'zalo' ), true ) ) {
 			return false;
 		}
-		$record = self::encrypt( $secret );
-		if ( ! is_array( $record ) ) {
-			return false;
-		}
-		$stored              = get_option( self::SECRET_OPTION, array() );
-		$stored              = is_array( $stored ) ? $stored : array();
-		$stored[ $provider ] = $record;
-		return update_option( self::SECRET_OPTION, $stored );
+
+		return SecretBox::put( self::SECRET_OPTION, $provider, $secret );
 	}
 
 	public static function clear_secret( string $provider ): bool {
-		$provider = sanitize_key( $provider );
-		$stored   = get_option( self::SECRET_OPTION, array() );
-		if ( ! is_array( $stored ) || ! array_key_exists( $provider, $stored ) ) {
-			return true;
-		}
-		unset( $stored[ $provider ] );
-		return update_option( self::SECRET_OPTION, $stored );
+		return SecretBox::forget( self::SECRET_OPTION, sanitize_key( $provider ) );
 	}
 
 	private static function constant_value( string $name ): string {
 		return defined( $name ) ? trim( (string) constant( $name ) ) : '';
-	}
-
-	private static function key(): string {
-		return hash( 'sha256', wp_salt( 'auth' ) . '|' . wp_salt( 'secure_auth' ) . '|' . SMART_LOGIN_BASENAME, true );
-	}
-
-	private static function encrypt( string $plaintext ): ?array {
-		if ( ! function_exists( 'openssl_encrypt' ) ) {
-			return null;
-		}
-		$iv         = random_bytes( 12 );
-		$tag        = '';
-		$ciphertext = openssl_encrypt( $plaintext, self::CIPHER, self::key(), OPENSSL_RAW_DATA, $iv, $tag );
-		if ( false === $ciphertext || '' === $tag ) {
-			return null;
-		}
-		return array(
-			'version'    => 1,
-			'cipher'     => self::CIPHER,
-			'iv'         => base64_encode( $iv ),
-			'tag'        => base64_encode( $tag ),
-			'ciphertext' => base64_encode( $ciphertext ),
-		);
-	}
-
-	private static function decrypt( array $record ): string {
-		if (
-			1 !== (int) ( $record['version'] ?? 0 )
-			|| self::CIPHER !== (string) ( $record['cipher'] ?? '' )
-			|| ! function_exists( 'openssl_decrypt' )
-		) {
-			return '';
-		}
-		$iv         = base64_decode( (string) ( $record['iv'] ?? '' ), true );
-		$tag        = base64_decode( (string) ( $record['tag'] ?? '' ), true );
-		$ciphertext = base64_decode( (string) ( $record['ciphertext'] ?? '' ), true );
-		if ( false === $iv || false === $tag || false === $ciphertext ) {
-			return '';
-		}
-		$plaintext = openssl_decrypt( $ciphertext, self::CIPHER, self::key(), OPENSSL_RAW_DATA, $iv, $tag );
-		return false === $plaintext ? '' : $plaintext;
 	}
 }

@@ -22,7 +22,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 6 — Provider lifecycle**
 - [x] **Phase 7 — Release preparation**
 - [ ] **Phase 8 — Account surface**
-- [ ] **Phase 9 — Abuse boundary**
+- [x] **Phase 9 — Abuse boundary**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -637,8 +637,12 @@ no limiter at all while the README says it does.
       shared gate in `check_permission()` rather than eleven copies, and rule 6
       rewritten to check reachability instead of repetition. **The suite went
       fully green here and is now `required`.** 280 → 285
-- [ ] **9.8** [Adaptive captcha](abuse-boundary/9.8-adaptive-captcha.md) —
-      invisible under normal load; **blocked on 9.1 and 9.3**
+- [x] **9.8** [Adaptive captcha](abuse-boundary/9.8-adaptive-captcha.md) —
+      invisible under normal load, and invisible means **no third-party script
+      registered**, not merely not shown. The provider secret path was extracted
+      into `Security\SecretBox` rather than duplicated, keeping the stored record
+      shape byte-identical so existing provider secrets still open. A new
+      `secret` field type makes the next one a registry row. 285 → 301
 - [x] **9.9** [Audit and visibility](abuse-boundary/9.9-audit-and-visibility.md) —
       write cap, consumption on the readiness row, resume button, and the live
       retention bug fixed. Corrected 9.1's own claim: a halted site was still

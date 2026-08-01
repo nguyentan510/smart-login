@@ -156,6 +156,10 @@ function _n( $single, $plural, $number, $domain = null ) {
 	return 1 === (int) $number ? $single : $plural;
 }
 
+function esc_attr( $text ) {
+	return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' );
+}
+
 function esc_html( $text ) {
 	return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' );
 }
@@ -263,6 +267,18 @@ function wp_remote_request( $url, $args ) {
 		'response' => array( 'code' => 500 ),
 		'body'     => 'gateway failure',
 	);
+}
+
+/**
+ * Delegates, so anything asserting on $GLOBALS['sl_http_requests'] sees POSTs too.
+ *
+ * The default response is a 500, which is what makes the captcha guard rail
+ * meaningful: verify_token() has to read that as "no" rather than as "carry on".
+ */
+function wp_remote_post( $url, $args = array() ) {
+	$args['method'] = 'POST';
+
+	return wp_remote_request( $url, $args );
 }
 
 function wp_remote_retrieve_response_code( $response ) {

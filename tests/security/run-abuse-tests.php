@@ -361,6 +361,53 @@ sl_assert(
 );
 
 // =====================================================================
+sl_section( 'Rule 10 — the challenge is adaptive, closed and quiet (9.8)' );
+
+$sl_captcha_file = 'includes/Security/class-captcha.php';
+$sl_captcha_src  = sl_source( $sl_captcha_file );
+
+sl_assert(
+	'a Captcha class exists',
+	'' !== $sl_captcha_src,
+	'9.8 adds includes/Security/class-captcha.php.'
+);
+
+// Fail closed. This is the opposite of the Client::ip() decision in 9.5 and
+// deliberately so: there, failing open protects legitimate CLI traffic against
+// an attack the budget already covers; here, the only thing failing open
+// protects is the attacker.
+sl_assert(
+	'verification that cannot complete refuses the request',
+	'' !== $sl_captcha_src && class_exists( '\SmartLogin\Security\Captcha' )
+		&& false === \SmartLogin\Security\Captcha::verify_token( 'anything', 'https://127.0.0.1:9/never' ),
+	'A network error, a timeout or a malformed response must all be a refusal.'
+);
+
+// Adaptive is the default, so the widget has to be absent on a quiet day or it
+// is a conversion bug wearing a security label.
+sl_assert(
+	'adaptive mode reads the pressure signals rather than showing always',
+	'' !== $sl_captcha_src
+		&& false !== strpos( $sl_captcha_src, 'halted_for' )
+		&& false !== strpos( $sl_captcha_src, 'count_recent_all' ),
+	'Adaptive mode is defined by the budget and breaker state it consults; without them it is just "always" with extra steps.'
+);
+
+// Same discipline as 9.3: an outbound call in the request path is a worker held.
+sl_assert(
+	'the verification call is bounded by a hard timeout',
+	'' !== $sl_captcha_src && false !== strpos( $sl_captcha_src, 'MAX_TIMEOUT' ),
+	'A captcha endpoint that hangs must not become the worker-exhaustion bug a second time.'
+);
+
+sl_forbid_pattern(
+	'the captcha secret never reaches the DOM',
+	'/value="[^"]*captcha_secret/',
+	array(),
+	'Secrets are write-only in this plugin: stored encrypted, never echoed back into a form.'
+);
+
+// =====================================================================
 sl_section( 'Rule 7 — the audit log stops amplifying the attack it records (9.9)' );
 
 $GLOBALS['wpdb']->writes = array();
