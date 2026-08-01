@@ -636,8 +636,12 @@ no limiter at all while the README says it does.
       JS sends no stamp, so the existing check is inert; JS ships first
 - [ ] **9.8** [Adaptive captcha](abuse-boundary/9.8-adaptive-captcha.md) —
       invisible under normal load; **blocked on 9.1 and 9.3**
-- [ ] **9.9** [Audit and visibility](abuse-boundary/9.9-audit-and-visibility.md) —
-      write cap, operator screen, and the rule that catches a live retention bug
+- [x] **9.9** [Audit and visibility](abuse-boundary/9.9-audit-and-visibility.md) —
+      write cap, consumption on the readiness row, resume button, and the live
+      retention bug fixed. Corrected 9.1's own claim: a halted site was still
+      writing one audit row per blocked request, so the cap is the other half of
+      the kill switch rather than polish beside it. Full dashboard deliberately
+      not built — see the Outcome. 272 → 280
 - [ ] **9.10** [Housekeeping](abuse-boundary/9.10-housekeeping.md) — measure the
       address cache premise before fixing it; decide the shim templates
 

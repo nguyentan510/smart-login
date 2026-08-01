@@ -365,8 +365,15 @@ class Installer {
 	public static function cleanup(): void {
 		global $wpdb;
 
-		$otp_days   = max( 1, Settings::get_int( 'otp_retention_days', 7 ) );
-		$audit_days = max( 1, Settings::get_int( 'audit_retention_days', 90 ) );
+		// Dot paths. These read `otp_retention_days` and `audit_retention_days`
+		// until 9.9 — flat keys the settings rewrite had renamed two hundred lines
+		// above, in the migration map at self::migrate_flat_settings(). Settings
+		// resolves by dot path, so both reads missed, both fell back to the
+		// literal, and the retention an operator configured had never once taken
+		// effect. Rule 8 in tests/security/run-abuse-tests.php now fails the build
+		// on any settings key the registry does not declare.
+		$otp_days   = max( 1, Settings::get_int( 'advanced.otp_retention_days', 7 ) );
+		$audit_days = max( 1, Settings::get_int( 'advanced.audit_retention_days', 90 ) );
 
 		$otp_table   = self::otp_table();
 		$audit_table = self::audit_table();

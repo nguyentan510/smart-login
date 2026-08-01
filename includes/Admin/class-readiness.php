@@ -211,16 +211,49 @@ final class Readiness {
 			);
 		}
 
+		// Consumption, not just configuration. The ceilings shipped with defaults
+		// that were chosen for plausibility rather than measured from any real
+		// site's traffic, so an operator needs to see how close they run before
+		// the kill switch introduces them to the number.
+		$repo = new \SmartLogin\OTP\OtpRepository();
+		$used = $repo->count_recent_all( HOUR_IN_SECONDS );
+		$sms  = $repo->count_recent_by_transport( 'sms', DAY_IN_SECONDS );
+		$cost = Settings::get_int( 'otp.sms_unit_cost', 0 );
+
+		$detail = sprintf(
+			/* translators: 1: codes sent this hour, 2: hourly ceiling, 3: daily ceiling. */
+			__( 'Giờ này đã gửi %1$d. Trần %2$s mã/giờ, %3$s mã/ngày.', 'smart-login' ),
+			$used,
+			$hour > 0 ? (string) $hour : __( 'không giới hạn', 'smart-login' ),
+			$day > 0 ? (string) $day : __( 'không giới hạn', 'smart-login' )
+		);
+
+		if ( $cost > 0 && $sms > 0 ) {
+			$detail .= ' ' . sprintf(
+				/* translators: 1: SMS sent today, 2: estimated cost. */
+				__( 'Hôm nay %1$d tin SMS, ước tính %2$s đ.', 'smart-login' ),
+				$sms,
+				number_format_i18n( $sms * $cost )
+			);
+		}
+
+		// Approaching the ceiling is worth saying before it trips, not after.
+		if ( $hour > 0 && $used >= (int) ceil( $hour * 0.8 ) ) {
+			return $this->check(
+				'budget',
+				__( 'Trần gửi toàn site', 'smart-login' ),
+				self::WARN,
+				$detail . ' ' . __( 'Đang sát trần — hoặc site đang bị lạm dụng, hoặc trần đặt thấp hơn nhu cầu thật.', 'smart-login' ),
+				'security',
+				__( 'Xem trần', 'smart-login' )
+			);
+		}
+
 		return $this->check(
 			'budget',
 			__( 'Trần gửi toàn site', 'smart-login' ),
 			self::OK,
-			sprintf(
-				/* translators: 1: hourly ceiling, 2: daily ceiling. */
-				__( '%1$s mã/giờ, %2$s mã/ngày.', 'smart-login' ),
-				$hour > 0 ? (string) $hour : __( 'không giới hạn', 'smart-login' ),
-				$day > 0 ? (string) $day : __( 'không giới hạn', 'smart-login' )
-			),
+			$detail,
 			'security'
 		);
 	}

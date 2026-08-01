@@ -35,6 +35,8 @@ use SmartLogin\OTP\Transports\WebhookTransport;
 use SmartLogin\OTP\OtpRepository;
 use SmartLogin\OTP\OtpService;
 use SmartLogin\OTP\Placeholders;
+use SmartLogin\Installer;
+use SmartLogin\Security\AuditLog;
 use SmartLogin\Security\Client;
 use SmartLogin\Security\RateLimiter;
 use SmartLogin\Settings;
@@ -335,6 +337,93 @@ foreach ( array( '0969789475', '+84969789475', '096 978 9475', '096-978-9475' ) 
 }
 
 check( 'phone formatting variants share one lock key', 1, count( array_unique( $lock_keys ) ) );
+
+// ---------------------------------------------------------------------
+section( 'AuditLog — the log stops amplifying the attack (Phase 9.9)' );
+
+Settings::update(
+	array(
+		'advanced.audit_enabled'           => 1,
+		'security.audit_max_per_event_hour' => 10,
+	)
+);
+
+$GLOBALS['sl_transients'] = array();
+$GLOBALS['wpdb']->writes  = array();
+
+for ( $i = 0; $i < 200; $i++ ) {
+	AuditLog::record( AuditLog::LOGIN_FAILED, '096••••475', array( 'reason' => 'test' ) );
+}
+
+$written = count( $GLOBALS['wpdb']->writes );
+
+// Ten detailed rows, then one summary saying the rest were dropped.
+check( '200 identical events become 11 rows', 11, $written );
+
+$events = array_map(
+	static function ( $write ) {
+		return $write['data']['event'] ?? '';
+	},
+	$GLOBALS['wpdb']->writes
+);
+
+check( 'the last row is a summary', 'login_failed_summary', end( $events ) );
+check( 'only one summary is written', 1, count( array_filter( $events, static fn( $e ) => 'login_failed_summary' === $e ) ) );
+
+// A lockout is the record of the attack succeeding. Dropping it to survive the
+// flood would throw away the one row worth keeping.
+$GLOBALS['wpdb']->writes = array();
+
+for ( $i = 0; $i < 50; $i++ ) {
+	AuditLog::record( AuditLog::LOCKOUT, '096••••475', array( 'minutes' => 15 ) );
+}
+
+check( 'lockout events are never sampled', 50, count( $GLOBALS['wpdb']->writes ) );
+
+$GLOBALS['wpdb']->writes  = array();
+$GLOBALS['sl_transients'] = array();
+Settings::update( array( 'security.audit_max_per_event_hour' => 0 ) );
+
+for ( $i = 0; $i < 30; $i++ ) {
+	AuditLog::record( AuditLog::OTP_FAILED, '096••••475' );
+}
+
+check( 'a cap of 0 records everything', 30, count( $GLOBALS['wpdb']->writes ) );
+
+Settings::update( array( 'security.audit_max_per_event_hour' => 500 ) );
+$GLOBALS['wpdb']->writes  = array();
+$GLOBALS['sl_transients'] = array();
+
+// ---------------------------------------------------------------------
+section( 'Installer::cleanup — the configured retention finally applies (Phase 9.9)' );
+
+// This read flat keys the settings rewrite had renamed, so it always fell back
+// to the hardcoded 7/90 and the operator's setting had never once taken effect.
+// Asserted through the SQL the stub captures, because the bug was invisible from
+// every other angle.
+Settings::update(
+	array(
+		'advanced.otp_retention_days'   => 3,
+		'advanced.audit_retention_days' => 11,
+	)
+);
+
+$GLOBALS['wpdb']->writes = array();
+Installer::cleanup();
+
+$queries = array_column( $GLOBALS['wpdb']->writes, 'sql' );
+
+check( 'cleanup issues two deletes', 2, count( $queries ) );
+check( 'the OTP delete uses the configured 3 days', true, false !== strpos( (string) ( $queries[0] ?? '' ), gmdate( 'Y-m-d', time() - ( 3 * DAY_IN_SECONDS ) ) ) );
+check( 'the audit delete uses the configured 11 days', true, false !== strpos( (string) ( $queries[1] ?? '' ), gmdate( 'Y-m-d', time() - ( 11 * DAY_IN_SECONDS ) ) ) );
+
+Settings::update(
+	array(
+		'advanced.otp_retention_days'   => 7,
+		'advanced.audit_retention_days' => 90,
+	)
+);
+$GLOBALS['wpdb']->writes = array();
 
 // ---------------------------------------------------------------------
 section( 'RateLimiter — password spraying has a ceiling (Phase 9.6)' );
