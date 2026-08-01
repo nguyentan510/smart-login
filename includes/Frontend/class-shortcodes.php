@@ -24,7 +24,32 @@ class Shortcodes {
 		add_shortcode( 'smart_verify_otp', array( $this, 'render_otp' ) );
 		add_shortcode( 'smart_forgot_password', array( $this, 'render_forgot' ) );
 		add_shortcode( 'smart_profile', array( $this, 'render_profile' ) );
+		add_shortcode( 'smart_account', array( $this, 'render_account' ) );
 		add_shortcode( 'smart_address', array( $this, 'render_address' ) );
+	}
+
+	/**
+	 * The editable account surface, on any page, with or without WooCommerce.
+	 *
+	 * [smart_profile] shows a member what is on file; this lets them change it.
+	 * Until Phase 8.3 the only way to edit anything was the WooCommerce account
+	 * page, so a site without WooCommerce had no profile editing at all and the
+	 * summary's "Cập nhật ngay" link pointed into wp-admin.
+	 */
+	public function render_account( $atts = array() ): string {
+		if ( ! is_user_logged_in() ) {
+			return $this->render_flow( Flow::STEP_IDENTIFY, (array) $atts );
+		}
+
+		Assets::enqueue();
+
+		return TemplateLoader::render(
+			'account',
+			array(
+				'sl_form' => new AccountForm( get_current_user_id(), AccountForm::CONTEXT_STANDALONE ),
+				'notices' => Notices::all(),
+			)
+		);
 	}
 
 	/**

@@ -53,22 +53,6 @@ class AddressRest {
 				),
 			)
 		);
-
-		register_rest_route(
-			self::REST_NAMESPACE,
-			'/address/search',
-			array(
-				'methods'             => 'GET',
-				'callback'            => array( $this, 'get_search' ),
-				'permission_callback' => '__return_true',
-				'args'                => array(
-					'q' => array(
-						'required'          => true,
-						'sanitize_callback' => 'sanitize_text_field',
-					),
-				),
-			)
-		);
 	}
 
 	public function get_provinces(): WP_REST_Response {
@@ -99,14 +83,6 @@ class AddressRest {
 		return $this->cacheable( $out, 'wards-' . $province );
 	}
 
-	public function get_search( WP_REST_Request $request ): WP_REST_Response {
-		$query   = (string) $request->get_param( 'q' );
-		$results = AddressRepository::search( $query, 20 );
-
-		// Search results are still a pure function of the static dataset, so
-		// they cache too — keyed by the query itself.
-		return $this->cacheable( $results, 'search-' . md5( $query ) );
-	}
 
 	/**
 	 * Attach long-lived cache headers and a dataset-stamped ETag.
@@ -118,12 +94,59 @@ class AddressRest {
 	 * CACHE_SECONDS, which is exactly the case the header exists to handle.
 	 */
 	private function cacheable( array $data, string $key ): WP_REST_Response {
+		$etag = '"' . md5( self::dataset_stamp() . '|' . $key ) . '"';
+
+		// Measured before it was written: a live request confirms the plugin's
+		// Cache-Control and ETag do reach the client — WordPress only sends its
+		// nocache headers for logged-in REST requests, and these routes are
+		// anonymous. What was missing was the other half of the exchange. Without
+		// it a client whose max-age lapsed re-downloaded the whole dataset to be
+		// told nothing had changed.
+		if ( self::matches_etag( $etag ) ) {
+			$response = new WP_REST_Response( null, 304 );
+			$response->header( 'Cache-Control', 'public, max-age=' . self::CACHE_SECONDS );
+			$response->header( 'ETag', $etag );
+
+			return $response;
+		}
+
 		$response = new WP_REST_Response( $data, 200 );
 
 		$response->header( 'Cache-Control', 'public, max-age=' . self::CACHE_SECONDS );
-		$response->header( 'ETag', '"' . md5( self::dataset_stamp() . '|' . $key ) . '"' );
+		$response->header( 'ETag', $etag );
 
 		return $response;
+	}
+
+	/**
+	 * Does the request already hold this version?
+	 *
+	 * If-None-Match is a comma-separated list and entries may carry the `W/`
+	 * weak-comparison prefix, which is correct to ignore here: these responses
+	 * are byte-identical for a given dataset stamp, so weak and strong agree.
+	 */
+	private static function matches_etag( string $etag ): bool {
+		$header = isset( $_SERVER['HTTP_IF_NONE_MATCH'] )
+			? sanitize_text_field( wp_unslash( $_SERVER['HTTP_IF_NONE_MATCH'] ) )
+			: '';
+
+		if ( '' === $header ) {
+			return false;
+		}
+
+		foreach ( explode( ',', $header ) as $candidate ) {
+			$candidate = trim( $candidate );
+
+			if ( 0 === strpos( $candidate, 'W/' ) ) {
+				$candidate = trim( substr( $candidate, 2 ) );
+			}
+
+			if ( '*' === $candidate || $candidate === $etag ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

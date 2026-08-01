@@ -16,25 +16,27 @@ defined( 'ABSPATH' ) || exit;
 
 class AuditLog {
 
-	const REGISTER_STARTED  = 'register_started';
-	const OTP_SENT          = 'otp_sent';
-	const OTP_SEND_FAILED   = 'otp_send_failed';
-	const OTP_VERIFIED      = 'otp_verified';
-	const OTP_FAILED        = 'otp_failed';
-	const OTP_EXPIRED       = 'otp_expired';
-	const USER_REGISTERED   = 'user_registered';
-	const LOGIN_SUCCESS     = 'login_success';
-	const LOGIN_FAILED      = 'login_failed';
-	const LOCKOUT           = 'lockout';
-	const RATE_LIMITED      = 'rate_limited';
-	const PASSWORD_RESET    = 'password_reset';
-	const PROVIDER_LOGIN    = 'provider_login';
-	const PROVIDER_FAILED   = 'provider_failed';
-	const PROVIDER_LINKED   = 'provider_linked';
-	const PROVIDER_UNLINKED = 'provider_unlinked';
-	const IDENTITY_RETIRED  = 'identity_retired';
-	const CONTACT_PENDING   = 'contact_pending';
-	const CONTACT_VERIFIED  = 'contact_verified';
+	const REGISTER_STARTED       = 'register_started';
+	const OTP_SENT               = 'otp_sent';
+	const OTP_SEND_FAILED        = 'otp_send_failed';
+	const OTP_VERIFIED           = 'otp_verified';
+	const OTP_FAILED             = 'otp_failed';
+	const OTP_EXPIRED            = 'otp_expired';
+	const USER_REGISTERED        = 'user_registered';
+	const LOGIN_SUCCESS          = 'login_success';
+	const LOGIN_FAILED           = 'login_failed';
+	const LOCKOUT                = 'lockout';
+	const RATE_LIMITED           = 'rate_limited';
+	const OTP_BUDGET_HALTED      = 'otp_budget_halted';
+	const TRANSPORT_BREAKER_OPEN = 'transport_breaker_open';
+	const PASSWORD_RESET         = 'password_reset';
+	const PROVIDER_LOGIN         = 'provider_login';
+	const PROVIDER_FAILED        = 'provider_failed';
+	const PROVIDER_LINKED        = 'provider_linked';
+	const PROVIDER_UNLINKED      = 'provider_unlinked';
+	const IDENTITY_RETIRED       = 'identity_retired';
+	const CONTACT_PENDING        = 'contact_pending';
+	const CONTACT_VERIFIED       = 'contact_verified';
 
 	/**
 	 * @param string $event           One of the constants above.
@@ -42,11 +44,45 @@ class AuditLog {
 	 * @param array  $meta            Extra context; secrets are stripped.
 	 * @param int    $user_id         0 when unknown.
 	 */
+	/**
+	 * Events that are never sampled, whatever the volume.
+	 *
+	 * All low-volume and all forensically load-bearing: a cap that discards them
+	 * to survive a flood has thrown away the record of the flood. Everything else
+	 * degrades to one aggregated row per hour.
+	 */
+	const NEVER_SAMPLED = array(
+		self::LOCKOUT,
+		self::USER_REGISTERED,
+		self::PASSWORD_RESET,
+		self::OTP_BUDGET_HALTED,
+		self::TRANSPORT_BREAKER_OPEN,
+		self::IDENTITY_RETIRED,
+		self::PROVIDER_LOGIN,
+		self::PROVIDER_FAILED,
+		self::PROVIDER_LINKED,
+		self::PROVIDER_UNLINKED,
+	);
+
 	public static function record( string $event, string $identity_masked = '', array $meta = array(), int $user_id = 0 ): void {
 		if ( ! Settings::is_on( 'advanced.audit_enabled' ) ) {
 			return;
 		}
 
+		if ( ! self::may_write( $event ) ) {
+			return;
+		}
+
+		self::write( $event, $identity_masked, $meta, $user_id );
+	}
+
+	/**
+	 * The insert itself, past every gate.
+	 *
+	 * Split out so the hourly summary row can be written without re-entering the
+	 * cap that produced it — which would either drop the summary or recurse.
+	 */
+	private static function write( string $event, string $identity_masked, array $meta, int $user_id ): void {
 		global $wpdb;
 
 		$wpdb->insert( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
@@ -62,6 +98,58 @@ class AuditLog {
 			),
 			array( '%d', '%s', '%s', '%s', '%s', '%s', '%s' )
 		);
+	}
+
+	/**
+	 * Decide whether this event may still write its own row this hour.
+	 *
+	 * Until 9.9 the log wrote one row per failed request, so an attack cost the
+	 * operator an unbounded INSERT stream and a table that outgrew its daily
+	 * sweep — the audit log was an amplifier for the very attack it exists to
+	 * record. Worse, the kill switch did not stop it: RateLimiter returns before
+	 * the counting queries, but OtpService still records RATE_LIMITED on every
+	 * blocked request, so a halted site was shedding three SELECTs and keeping
+	 * one INSERT.
+	 *
+	 * Past the cap the event stops writing individual rows and writes one
+	 * aggregated row per hour instead, so the signal that something is happening
+	 * survives even though the detail does not.
+	 */
+	private static function may_write( string $event ): bool {
+		if ( in_array( $event, self::NEVER_SAMPLED, true ) ) {
+			return true;
+		}
+
+		$cap = Settings::get_int( 'security.audit_max_per_event_hour', 500 );
+
+		if ( $cap <= 0 ) {
+			return true;
+		}
+
+		$key   = 'smart_login_audit_' . md5( $event . '|' . gmdate( 'YmdH' ) );
+		$count = (int) get_transient( $key );
+
+		set_transient( $key, $count + 1, HOUR_IN_SECONDS );
+
+		if ( $count < $cap ) {
+			return true;
+		}
+
+		// Exactly at the cap, write the one summary row that says the rest were
+		// dropped. Above it, write nothing at all.
+		if ( $count === $cap ) {
+			self::write(
+				$event . '_summary',
+				'',
+				array(
+					'capped_at' => $cap,
+					'note'      => 'further events of this type are not recorded this hour',
+				),
+				0
+			);
+		}
+
+		return false;
 	}
 
 	/**

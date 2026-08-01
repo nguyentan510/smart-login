@@ -18,15 +18,83 @@ defined( 'ABSPATH' ) || exit;
 
 final class OverviewScreen {
 
+	/** admin-post action behind the "resume sending" button. */
+	const RESUME_ACTION = 'smart_login_resume_sending';
+
+	public function register(): void {
+		add_action( 'admin_post_' . self::RESUME_ACTION, array( $this, 'handle_resume' ) );
+	}
+
+	/**
+	 * Clear the kill switch by hand.
+	 *
+	 * The switch shipped in 9.1 without an off switch: RateLimiter::resume()
+	 * existed and was tested, and nothing called it. A halt clears itself after
+	 * security.halt_minutes, but the thresholds that trip it were chosen without
+	 * any site's traffic to measure, so the first person to meet one may well be
+	 * a legitimate campaign rather than an attacker.
+	 */
+	public function handle_resume(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'Bạn không có quyền thực hiện việc này.', 'smart-login' ) );
+		}
+
+		check_admin_referer( self::RESUME_ACTION );
+
+		\SmartLogin\Security\RateLimiter::resume();
+
+		wp_safe_redirect(
+			add_query_arg(
+				'sl_resumed',
+				'1',
+				admin_url( 'admin.php?page=' . SettingsPage::SLUG )
+			)
+		);
+		exit;
+	}
+
 	public function render(): void {
 		$readiness = new Readiness();
 		$checks    = $readiness->checks();
 		$ready     = $readiness->is_ready();
+		$halted    = ( new \SmartLogin\Security\RateLimiter() )->halted_for();
 		?>
 		<div class="wrap smart-login-admin">
 			<h1><?php esc_html_e( 'Smart Login', 'smart-login' ); ?></h1>
 
 			<?php SettingsPage::nav( SettingsPage::OVERVIEW ); ?>
+
+			<?php if ( isset( $_GET['sl_resumed'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification ?>
+				<div class="notice notice-success is-dismissible">
+					<p><?php esc_html_e( 'Đã mở lại việc gửi mã.', 'smart-login' ); ?></p>
+				</div>
+			<?php endif; ?>
+
+			<?php if ( $halted > 0 ) : ?>
+				<div class="notice notice-warning">
+					<p>
+						<?php
+						printf(
+							/* translators: %d: minutes remaining. */
+							esc_html__( 'Việc gửi mã đang tạm dừng vì chạm trần toàn site. Tự mở lại sau %d phút.', 'smart-login' ),
+							(int) max( 1, ceil( $halted / MINUTE_IN_SECONDS ) )
+						);
+						?>
+					</p>
+					<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+						<input type="hidden" name="action" value="<?php echo esc_attr( self::RESUME_ACTION ); ?>" />
+						<?php wp_nonce_field( self::RESUME_ACTION ); ?>
+						<p>
+							<button type="submit" class="button button-primary">
+								<?php esc_html_e( 'Mở lại việc gửi mã', 'smart-login' ); ?>
+							</button>
+							<span class="description">
+								<?php esc_html_e( 'Chỉ làm việc này khi bạn đã xem nhật ký và tin rằng lưu lượng vừa rồi là thật.', 'smart-login' ); ?>
+							</span>
+						</p>
+					</form>
+				</div>
+			<?php endif; ?>
 
 			<div class="sl-readiness-banner <?php echo $ready ? 'is-ready' : 'is-blocked'; ?>">
 				<?php if ( $ready ) : ?>

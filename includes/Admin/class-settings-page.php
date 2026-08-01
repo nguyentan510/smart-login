@@ -31,6 +31,10 @@ class SettingsPage {
 	const OVERVIEW = 'overview';
 
 	public function register(): void {
+		// The overview screen owns one admin-post handler (resume sending), which
+		// has to be registered whether or not that screen is the one rendering.
+		( new OverviewScreen() )->register();
+
 		add_action( 'admin_menu', array( $this, 'add_menu' ) );
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );

@@ -78,6 +78,10 @@ final class FieldRenderer {
 						self::page( $path );
 						break;
 
+					case 'secret':
+						self::secret( $path, $field );
+						break;
+
 					default:
 						self::input( $path, $field );
 				}
@@ -87,6 +91,35 @@ final class FieldRenderer {
 			</td>
 		</tr>
 		<?php
+	}
+
+	/**
+	 * Write-only: a stored secret is never rendered back into the form.
+	 *
+	 * `value` is unconditionally empty, so a blank submission cannot be
+	 * distinguished from "unchanged" any other way — which is exactly the
+	 * convention Settings::sanitize() already applies to the provider secrets, and
+	 * why the clear checkbox exists rather than "empty the box to remove it".
+	 */
+	private static function secret( string $path, array $field ): void {
+		$stored = '' !== ( $field['stored'] ?? '' );
+
+		printf(
+			'<input type="password" class="regular-text" id="%1$s" name="%2$s" value="" autocomplete="new-password" placeholder="%3$s" />',
+			esc_attr( self::id( $path ) ),
+			esc_attr( self::name( $path ) ),
+			esc_attr( $stored ? __( 'Đã lưu — để trống nếu không đổi', 'smart-login' ) : __( 'Chưa có', 'smart-login' ) )
+		);
+
+		if ( $stored ) {
+			// A flat input name, not a nested one: the value never belongs in the
+			// settings array, and Settings::sanitize() strips it before storing.
+			printf(
+				'<p><label><input type="checkbox" name="%1$s" value="1" /> %2$s</label></p>',
+				esc_attr( 'sl_clear_' . str_replace( '.', '_', $path ) ),
+				esc_html__( 'Xoá giá trị đã lưu', 'smart-login' )
+			);
+		}
 	}
 
 	private static function input( string $path, array $field ): void {

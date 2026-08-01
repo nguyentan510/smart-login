@@ -119,6 +119,20 @@ class RestController {
 			);
 		}
 
+		// The honeypot and fill-time guard, once, for every route rather than
+		// repeated in eleven callbacks. Ten of them called nothing before 9.7, and
+		// a rule that requires eleven copies is a rule that will be short one the
+		// day somebody adds a twelfth route.
+		//
+		// Worth stating plainly next to the nonce above: for anonymous visitors
+		// the wp_rest nonce is constant for 12-24 hours across all of them, so it
+		// is a CSRF control and nothing more. The rate limits are what stop bots.
+		$guard = RequestGuard::verify_rest( 'rest', $request->get_params() );
+
+		if ( is_wp_error( $guard ) ) {
+			return $guard;
+		}
+
 		return true;
 	}
 
@@ -138,10 +152,13 @@ class RestController {
 	public function handle_register( WP_REST_Request $request ) {
 		$params = $request->get_params();
 
-		$guard = RequestGuard::verify_rest( 'register', $params );
+		// The form guard runs in check_permission() for every route. The challenge
+		// does not: it belongs only on the routes that can cause a message to be
+		// sent, which is this one and /forgot.
+		$challenge = \SmartLogin\Security\Captcha::check( $params );
 
-		if ( is_wp_error( $guard ) ) {
-			return $this->error( $guard );
+		if ( is_wp_error( $challenge ) ) {
+			return $this->error( $challenge );
 		}
 
 		$handler = new RegisterHandler( $this->otp() );
@@ -315,6 +332,12 @@ class RestController {
 	}
 
 	public function handle_forgot( WP_REST_Request $request ) {
+		$challenge = \SmartLogin\Security\Captcha::check( $request->get_params() );
+
+		if ( is_wp_error( $challenge ) ) {
+			return $this->error( $challenge );
+		}
+
 		$handler = new PasswordResetHandler( $this->otp() );
 		$result  = $handler->start( $request->get_params() );
 
@@ -391,7 +414,20 @@ class RestController {
 	}
 
 	public function handle_contact_resend( WP_REST_Request $request ) {
-		$token        = (string) $request->get_param( 'token' );
+		$token = (string) $request->get_param( 'token' );
+		$type  = sanitize_key( (string) $request->get_param( 'type' ) );
+
+		// A reload loses the token, which only ever existed in the browser. The
+		// pending row on the server did not, so the client may ask by type
+		// instead and let the service find what is in flight.
+		if ( '' === $token && '' !== $type ) {
+			$result = ( new ContactVerificationService( $this->otp() ) )->resend( get_current_user_id(), $type );
+
+			return is_wp_error( $result )
+				? $this->error( $result )
+				: $this->success( $this->public_otp_payload( $result, OtpService::INTENT_ADD_IDENTITY ) );
+		}
+
 		$row          = $this->otp()->peek( $token );
 		$valid_intent = $row && in_array( (string) $row['intent'], array( OtpService::INTENT_ADD_IDENTITY ), true );
 		if ( ! $valid_intent || (int) ( $row['payload']['user_id'] ?? 0 ) !== get_current_user_id() ) {

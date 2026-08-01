@@ -197,6 +197,80 @@ sl_require_companion(
 	'Removing the last identity would lock the owner out with no recovery path, because user_login is opaque.'
 );
 
+// Account surface duplication rules live in their own suite —
+// identity/run-account-surface-tests.php — registered `spec` until 8.2 extracts
+// the partials that make them green.
+
+// ---------------------------------------------------------------------
+sl_section( 'The account form does not throw away what was typed (Phase 8.1)' );
+
+// These are green and required, not spec: 8.1 is a bug fix, and the point of
+// pinning it here is that the next person cannot reintroduce the reload without
+// the build saying so. Structural assertions, not behavioural ones — the browser
+// checks are listed in docs/account-surface/8.1-stop-data-loss.md and have to be
+// run against a live install.
+$sl_js = sl_source( 'assets/js/smart-login.js' );
+
+sl_assert(
+	'verifying a contact does not reload the page',
+	false === strpos( $sl_js, 'window.location.reload()' ),
+	'A reload discards every unsaved field on the account form, and leaves the form posting the previous address while the account already holds the new one.'
+);
+
+sl_assert(
+	'the contact inputs intercept Enter',
+	(bool) preg_match( "/valueInput\.addEventListener\(\s*'keydown'/", $sl_js ),
+	'Enter in an unnamed input triggers implicit form submission: the typed value is discarded and the rest of the form saves as a side effect.'
+);
+
+sl_assert(
+	'unsaved edits are guarded before navigation',
+	false !== strpos( $sl_js, "'beforeunload'" ),
+	'The provider link buttons are plain <a> elements sitting in the middle of a long form.'
+);
+
+sl_assert(
+	'resend works without a token the page no longer has',
+	(bool) preg_match( '/token \? \{ token: token \} : \{ type: type \}/', $sl_js ),
+	'The token lives only in the browser, so a reload strands the pending flow with no way to ask for a new code.'
+);
+
+$sl_contact_service = sl_source( 'includes/Auth/class-contact-verification-service.php' );
+
+sl_assert(
+	'the pending row carries the token the client lost',
+	(bool) preg_match( "/'token'\s*=>/", $sl_contact_service ),
+	'resend-by-type needs the server to hold the token, and pending() must keep not returning it — a token a template can print is a token that ends up in a page.'
+);
+
+// ---------------------------------------------------------------------
+sl_section( 'Removed features stay removed' );
+
+// "The old thing is gone" is half a rule; the other half is "nothing points at
+// the old thing". Both features were deleted on request, and each had reached
+// into settings, REST, JS, the generated dataset and the uninstall routine —
+// exactly the spread that leaves a stub behind somewhere.
+
+sl_forbid_pattern(
+	'the referral code is gone from shipped code',
+	'/referral/i',
+	array( 'uninstall.php' ),
+	'Removed as unnecessary. uninstall.php keeps the meta key so installs that already wrote one are still cleaned up.'
+);
+
+sl_forbid_pattern(
+	'the address quick-search is gone from shipped code',
+	'/quick_search|data-sl-quick|search-index|index_key/',
+	array(),
+	'Removed as unnecessary, along with its REST route, its 312 KB generated index and the build step that produced it.'
+);
+
+sl_assert(
+	'the generated search index is no longer shipped',
+	! is_readable( dirname( __DIR__, 2 ) . '/data/search-index.php' ),
+	'data/search-index.php is dead weight once nothing searches it.'
+);
+
 // ---------------------------------------------------------------------
 sl_section( 'Every referenced SmartLogin class exists on disk' );
 

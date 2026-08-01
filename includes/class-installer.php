@@ -135,9 +135,7 @@ class Installer {
 			'field_email_optional'         => 'profile.email_optional',
 			'field_dob'                    => 'profile.dob',
 			'field_gender'                 => 'profile.gender',
-			'field_referral'               => 'profile.referral',
 			'address_enabled'              => 'address.enabled',
-			'address_quick_search'         => 'address.quick_search',
 			'address_required_in_profile'  => 'address.required_in_profile',
 			'address_hide_postcode'        => 'address.hide_postcode',
 			'woo_replace_login_form'       => 'woo.replace_login_form',
@@ -212,8 +210,14 @@ class Installer {
 			UNIQUE KEY token (token),
 			KEY dest_intent (destination(100), intent, consumed_at),
 			KEY expires_at (expires_at),
-			KEY ip_created (ip, created_at)
+			KEY ip_created (ip, created_at),
+			KEY created_at (created_at)
 		) {$charset};";
+
+		// `created_at` is not redundant against `ip_created`. MySQL can only use
+		// a composite index from its leftmost column, so a site-wide count —
+		// WHERE created_at > ? with no IP predicate — cannot use (ip, created_at)
+		// and would table-scan. RateLimiter runs that count on every send.
 
 		$sql_audit = "CREATE TABLE {$audit} (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -361,8 +365,15 @@ class Installer {
 	public static function cleanup(): void {
 		global $wpdb;
 
-		$otp_days   = max( 1, Settings::get_int( 'otp_retention_days', 7 ) );
-		$audit_days = max( 1, Settings::get_int( 'audit_retention_days', 90 ) );
+		// Dot paths. These read `otp_retention_days` and `audit_retention_days`
+		// until 9.9 — flat keys the settings rewrite had renamed two hundred lines
+		// above, in the migration map at self::migrate_flat_settings(). Settings
+		// resolves by dot path, so both reads missed, both fell back to the
+		// literal, and the retention an operator configured had never once taken
+		// effect. Rule 8 in tests/security/run-abuse-tests.php now fails the build
+		// on any settings key the registry does not declare.
+		$otp_days   = max( 1, Settings::get_int( 'advanced.otp_retention_days', 7 ) );
+		$audit_days = max( 1, Settings::get_int( 'advanced.audit_retention_days', 90 ) );
 
 		$otp_table   = self::otp_table();
 		$audit_table = self::audit_table();

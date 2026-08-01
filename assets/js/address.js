@@ -366,12 +366,24 @@
 	 * @param {Combo|null}        wardCombo
 	 */
 	function link( provinceSelect, wardSelect, wardCombo ) {
+		// The server renders this when it hands over an empty ward list, so the
+		// grey select explains itself before any script runs. Once the list
+		// arrives the explanation is wrong, so it goes with it.
+		var wardHint = ( wardSelect.closest( '.sl-field' ) || document ).querySelector( '[data-sl-ward-hint]' );
+
+		function showHint( waiting ) {
+			if ( wardHint ) {
+				wardHint.hidden = ! waiting;
+			}
+		}
+
 		function load( preserve ) {
 			var code = provinceSelect.value;
 
 			if ( ! code ) {
 				fillWardSelect( wardSelect, [], '' );
 				wardSelect.disabled = true;
+				showHint( true );
 				if ( wardCombo ) {
 					wardCombo.setDisabled( true );
 					wardCombo.syncFromSelect();
@@ -386,6 +398,7 @@
 			return fetchWards( code ).then( function ( wards ) {
 				fillWardSelect( wardSelect, wards, preserve );
 				wardSelect.disabled = wards.length === 0;
+				showHint( wards.length === 0 );
 
 				if ( wardCombo ) {
 					wardCombo.setDisabled( wards.length === 0 );
@@ -405,152 +418,6 @@
 		return load;
 	}
 
-	// -----------------------------------------------------------------
-	// Nationwide quick search
-	// -----------------------------------------------------------------
-
-	function initQuickSearch( root, provinceSelect, wardSelect, provinceCombo, wardCombo ) {
-		var box = root.querySelector( '[data-sl-quick]' );
-
-		if ( ! box || ! provinceSelect || ! wardSelect ) {
-			return;
-		}
-
-		var input = box.querySelector( '.sl-combo__input' );
-		var list = box.querySelector( '.sl-combo__list' );
-		var results = [];
-		var active = -1;
-
-		function close() {
-			list.hidden = true;
-			input.setAttribute( 'aria-expanded', 'false' );
-			active = -1;
-		}
-
-		function render( items ) {
-			results = items;
-			active = -1;
-			list.innerHTML = '';
-
-			if ( ! items.length ) {
-				var empty = document.createElement( 'li' );
-				empty.className = 'sl-combo__empty';
-				empty.textContent = i18n.noResults || 'Không tìm thấy';
-				list.appendChild( empty );
-			} else {
-				items.forEach( function ( item, index ) {
-					var li = document.createElement( 'li' );
-					li.className = 'sl-combo__option';
-					li.setAttribute( 'role', 'option' );
-					li.setAttribute( 'data-index', index );
-					li.innerHTML = '';
-
-					var strong = document.createElement( 'span' );
-					strong.className = 'sl-combo__primary';
-					strong.textContent = item.ward_name;
-
-					var muted = document.createElement( 'span' );
-					muted.className = 'sl-combo__secondary';
-					muted.textContent = ' — ' + item.province_name;
-
-					li.appendChild( strong );
-					li.appendChild( muted );
-					list.appendChild( li );
-				} );
-			}
-
-			list.hidden = false;
-			input.setAttribute( 'aria-expanded', 'true' );
-		}
-
-		function apply( item ) {
-			if ( ! item ) {
-				return;
-			}
-
-			provinceSelect.value = item.province_code;
-
-			if ( provinceCombo ) {
-				provinceCombo.syncFromSelect();
-			}
-
-			fetchWards( item.province_code ).then( function ( wards ) {
-				fillWardSelect( wardSelect, wards, item.ward_code );
-				wardSelect.disabled = false;
-
-				if ( wardCombo ) {
-					wardCombo.setDisabled( false );
-					wardCombo.syncFromSelect();
-				}
-
-				wardSelect.dispatchEvent( new Event( 'change', { bubbles: true } ) );
-			} );
-
-			input.value = '';
-			close();
-		}
-
-		var search = debounce( function ( query ) {
-			if ( slug( query ).length < 2 ) {
-				close();
-				return;
-			}
-
-			window
-				.fetch( cfg.restUrl + 'address/search?q=' + encodeURIComponent( query ), {
-					credentials: 'same-origin'
-				} )
-				.then( function ( response ) {
-					return response.json();
-				} )
-				.then( function ( items ) {
-					render( Array.isArray( items ) ? items : [] );
-				} )
-				.catch( close );
-		}, 250 );
-
-		input.addEventListener( 'input', function () {
-			search( input.value );
-		} );
-
-		input.addEventListener( 'keydown', function ( event ) {
-			if ( event.key === 'ArrowDown' || event.key === 'ArrowUp' ) {
-				if ( ! results.length ) {
-					return;
-				}
-
-				event.preventDefault();
-				active = ( active + ( event.key === 'ArrowDown' ? 1 : -1 ) + results.length ) % results.length;
-
-				var nodes = list.querySelectorAll( '.sl-combo__option' );
-				for ( var i = 0; i < nodes.length; i++ ) {
-					nodes[ i ].classList.toggle( 'is-active', i === active );
-				}
-			} else if ( event.key === 'Enter' ) {
-				if ( active >= 0 ) {
-					event.preventDefault();
-					apply( results[ active ] );
-				}
-			} else if ( event.key === 'Escape' ) {
-				close();
-			}
-		} );
-
-		list.addEventListener( 'mousedown', function ( event ) {
-			var li = event.target.closest( 'li[data-index]' );
-
-			if ( ! li ) {
-				return;
-			}
-
-			event.preventDefault();
-			apply( results[ parseInt( li.getAttribute( 'data-index' ), 10 ) ] );
-		} );
-
-		input.addEventListener( 'blur', function () {
-			window.setTimeout( close, 150 );
-		} );
-	}
 
 	// -----------------------------------------------------------------
 	// Entry points
@@ -575,8 +442,6 @@
 		var wardCombo = new Combo( wardSelect, { placeholder: i18n.chooseWard || '' } );
 
 		link( provinceSelect, wardSelect, wardCombo );
-
-		initQuickSearch( root, provinceSelect, wardSelect, provinceCombo, wardCombo );
 	}
 
 	/**
@@ -616,11 +481,6 @@
 				load( wardSelect.getAttribute( 'data-selected' ) || '' );
 			}
 
-			var quickRoot = document.querySelector( '[data-sl-quick]' );
-
-			if ( quickRoot && quickRoot.closest( 'form' ) === wardSelect.closest( 'form' ) ) {
-				initQuickSearch( document, provinceSelect, wardSelect, null, wardCombo );
-			}
 		} );
 	}
 

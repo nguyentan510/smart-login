@@ -37,9 +37,9 @@ if ( ! class_exists( 'WP_User' ) ) {
 	}
 }
 
-function esc_attr( $text ) {
-	return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' );
-}
+// esc_attr() moved to stubs.php in 9.8: Captcha::field_html() builds markup
+// outside the template layer, and run-tests.php does not load this file. This
+// one is always loaded after stubs.php, so a second declaration would fatal.
 
 function esc_url( $url ) {
 	return htmlspecialchars( (string) $url, ENT_QUOTES, 'UTF-8' );
@@ -137,6 +137,14 @@ function get_userdata( $user_id ) {
 	return $user_id > 0 ? new WP_User( (int) $user_id ) : false;
 }
 
+/**
+ * Frontend\AccountForm resolves the account it renders, so the smoke test needs
+ * this as well as get_userdata(). Only the 'id' field is used.
+ */
+function get_user_by( $field, $value ) {
+	return 'id' === $field && (int) $value > 0 ? new WP_User( (int) $value ) : false;
+}
+
 function get_permalink( $post = null ) {
 	return 'https://example.test/my-account/';
 }
@@ -159,6 +167,28 @@ function do_shortcode( $content ) {
 
 function number_format_i18n( $number, $decimals = 0 ) {
 	return number_format( (float) $number, (int) $decimals );
+}
+
+/**
+ * Reached now that the status fixture carries non-empty missing-field lists —
+ * the old fixture had both empty, so the branch that plucks labels was never
+ * executed by any test.
+ */
+function wp_list_pluck( $list, $field, $index_key = null ) {
+	$out = array();
+
+	foreach ( (array) $list as $key => $item ) {
+		$value = is_array( $item ) ? ( $item[ $field ] ?? null ) : ( is_object( $item ) ? ( $item->$field ?? null ) : null );
+
+		if ( null !== $index_key && is_array( $item ) && isset( $item[ $index_key ] ) ) {
+			$out[ $item[ $index_key ] ] = $value;
+			continue;
+		}
+
+		$out[ $key ] = $value;
+	}
+
+	return $out;
 }
 
 function absint( $value ) {

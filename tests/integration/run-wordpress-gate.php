@@ -18,7 +18,17 @@ $db_user  = (string) getenv( 'SMART_LOGIN_DB_USER' );
 $db_pass  = (string) getenv( 'SMART_LOGIN_DB_PASSWORD' );
 $prefix   = (string) getenv( 'SMART_LOGIN_DB_PREFIX' );
 $plugin_root = rtrim( (string) getenv( 'SMART_LOGIN_PLUGIN_ROOT' ), "\\/" );
-$plugin      = $plugin_root . DIRECTORY_SEPARATOR . 'smart-login.php';
+/*
+ * `$sl_plugin`, not `$plugin`.
+ *
+ * wp-settings.php uses $plugin as the loop variable for active plugins and
+ * unset()s it afterwards, and this file requires it into the same scope. So the
+ * guard below — which is only reachable when the plugin was NOT already loaded,
+ * i.e. exactly when it matters — read a variable WordPress had just destroyed,
+ * and reported `TypeError: is_file(): Argument #1 must be of type string, null
+ * given` instead of the clean blocker it was written to give.
+ */
+$sl_plugin = $plugin_root . DIRECTORY_SEPARATOR . 'smart-login.php';
 
 $blocked = static function ( string $message ): never {
 	echo "SMART_LOGIN_AUTH_INTEGRATION_BLOCKED\n";
@@ -35,7 +45,7 @@ $failed = static function ( string $message ): never {
 if ( '' === $wp_root || ! is_file( $wp_root . DIRECTORY_SEPARATOR . 'wp-settings.php' ) ) {
 	$blocked( 'SMART_LOGIN_WP_ROOT must point to a WordPress public root' );
 }
-if ( '' === $plugin_root || ! is_file( $plugin ) ) {
+if ( '' === $plugin_root || ! is_file( $sl_plugin ) ) {
 	$blocked( 'SMART_LOGIN_PLUGIN_ROOT must point to the current plugin source' );
 }
 
@@ -73,10 +83,10 @@ try {
 }
 
 if ( ! class_exists( 'SmartLogin\\Installer' ) ) {
-	if ( ! is_file( $plugin ) ) {
+	if ( ! is_file( $sl_plugin ) ) {
 		$blocked( 'Smart Login plugin is not present in the WordPress installation' );
 	}
-	require_once $plugin;
+	require_once $sl_plugin;
 }
 
 global $wpdb;

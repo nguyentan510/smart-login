@@ -29,8 +29,26 @@ function get_option( $name, $default = false ) {
 	return $GLOBALS['sl_options'][ $name ] ?? $default;
 }
 
-function update_option( $name, $value ) {
+function update_option( $name, $value, $autoload = null ) {
 	$GLOBALS['sl_options'][ $name ] = $value;
+	return true;
+}
+
+function delete_option( $name ) {
+	unset( $GLOBALS['sl_options'][ $name ] );
+	return true;
+}
+
+/** Every mail the plugin tried to send, so a test can count them. */
+$GLOBALS['sl_mails'] = array();
+
+function wp_mail( $to, $subject, $message, $headers = '', $attachments = array() ) {
+	$GLOBALS['sl_mails'][] = array(
+		'to'      => $to,
+		'subject' => $subject,
+		'message' => $message,
+	);
+
 	return true;
 }
 
@@ -56,7 +74,55 @@ function delete_transient( $name ) {
 	return true;
 }
 
-function apply_filters( $hook, $value ) {
+/**
+ * Registered filters, hook => list of callbacks.
+ *
+ * Before this existed, apply_filters() returned its input untouched, so a test
+ * could not exercise any branch a filter controls — Client::ip() reading proxy
+ * headers being the one that forced the change. An empty registry behaves
+ * exactly as the old stub did, which is what keeps the four suites that load
+ * this file unaffected.
+ */
+$GLOBALS['sl_filters'] = array();
+
+function add_filter( $hook, $callback, $priority = 10, $accepted_args = 1 ) {
+	$GLOBALS['sl_filters'][ $hook ][] = array(
+		'cb'   => $callback,
+		'args' => max( 1, (int) $accepted_args ),
+	);
+
+	return true;
+}
+
+function remove_all_filters( $hook = '' ) {
+	if ( '' === $hook ) {
+		$GLOBALS['sl_filters'] = array();
+		return true;
+	}
+
+	unset( $GLOBALS['sl_filters'][ $hook ] );
+
+	return true;
+}
+
+function __return_true() {
+	return true;
+}
+
+function __return_false() {
+	return false;
+}
+
+function has_filter( $hook, $callback = false ) {
+	return ! empty( $GLOBALS['sl_filters'][ $hook ] );
+}
+
+function apply_filters( $hook, $value, ...$args ) {
+	foreach ( $GLOBALS['sl_filters'][ $hook ] ?? array() as $filter ) {
+		$params = array_slice( array_merge( array( $value ), $args ), 0, $filter['args'] );
+		$value  = call_user_func_array( $filter['cb'], $params );
+	}
+
 	return $value;
 }
 
@@ -88,6 +154,10 @@ function __( $text, $domain = null ) {
 
 function _n( $single, $plural, $number, $domain = null ) {
 	return 1 === (int) $number ? $single : $plural;
+}
+
+function esc_attr( $text ) {
+	return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' );
 }
 
 function esc_html( $text ) {
@@ -197,6 +267,18 @@ function wp_remote_request( $url, $args ) {
 		'response' => array( 'code' => 500 ),
 		'body'     => 'gateway failure',
 	);
+}
+
+/**
+ * Delegates, so anything asserting on $GLOBALS['sl_http_requests'] sees POSTs too.
+ *
+ * The default response is a 500, which is what makes the captcha guard rail
+ * meaningful: verify_token() has to read that as "no" rather than as "carry on".
+ */
+function wp_remote_post( $url, $args = array() ) {
+	$args['method'] = 'POST';
+
+	return wp_remote_request( $url, $args );
 }
 
 function wp_remote_retrieve_response_code( $response ) {

@@ -56,9 +56,9 @@ function add_action( $hook, $callback, $priority = 10, $accepted = 1 ) {
 	return true;
 }
 
-function add_filter( $hook, $callback, $priority = 10, $accepted = 1 ) {
-	return true;
-}
+// add_filter() is no longer declared here: stubs.php now carries a real
+// registry, and this file is only ever loaded after it. A second no-op
+// declaration would be a redeclaration fatal, and the no-op would win nothing.
 
 function add_menu_page( ...$args ) {
 	return 'toplevel_page_smart-login';

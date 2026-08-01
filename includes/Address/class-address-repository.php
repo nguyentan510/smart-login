@@ -20,9 +20,6 @@ class AddressRepository {
 	/** @var array<string,array<string,array>> Ward lists keyed by province code. */
 	private static $wards = array();
 
-	/** @var array|null Flat search index, only loaded when a search runs. */
-	private static $index = null;
-
 	private static function data_dir(): string {
 		return SMART_LOGIN_DIR . 'data/';
 	}
@@ -121,75 +118,6 @@ class AddressRepository {
 		return null !== self::find_ward( $ward_code, $province_code );
 	}
 
-	/**
-	 * Nationwide ward search for the quick-search box.
-	 *
-	 * @param string $query Raw user input.
-	 * @param int    $limit Maximum results.
-	 * @return array<int,array{ward_code:string,ward_name:string,province_code:string,province_name:string}>
-	 */
-	public static function search( string $query, int $limit = 20 ): array {
-		$needle = AddressNormalizer::slug( $query );
-
-		// One character would match most of the country; not worth the scan.
-		if ( mb_strlen( $needle ) < 2 ) {
-			return array();
-		}
-
-		if ( null === self::$index ) {
-			self::$index = self::load( 'search-index.php' );
-		}
-
-		$exact  = array();
-		$prefix = array();
-		$loose  = array();
-
-		foreach ( self::$index as $row ) {
-			$key = $row['k'] ?? '';
-			$pos = strpos( $key, $needle );
-
-			if ( false === $pos ) {
-				continue;
-			}
-
-			// Rank: whole key match, then start-of-a-segment match, then anywhere.
-			if ( $key === $needle ) {
-				$exact[] = $row;
-			} elseif ( 0 === $pos || '|' === $key[ $pos - 1 ] ) {
-				$prefix[] = $row;
-			} else {
-				$loose[] = $row;
-			}
-
-			if ( count( $exact ) + count( $prefix ) >= $limit * 3 ) {
-				break;
-			}
-		}
-
-		$ranked = array_slice( array_merge( $exact, $prefix, $loose ), 0, $limit );
-
-		$results = array();
-
-		foreach ( $ranked as $row ) {
-			$province_code = (string) ( $row['p'] ?? '' );
-			$ward_code     = (string) ( $row['w'] ?? '' );
-			$ward          = self::find_ward( $ward_code, $province_code );
-			$province      = self::find_province( $province_code );
-
-			if ( ! $ward || ! $province ) {
-				continue;
-			}
-
-			$results[] = array(
-				'ward_code'     => $ward_code,
-				'ward_name'     => $ward['name'],
-				'province_code' => $province_code,
-				'province_name' => $province['short'] ?: $province['name'],
-			);
-		}
-
-		return $results;
-	}
 
 	/**
 	 * Is a usable dataset installed?
@@ -246,6 +174,5 @@ class AddressRepository {
 	public static function flush(): void {
 		self::$provinces = null;
 		self::$wards     = array();
-		self::$index     = null;
 	}
 }

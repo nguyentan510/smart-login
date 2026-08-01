@@ -26,6 +26,7 @@ defined( 'ABSPATH' ) || exit;
 
 	<form method="post" class="sl-form" novalidate>
 		<?php RequestGuard::fields( 'forgot' ); ?>
+		<?php echo \SmartLogin\Security\Captcha::field_html(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts. ?>
 		<input type="hidden" name="smart_login_action" value="forgot" />
 
 		<div class="sl-field">

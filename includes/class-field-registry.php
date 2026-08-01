@@ -35,6 +35,7 @@ final class FieldRegistry {
 			'providers' => __( 'Đăng nhập nhanh', 'smart-login' ),
 			'delivery'  => __( 'Gửi mã', 'smart-login' ),
 			'profile'   => __( 'Hồ sơ & Địa chỉ', 'smart-login' ),
+			'security'  => __( 'Chống lạm dụng', 'smart-login' ),
 			'advanced'  => __( 'Nâng cao', 'smart-login' ),
 		);
 	}
@@ -53,6 +54,10 @@ final class FieldRegistry {
 			'fields'   => __( 'Trường hồ sơ', 'smart-login' ),
 			'address'  => __( 'Địa chỉ 2 cấp', 'smart-login' ),
 			'woo'      => __( 'WooCommerce', 'smart-login' ),
+			'budget'   => __( 'Trần gửi toàn site', 'smart-login' ),
+			'breaker'  => __( 'Ngắt mạch kênh gửi', 'smart-login' ),
+			'captcha'  => __( 'Xác minh chống robot', 'smart-login' ),
+			'network'  => __( 'Proxy và địa chỉ IP', 'smart-login' ),
 			'audit'    => __( 'Nhật ký & dọn dẹp', 'smart-login' ),
 			'dev'      => __( 'Phát triển', 'smart-login' ),
 		);
@@ -80,6 +85,7 @@ final class FieldRegistry {
 			self::provider_fields(),
 			self::delivery_fields(),
 			self::profile_fields(),
+			self::security_fields(),
 			self::advanced_fields(),
 			self::programmatic_fields()
 		);
@@ -108,7 +114,7 @@ final class FieldRegistry {
 
 	private static function auth_fields(): array {
 		return array(
-			'identity.mode'              => array(
+			'identity.mode'                  => array(
 				'type'    => 'select',
 				'default' => 'phone_only',
 				'tab'     => 'auth',
@@ -121,7 +127,7 @@ final class FieldRegistry {
 				),
 				'help'    => __( 'Quyết định trường định danh trên màn hình đăng nhập/đăng ký.', 'smart-login' ),
 			),
-			'identity.country_code'      => array(
+			'identity.country_code'          => array(
 				'type'     => 'select',
 				'default'  => '84',
 				'tab'      => 'auth',
@@ -144,7 +150,15 @@ final class FieldRegistry {
 				'sanitize' => 'country_code',
 				'help'     => __( 'Số nhập dạng <code>0969789475</code> sẽ được chuẩn hoá thành <code>84969789475</code>.', 'smart-login' ),
 			),
-			'identity.synthetic_domain'  => array(
+			'identity.allowed_country_codes' => array(
+				'type'    => 'text',
+				'default' => '',
+				'tab'     => 'auth',
+				'section' => 'identity',
+				'label'   => __( 'Mã quốc gia được phép', 'smart-login' ),
+				'help'    => __( 'Danh sách cách nhau bằng dấu phẩy, ví dụ <code>84,65,1</code>. <strong>Để trống nghĩa là chỉ chấp nhận mã quốc gia mặc định ở trên</strong> — không phải chấp nhận mọi quốc gia. Mở rộng danh sách này làm tăng rủi ro bị đốt tin nhắn qua các đầu số quốc tế.', 'smart-login' ),
+			),
+			'identity.synthetic_domain'      => array(
 				'type'     => 'text',
 				'default'  => 'phone.invalid',
 				'tab'      => 'auth',
@@ -153,7 +167,7 @@ final class FieldRegistry {
 				'sanitize' => 'domain',
 				'help'     => __( 'Dùng cho tài khoản chỉ có số điện thoại. Nên giữ đuôi <code>.invalid</code> — theo RFC 2606 domain này không bao giờ phân giải được, nên không thể phát sinh email bounce.', 'smart-login' ),
 			),
-			'signup.min_password_length' => array(
+			'signup.min_password_length'     => array(
 				'type'    => 'number',
 				'default' => 8,
 				'min'     => 6,
@@ -162,7 +176,7 @@ final class FieldRegistry {
 				'section' => 'signup',
 				'label'   => __( 'Độ dài mật khẩu tối thiểu', 'smart-login' ),
 			),
-			'signup.terms_url'           => array(
+			'signup.terms_url'               => array(
 				'type'    => 'page',
 				'default' => '',
 				'tab'     => 'auth',
@@ -170,7 +184,7 @@ final class FieldRegistry {
 				'label'   => __( 'Link điều kiện áp dụng', 'smart-login' ),
 				'help'    => __( 'Để trống nếu không có trang điều khoản riêng.', 'smart-login' ),
 			),
-			'signup.redirect_register'   => array(
+			'signup.redirect_register'       => array(
 				'type'    => 'page',
 				'default' => '',
 				'tab'     => 'auth',
@@ -178,7 +192,7 @@ final class FieldRegistry {
 				'label'   => __( 'Sau khi đăng ký', 'smart-login' ),
 				'help'    => __( 'Để trống để dùng trang Tài khoản của WooCommerce.', 'smart-login' ),
 			),
-			'signup.redirect_login'      => array(
+			'signup.redirect_login'          => array(
 				'type'    => 'page',
 				'default' => '',
 				'tab'     => 'auth',
@@ -186,7 +200,7 @@ final class FieldRegistry {
 				'label'   => __( 'Sau khi đăng nhập', 'smart-login' ),
 				'help'    => __( 'Để trống để dùng trang Tài khoản của WooCommerce.', 'smart-login' ),
 			),
-			'login.max_attempts'         => array(
+			'login.max_attempts'             => array(
 				'type'    => 'number',
 				'default' => 5,
 				'min'     => 0,
@@ -195,7 +209,7 @@ final class FieldRegistry {
 				'section' => 'login',
 				'label'   => __( 'Số lần sai trước khi khoá', 'smart-login' ),
 			),
-			'login.lockout_minutes'      => array(
+			'login.lockout_minutes'          => array(
 				'type'    => 'number',
 				'default' => 15,
 				'min'     => 1,
@@ -204,7 +218,7 @@ final class FieldRegistry {
 				'section' => 'login',
 				'label'   => __( 'Thời gian khoá (phút)', 'smart-login' ),
 			),
-			'login.otp_new_device'       => array(
+			'login.otp_new_device'           => array(
 				'type'    => 'checkbox',
 				'default' => 0,
 				'tab'     => 'auth',
@@ -405,12 +419,13 @@ final class FieldRegistry {
 			),
 			'sms.timeout'                  => array(
 				'type'    => 'number',
-				'default' => 10,
-				'min'     => 3,
-				'max'     => 30,
+				'default' => 5,
+				'min'     => 2,
+				'max'     => 15,
 				'tab'     => 'delivery',
 				'section' => 'sms',
 				'label'   => __( 'Timeout (giây)', 'smart-login' ),
+				'help'    => __( 'Mỗi lần gửi giữ một tiến trình PHP trong đúng khoảng này. Đặt cao là cách nhanh nhất để một gateway chậm làm sập cả website, nên trần cứng là 15 giây kể cả khi giá trị cũ lớn hơn.', 'smart-login' ),
 			),
 			'sms.success_path'             => array(
 				'type'    => 'text',
@@ -524,15 +539,6 @@ final class FieldRegistry {
 				'label'   => __( 'Giới tính', 'smart-login' ),
 				'help'    => __( 'Hiển thị ở màn hình chào mừng và trong hồ sơ; không hiển thị khi đăng ký.', 'smart-login' ),
 			),
-			'profile.referral'            => array(
-				'type'    => 'checkbox',
-				'default' => 1,
-				'tab'     => 'profile',
-				'section' => 'fields',
-				'label'   => __( 'Mã giới thiệu', 'smart-login' ),
-				'help'    => __( 'Hiển thị trong hồ sơ; không hiển thị khi đăng ký.', 'smart-login' ),
-			),
-
 			'address.enabled'             => array(
 				'type'    => 'checkbox',
 				'default' => 1,
@@ -540,14 +546,6 @@ final class FieldRegistry {
 				'section' => 'address',
 				'label'   => __( 'Kích hoạt', 'smart-login' ),
 				'help'    => __( 'Bật bộ chọn Tỉnh/Thành phố → Phường/Xã', 'smart-login' ),
-			),
-			'address.quick_search'        => array(
-				'type'    => 'checkbox',
-				'default' => 1,
-				'tab'     => 'profile',
-				'section' => 'address',
-				'label'   => __( 'Ô tìm nhanh', 'smart-login' ),
-				'help'    => __( 'Cho phép gõ thẳng tên phường/xã để tự điền cả hai ô', 'smart-login' ),
 			),
 			'address.required_in_profile' => array(
 				'type'    => 'checkbox',
@@ -597,6 +595,168 @@ final class FieldRegistry {
 				'section' => 'woo',
 				'label'   => __( 'Chặn email ảo', 'smart-login' ),
 				'help'    => __( 'Không gửi bất kỳ email nào tới địa chỉ ảo (khuyến nghị bật)', 'smart-login' ),
+			),
+		);
+	}
+
+	/**
+	 * Ceilings that are not scoped to one destination or one IP.
+	 *
+	 * Everything under `otp.max_per_*` counts a single attacker. These count the
+	 * site, which is the only axis a botnet cannot rotate around. Defaults are
+	 * deliberately generous: a ceiling low enough to break a launch gets switched
+	 * off and never switched back on, which is worse than a high one.
+	 */
+	private static function security_fields(): array {
+		return array(
+			'security.max_per_site_hour'              => array(
+				'type'    => 'number',
+				'default' => 100,
+				'min'     => 0,
+				'tab'     => 'security',
+				'section' => 'budget',
+				'label'   => __( 'Số mã tối đa / toàn site / giờ', 'smart-login' ),
+				'help'    => __( 'Chạm trần thì việc gửi mã bị tạm dừng và admin nhận email. Đặt 0 để bỏ giới hạn — <strong>không khuyến nghị nếu bạn trả tiền cho mỗi tin nhắn</strong>.', 'smart-login' ),
+			),
+			'security.max_per_site_day'               => array(
+				'type'    => 'number',
+				'default' => 500,
+				'min'     => 0,
+				'tab'     => 'security',
+				'section' => 'budget',
+				'label'   => __( 'Số mã tối đa / toàn site / ngày', 'smart-login' ),
+				'help'    => __( 'Đặt 0 để bỏ giới hạn.', 'smart-login' ),
+			),
+			'security.halt_minutes'                   => array(
+				'type'    => 'number',
+				'default' => 60,
+				'min'     => 5,
+				'max'     => 1440,
+				'tab'     => 'security',
+				'section' => 'budget',
+				'label'   => __( 'Tạm dừng trong (phút)', 'smart-login' ),
+				'help'    => __( 'Sau khoảng thời gian này việc gửi mã tự mở lại.', 'smart-login' ),
+			),
+			'security.max_identify_per_ip_hour'       => array(
+				'type'    => 'number',
+				'default' => 30,
+				'min'     => 0,
+				'tab'     => 'security',
+				'section' => 'budget',
+				'label'   => __( 'Số lần tra định danh / IP / giờ', 'smart-login' ),
+				'help'    => __( 'Màn hình đăng nhập tra xem một số điện thoại đã có tài khoản chưa. Không giới hạn thì danh sách khách hàng của bạn có thể bị dò sạch mà không tốn gì. Đặt 0 để bỏ giới hạn.', 'smart-login' ),
+			),
+			'security.max_login_failures_per_ip_hour' => array(
+				'type'    => 'number',
+				'default' => 30,
+				'min'     => 0,
+				'tab'     => 'security',
+				'section' => 'budget',
+				'label'   => __( 'Số lần đăng nhập sai / IP / giờ', 'smart-login' ),
+				'help'    => __( 'Bắt kiểu tấn công rải mật khẩu: thử một mật khẩu phổ biến trên hàng nghìn tài khoản. Khoá theo tài khoản không thấy được kiểu này vì mỗi tài khoản chỉ sai một lần. Để rộng rãi — văn phòng, trường học và mạng di động dồn nhiều người thật vào một IP. Đặt 0 để bỏ giới hạn.', 'smart-login' ),
+			),
+			'security.ip_lockout_minutes'             => array(
+				'type'    => 'number',
+				'default' => 15,
+				'min'     => 1,
+				'max'     => 1440,
+				'tab'     => 'security',
+				'section' => 'budget',
+				'label'   => __( 'Khoá IP trong (phút)', 'smart-login' ),
+			),
+			'security.audit_max_per_event_hour'       => array(
+				'type'    => 'number',
+				'default' => 500,
+				'min'     => 0,
+				'tab'     => 'security',
+				'section' => 'budget',
+				'label'   => __( 'Số dòng nhật ký tối đa / loại sự kiện / giờ', 'smart-login' ),
+				'help'    => __( 'Vượt quá thì loại sự kiện đó chỉ ghi một dòng tổng hợp cho cả giờ. Không có trần này, một cuộc tấn công khiến chính nhật ký trở thành thứ khuếch đại nó. Các sự kiện quan trọng — khoá tài khoản, đăng ký, đặt lại mật khẩu, chạm trần, ngắt mạch, liên kết provider — không bao giờ bị bỏ. Đặt 0 để ghi tất cả.', 'smart-login' ),
+			),
+			'otp.sms_unit_cost'                       => array(
+				'type'    => 'number',
+				'default' => 0,
+				'min'     => 0,
+				'tab'     => 'security',
+				'section' => 'budget',
+				'label'   => __( 'Giá mỗi tin nhắn (VNĐ)', 'smart-login' ),
+				'help'    => __( 'Chỉ dùng để ước tính chi phí hiển thị trên màn hình Tổng quan. Đặt 0 để ẩn.', 'smart-login' ),
+			),
+			'security.captcha_provider'               => array(
+				'type'    => 'select',
+				'default' => 'off',
+				'tab'     => 'security',
+				'section' => 'captcha',
+				'label'   => __( 'Nhà cung cấp', 'smart-login' ),
+				'choices' => array(
+					'off'       => __( 'Tắt', 'smart-login' ),
+					'turnstile' => __( 'Cloudflare Turnstile', 'smart-login' ),
+					'hcaptcha'  => __( 'hCaptcha', 'smart-login' ),
+				),
+			),
+			'security.captcha_mode'                   => array(
+				'type'    => 'select',
+				'default' => 'adaptive',
+				'tab'     => 'security',
+				'section' => 'captcha',
+				'label'   => __( 'Khi nào hiện', 'smart-login' ),
+				'choices' => array(
+					'adaptive' => __( 'Chỉ khi site đang bị ép', 'smart-login' ),
+					'always'   => __( 'Luôn luôn', 'smart-login' ),
+				),
+				'help'    => __( 'Chế độ thích ứng chỉ hiện thử thách khi ngân sách đã tiêu quá nửa, kill switch vừa nổ, kênh gửi đang bị ngắt mạch, hoặc IP đó đã dùng quá nửa hạn mức tra cứu. Ngày thường khách không thấy gì — một captcha hiện lên vào thứ Ba yên ả là lỗi chuyển đổi, không phải biện pháp bảo mật.', 'smart-login' ),
+			),
+			'security.captcha_site_key'               => array(
+				'type'    => 'text',
+				'default' => '',
+				'tab'     => 'security',
+				'section' => 'captcha',
+				'label'   => __( 'Site key', 'smart-login' ),
+			),
+			'security.captcha_secret'                 => array(
+				'type'    => 'secret',
+				'default' => '',
+				'tab'     => 'security',
+				'section' => 'captcha',
+				'label'   => __( 'Secret key', 'smart-login' ),
+				'help'    => __( 'Được mã hoá trước khi lưu và không bao giờ hiển thị lại. Để trống khi lưu nghĩa là giữ nguyên giá trị cũ.', 'smart-login' ),
+			),
+			'security.trust_proxy'                    => array(
+				'type'    => 'checkbox',
+				'default' => 0,
+				'tab'     => 'security',
+				'section' => 'network',
+				'label'   => __( 'Site đứng sau proxy tin cậy', 'smart-login' ),
+				'help'    => __( 'Bật khi site thực sự nằm sau Cloudflare hoặc một load balancer của bạn. Nếu không điền dải IP bên dưới thì bật cái này <strong>không có tác dụng gì</strong> — và đó là chủ ý: tin header từ một máy chưa xác minh còn tệ hơn không tin gì cả.', 'smart-login' ),
+			),
+			'security.trusted_proxy_cidrs'            => array(
+				'type'    => 'textarea',
+				'default' => '',
+				'rows'    => 4,
+				'tab'     => 'security',
+				'section' => 'network',
+				'label'   => __( 'Dải IP của proxy', 'smart-login' ),
+				'help'    => __( 'Dạng CIDR, mỗi dòng một dải — ví dụ <code>173.245.48.0/20</code>. Cloudflare công bố danh sách tại <code>https://www.cloudflare.com/ips/</code>. Plugin <strong>không kèm sẵn</strong> danh sách này: một danh sách cứng sẽ lạc hậu âm thầm, và lúc đó nó thành lỗ hổng chứ không còn là biện pháp bảo vệ.', 'smart-login' ),
+			),
+			'security.breaker_threshold'              => array(
+				'type'    => 'number',
+				'default' => 5,
+				'min'     => 0,
+				'max'     => 50,
+				'tab'     => 'security',
+				'section' => 'breaker',
+				'label'   => __( 'Số lần lỗi liên tiếp trước khi ngắt', 'smart-login' ),
+				'help'    => __( 'Khi kênh gửi lỗi liên tiếp đủ số lần này, plugin ngừng gọi nó và trả lỗi ngay — không giữ tiến trình PHP để chờ một gateway đã chết. Đặt 0 để tắt.', 'smart-login' ),
+			),
+			'security.breaker_cooldown'               => array(
+				'type'    => 'number',
+				'default' => 300,
+				'min'     => 30,
+				'max'     => 3600,
+				'tab'     => 'security',
+				'section' => 'breaker',
+				'label'   => __( 'Ngắt trong (giây)', 'smart-login' ),
+				'help'    => __( 'Hết khoảng này, một lần gửi được cho đi thử. Thất bại thì ngắt lại ngay, không cần lỗi đủ số lần lần nữa.', 'smart-login' ),
 			),
 		);
 	}

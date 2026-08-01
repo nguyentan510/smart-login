@@ -77,6 +77,110 @@
 	}
 
 	// ---------------------------------------------------------------
+	// Unsaved-changes guard
+	//
+	// The account form is long, and three of the things on it navigate away:
+	// the provider link buttons are plain <a> elements, and the browser's own
+	// back button is always there. Losing a screen of typing to a misclick is
+	// the kind of defect people do not report, they just stop editing.
+	//
+	// Contact inputs are excluded on purpose. They carry no name, so submitting
+	// never saves them; their own flow persists over REST and clears them.
+	// ---------------------------------------------------------------
+
+	var dirtyForms = [];
+
+	function isTracked( field ) {
+		return ! field.hasAttribute( 'data-sl-contact-value' ) && ! field.hasAttribute( 'data-sl-contact-code' );
+	}
+
+	function initDirtyGuard( root ) {
+		root.querySelectorAll( 'form.sl-form' ).forEach( function ( form ) {
+			var state = { form: form, dirty: false };
+
+			form.addEventListener( 'input', function ( event ) {
+				if ( isTracked( event.target ) ) {
+					state.dirty = true;
+				}
+			} );
+
+			form.addEventListener( 'change', function ( event ) {
+				if ( isTracked( event.target ) ) {
+					state.dirty = true;
+				}
+			} );
+
+			// Submitting is how the edits stop being unsaved.
+			form.addEventListener( 'submit', function () {
+				state.dirty = false;
+			} );
+
+			dirtyForms.push( state );
+		} );
+	}
+
+	function anythingDirty() {
+		return dirtyForms.some( function ( state ) {
+			return state.dirty;
+		} );
+	}
+
+	// ---------------------------------------------------------------
+	// Save bar
+	//
+	// Reflects the same dirty state the unload guard uses, so the page never
+	// warns about unsaved changes it has not shown the visitor. Sections that
+	// persist through their own request are excluded by isTracked(), which is
+	// why the contact card carries a badge saying so instead.
+	// ---------------------------------------------------------------
+
+	function initSaveBar( root ) {
+		root.querySelectorAll( '[data-sl-savebar]' ).forEach( function ( bar ) {
+			var state = bar.querySelector( '[data-sl-savebar-state]' );
+			var form = bar.closest( 'form' );
+
+			if ( ! form ) {
+				return;
+			}
+
+			function paint() {
+				var dirty = dirtyForms.some( function ( entry ) {
+					return entry.form === form && entry.dirty;
+				} );
+
+				bar.classList.toggle( 'is-dirty', dirty );
+
+				if ( state ) {
+					state.textContent = dirty ? ( i18n.unsaved || '' ) : '';
+				}
+			}
+
+			form.addEventListener( 'input', paint );
+			form.addEventListener( 'change', paint );
+			form.addEventListener( 'submit', function () {
+				bar.classList.remove( 'is-dirty' );
+
+				if ( state ) {
+					state.textContent = '';
+				}
+			} );
+
+			paint();
+		} );
+	}
+
+	window.addEventListener( 'beforeunload', function ( event ) {
+		if ( ! anythingDirty() ) {
+			return;
+		}
+
+		// Browsers show their own wording and ignore ours; both lines are still
+		// required for the prompt to appear at all.
+		event.preventDefault();
+		event.returnValue = '';
+	} );
+
+	// ---------------------------------------------------------------
 	// OTP digit boxes
 	// ---------------------------------------------------------------
 
@@ -299,10 +403,50 @@
 			var confirm = panel.querySelector( '[data-sl-contact-confirm]' );
 			var masked = panel.querySelector( '[data-sl-contact-masked]' );
 			var status = panel.querySelector( '[data-sl-contact-status]' );
+			var targetSelector = panel.getAttribute( 'data-sl-contact-target' );
+			var target = targetSelector ? document.querySelector( targetSelector ) : null;
+			var pendingMask = panel.getAttribute( 'data-sl-contact-pending' );
+			var toggle = panel.querySelector( '[data-sl-contact-toggle]' );
+			var edit = panel.querySelector( '[data-sl-contact-edit]' );
+			var verifiedBadge = panel.querySelector( '[data-sl-contact-verified]' );
 			var token = '';
+
+			// One "Đổi" per row, opening the exchange next to the value it
+			// changes. The screen this replaces showed both OTP panels to
+			// everybody, all the time, including people with nothing to change.
+			function openEditor( open ) {
+				if ( ! edit || ! toggle ) {
+					return;
+				}
+
+				edit.hidden = ! open;
+				toggle.setAttribute( 'aria-expanded', open ? 'true' : 'false' );
+
+				if ( open && valueInput ) {
+					valueInput.focus();
+				}
+			}
+
+			if ( toggle && edit ) {
+				toggle.addEventListener( 'click', function () {
+					openEditor( edit.hidden );
+				} );
+			}
 
 			if ( ! valueInput || ! startButton || ! verifyButton || ! confirm || ! status ) {
 				return;
+			}
+
+			// A code was already in flight when this page loaded. Its token went
+			// with the previous page, so the panel reopens without one and the
+			// server resolves the flow by type instead.
+			if ( null !== pendingMask ) {
+				openEditor( true );
+				confirm.hidden = false;
+
+				if ( masked ) {
+					masked.textContent = ( i18n.contactSent || 'OTP sent to %s.' ).replace( '%s', pendingMask );
+				}
 			}
 
 			function message( text, kind ) {
@@ -312,6 +456,14 @@
 			}
 
 			function request( path, payload ) {
+				// The honeypot and the signed timestamp the HTML forms carry.
+				// Without them RequestGuard::verify_rest() has nothing to inspect,
+				// so the guard was inert on this path rather than merely weak.
+				var body = Object.assign( {}, payload || {} );
+
+				body.smart_login_ts = String( data.stamp || '' );
+				body.smart_login_website = '';
+
 				return window.fetch( String( data.restUrl || '' ) + path, {
 					method: 'POST',
 					credentials: 'same-origin',
@@ -319,7 +471,7 @@
 						'Content-Type': 'application/json',
 						'X-WP-Nonce': String( data.nonce || '' )
 					},
-					body: JSON.stringify( payload )
+					body: JSON.stringify( body )
 				} ).then( function ( response ) {
 					return response.json().catch( function () {
 						return {};
@@ -364,15 +516,66 @@
 					} );
 			} );
 
+			// Enter is the reflex in a single-field row. Without these handlers the
+			// browser submits the account form instead: these inputs carry no
+			// name, so the typed value is thrown away and everything else saves
+			// as a side effect of asking for a code.
+			valueInput.addEventListener( 'keydown', function ( event ) {
+				if ( 'Enter' === event.key ) {
+					event.preventDefault();
+					startButton.click();
+				}
+			} );
+
+			if ( codeInput ) {
+				codeInput.addEventListener( 'keydown', function ( event ) {
+					if ( 'Enter' === event.key ) {
+						event.preventDefault();
+						verifyButton.click();
+					}
+				} );
+			}
+
 			verifyButton.addEventListener( 'click', function () {
 				message( i18n.contactWait || 'Please wait…' );
 				busy( verifyButton, true );
 				request( 'contact/verify', { type: type, token: token, code: codeInput ? codeInput.value : '' } )
-					.then( function () {
+					.then( function ( result ) {
+						// The server's formatting, not the raw input: a phone is
+						// stored E.164 and displayed local.
+						var accepted = ( result && result.display ) ? result.display : valueInput.value;
+
 						message( i18n.contactDone || 'Contact verified.', 'success' );
-						window.setTimeout( function () {
-							window.location.reload();
-						}, 700 );
+
+						// This used to reload the page, which discarded every
+						// other edit in progress. Writing the accepted value back
+						// is not cosmetic either: the form posts the field it is
+						// showing, so leaving the previous address in place makes
+						// the next save fail block_unverified_email_change().
+						if ( target ) {
+							// The row shows text now, not an input value.
+							if ( 'value' in target && target.tagName !== 'SPAN' ) {
+								target.value = accepted;
+							} else {
+								target.textContent = accepted;
+							}
+						}
+
+						if ( verifiedBadge ) {
+							verifiedBadge.hidden = false;
+						}
+
+						token = '';
+						valueInput.value = '';
+
+						if ( codeInput ) {
+							codeInput.value = '';
+						}
+
+						confirm.hidden = true;
+						openEditor( false );
+						panel.removeAttribute( 'data-sl-contact-pending' );
+						busy( verifyButton, false );
 					} )
 					.catch( function ( error ) {
 						message( error.message, 'error' );
@@ -382,13 +585,13 @@
 
 			if ( resendButton ) {
 				resendButton.addEventListener( 'click', function () {
-					if ( ! token ) {
-						startButton.click();
-						return;
-					}
 					message( i18n.contactWait || 'Please wait…' );
 					busy( resendButton, true );
-					request( 'contact/resend', { token: token } )
+
+					// No token means this page did not start the flow — a reload,
+					// almost always. The pending row is still on the server, so
+					// ask by type and take the fresh token from the reply.
+					request( 'contact/resend', token ? { token: token } : { type: type } )
 						.then( function ( result ) {
 							token = String( result.token || token );
 							if ( masked ) {
@@ -413,11 +616,13 @@
 		document.querySelectorAll( '.smart-login' ).forEach( function ( root ) {
 			initPasswordToggles( root );
 			initSubmitGuard( root );
+			initDirtyGuard( root );
 			initOtpBoxes( root );
 			initCountdown( root );
 			initResend( root );
 			initDobMask( root );
 			initContactVerification( root );
+			initSaveBar( root );
 		} );
 	} );
 } )();

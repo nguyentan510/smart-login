@@ -55,6 +55,19 @@ class RequestGuard {
 	}
 
 	/**
+	 * A signed timestamp on its own, for clients that are not HTML forms.
+	 *
+	 * fields() prints hidden inputs; the JSON path needs the same value as a
+	 * string it can put in a request body. Same signature, same verifier — the
+	 * point is that there is one implementation rather than two that drift.
+	 */
+	public static function stamp( string $action ): string {
+		$ts = time();
+
+		return $ts . '.' . self::sign( $ts, $action );
+	}
+
+	/**
 	 * @param array $request Usually $_POST (unslashed by the caller is not required).
 	 * @return true|WP_Error
 	 */
@@ -127,6 +140,39 @@ class RequestGuard {
 	public static function verify_rest( string $action, array $params ) {
 		if ( ! empty( $params[ self::HONEYPOT_FIELD ] ) ) {
 			return new WP_Error( 'smart_login_bot', __( 'Yêu cầu không hợp lệ.', 'smart-login' ) );
+		}
+
+		$stamp = isset( $params[ self::TIME_FIELD ] ) ? sanitize_text_field( wp_unslash( $params[ self::TIME_FIELD ] ) ) : '';
+
+		// Verified only when present, exactly as the form path does. A cookie-less
+		// native client that sends no stamp must not be locked out — this is
+		// parity work, not a new requirement, and treating absence as failure
+		// would make it a breaking change wearing a security label.
+		if ( false === strpos( $stamp, '.' ) ) {
+			return true;
+		}
+
+		list( $ts, $sig ) = explode( '.', $stamp, 2 );
+		$ts               = (int) $ts;
+
+		if ( ! hash_equals( self::sign( $ts, $action ), $sig ) ) {
+			return new WP_Error( 'smart_login_bad_stamp', __( 'Yêu cầu không hợp lệ.', 'smart-login' ) );
+		}
+
+		$age = time() - $ts;
+
+		if ( $age < self::MIN_FILL_SECONDS ) {
+			return new WP_Error(
+				'smart_login_too_fast',
+				__( 'Bạn thao tác quá nhanh. Vui lòng thử lại.', 'smart-login' )
+			);
+		}
+
+		if ( $age > self::MAX_FORM_AGE ) {
+			return new WP_Error(
+				'smart_login_stale',
+				__( 'Biểu mẫu đã hết hạn. Vui lòng tải lại trang.', 'smart-login' )
+			);
 		}
 
 		return true;

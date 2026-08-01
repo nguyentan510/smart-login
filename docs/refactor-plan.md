@@ -21,9 +21,20 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 5 — Profile boundary**
 - [x] **Phase 6 — Provider lifecycle**
 - [x] **Phase 7 — Release preparation**
+- [x] **Phase 8 — Account surface**
+- [x] **Phase 9 — Abuse boundary**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
+
+Phase 8 is a second body of work on top of a finished refactor: the identity
+model is right, the screen that exposes it is not. Its sub-phases are ordered by
+risk, not by visibility — the user-facing redesign is deliberately last.
+
+Phase 9 is a third: the identity model is right, the screen is right, and neither
+counts anything across the whole site. Its ordering is not preference — three of
+its sub-phases are blocked on another, and shipping them out of order converts a
+security control into an outage.
 
 ---
 
@@ -505,6 +516,171 @@ refactor: rules of the form "the old thing is gone" are half a rule. The other
 half is "nothing points at the old thing", and neither half is worth much for
 code that no test ever executes.
 
+## Phase 8 — Account surface
+
+Normative spec: [`account-surface.md`](account-surface.md) — the problem, the
+ownership boundary between Smart Login and WooCommerce, the section contract, the
+layout, the CSS inventory and the field-level corrections all live there.
+
+Execution briefs: [`account-surface/`](account-surface/), one file per
+sub-phase. **Status lives here and only here** — the briefs carry no checkboxes,
+so a sub-phase cannot be marked done in one file and open in another. That is the
+same argument this tracker opens with, applied one level down.
+
+Short version: the identity model is right and the screen exposing it is not. The
+profile-status notice and the provider block each exist in two templates, one
+maintained and one not, which is why the live page renders a blue box containing
+the single word "Địa chỉ" and offers "link Google" to accounts that already have
+Google linked.
+
+---
+
+### Sub-phases
+
+- [x] **8.0** [Guard rails](account-surface/8.0-guard-rails.md) — the
+      duplication rule, proven red before the duplication is removed
+- [x] **8.1** [Stop the data loss](account-surface/8.1-stop-data-loss.md) — four
+      live defects, JS only, ships alone. `SMART_LOGIN_AUTH_INTEGRATION_OK` on
+      WordPress 7.0.2, fifteen server-side checks, three of four client checks
+      measured in a browser; two unrelated gate defects found and written down
+- [x] **8.2** [Section contract](account-surface/8.2-section-contract.md) — seven
+      partials and a renderer; live before/after diff shows only the declared
+      deltas. The Woo template is 330 lines → 65, and is now executed by a test
+      for the first time
+- [x] **8.3** [Owned save path](account-surface/8.3-owned-save-path.md) — profile
+      editing without WooCommerce. 16 checks green with WooCommerce genuinely
+      absent; the account-surface suite is now `required`, not `spec`
+- [x] **8.4** [Layout](account-surface/8.4-layout.md) — the redesign. Four
+      carded sections in wireframe order; the form is 680px in a 680px column
+      instead of a 460px strip inside it
+- [x] **Removal by request** — Mã giới thiệu and Tìm nhanh địa chỉ deleted from
+      the whole codebase, including `data/search-index.php` (312 KB) and the
+      build step behind it. Three fitness rules keep them gone
+- [x] **8.5** [Address boundary](account-surface/8.5-address-boundary.md) — one
+      picker, two hosts. Already unified where it counts; the plan's step 2
+      would have been a regression and was dropped. The boundary is now
+      asserted instead, and the ward select explains itself
+- [x] **8.6** [Interface language](account-surface/8.6-interface-language.md) —
+      **declined in writing for 1.0.1.** The plugin targets Vietnamese sites and
+      Vietnamese msgids are the honest encoding of that. The delay was not free:
+      the sweep grew 445 → 605 strings while the decision stayed open, which is
+      the effect the brief predicted and the reason it is closed rather than
+      deferred again. The `.pot` is regenerated and current
+
+---
+
+**Ordering rationale.** 8.1 ships alone and early because data loss outranks
+everything. 8.0 precedes 8.2 because a guard rail proven after the fact proves
+nothing. 8.2 changes no output, so it can be reviewed on behaviour rather than
+appearance. 8.3 is what makes the plugin whole without WooCommerce, and must land
+before 8.4 so the redesign has somewhere to live other than the Woo page. 8.5 and
+8.6 are independent and may be reordered or dropped.
+
+---
+
+## Phase 9 — Abuse boundary
+
+Normative spec: [`abuse-boundary.md`](abuse-boundary.md) — the single-axis
+problem, the budget/breaker distinction, the fail-open/fail-closed asymmetry, the
+ownership boundary and the defaults table all live there.
+
+Execution briefs: [`abuse-boundary/`](abuse-boundary/), one file per sub-phase.
+**Status lives here and only here.**
+
+Short version: every control the plugin has is scoped to one destination or one
+IP, so an attacker rotating both meets no ceiling. `handle_identify()` sends an
+SMS to any number on earth with no account and no challenge; `Phone::is_valid()`
+accepts any country code outside `84`; and the enumeration branch passes through
+no limiter at all while the README says it does.
+
+### Sub-phases
+
+- [x] **9.0** [Guard rails](abuse-boundary/9.0-guard-rails.md) — landed red as
+      intended: `4 passed, 11 failed, 0 pending`, no production file touched.
+      Needed two harness changes first — a `token_get_all()` method-body
+      extractor for the ordering and per-callback rules, and a real filter
+      registry in the stubs — the latter proven byte-identical across the other
+      eight suites. Rule 6 shows **1 of 11** REST callbacks reaching the guard
+- [x] **9.1** [Site budget](abuse-boundary/9.1-site-budget.md) — the missing
+      axis, plus the phase's single DB version bump (4 → 5, `KEY created_at`).
+      Kill switch is an option not a transient, and the halted path sheds load:
+      one option read instead of three counting queries. Behaviour pinned in the
+      **required** suite rather than the spec one, so it blocks now — 201 → 217
+- [x] **9.2** [Country allowlist](abuse-boundary/9.2-country-allowlist.md) —
+      cheapest control in the phase, removes most of the pumping incentive. An
+      empty setting means *the default code only*, so no migration. The Phase 4
+      "exactly one return path through the filter" rule caught the first version
+      of this change adding a second exit — fixed by structure, not by weakening
+      the rule. 217 → 226
+- [x] **9.3** [Delivery limits](abuse-boundary/9.3-delivery-limits.md) — clamped
+      timeout, real backoff, circuit breaker; queueing rejected with reasons.
+      Breaker landed in `TransportRouter`, not `WebhookTransport`, so it covers
+      SMTP too and leaves the admin's "Gửi thử" button outside it. Half-open is a
+      count, not a flag, so concurrent probes cannot race. Rule 3c had to be
+      rewritten: it was pinned to one spelling of the clamp. 226 → 238
+- [x] **9.4** [Identify limit](abuse-boundary/9.4-identify-limit.md) — closes the
+      enumeration oracle and makes the README true. The future-proofing half of
+      rule 4 found a **second** free oracle: `PasswordResetHandler::start()`
+      resolves and returns without issuing a code when the subject is unknown, so
+      it never reached any limiter. Both doors now spend one budget. 238 → 245.
+      **The four release blockers are done.**
+- [x] **9.5** [Trusted proxy](abuse-boundary/9.5-trusted-proxy.md) — CIDR
+      allowlist, not a boolean; readiness fails on the spoofable configuration.
+      **Reversed a decision the brief had made**: `smart_login_trust_proxy_headers`
+      no longer grants trust on its own, because an escape hatch that reopens the
+      hole is not one. Managed deployments pair it with the new
+      `smart_login_trusted_proxy_cidrs`. 245 → 266, the phase's largest jump —
+      CIDR parsing is where the sharp edges are
+- [x] **9.6** [Login IP ceiling](abuse-boundary/9.6-login-ip-ceiling.md) —
+      password spraying. Needed a **new** guard rail first: 9.0's eight rules
+      covered 9.1–9.9 but not this. A success clears the account counter and
+      deliberately **not** the address one, since one hit among a thousand
+      guesses is what a successful spray looks like. 266 → 272
+- [x] **9.7** [REST guard parity](abuse-boundary/9.7-rest-guard-parity.md) — the
+      JS sent no stamp, so the existing check was inert rather than lax. One
+      shared gate in `check_permission()` rather than eleven copies, and rule 6
+      rewritten to check reachability instead of repetition. **The suite went
+      fully green here and is now `required`.** 280 → 285
+- [x] **9.8** [Adaptive captcha](abuse-boundary/9.8-adaptive-captcha.md) —
+      invisible under normal load, and invisible means **no third-party script
+      registered**, not merely not shown. The provider secret path was extracted
+      into `Security\SecretBox` rather than duplicated, keeping the stored record
+      shape byte-identical so existing provider secrets still open. A new
+      `secret` field type makes the next one a registry row. 285 → 301
+- [x] **9.9** [Audit and visibility](abuse-boundary/9.9-audit-and-visibility.md) —
+      write cap, consumption on the readiness row, resume button, and the live
+      retention bug fixed. Corrected 9.1's own claim: a halted site was still
+      writing one audit row per blocked request, so the cap is the other half of
+      the kill switch rather than polish beside it. Full dashboard deliberately
+      not built — see the Outcome. 272 → 280
+- [x] **9.10** [Housekeeping](abuse-boundary/9.10-housekeeping.md) — the cache
+      premise held when measured, so `/address/*` now answers 304 (0 bytes
+      instead of 7 KB on a `wards` replay), verified over HTTP against the live
+      site. The shim templates **stay**: they forward to `form-auth`, so they are
+      compatibility surface rather than dead code — the opposite of what the
+      first review of them concluded
+
+**Integration gate.** `tests/integration/run-abuse-gate.php` covers what the stub
+`$wpdb` cannot: the DB 5 index under `dbDelta`, `count_recent_all()` as real SQL,
+the halt option round trip, the readiness rows, and `in_cidr()` on the runtime's
+own PHP. Wired into `scripts/run-auth-integration-gate.ps1`. Green on WordPress
+7.0.2 / PHP 8.2.29 as of 9.5.
+
+---
+
+**Ordering rationale.** 9.0 first, for the reason the Postscript below gives.
+9.1–9.4 are the release blockers for any site sending paid SMS, and 9.2 is
+sequenced early inside that group because it is an afternoon's work that removes
+most of the attacker's payoff. **9.5 must precede 9.6**: a per-IP login ceiling on
+a site behind a CDN with proxy trust off locks out every visitor sharing an edge
+address, so shipping 9.6 first is an outage, not a control. **9.8 is blocked on
+9.1 and 9.3** — it reads budget pressure and breaker state, and its own outbound
+call must inherit 9.3's timeout discipline. 9.9 and 9.10 are independent and may
+be reordered or dropped.
+
+**9.1 owns the only `SMART_LOGIN_DB_VERSION` bump.** Anything else wanting a
+schema change folds into it rather than bumping again.
+
 ## Risks
 
 | Risk | Mitigation |
@@ -513,3 +689,13 @@ code that no test ever executes.
 | `dbDelta` + `UNIQUE` on `VARCHAR(191)` utf8mb4 is 764/767 bytes | Already the width in use; the idempotency test catches divergent environments early |
 | Opaque `user_login` hinders admin support | Identity column + `user_search_columns` hook, both in Phase 3 |
 | Fitness greps produce false positives on legitimate code | Per-file allowlist declared inside the test, forcing any exception to be justified in writing |
+| Phase 8.2 silently changes rendered output while claiming not to | Acceptance is a diff of rendered HTML for a fixture user, not a reading of the code |
+| Taking over the Woo save path breaks third-party plugins invisibly | `WC_Form_Handler` keeps saving on the Woo page; the renderer emits all four `woocommerce_edit_account_form*` hooks |
+| The redesign lands on a page only reachable with WooCommerce active | 8.3 precedes 8.4, so the standalone surface exists before it is redesigned |
+| 8.6 repeats the Phase 4 / Phase 7 rename failure at 445× the scale | Sequenced last, gated on a dangling-string scan, and declinable in writing |
+| A site-wide ceiling set too low blocks a real launch, gets switched off, and never comes back | Generous defaults; 9.9's screen makes tuning evidence-based rather than a guess |
+| 9.6 causes mass lockout behind a CDN | Hard-sequenced after 9.5; loose default; readiness warns on the exact dangerous combination |
+| The country allowlist rejects a legitimate foreign customer | Default matches today's effective behaviour for VN sites; `smart_login_phone_is_valid` stays the last word; widening is one text field |
+| 9.7's timing check rejects in-flight JS clients on deploy | JS ships as a separate, earlier commit; the check is skipped when no stamp is present |
+| The kill switch becomes a DoS — an attacker halts OTP for everyone | The deliberate trade: a halted hour costs less than a drained balance. Bounded by `halt_minutes`, alerted on, clearable from the admin screen |
+| New settings scatter across existing tabs and get lost | One new `security` tab; existing keys are **not** moved, so the admin suite's tab-membership assertions do not churn |

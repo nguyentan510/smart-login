@@ -105,20 +105,44 @@ if ( ! isset( $wpdb ) || ! $wpdb instanceof wpdb || '' !== (string) $wpdb->last_
 	$blocked( 'WordPress database bootstrap is not healthy' );
 }
 
+/*
+ * These are the settings the gate needs, forced regardless of how the host site
+ * is configured — a gate that reads live configuration is not a gate.
+ *
+ * The keys were the pre-rename ones (`google_enabled`, `field_email_optional`
+ * and friends) long after class-installer.php's migration map moved them to the
+ * dotted namespaces below. A filter whose key never matches costs nothing and
+ * says nothing, so the gate silently inherited the site's own settings instead:
+ * on an install with `profile.email_optional = 1` it failed with "Zalo
+ * provider-only account did not enter required email onboarding", and on an
+ * install with 0 it would have passed for the wrong reason.
+ *
+ * Asserted below rather than trusted, because that is the failure this had.
+ */
+$sl_forced_settings = array(
+	'providers.google.enabled' => 1,
+	'providers.zalo.enabled'   => 1,
+	'providers.auto_link_email' => 1,
+	'profile.email_optional'   => 0,
+);
+
 add_filter(
 	'smart_login_setting',
-	static function ( $value, $key ) {
-		if ( in_array( $key, array( 'google_enabled', 'zalo_enabled', 'provider_auto_link_email' ), true ) ) {
-			return 1;
-		}
-		if ( 'field_email_optional' === $key ) {
-			return 0;
-		}
-		return $value;
+	static function ( $value, $key ) use ( $sl_forced_settings ) {
+		return array_key_exists( $key, $sl_forced_settings ) ? $sl_forced_settings[ $key ] : $value;
 	},
 	99,
 	2
 );
+
+// A key nobody reads is a key that has been renamed out from under this file.
+foreach ( $sl_forced_settings as $sl_key => $sl_expected ) {
+	if ( (int) \SmartLogin\Settings::get( $sl_key ) !== (int) $sl_expected ) {
+		echo "SMART_LOGIN_PROVIDER_GATES_BLOCKED\n";
+		echo 'reason=forced setting did not take effect: ' . $sl_key . " — has it been renamed?\n";
+		exit( 2 );
+	}
+}
 
 try {
 	// P0.2: construct a signed Google ID token and mock only Google HTTP calls.

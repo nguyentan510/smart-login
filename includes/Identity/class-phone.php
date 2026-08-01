@@ -101,7 +101,20 @@ class Phone {
 
 		$cc = preg_replace( '/[^0-9]/', '', (string) Settings::get( 'identity.country_code', '84' ) );
 
-		if ( '84' === $cc && 0 === strpos( $canonical, '84' ) ) {
+		if ( ! self::country_allowed( $canonical ) ) {
+			// The allowlist is asked first, because the question it answers comes
+			// first: not "is this a well-formed number" but "is this a number this
+			// site would ever legitimately message". A generic length check said
+			// yes to every country on earth, which is the precondition SMS pumping
+			// needs — codes aimed at a premium range in a country where the
+			// attacker shares the termination revenue.
+			//
+			// It sets $valid rather than returning, so the single exit below stays
+			// single. The Phase 4 rule in run-core-tests.php caught the first
+			// version of this change doing otherwise, which is exactly what that
+			// rule was written for.
+			$valid = false;
+		} elseif ( '84' === $cc && 0 === strpos( $canonical, '84' ) ) {
 			// Carrier-prefix validation for Vietnamese numbers.
 			$valid = (bool) preg_match( self::VN_MOBILE_NSN, substr( $canonical, 2 ) );
 		} else {
@@ -112,14 +125,66 @@ class Phone {
 		/**
 		 * Allow site owners to plug in their own numbering plan.
 		 *
-		 * Applies to every country code including the default 84. The Vietnamese
-		 * branch used to return before reaching this filter, which made the
-		 * documented hook dead on the one configuration almost every site uses.
+		 * Applies to every country code including the default 84, and to numbers
+		 * the allowlist rejected — a filter that can only tighten is not the last
+		 * word. The Vietnamese branch used to return before reaching this filter,
+		 * which made the documented hook dead on the one configuration almost
+		 * every site uses.
 		 *
 		 * @param bool   $valid
 		 * @param string $canonical
 		 */
 		return (bool) apply_filters( 'smart_login_phone_is_valid', $valid, $canonical );
+	}
+
+	/**
+	 * Country codes this site is willing to send a code to.
+	 *
+	 * An empty setting means **only the configured default country code**, not
+	 * "anything". That makes the safe reading the default one and needs no
+	 * migration: on a site left at `84` the behaviour is what it already was.
+	 * The settings help text says this outright — an empty field that silently
+	 * means "restricted" is only safe if the screen admits it.
+	 *
+	 * @return string[] Digit-only codes, never empty.
+	 */
+	public static function allowed_codes(): array {
+		$configured = (string) Settings::get( 'identity.allowed_country_codes', '' );
+		$codes      = array();
+
+		foreach ( preg_split( '/[\s,;]+/', $configured ) ?: array() as $candidate ) {
+			$digits = preg_replace( '/[^0-9]/', '', (string) $candidate );
+
+			if ( '' !== $digits ) {
+				$codes[] = $digits;
+			}
+		}
+
+		if ( ! $codes ) {
+			$default = preg_replace( '/[^0-9]/', '', (string) Settings::get( 'identity.country_code', '84' ) );
+			$codes   = '' !== $default ? array( $default ) : array( '84' );
+		}
+
+		return array_values( array_unique( $codes ) );
+	}
+
+	/**
+	 * Does this canonical number begin with an allowed country code?
+	 *
+	 * No prefix table. E.164 country codes are one to three digits and
+	 * variable-length, so resolving "which country is this" properly would need
+	 * one — but that is not the question. The question is whether the number
+	 * starts with a code the operator listed, and a prefix comparison answers
+	 * exactly that with nothing to keep up to date.
+	 */
+	private static function country_allowed( string $canonical ): bool {
+		foreach ( self::allowed_codes() as $code ) {
+			if ( 0 === strpos( $canonical, $code ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

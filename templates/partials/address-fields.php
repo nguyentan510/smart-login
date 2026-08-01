@@ -10,7 +10,6 @@
  *
  * @var array $values       province_code, province_name, ward_code, ward_name, street
  * @var bool  $required
- * @var bool  $quick_search
  * @var array $provinces    code => [name, short, type]
  * @var array $wards        code => [name, type]  (only for the selected province)
  *
@@ -25,29 +24,6 @@ $sl_uid = wp_unique_id( 'sl-addr-' );
 $sl_req = ! empty( $required );
 ?>
 <div class="sl-address" data-sl-address>
-
-	<?php if ( ! empty( $quick_search ) ) : ?>
-		<div class="sl-field sl-address__quick">
-			<label class="sl-label" for="<?php echo esc_attr( $sl_uid ); ?>-quick">
-				<?php esc_html_e( 'Tìm nhanh', 'smart-login' ); ?>
-			</label>
-			<div class="sl-combo" data-sl-quick>
-				<input
-					type="text"
-					class="sl-input sl-combo__input"
-					id="<?php echo esc_attr( $sl_uid ); ?>-quick"
-					placeholder="<?php esc_attr_e( 'Gõ tên phường/xã, ví dụ: cau giay', 'smart-login' ); ?>"
-					autocomplete="off"
-					role="combobox"
-					aria-expanded="false"
-					aria-autocomplete="list"
-					aria-controls="<?php echo esc_attr( $sl_uid ); ?>-quick-list"
-				/>
-				<ul class="sl-combo__list" id="<?php echo esc_attr( $sl_uid ); ?>-quick-list" role="listbox" hidden></ul>
-			</div>
-			<p class="sl-hint"><?php esc_html_e( 'Chọn một gợi ý để tự điền cả Tỉnh/Thành phố và Phường/Xã.', 'smart-login' ); ?></p>
-		</div>
-	<?php endif; ?>
 
 	<div class="sl-field">
 		<label class="sl-label" for="<?php echo esc_attr( $sl_uid ); ?>-province">
@@ -81,13 +57,22 @@ $sl_req = ! empty( $required );
 				?>
 				<span class="sl-required">*</span><?php endif; ?>
 		</label>
+		<?php
+		/*
+		 * Inert until a province is chosen, because there is nothing to choose
+		 * from until then — but a grey box that never says why reads as broken
+		 * rather than as waiting. The hint is tied to the control through
+		 * aria-describedby so it is not only a visual explanation.
+		 */
+		$sl_ward_waiting = empty( $wards );
+		?>
 		<select
 			class="sl-input sl-address__ward"
 			id="<?php echo esc_attr( $sl_uid ); ?>-ward"
 			name="<?php echo esc_attr( AddressFields::FIELD_WARD ); ?>"
 			data-sl-ward
 			<?php echo $sl_req ? 'required' : ''; ?>
-			<?php echo empty( $wards ) ? 'disabled' : ''; ?>
+			<?php echo $sl_ward_waiting ? 'disabled aria-describedby="' . esc_attr( $sl_uid ) . '-ward-hint"' : ''; ?>
 		>
 			<option value=""><?php esc_html_e( '— Chọn Phường/Xã —', 'smart-login' ); ?></option>
 			<?php foreach ( $wards as $sl_code => $sl_ward ) : ?>
@@ -96,6 +81,12 @@ $sl_req = ! empty( $required );
 				</option>
 			<?php endforeach; ?>
 		</select>
+
+		<?php if ( $sl_ward_waiting ) : ?>
+			<p class="sl-hint" id="<?php echo esc_attr( $sl_uid ); ?>-ward-hint" data-sl-ward-hint>
+				<?php esc_html_e( 'Chọn Tỉnh/Thành phố trước để hiện danh sách Phường/Xã.', 'smart-login' ); ?>
+			</p>
+		<?php endif; ?>
 
 		<noscript>
 			<p class="sl-hint">

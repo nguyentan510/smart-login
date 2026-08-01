@@ -15,6 +15,15 @@ defined( 'ABSPATH' ) || exit;
 
 class WebhookTransport implements TransportInterface {
 
+	/**
+	 * Hard ceiling on how long one send may hold a PHP worker.
+	 *
+	 * At 10 requests/second a 10-second timeout occupies 100 workers; a typical
+	 * PHP-FPM pool has 20-50. What goes down then is the whole site, not just
+	 * sign-in, and it needs no attacker beyond a gateway having a bad day.
+	 */
+	const MAX_TIMEOUT = 15;
+
 	public function id(): string {
 		return 'sms';
 	}
@@ -58,8 +67,13 @@ class WebhookTransport implements TransportInterface {
 		$map                = Placeholders::build( $destination, $code, $ctx );
 		$method             = strtoupper( (string) Settings::get( 'sms.method', 'POST' ) );
 		$content_type       = (string) Settings::get( 'sms.content_type', 'application/json' );
-		$timeout            = Settings::get_int( 'sms.timeout', 10 );
-		$is_json            = ( 'application/json' === $content_type );
+		// Clamped again here, not only by the registry. Settings::sanitize()
+		// applies the registry maximum on save, so an install that stored 30
+		// under the old ceiling keeps 30 until somebody happens to re-save that
+		// tab — and those are exactly the sites where a slow gateway will empty
+		// the worker pool. MAX_TIMEOUT is the number that actually binds.
+		$timeout = min( self::MAX_TIMEOUT, max( 1, Settings::get_int( 'sms.timeout', 5 ) ) );
+		$is_json = ( 'application/json' === $content_type );
 
 		// The URL itself may contain placeholders (common for GET-based gateways).
 		$url = Placeholders::render( (string) Settings::get( 'sms.url', '' ), $map, 'rawurlencode' );
@@ -131,7 +145,11 @@ class WebhookTransport implements TransportInterface {
 
 		for ( $i = 0; $i < $attempts; $i++ ) {
 			if ( $i > 0 ) {
-				usleep( 2000000 ); // 2s backoff before the single retry.
+				// 250ms, not the two seconds this used to hold. The single retry
+				// exists for a response lost on the way back from an idempotent
+				// gateway; an immediate retry serves that just as well, and two
+				// seconds of a held worker never served anything.
+				usleep( 250000 );
 			}
 
 			$response = wp_remote_request( $url, $args );

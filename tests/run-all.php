@@ -78,6 +78,26 @@ $suites = array(
 		'file' => 'identity/run-admin-tests.php',
 		'kind' => 'required',
 	),
+	array(
+		// Phase 8. Landed `spec` and red on purpose, so the duplication rules
+		// could be seen failing on the tree that still contained the defect.
+		// 8.2 and 8.3 turned all five green, so it is promoted here for the same
+		// reason Phase 5 promoted the identity suites: leaving a passing suite
+		// non-blocking can only hide the next regression.
+		'name' => 'Account surface',
+		'file' => 'identity/run-account-surface-tests.php',
+		'kind' => 'required',
+	),
+	array(
+		// Phase 9. Landed `spec` and red on purpose — nine of its assertions
+		// described controls that did not exist and two described a defect
+		// already in production. 9.7 turned the last one green, so it is promoted
+		// here for the reason Phase 5 promoted the identity suites: a passing
+		// suite left non-blocking can only serve to hide the next regression.
+		'name' => 'Abuse boundary',
+		'file' => 'security/run-abuse-tests.php',
+		'kind' => 'required',
+	),
 );
 
 $results  = array();

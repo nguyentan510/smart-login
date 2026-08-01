@@ -161,6 +161,7 @@ class Settings {
 		$clean = self::all();
 
 		self::absorb_provider_secrets( $input );
+		self::absorb_secret_fields( $input );
 
 		$fields = self::posted_fields( $input );
 
@@ -183,6 +184,72 @@ class Settings {
 		self::$cache = null;
 
 		return $clean;
+	}
+
+	/**
+	 * Take any `secret` field out of the settings array and into its own store.
+	 *
+	 * The generic form of what absorb_provider_secrets() does for Google and Zalo:
+	 * a secret is encrypted at rest and never round-trips through the option
+	 * array, so it can never be echoed back into a page by a field renderer that
+	 * forgot it was special.
+	 *
+	 * Blank means "keep the stored one", because the form never renders a saved
+	 * secret and blank is therefore indistinguishable from unchanged. Removing one
+	 * takes the explicit clear checkbox.
+	 */
+	private static function absorb_secret_fields( array &$input ): void {
+		foreach ( FieldRegistry::all() as $path => $field ) {
+			if ( 'secret' !== ( $field['type'] ?? '' ) ) {
+				continue;
+			}
+
+			$submitted = (string) ( self::dig( $input, $path ) ?? '' );
+
+			// phpcs:ignore WordPress.Security.NonceVerification -- register_setting() has already verified.
+			$clear = ! empty( $_POST[ 'sl_clear_' . str_replace( '.', '_', $path ) ] );
+
+			if ( $clear ) {
+				self::store_secret( $path, '' );
+			} elseif ( '' !== trim( $submitted ) ) {
+				self::store_secret( $path, trim( $submitted ) );
+			}
+
+			// Never let the plaintext reach the stored option, whatever happened.
+			self::prune( $input, $path );
+		}
+	}
+
+	/**
+	 * Route a secret to whichever store owns it.
+	 */
+	private static function store_secret( string $path, string $secret ): void {
+		if ( 'security.captcha_secret' === $path ) {
+			if ( '' === $secret ) {
+				\SmartLogin\Security\Captcha::clear_secret();
+			} else {
+				\SmartLogin\Security\Captcha::store_secret( $secret );
+			}
+		}
+	}
+
+	/**
+	 * Remove a dot path from a nested array.
+	 */
+	private static function prune( array &$target, string $path ): void {
+		$parts  = explode( '.', $path );
+		$last   = array_pop( $parts );
+		$cursor = &$target;
+
+		foreach ( $parts as $part ) {
+			if ( ! isset( $cursor[ $part ] ) || ! is_array( $cursor[ $part ] ) ) {
+				return;
+			}
+
+			$cursor = &$cursor[ $part ];
+		}
+
+		unset( $cursor[ $last ] );
 	}
 
 	/**

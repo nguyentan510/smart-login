@@ -116,7 +116,120 @@ class FormController {
 			case 'unlink_identity':
 				$this->handle_unlink_identity( $post );
 				break;
+
+			case 'save_profile':
+				$this->handle_save_profile( $post );
+				break;
 		}
+	}
+
+	/**
+	 * Save the account profile without WooCommerce.
+	 *
+	 * On the WooCommerce account page WC_Form_Handler::save_account_details() does
+	 * this, and must keep doing it — third-party plugins hook
+	 * woocommerce_save_account_details. Everywhere else there was nothing at all:
+	 * deactivate WooCommerce and the plugin had no way for a member to edit their
+	 * own profile. See docs/account-surface.md.
+	 *
+	 * Email is deliberately absent. It only ever moves through the OTP flow, and
+	 * block_unverified_email_change() rejects every other route.
+	 */
+	private function handle_save_profile( array $post ): void {
+		if ( ! is_user_logged_in() ) {
+			return;
+		}
+
+		$user_id  = get_current_user_id();
+		$redirect = wp_validate_redirect( (string) ( $post['_redirect'] ?? '' ), '' );
+		$redirect = '' !== $redirect ? $redirect : (string) ( wp_get_referer() ?: home_url( '/' ) );
+
+		// A plain nonce, as handle_unlink_identity() uses. RequestGuard's honeypot
+		// and minimum fill time are aimed at anonymous forms; on a profile page the
+		// visitor is already authenticated, and the timing check would reject
+		// somebody who only flipped one radio button and pressed save.
+		if ( ! wp_verify_nonce( (string) ( $post['_wpnonce'] ?? '' ), 'smart_login_save_profile' ) ) {
+			Notices::flash( __( 'Phiên làm việc đã hết hạn. Vui lòng tải lại trang và thử lại.', 'smart-login' ), 'error' );
+			$this->redirect( $redirect );
+			return;
+		}
+
+		// The account form names its fields for WooCommerce, which is the surface
+		// that cannot be changed. Normalising here rather than renaming the inputs
+		// keeps one set of markup serving both save paths — the same trick
+		// WooIntegration::prepare_account_post() plays in the other direction.
+		foreach ( array(
+			'smartlogin_full_name' => 'full_name',
+			'smartlogin_dob'       => 'dob',
+			'smartlogin_gender'    => 'gender',
+		) as $sl_posted => $sl_internal ) {
+			if ( isset( $post[ $sl_posted ] ) && ! isset( $post[ $sl_internal ] ) ) {
+				$post[ $sl_internal ] = $post[ $sl_posted ];
+			}
+		}
+
+		$this->save_onboarding( $user_id, $post );
+
+		$password = $this->save_password( $user_id, $post );
+
+		if ( is_wp_error( $password ) ) {
+			Notices::flash( $password->get_error_message(), 'error' );
+			$this->redirect( $redirect );
+			return;
+		}
+
+		Notices::flash( __( 'Đã lưu thông tin của bạn.', 'smart-login' ), 'success' );
+		$this->redirect( $redirect );
+	}
+
+	/**
+	 * Change the password, but only when one was actually typed.
+	 *
+	 * Blank fields must save the rest of the form untouched — that is what "để
+	 * trống nếu không muốn thay đổi" promises.
+	 *
+	 * wp_update_user() rather than wp_set_password(): for the current user it
+	 * re-issues the auth cookie, so changing your own password does not sign you
+	 * out mid-edit. wp_set_password() would, and re-authenticating here would mean
+	 * minting a session outside SessionIssuer.
+	 *
+	 * @return true|WP_Error
+	 */
+	private function save_password( int $user_id, array $post ) {
+		$new = (string) ( $post['password_1'] ?? '' );
+
+		if ( '' === $new ) {
+			return true;
+		}
+
+		$user = get_userdata( $user_id );
+
+		if ( ! $user ) {
+			return new WP_Error( 'smart_login_no_user', __( 'Không tìm thấy tài khoản.', 'smart-login' ) );
+		}
+
+		if ( ! wp_check_password( (string) ( $post['password_current'] ?? '' ), $user->user_pass, $user_id ) ) {
+			return new WP_Error( 'smart_login_bad_password', __( 'Mật khẩu hiện tại không đúng.', 'smart-login' ) );
+		}
+
+		if ( (string) ( $post['password_2'] ?? '' ) !== $new ) {
+			return new WP_Error( 'smart_login_password_mismatch', __( 'Hai mật khẩu mới không khớp.', 'smart-login' ) );
+		}
+
+		$policy = \SmartLogin\Auth\PasswordPolicy::validate( $new );
+
+		if ( is_wp_error( $policy ) ) {
+			return $policy;
+		}
+
+		$updated = wp_update_user(
+			array(
+				'ID'        => $user_id,
+				'user_pass' => $new,
+			)
+		);
+
+		return is_wp_error( $updated ) ? $updated : true;
 	}
 
 	/**
@@ -190,6 +303,23 @@ class FormController {
 				),
 				Flow::STEP_IDENTIFY
 			);
+			return;
+		}
+
+		// Before the lookup, not after. The lookup is the enumeration oracle —
+		// it reveals whether a subject is registered by which screen comes back —
+		// so a limit applied afterwards would leave the oracle intact.
+		$allowed = ( new RateLimiter() )->check_identify( $identity );
+
+		if ( is_wp_error( $allowed ) ) {
+			$this->fail( $allowed, Flow::STEP_IDENTIFY );
+			return;
+		}
+
+		$challenge = \SmartLogin\Security\Captcha::check( $post );
+
+		if ( is_wp_error( $challenge ) ) {
+			$this->fail( $challenge, Flow::STEP_IDENTIFY );
 			return;
 		}
 
@@ -724,6 +854,13 @@ class FormController {
 
 		if ( is_wp_error( $guard ) ) {
 			$this->fail( $guard, Flow::STEP_FORGOT );
+			return;
+		}
+
+		$challenge = \SmartLogin\Security\Captcha::check( $post );
+
+		if ( is_wp_error( $challenge ) ) {
+			$this->fail( $challenge, Flow::STEP_FORGOT );
 			return;
 		}
 

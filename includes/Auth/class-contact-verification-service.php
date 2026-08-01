@@ -96,18 +96,71 @@ final class ContactVerificationService {
 			array( 'user_name' => $user->display_name )
 		);
 		if ( ! is_wp_error( $result ) ) {
-			update_user_meta(
-				$user_id,
-				self::META_PENDING,
-				array(
-					'type'       => $type,
-					'masked'     => (string) $result['masked'],
-					'expires_at' => time() + (int) $result['expires_in'],
-				)
-			);
+			$this->remember_pending( $user_id, $type, $result );
 			AuditLog::record( AuditLog::CONTACT_PENDING, RateLimiter::mask_identity( $destination ), array( 'type' => $type ), $user_id );
 		}
 		return $result;
+	}
+
+	/**
+	 * Send a fresh code for whatever this account already has in flight.
+	 *
+	 * The OTP token lives in a JavaScript variable on the page that started the
+	 * flow, so a reload loses it and the only control left — "Gửi lại mã" — sits
+	 * inside a block that renders hidden. The account was told it could resend
+	 * and then given nothing to press.
+	 *
+	 * The server never lost anything: the pending row knows the destination and
+	 * the intent. So the client asks by type and the token stays here, which is
+	 * also why this is not simply exposed through pending() — a token a template
+	 * can print is a token that ends up in a page.
+	 *
+	 * @return array|WP_Error
+	 */
+	public function resend( int $user_id, string $type ) {
+		$pending = get_user_meta( $user_id, self::META_PENDING, true );
+		$expired = ! is_array( $pending ) || (int) ( $pending['expires_at'] ?? 0 ) <= time();
+
+		if ( $expired ) {
+			delete_user_meta( $user_id, self::META_PENDING );
+		}
+
+		if ( $expired || ( $pending['type'] ?? '' ) !== $type || '' === (string) ( $pending['token'] ?? '' ) ) {
+			return new WP_Error(
+				'smart_login_contact_session',
+				__( 'Không còn mã nào đang chờ xác thực. Hãy gửi mã mới.', 'smart-login' )
+			);
+		}
+
+		$result = $this->otp->resend( (string) $pending['token'] );
+
+		// resend() issues a new row, so the stored token is stale the moment it
+		// succeeds. Not updating it would make the second resend fail.
+		if ( ! is_wp_error( $result ) ) {
+			$this->remember_pending( $user_id, $type, $result );
+		}
+
+		return $result;
+	}
+
+	/**
+	 * Record what is in flight, so a reload can pick the flow back up.
+	 *
+	 * @param int    $user_id Account the code was issued for.
+	 * @param string $type    'phone' or 'email'.
+	 * @param array  $result  Output of OtpService::issue().
+	 */
+	private function remember_pending( int $user_id, string $type, array $result ): void {
+		update_user_meta(
+			$user_id,
+			self::META_PENDING,
+			array(
+				'type'       => $type,
+				'masked'     => (string) $result['masked'],
+				'token'      => (string) $result['token'],
+				'expires_at' => time() + (int) $result['expires_in'],
+			)
+		);
 	}
 
 	/** @return array|WP_Error */
@@ -179,8 +232,13 @@ final class ContactVerificationService {
 		delete_user_meta( $user_id, self::META_PENDING );
 		AuditLog::record( AuditLog::CONTACT_VERIFIED, RateLimiter::mask_identity( $destination ), array( 'type' => $type ), $user_id );
 		return array(
-			'type'  => $type,
-			'value' => $destination,
+			'type'    => $type,
+			'value'   => $destination,
+			// What the screen should now show. `value` is canonical — a phone is
+			// stored E.164 — and the field it replaces was rendered with
+			// Phone::to_local(). Formatting it here keeps the client from
+			// reimplementing that rule and then drifting from it.
+			'display' => 'phone' === $type ? Phone::to_local( $destination ) : $destination,
 		);
 	}
 

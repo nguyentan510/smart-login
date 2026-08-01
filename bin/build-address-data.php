@@ -9,7 +9,6 @@
  * Writes:
  *   data/provinces.php
  *   data/wards/{province_code}.php   (one per province)
- *   data/search-index.php
  *
  * The script prints the province and ward counts it wrote. Vietnam's two-level
  * structure since 2025-07-01 should give 34 provinces and roughly 3,320
@@ -369,8 +368,6 @@ foreach ( glob( $data_dir . '/wards/*.php' ) as $stale ) {
 
 write_php_file( $data_dir . '/provinces.php', 'Vietnamese provinces and centrally-governed cities.', $provinces );
 
-$index = array();
-
 foreach ( $provinces as $p_code => $province ) {
 	$list = $wards[ $p_code ] ?? array();
 	ksort( $list );
@@ -380,25 +377,7 @@ foreach ( $provinces as $p_code => $province ) {
 		'Wards of ' . $province['name'] . '.',
 		$list
 	);
-
-	foreach ( $list as $w_code => $ward ) {
-		$index[] = array(
-			'w' => (string) $w_code,
-			'p' => (string) $p_code,
-			'k' => AddressNormalizer::index_key( $ward['name'], $province['name'] ),
-		);
-	}
 }
-
-// The search index is a list, not a map, so it gets its own writer.
-$index_out = "<?php\n/**\n * Flat ward search index (accent-free keys).\n *\n * GENERATED FILE — do not edit by hand.\n *\n * @package SmartLogin\n */\n\ndefined( 'ABSPATH' ) || exit;\n\nreturn array(\n";
-
-foreach ( $index as $row ) {
-	$index_out .= "\tarray( 'w' => '{$row['w']}', 'p' => '{$row['p']}', 'k' => " . var_export( $row['k'], true ) . " ),\n";
-}
-
-$index_out .= ");\n";
-file_put_contents( $data_dir . '/search-index.php', $index_out );
 
 // ---------------------------------------------------------------------
 // Report
@@ -406,8 +385,7 @@ file_put_contents( $data_dir . '/search-index.php', $index_out );
 
 echo "\nWrote to {$data_dir}:\n";
 echo "  provinces.php        {$province_count} provinces\n";
-echo "  wards/*.php          {$province_count} files, {$total_wards} wards\n";
-echo '  search-index.php     ' . count( $index ) . " entries\n\n";
+echo "  wards/*.php          {$province_count} files, {$total_wards} wards\n\n";
 
 echo "Sample of what was parsed:\n";
 

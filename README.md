@@ -21,6 +21,7 @@ Sau khi kích hoạt, mở **Smart Login → Tổng quan**. Màn hình này li�
 ### 1. Tab **Đăng nhập & Đăng ký**
 - **Đăng nhập bằng**: `Chỉ số điện thoại` (mặc định).
 - **Mã quốc gia mặc định**: chọn từ danh sách, mặc định `Việt Nam (+84)`.
+- **Mã quốc gia được phép**: để trống nghĩa là **chỉ chấp nhận mã mặc định ở trên**, không phải chấp nhận mọi quốc gia. Điền `84,65,1` nếu bạn thực sự phục vụ khách ở nhiều nước — xem mục Bảo mật để biết vì sao mỗi mã mở thêm là một khoản chi phí.
 - **Domain email ảo**: giữ nguyên `phone.invalid`. Phần trước `@` là mã nội bộ, không phải số điện thoại — xem mục Bảo mật.
 
 ### 2. Tab **Gửi mã**
@@ -36,7 +37,7 @@ Có hai cách, dùng được đồng thời:
 
 Không còn cặp tab Đăng nhập / Đăng ký: người dùng hiếm khi biết mình thuộc nhánh nào, nên server tra định danh và tự quyết định. `[smart_register]` vẫn dùng được và mở cùng màn hình đó, chỉ đổi tiêu đề. Các shortcode khác: `[smart_verify_otp]`, `[smart_forgot_password]`, `[smart_profile]`.
 
-Form đăng ký thu thập Họ tên và Mật khẩu **sau** bước OTP, mỗi màn một việc. Không có ô "Nhập lại mật khẩu" — nút hiện/ẩn mật khẩu đã làm đúng việc mà ô đó sinh ra để làm. Ngày sinh, Giới tính, Mã giới thiệu nằm ở màn hình chào mừng và ở hồ sơ, đều không bắt buộc.
+Form đăng ký thu thập Họ tên và Mật khẩu **sau** bước OTP, mỗi màn một việc. Không có ô "Nhập lại mật khẩu" — nút hiện/ẩn mật khẩu đã làm đúng việc mà ô đó sinh ra để làm. Ngày sinh và Giới tính nằm ở màn hình chào mừng và ở hồ sơ, đều không bắt buộc.
 
 ---
 
@@ -83,6 +84,10 @@ add_filter( 'smart_login_gateway_presets', function ( array $presets ): array {
 
 Với `application/json`, mọi giá trị được escape tự động nên payload luôn là JSON hợp lệ kể cả khi tên website chứa dấu nháy kép.
 
+**Timeout bị chặn cứng ở 15 giây**, kể cả khi giá trị cũ trong CSDL lớn hơn. Mỗi lần gửi giữ một tiến trình PHP đúng bằng khoảng thời gian đó; ở 10 request/giây, timeout 10 giây chiếm 100 tiến trình trong khi một pool PHP-FPM điển hình chỉ có 20–50 — thứ sập là cả website chứ không riêng trang đăng nhập.
+
+**Ngắt mạch:** gateway lỗi liên tiếp đủ số lần (mặc định 5) thì plugin ngừng gọi nó trong 5 phút và trả lỗi ngay, thay vì giữ tiến trình để chờ một dịch vụ đã chết. Hết thời gian, đúng **một** lần gửi được cho đi thử; thất bại thì ngắt lại ngay. Admin nhận email khi mạch ngắt. Nút **Gửi thử** không bị ngắt mạch chặn — đó chính là cách bạn kiểm tra gateway đã sống lại chưa.
+
 Retry webhook mặc định bị tắt để tránh gửi trùng khi gateway đã nhận request nhưng response bị mất. Chỉ bật **Thử lại** khi gateway có cơ chế idempotency; điền tên header (ví dụ `Idempotency-Key`) ở trường **Header idempotency**. Plugin sẽ gửi cùng một `{{delivery_id}}` cho cả hai lần thử.
 
 ---
@@ -96,7 +101,9 @@ Người dùng nhập SĐT (hoặc email). Plugin chuẩn hoá về E.164 (`0969
 - **Đã có chủ sở hữu** → màn hình nhập mật khẩu.
 - **Chưa có, hoặc chủ cũ đã từ bỏ số này** → bắt đầu đăng ký.
 
-Việc rẽ nhánh có tiết lộ một định danh đã được đăng ký hay chưa. Đây là đánh đổi có chủ ý: form đăng ký cũ vốn đã tiết lộ điều đó qua thông báo lỗi, và `RateLimiter` chặn dò quét theo IP lẫn theo đích đến.
+Việc rẽ nhánh có tiết lộ một định danh đã được đăng ký hay chưa. Đây là đánh đổi có chủ ý: form đăng ký cũ vốn đã tiết lộ điều đó qua thông báo lỗi.
+
+Bản thân bước tra cứu được tính vào một hạn mức riêng theo IP (mặc định 30 lần/giờ, đổi được ở tab **Chống lạm dụng**), áp dụng **trước** khi tra và **giống hệt nhau ở cả hai nhánh** — nếu không, chính thông báo từ chối lại trở thành cái oracle mà nó sinh ra để đóng. Màn hình Quên mật khẩu dùng chung hạn mức đó, vì nó cũng tra danh bạ và cũng không tốn tin nhắn nào khi định danh không tồn tại.
 
 ### Đăng ký
 1. Gửi mã 6 số, hiệu lực 5 phút. **Chưa tạo tài khoản** — chỉ có một bản ghi OTP tạm giữ đúng định danh. Nếu gửi thất bại, bản ghi bị xoá và người dùng nhận thông báo rõ ràng, không bao giờ mắc kẹt ở màn hình chờ mã không tồn tại.
@@ -130,10 +137,16 @@ add_filter( 'smart_login_dispatch_otp', function ( $handled, $destination, $code
     return true; // hoặc new WP_Error(...) nếu thất bại
 }, 10, 4 );
 
-// Xử lý mã giới thiệu / cộng điểm sau khi tài khoản được tạo.
+// Thêm một trường của riêng bạn vào hồ sơ đăng ký, rồi xử lý sau khi tài khoản
+// được tạo. Plugin không tự thu thập trường nào ngoài những gì nó hiển thị.
+add_filter( 'smart_login_registration_payload', function ( $payload, $input ) {
+    $payload['my_campaign'] = sanitize_text_field( $input['my_campaign'] ?? '' );
+    return $payload;
+}, 10, 2 );
+
 add_action( 'smart_login_user_registered', function ( $user_id, $payload ) {
-    if ( ! empty( $payload['referral_code'] ) ) {
-        my_loyalty_apply_referral( $user_id, $payload['referral_code'] );
+    if ( ! empty( $payload['my_campaign'] ) ) {
+        my_loyalty_apply_campaign( $user_id, $payload['my_campaign'] );
     }
 }, 10, 2 );
 
@@ -175,7 +188,7 @@ php bin/build-address-data.php duong/dan/toi/source.json
 
 Script tự nhận diện các cách đặt tên trường phổ biến (`code`/`Code`/`id`, `name`/`full_name`/`name_with_type`, `wards`/`communes`/`children`…) và sẽ **từ chối ghi** nếu số lượng không khớp mô hình 2 cấp — đó là lưới an toàn chống việc vô tình dùng bộ dữ liệu 3 cấp cũ.
 
-Kết quả: `data/provinces.php`, `data/wards/{mã tỉnh}.php`, `data/search-index.php`.
+Kết quả: `data/provinces.php`, `data/wards/{mã tỉnh}.php`.
 
 Trang **Smart Login → Cài đặt → Chung** hiển thị trạng thái dữ liệu đã cài kèm số lượng thực tế.
 
@@ -241,9 +254,13 @@ wp-content/themes/your-theme/woocommerce/myaccount/form-edit-account.php
 
 Namespace `smart-login/v1`. Mọi endpoint dùng `POST` và cần header `X-WP-Nonce` (nonce `wp_rest`).
 
+> **Nonce không phải biện pháp chống bot.** Với khách chưa đăng nhập, WordPress cấp cùng một `wp_rest` nonce cho **tất cả** trong 12–24 giờ, nên bot lấy một lần dùng cả ngày. Nó chống CSRF, chỉ vậy. Thứ thực sự chặn lạm dụng là các hạn mức ở tab **Chống lạm dụng** — chúng nằm trong `RateLimiter`, nên áp dụng cho cả REST lẫn form.
+>
+> Client trình duyệt còn gửi kèm `smart_login_ts` (timestamp có chữ ký) và ô honeypot `smart_login_website`. Client không dùng cookie (app native) có thể **bỏ qua cả hai** — server chỉ kiểm khi chúng có mặt.
+
 | Endpoint | Tham số |
 |---|---|
-| `/register` | `identity`, `password`, `full_name`, `dob`, `gender`, `referral_code`, `terms` |
+| `/register` | `identity`, `password`, `full_name`, `dob`, `gender`, `terms` |
 | `/verify` | `code` (và `token` + `purpose` nếu client không dùng cookie) |
 | `/resend` | — |
 | `/login` | `identity`, `password`, `redirect_to` |
@@ -287,12 +304,51 @@ Zalo OA/ZNS không thuộc Login Provider và chưa được triển khai trong 
 
 ---
 
+## Xác minh chống robot (captcha)
+
+Mặc định tắt. Bật ở tab **Chống lạm dụng → Xác minh chống robot**: chọn Cloudflare Turnstile hoặc hCaptcha, điền Site key và Secret key.
+
+**Chế độ mặc định là `Chỉ khi site đang bị ép`**, và đó là điểm thiết kế chứ không phải sự dè dặt. Trần gửi toàn site đã chặn được thiệt hại tối đa rồi, nên một thử thách bắt mọi khách vượt qua mỗi ngày mua thêm rất ít mà tốn tỉ lệ chuyển đổi mỗi ngày. Thử thách chỉ hiện khi:
+
+- ngân sách giờ đã tiêu quá **một nửa**, hoặc
+- kill switch đang bật, hoặc
+- kênh gửi đang bị ngắt mạch, hoặc
+- chính IP đó đã dùng quá nửa hạn mức tra cứu định danh
+
+Ngày thường khách **không thấy gì, và trình duyệt cũng không tải script của bên thứ ba** — một captcha vẫn tốn một request và một dấu vết riêng tư kể cả khi không ai nhìn tới nó.
+
+Secret được mã hoá trước khi lưu (AES-256-GCM, khoá dẫn xuất từ salt của chính site) và **không bao giờ hiển thị lại**. Để trống ô khi lưu nghĩa là giữ nguyên; muốn xoá phải tick ô xoá.
+
+---
+
+## Site đứng sau Cloudflare hay proxy
+
+**Bắt buộc đọc nếu site của bạn dùng CDN.** Mặc định plugin chỉ tin `REMOTE_ADDR` — địa chỉ duy nhất client không giả mạo được. Sau Cloudflare, `REMOTE_ADDR` là IP máy chủ biên của Cloudflare, nên **mọi khách bị tính chung một địa chỉ**: giới hạn theo IP vừa chặn oan người thật vừa không chặn được kẻ tấn công, và nhật ký ghi lại IP vô dụng cho việc điều tra.
+
+Sửa ở tab **Chống lạm dụng → Proxy và địa chỉ IP**: bật *Site đứng sau proxy tin cậy* **và** dán dải IP của proxy (Cloudflare công bố tại `https://www.cloudflare.com/ips/`).
+
+Cần cả hai. Bật cờ mà không khai dải thì plugin không tin header của ai cả — đó là chủ ý, không phải thiếu sót: nếu chỉ cần một cái cờ, kẻ tấn công tìm được IP gốc của server sẽ đi thẳng vào đó và tự khai IP mới cho từng request, làm bay sạch mọi giới hạn theo IP. **Header chỉ đáng tin khi máy gửi nó đáng tin.** Màn hình Tổng quan báo đỏ nếu bạn bật cờ mà quên khai dải.
+
+Plugin **không kèm sẵn** danh sách IP Cloudflare: một danh sách cứng sẽ lạc hậu âm thầm, và lúc đó nó thành lỗ hổng chứ không còn là biện pháp bảo vệ.
+
+Với deployment quản lý tập trung, dùng filter thay cho Settings:
+
+```php
+add_filter( 'smart_login_trust_proxy_headers', '__return_true' );
+add_filter( 'smart_login_trusted_proxy_cidrs', fn() => array( '173.245.48.0/20', '2400:cb00::/32' ) );
+```
+
+Cả hai đều cần. Trước đây `smart_login_trust_proxy_headers` một mình là đủ; nay không còn, vì một lối thoát hiểm mở lại đúng lỗ hổng thì không phải lối thoát hiểm.
+
+---
+
 ## Bảo mật
 
 - Mã OTP sinh bằng `random_int()`, chỉ lưu dạng HMAC-SHA256, so sánh bằng `hash_equals()`.
 - Bước xác thực dùng token ngẫu nhiên 64 ký tự trong cookie HttpOnly — số điện thoại không bao giờ đi qua form, nên không thể đổi số đích giữa chừng.
 - Mật khẩu không bao giờ tồn tại ở dạng plaintext trong CSDL, kể cả trong bản ghi OTP tạm.
-- Rate limit 3 tầng: cooldown giữa 2 lần gửi, giới hạn theo số điện thoại/giờ, giới hạn theo IP/giờ.
+- Rate limit 4 tầng: cooldown giữa 2 lần gửi, giới hạn theo số điện thoại/giờ, giới hạn theo IP/giờ, và **trần toàn site theo giờ/ngày**. Ba tầng đầu đều tính theo *một* số hoặc *một* IP — tức hai thứ kẻ tấn công xoay vòng được; tầng thứ tư là tầng duy nhất một botnet không đi vòng qua được. Chạm trần thì việc gửi mã tự tạm dừng và admin nhận email.
+- **Chỉ gửi tới mã quốc gia đã cho phép** (mặc định: chỉ mã mặc định). Trước đây mọi mã ngoài `84` chỉ bị kiểm tra độ dài 8–15 chữ số, nghĩa là mã xác thực có thể bị nhắm tới đầu số premium ở nước mà kẻ tấn công ăn chia doanh thu với nhà mạng — kiểu lạm dụng gọi là *SMS pumping*, và nó tiêu tiền thật của bạn.
 - Nonce + honeypot + kiểm tra thời gian điền form tối thiểu.
 - Thông báo lỗi đăng nhập đồng nhất, không phân biệt sai tài khoản hay sai mật khẩu.
 - Tài khoản mới luôn bị ép role `customer`; mọi role gửi kèm form đều bị bỏ qua.

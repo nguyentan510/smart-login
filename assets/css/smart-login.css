@@ -471,18 +471,12 @@
 	line-height: 1;
 }
 
-.sl-contact-grid {
-	display: grid;
-	gap: 16px;
-	margin: 16px 0 24px;
-}
-
-.sl-contact-verification {
-	padding: 14px;
-	border: 1px solid var(--sl-border);
-	border-radius: var(--sl-radius);
-	background: #fafafa;
-}
+/* .sl-contact-grid and the grey bordered box that .sl-contact-verification used
+   to carry both belonged to the pre-8.4 design, where two OTP panels sat open
+   on the page permanently. The panels are rows now, inside a card that already
+   provides the border and the background, so a second box around each one was
+   drawing a frame inside a frame. The block's spacing rules live with the rest
+   of the account layout, further down. */
 
 .sl-contact-row {
 	display: grid;
@@ -638,10 +632,6 @@
 	font-size: 14px;
 }
 
-.sl-address__quick .sl-hint {
-	margin: 6px 0 0;
-}
-
 .sl-separator {
 	margin: 24px 0;
 	border: 0;
@@ -785,9 +775,291 @@
 	font-weight: 500;
 }
 
+/* ---------- Account surface ----------
+   The page inherited max-width:460px from .smart-login — a login-card width on
+   a profile page inside a full-width WooCommerce column, which is why the form
+   sat in a narrow strip misaligned with its own heading. */
+
+.smart-login--account {
+	max-width: 760px;
+	margin: 0;
+	padding-top: 0;
+}
+
+.sl-card {
+	margin: 0 0 16px;
+	padding: 18px 20px;
+	border: 1px solid var(--sl-border);
+	border-radius: 12px;
+	background: #fff;
+}
+
+.sl-card__head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.sl-card__title {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin: 0 0 16px;
+	font-size: 16px;
+	font-weight: 600;
+}
+
+.sl-card__head .sl-card__title {
+	margin-bottom: 0;
+}
+
+.sl-card__head + * {
+	margin-top: 16px;
+}
+
+.sl-card__icon {
+	color: var(--sl-accent);
+	font-size: 10px;
+	line-height: 1;
+}
+
+.sl-card__note {
+	margin-top: -8px;
+}
+
+.sl-grid-2 {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 0 16px;
+}
+
+.sl-static {
+	margin: 0;
+	padding: 9px 0;
+	font-weight: 500;
+}
+
+/* ---------- Badges ---------- */
+
+.sl-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 999px;
+	font-size: 11px;
+	line-height: 1.6;
+	white-space: nowrap;
+}
+
+.sl-badge--verified {
+	background: #e8f6ee;
+	color: #0f6b3c;
+}
+
+/* Says out loud that this card does not wait for the submit button. A control
+   that takes effect immediately inside a form you must still submit is the
+   single most confusing thing about the screen this replaces. */
+.sl-badge--instant {
+	background: #eaf1fe;
+	color: #1c4bb8;
+}
+
+/* ---------- Value rows ---------- */
+
+/* The row is only a line of content: label, value, badge, action. Separation and
+   rhythm belong to the block around it, because the editor that expands under a
+   row is part of the same block — a rule drawn on the row itself would cut the
+   value off from the editor that changes it. */
+.sl-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+	min-height: 36px;
+}
+
+/* Separator between blocks, not on each one. `:first-of-type` cannot express
+   this: it counts element type, not class, and .sl-card__head is already the
+   first div in the card — so the first contact block was never matched and kept
+   a rule above it with nothing to separate it from. */
+.sl-contact-verification {
+	padding-bottom: 12px;
+}
+
+.sl-contact-verification + .sl-contact-verification {
+	padding-top: 12px;
+	border-top: 1px solid var(--sl-border);
+}
+
+.sl-row__label {
+	flex: 0 0 108px;
+	color: var(--sl-muted);
+	font-size: 13px;
+}
+
+.sl-row__value {
+	flex: 1 1 140px;
+	word-break: break-word;
+}
+
+.sl-contact-edit {
+	padding-top: 12px;
+}
+
+/* ---------- Linked identities ----------
+   Phase 6 shipped this markup with no CSS at all, so it rendered as a bulleted
+   list with a bare <details>. */
+
+.sl-identities {
+	margin-top: 4px;
+	padding-top: 4px;
+	border-top: 1px solid var(--sl-border);
+}
+
+.sl-subtitle {
+	margin: 12px 0 8px;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--sl-muted);
+}
+
+.sl-identity-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.sl-identity-item {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 10px;
+	padding: 10px 0;
+	border-top: 1px solid var(--sl-border);
+}
+
+.sl-identity-item:first-child {
+	border-top: 0;
+}
+
+.sl-identity-label {
+	font-weight: 500;
+}
+
+.sl-identity-value {
+	flex: 1 1 auto;
+	color: var(--sl-muted);
+	word-break: break-all;
+}
+
+.sl-identity-badge {
+	padding: 2px 8px;
+	border-radius: 999px;
+	background: #eaf1fe;
+	color: #1c4bb8;
+	font-size: 11px;
+}
+
+.sl-identity-note {
+	flex: 1 1 100%;
+	font-size: 12px;
+}
+
+.sl-identity-unlink summary {
+	cursor: pointer;
+	font-size: 13px;
+}
+
+.sl-identity-unlink[open] {
+	flex: 1 1 100%;
+	margin-top: 6px;
+	padding: 12px;
+	border: 1px solid var(--sl-border);
+	border-radius: var(--sl-radius);
+	background: #fafafa;
+}
+
+.sl-btn--danger {
+	border-color: var(--sl-accent);
+	color: var(--sl-accent);
+}
+
+.sl-link-providers {
+	margin-top: 12px;
+	padding-top: 12px;
+	border-top: 1px solid var(--sl-border);
+}
+
+/* ---------- Disclosure ---------- */
+
+.sl-disclosure__summary {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 10px;
+	cursor: pointer;
+	font-weight: 500;
+}
+
+.sl-disclosure__body {
+	margin-top: 16px;
+}
+
+/* ---------- Save bar ----------
+   The form is long enough that a button at the end of the document means
+   scrolling past everything to save anything. */
+
+.sl-savebar {
+	position: sticky;
+	bottom: 0;
+	z-index: 20;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 12px;
+	margin: 0;
+	padding: 12px 16px;
+	border: 1px solid var(--sl-border);
+	border-radius: 12px;
+	background: #fff;
+}
+
+.sl-savebar .sl-btn {
+	margin: 0 0 0 auto;
+	width: auto;
+	min-width: 160px;
+}
+
+.sl-savebar__state {
+	color: var(--sl-muted);
+	font-size: 13px;
+}
+
+.sl-savebar.is-dirty {
+	border-color: var(--sl-accent);
+}
+
+.sl-savebar.is-dirty .sl-savebar__state {
+	color: var(--sl-accent);
+}
+
 /* ---------- Small screens ---------- */
 
 @media (max-width: 480px) {
+	.sl-card {
+		padding: 14px;
+	}
+
+	.sl-row__label {
+		flex-basis: 100%;
+	}
+
+	.sl-savebar .sl-btn {
+		width: 100%;
+		margin-left: 0;
+	}
+
 	.smart-login {
 		padding-left: 16px;
 		padding-right: 16px;
