@@ -597,8 +597,11 @@ no limiter at all while the README says it does.
       extractor for the ordering and per-callback rules, and a real filter
       registry in the stubs — the latter proven byte-identical across the other
       eight suites. Rule 6 shows **1 of 11** REST callbacks reaching the guard
-- [ ] **9.1** [Site budget](abuse-boundary/9.1-site-budget.md) — the missing
-      axis, plus the phase's single DB version bump
+- [x] **9.1** [Site budget](abuse-boundary/9.1-site-budget.md) — the missing
+      axis, plus the phase's single DB version bump (4 → 5, `KEY created_at`).
+      Kill switch is an option not a transient, and the halted path sheds load:
+      one option read instead of three counting queries. Behaviour pinned in the
+      **required** suite rather than the spec one, so it blocks now — 201 → 217
 - [ ] **9.2** [Country allowlist](abuse-boundary/9.2-country-allowlist.md) —
       cheapest control in the phase, removes most of the pumping incentive
 - [ ] **9.3** [Delivery limits](abuse-boundary/9.3-delivery-limits.md) — clamped

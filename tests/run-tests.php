@@ -294,6 +294,108 @@ foreach ( array( '0969789475', '+84969789475', '096 978 9475', '096-978-9475' ) 
 check( 'phone formatting variants share one lock key', 1, count( array_unique( $lock_keys ) ) );
 
 // ---------------------------------------------------------------------
+section( 'RateLimiter — site-wide budget and kill switch (Phase 9.1)' );
+
+/**
+ * Counts what it was asked for, so a ceiling can be driven without SQL.
+ *
+ * The stub wpdb returns one global whatever the query is, which makes every
+ * count_* method indistinguishable through it. RateLimiter injects its
+ * repository, so the honest instrument is a repository, not a smarter wpdb.
+ */
+class SmartLoginBudgetRepo extends OtpRepository {
+
+	/** @var int Rows the site is pretending to have sent this hour. */
+	public $sent = 0;
+
+	/** @var int How many times a counting query was run. */
+	public $counted = 0;
+
+	public function last_sent_at( string $destination, string $intent ): int {
+		return 0;
+	}
+
+	public function count_recent_by_destination( string $destination, int $seconds ): int {
+		++$this->counted;
+		return 0;
+	}
+
+	public function count_recent_by_ip( ?string $ip_binary, int $seconds ): int {
+		++$this->counted;
+		return 0;
+	}
+
+	public function count_recent_all( int $seconds ): int {
+		++$this->counted;
+		return $this->sent;
+	}
+}
+
+Settings::update(
+	array(
+		'security.max_per_site_hour' => 2,
+		'security.max_per_site_day'  => 0,
+		'security.halt_minutes'      => 60,
+		'otp.max_per_destination_hour' => 0,
+		'otp.max_per_ip_hour'          => 0,
+		'otp.resend_cooldown'          => 0,
+	)
+);
+
+RateLimiter::resume();
+$GLOBALS['sl_mails']    = array();
+$GLOBALS['sl_options']['admin_email'] = 'ops@example.test';
+
+$budget_repo = new SmartLoginBudgetRepo();
+$budget      = new RateLimiter( $budget_repo );
+
+// Two sends to two different destinations from two different addresses. Neither
+// is near any per-destination or per-IP limit; both are disabled above.
+$_SERVER['REMOTE_ADDR'] = '203.0.113.11';
+check( 'first send is allowed', true, true === $budget->check_otp_send( '84969789001', 'register' ) );
+
+$budget_repo->sent      = 1;
+$_SERVER['REMOTE_ADDR'] = '203.0.113.12';
+check( 'second send is allowed', true, true === $budget->check_otp_send( '84969789002', 'register' ) );
+
+// The third crosses the ceiling. A third destination and a third address, so
+// nothing but the site-wide counter can be refusing it.
+$budget_repo->sent      = 2;
+$_SERVER['REMOTE_ADDR'] = '203.0.113.13';
+$refused                = $budget->check_otp_send( '84969789003', 'register' );
+
+check( 'a third distinct destination on a third IP is refused', true, is_wp_error( $refused ) );
+check( 'the refusal does not name the site budget', 'smart_login_unavailable', is_wp_error( $refused ) ? $refused->get_error_code() : '' );
+check( 'the halt is recorded', true, $budget->halted_for() > 0 );
+check( 'crossing the ceiling mails the admin once', 1, count( $GLOBALS['sl_mails'] ) );
+
+// While halted, the limiter must shed load rather than add to it: no counting
+// query at all, and still no second mail.
+$budget_repo->counted = 0;
+$again                = $budget->check_otp_send( '84969789004', 'register' );
+
+check( 'a halted site is refused', true, is_wp_error( $again ) );
+check( 'a halted site runs no counting query', 0, $budget_repo->counted );
+check( 'a halted site does not mail again', 1, count( $GLOBALS['sl_mails'] ) );
+
+RateLimiter::resume();
+check( 'resume() clears the halt', 0, $budget->halted_for() );
+
+// A ceiling of 0 means unlimited, not "refuse everything" — the setting help
+// says so, and reading it the other way would take a site offline on save.
+Settings::update( array( 'security.max_per_site_hour' => 0 ) );
+$budget_repo->sent = 9999;
+check( 'a ceiling of 0 disables the limit', true, true === $budget->check_otp_send( '84969789005', 'register' ) );
+
+Settings::update(
+	array(
+		'security.max_per_site_hour' => 100,
+		'security.max_per_site_day'  => 500,
+	)
+);
+RateLimiter::resume();
+
+// ---------------------------------------------------------------------
 section( 'UserManager::split_name — Vietnamese name order' );
 
 $name = UserManager::split_name( 'Nguyễn Ngọc Tân' );

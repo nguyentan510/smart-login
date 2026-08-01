@@ -35,6 +35,7 @@ final class FieldRegistry {
 			'providers' => __( 'Đăng nhập nhanh', 'smart-login' ),
 			'delivery'  => __( 'Gửi mã', 'smart-login' ),
 			'profile'   => __( 'Hồ sơ & Địa chỉ', 'smart-login' ),
+			'security'  => __( 'Chống lạm dụng', 'smart-login' ),
 			'advanced'  => __( 'Nâng cao', 'smart-login' ),
 		);
 	}
@@ -53,6 +54,7 @@ final class FieldRegistry {
 			'fields'   => __( 'Trường hồ sơ', 'smart-login' ),
 			'address'  => __( 'Địa chỉ 2 cấp', 'smart-login' ),
 			'woo'      => __( 'WooCommerce', 'smart-login' ),
+			'budget'   => __( 'Trần gửi toàn site', 'smart-login' ),
 			'audit'    => __( 'Nhật ký & dọn dẹp', 'smart-login' ),
 			'dev'      => __( 'Phát triển', 'smart-login' ),
 		);
@@ -80,6 +82,7 @@ final class FieldRegistry {
 			self::provider_fields(),
 			self::delivery_fields(),
 			self::profile_fields(),
+			self::security_fields(),
 			self::advanced_fields(),
 			self::programmatic_fields()
 		);
@@ -580,6 +583,47 @@ final class FieldRegistry {
 				'section' => 'woo',
 				'label'   => __( 'Chặn email ảo', 'smart-login' ),
 				'help'    => __( 'Không gửi bất kỳ email nào tới địa chỉ ảo (khuyến nghị bật)', 'smart-login' ),
+			),
+		);
+	}
+
+	/**
+	 * Ceilings that are not scoped to one destination or one IP.
+	 *
+	 * Everything under `otp.max_per_*` counts a single attacker. These count the
+	 * site, which is the only axis a botnet cannot rotate around. Defaults are
+	 * deliberately generous: a ceiling low enough to break a launch gets switched
+	 * off and never switched back on, which is worse than a high one.
+	 */
+	private static function security_fields(): array {
+		return array(
+			'security.max_per_site_hour' => array(
+				'type'    => 'number',
+				'default' => 100,
+				'min'     => 0,
+				'tab'     => 'security',
+				'section' => 'budget',
+				'label'   => __( 'Số mã tối đa / toàn site / giờ', 'smart-login' ),
+				'help'    => __( 'Chạm trần thì việc gửi mã bị tạm dừng và admin nhận email. Đặt 0 để bỏ giới hạn — <strong>không khuyến nghị nếu bạn trả tiền cho mỗi tin nhắn</strong>.', 'smart-login' ),
+			),
+			'security.max_per_site_day'  => array(
+				'type'    => 'number',
+				'default' => 500,
+				'min'     => 0,
+				'tab'     => 'security',
+				'section' => 'budget',
+				'label'   => __( 'Số mã tối đa / toàn site / ngày', 'smart-login' ),
+				'help'    => __( 'Đặt 0 để bỏ giới hạn.', 'smart-login' ),
+			),
+			'security.halt_minutes'      => array(
+				'type'    => 'number',
+				'default' => 60,
+				'min'     => 5,
+				'max'     => 1440,
+				'tab'     => 'security',
+				'section' => 'budget',
+				'label'   => __( 'Tạm dừng trong (phút)', 'smart-login' ),
+				'help'    => __( 'Sau khoảng thời gian này việc gửi mã tự mở lại.', 'smart-login' ),
 			),
 		);
 	}

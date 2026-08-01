@@ -210,8 +210,14 @@ class Installer {
 			UNIQUE KEY token (token),
 			KEY dest_intent (destination(100), intent, consumed_at),
 			KEY expires_at (expires_at),
-			KEY ip_created (ip, created_at)
+			KEY ip_created (ip, created_at),
+			KEY created_at (created_at)
 		) {$charset};";
+
+		// `created_at` is not redundant against `ip_created`. MySQL can only use
+		// a composite index from its leftmost column, so a site-wide count —
+		// WHERE created_at > ? with no IP predicate — cannot use (ip, created_at)
+		// and would table-scan. RateLimiter runs that count on every send.
 
 		$sql_audit = "CREATE TABLE {$audit} (
 			id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,

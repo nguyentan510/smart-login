@@ -161,6 +161,26 @@ class OtpRepository {
 		);
 	}
 
+	/**
+	 * How many codes went out across the whole site in the last N seconds.
+	 *
+	 * The only counter here not scoped to a destination or an IP, which is the
+	 * point: those two are the axes an attacker rotates. Served by
+	 * KEY created_at, added in DB version 5 for this query.
+	 */
+	public function count_recent_all( int $seconds ): int {
+		global $wpdb;
+
+		$table = $this->table();
+
+		return (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$table} WHERE created_at > %s", // phpcs:ignore WordPress.DB.PreparedSQL
+				gmdate( 'Y-m-d H:i:s', time() - $seconds )
+			)
+		);
+	}
+
 	public function count_recent_by_ip( ?string $ip_binary, int $seconds ): int {
 		if ( null === $ip_binary ) {
 			return 0;

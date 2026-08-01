@@ -27,6 +27,7 @@ class AuditLog {
 	const LOGIN_FAILED      = 'login_failed';
 	const LOCKOUT           = 'lockout';
 	const RATE_LIMITED      = 'rate_limited';
+	const OTP_BUDGET_HALTED = 'otp_budget_halted';
 	const PASSWORD_RESET    = 'password_reset';
 	const PROVIDER_LOGIN    = 'provider_login';
 	const PROVIDER_FAILED   = 'provider_failed';

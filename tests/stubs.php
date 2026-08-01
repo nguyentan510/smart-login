@@ -29,8 +29,26 @@ function get_option( $name, $default = false ) {
 	return $GLOBALS['sl_options'][ $name ] ?? $default;
 }
 
-function update_option( $name, $value ) {
+function update_option( $name, $value, $autoload = null ) {
 	$GLOBALS['sl_options'][ $name ] = $value;
+	return true;
+}
+
+function delete_option( $name ) {
+	unset( $GLOBALS['sl_options'][ $name ] );
+	return true;
+}
+
+/** Every mail the plugin tried to send, so a test can count them. */
+$GLOBALS['sl_mails'] = array();
+
+function wp_mail( $to, $subject, $message, $headers = '', $attachments = array() ) {
+	$GLOBALS['sl_mails'][] = array(
+		'to'      => $to,
+		'subject' => $subject,
+		'message' => $message,
+	);
+
 	return true;
 }
 

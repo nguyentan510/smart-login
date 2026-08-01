@@ -51,6 +51,7 @@ final class Readiness {
 		$checks = array(
 			$this->identity(),
 			$this->delivery(),
+			$this->budget(),
 			$this->form_placement(),
 			$this->address_data(),
 			$this->providers(),
@@ -141,6 +142,62 @@ final class Readiness {
 	 * A configured plugin with no form on the site is still a plugin nobody can
 	 * use, and that was never reported anywhere.
 	 */
+	/**
+	 * The site-wide send ceiling, and whether it has tripped.
+	 *
+	 * A halt is reported as WARN rather than FAIL on purpose: the plugin is
+	 * working exactly as configured, and calling that "broken" would train the
+	 * reader to ignore the row. What it must never do is stay silent — a site
+	 * that has quietly stopped sending codes looks identical to a site whose
+	 * gateway died.
+	 */
+	private function budget(): array {
+		$limiter   = new \SmartLogin\Security\RateLimiter();
+		$remaining = $limiter->halted_for();
+
+		if ( $remaining > 0 ) {
+			return $this->check(
+				'budget',
+				__( 'Trần gửi toàn site', 'smart-login' ),
+				self::WARN,
+				sprintf(
+					/* translators: %d: minutes remaining. */
+					__( 'Đã chạm trần, đang tạm dừng gửi mã. Tự mở lại sau %d phút.', 'smart-login' ),
+					max( 1, (int) ceil( $remaining / MINUTE_IN_SECONDS ) )
+				),
+				'security',
+				__( 'Xem trần', 'smart-login' )
+			);
+		}
+
+		$hour = Settings::get_int( 'security.max_per_site_hour', 100 );
+		$day  = Settings::get_int( 'security.max_per_site_day', 500 );
+
+		if ( $hour <= 0 && $day <= 0 ) {
+			return $this->check(
+				'budget',
+				__( 'Trần gửi toàn site', 'smart-login' ),
+				self::WARN,
+				__( 'Không có trần nào. Mọi giới hạn còn lại đều tính theo một số điện thoại hoặc một IP, nên không có gì chặn được kẻ tấn công đổi cả hai.', 'smart-login' ),
+				'security',
+				__( 'Đặt trần', 'smart-login' )
+			);
+		}
+
+		return $this->check(
+			'budget',
+			__( 'Trần gửi toàn site', 'smart-login' ),
+			self::OK,
+			sprintf(
+				/* translators: 1: hourly ceiling, 2: daily ceiling. */
+				__( '%1$s mã/giờ, %2$s mã/ngày.', 'smart-login' ),
+				$hour > 0 ? (string) $hour : __( 'không giới hạn', 'smart-login' ),
+				$day > 0 ? (string) $day : __( 'không giới hạn', 'smart-login' )
+			),
+			'security'
+		);
+	}
+
 	private function form_placement(): array {
 		if ( \SmartLogin\Plugin::woocommerce_active() && Settings::is_on( 'woo.replace_login_form' ) ) {
 			return $this->check(

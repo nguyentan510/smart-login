@@ -35,6 +35,15 @@ class RateLimiter {
 	 * @return true|WP_Error
 	 */
 	public function check_otp_send( string $destination, string $intent ) {
+		// Cheapest check first, and deliberately so. While the site is halted
+		// this returns on one option read, without the three counting queries
+		// below — so a sustained attack sheds load instead of adding to it.
+		// That is what makes the kill switch an availability control as well as
+		// a spend control.
+		if ( $this->halted_for() > 0 ) {
+			return self::unavailable();
+		}
+
 		$cooldown = Settings::get_int( 'otp.resend_cooldown', 60 );
 		$last     = $this->repo->last_sent_at( $destination, $intent );
 
@@ -70,6 +79,19 @@ class RateLimiter {
 			);
 		}
 
+		// The site-wide ceilings. Every limit above is scoped to one destination
+		// or one IP, which are exactly the two axes an attacker rotates; these
+		// are the only ones a botnet cannot spread its way around.
+		$per_site_hour = Settings::get_int( 'security.max_per_site_hour', 100 );
+		if ( $per_site_hour > 0 && $this->repo->count_recent_all( HOUR_IN_SECONDS ) >= $per_site_hour ) {
+			return $this->halt( 'hour', $per_site_hour );
+		}
+
+		$per_site_day = Settings::get_int( 'security.max_per_site_day', 500 );
+		if ( $per_site_day > 0 && $this->repo->count_recent_all( DAY_IN_SECONDS ) >= $per_site_day ) {
+			return $this->halt( 'day', $per_site_day );
+		}
+
 		/**
 		 * Last word on whether a code may be sent.
 		 *
@@ -78,6 +100,109 @@ class RateLimiter {
 		 * @param string        $intent
 		 */
 		return apply_filters( 'smart_login_check_otp_send', true, $destination, $intent );
+	}
+
+	// -----------------------------------------------------------------
+	// Site-wide budget and kill switch
+	// -----------------------------------------------------------------
+
+	/** Where the halt deadline lives. An option, not a transient — see halt(). */
+	const HALT_OPTION = 'smart_login_otp_halted_until';
+
+	/**
+	 * Seconds left on the site-wide halt, 0 when sending is open.
+	 */
+	public function halted_for(): int {
+		$until = (int) get_option( self::HALT_OPTION, 0 );
+
+		return max( 0, $until - time() );
+	}
+
+	/**
+	 * Trip the kill switch and refuse the send.
+	 *
+	 * The deadline is an option rather than a transient because a transient can
+	 * be evicted by an object-cache flush, and an evicted spend limit fails open
+	 * at the exact moment it is being leaned on.
+	 *
+	 * @param string $window `hour` or `day`, for the audit record only.
+	 * @param int    $ceiling The limit that was reached.
+	 */
+	private function halt( string $window, int $ceiling ): WP_Error {
+		$minutes = max( 1, Settings::get_int( 'security.halt_minutes', 60 ) );
+		$already = $this->halted_for() > 0;
+
+		update_option( self::HALT_OPTION, time() + ( $minutes * MINUTE_IN_SECONDS ), false );
+
+		// Only the request that moved the site from open to halted reports it.
+		// Detecting the transition here rather than at the call site is what
+		// stops a burst of concurrent requests from sending a mail each.
+		if ( ! $already ) {
+			AuditLog::record(
+				AuditLog::OTP_BUDGET_HALTED,
+				'',
+				array(
+					'window'  => $window,
+					'ceiling' => $ceiling,
+					'minutes' => $minutes,
+				)
+			);
+
+			$this->notify_admin( $window, $ceiling, $minutes );
+		}
+
+		return self::unavailable();
+	}
+
+	/**
+	 * One mail per halt, to the site admin.
+	 */
+	private function notify_admin( string $window, int $ceiling, int $minutes ): void {
+		$to = (string) get_option( 'admin_email', '' );
+
+		if ( '' === $to ) {
+			return;
+		}
+
+		wp_mail(
+			$to,
+			sprintf(
+				/* translators: %s: site name. */
+				__( '[%s] Đã tạm dừng gửi mã xác thực', 'smart-login' ),
+				get_bloginfo( 'name' )
+			),
+			sprintf(
+				/* translators: 1: ceiling, 2: hour or day, 3: minutes halted. */
+				__(
+					"Smart Login đã chạm trần %1\$d mã xác thực trong một %2\$s và tạm dừng gửi trong %3\$d phút.\n\nĐây thường là dấu hiệu bị lạm dụng để đốt tin nhắn. Hãy mở Smart Login → Nhật ký để xem lưu lượng gần đây trước khi nâng trần.",
+					'smart-login'
+				),
+				$ceiling,
+				'day' === $window ? __( 'ngày', 'smart-login' ) : __( 'giờ', 'smart-login' ),
+				$minutes
+			)
+		);
+	}
+
+	/**
+	 * What the visitor is told, whichever ceiling tripped.
+	 *
+	 * Naming the site budget would tell an attacker their attack landed, and
+	 * tells an ordinary visitor something they cannot act on.
+	 */
+	private static function unavailable(): WP_Error {
+		return new WP_Error(
+			'smart_login_unavailable',
+			__( 'Hệ thống đang tạm thời không gửi được mã. Vui lòng thử lại sau.', 'smart-login' ),
+			array( 'retry_after' => MINUTE_IN_SECONDS * 15 )
+		);
+	}
+
+	/**
+	 * Clear the halt. The admin screen's "resume sending" control.
+	 */
+	public static function resume(): void {
+		delete_option( self::HALT_OPTION );
 	}
 
 	// -----------------------------------------------------------------
