@@ -645,8 +645,12 @@ no limiter at all while the README says it does.
       writing one audit row per blocked request, so the cap is the other half of
       the kill switch rather than polish beside it. Full dashboard deliberately
       not built — see the Outcome. 272 → 280
-- [ ] **9.10** [Housekeeping](abuse-boundary/9.10-housekeeping.md) — measure the
-      address cache premise before fixing it; decide the shim templates
+- [x] **9.10** [Housekeeping](abuse-boundary/9.10-housekeeping.md) — the cache
+      premise held when measured, so `/address/*` now answers 304 (0 bytes
+      instead of 7 KB on a `wards` replay), verified over HTTP against the live
+      site. The shim templates **stay**: they forward to `form-auth`, so they are
+      compatibility surface rather than dead code — the opposite of what the
+      first review of them concluded
 
 **Integration gate.** `tests/integration/run-abuse-gate.php` covers what the stub
 `$wpdb` cannot: the DB 5 index under `dbDelta`, `count_recent_all()` as real SQL,
