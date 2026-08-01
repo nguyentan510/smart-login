@@ -602,8 +602,12 @@ no limiter at all while the README says it does.
       Kill switch is an option not a transient, and the halted path sheds load:
       one option read instead of three counting queries. Behaviour pinned in the
       **required** suite rather than the spec one, so it blocks now — 201 → 217
-- [ ] **9.2** [Country allowlist](abuse-boundary/9.2-country-allowlist.md) —
-      cheapest control in the phase, removes most of the pumping incentive
+- [x] **9.2** [Country allowlist](abuse-boundary/9.2-country-allowlist.md) —
+      cheapest control in the phase, removes most of the pumping incentive. An
+      empty setting means *the default code only*, so no migration. The Phase 4
+      "exactly one return path through the filter" rule caught the first version
+      of this change adding a second exit — fixed by structure, not by weakening
+      the rule. 217 → 226
 - [ ] **9.3** [Delivery limits](abuse-boundary/9.3-delivery-limits.md) — clamped
       timeout, real backoff, circuit breaker; queueing rejected with reasons
 - [ ] **9.4** [Identify limit](abuse-boundary/9.4-identify-limit.md) — closes the

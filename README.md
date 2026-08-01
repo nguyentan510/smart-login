@@ -21,6 +21,7 @@ Sau khi kích hoạt, mở **Smart Login → Tổng quan**. Màn hình này li�
 ### 1. Tab **Đăng nhập & Đăng ký**
 - **Đăng nhập bằng**: `Chỉ số điện thoại` (mặc định).
 - **Mã quốc gia mặc định**: chọn từ danh sách, mặc định `Việt Nam (+84)`.
+- **Mã quốc gia được phép**: để trống nghĩa là **chỉ chấp nhận mã mặc định ở trên**, không phải chấp nhận mọi quốc gia. Điền `84,65,1` nếu bạn thực sự phục vụ khách ở nhiều nước — xem mục Bảo mật để biết vì sao mỗi mã mở thêm là một khoản chi phí.
 - **Domain email ảo**: giữ nguyên `phone.invalid`. Phần trước `@` là mã nội bộ, không phải số điện thoại — xem mục Bảo mật.
 
 ### 2. Tab **Gửi mã**
@@ -298,7 +299,8 @@ Zalo OA/ZNS không thuộc Login Provider và chưa được triển khai trong 
 - Mã OTP sinh bằng `random_int()`, chỉ lưu dạng HMAC-SHA256, so sánh bằng `hash_equals()`.
 - Bước xác thực dùng token ngẫu nhiên 64 ký tự trong cookie HttpOnly — số điện thoại không bao giờ đi qua form, nên không thể đổi số đích giữa chừng.
 - Mật khẩu không bao giờ tồn tại ở dạng plaintext trong CSDL, kể cả trong bản ghi OTP tạm.
-- Rate limit 3 tầng: cooldown giữa 2 lần gửi, giới hạn theo số điện thoại/giờ, giới hạn theo IP/giờ.
+- Rate limit 4 tầng: cooldown giữa 2 lần gửi, giới hạn theo số điện thoại/giờ, giới hạn theo IP/giờ, và **trần toàn site theo giờ/ngày**. Ba tầng đầu đều tính theo *một* số hoặc *một* IP — tức hai thứ kẻ tấn công xoay vòng được; tầng thứ tư là tầng duy nhất một botnet không đi vòng qua được. Chạm trần thì việc gửi mã tự tạm dừng và admin nhận email.
+- **Chỉ gửi tới mã quốc gia đã cho phép** (mặc định: chỉ mã mặc định). Trước đây mọi mã ngoài `84` chỉ bị kiểm tra độ dài 8–15 chữ số, nghĩa là mã xác thực có thể bị nhắm tới đầu số premium ở nước mà kẻ tấn công ăn chia doanh thu với nhà mạng — kiểu lạm dụng gọi là *SMS pumping*, và nó tiêu tiền thật của bạn.
 - Nonce + honeypot + kiểm tra thời gian điền form tối thiểu.
 - Thông báo lỗi đăng nhập đồng nhất, không phân biệt sai tài khoản hay sai mật khẩu.
 - Tài khoản mới luôn bị ép role `customer`; mọi role gửi kèm form đều bị bỏ qua.

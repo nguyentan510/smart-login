@@ -89,12 +89,38 @@ final class Readiness {
 			'both'       => __( 'Số điện thoại hoặc email', 'smart-login' ),
 		);
 		$mode  = (string) Settings::get( 'identity.mode', 'phone_only' );
+		$codes = \SmartLogin\Identity\Phone::allowed_codes();
+
+		// Not wrong, but it is the configuration that carries the SMS-pumping
+		// exposure, so the operator should have arrived at it on purpose.
+		if ( Settings::phone_enabled() && count( $codes ) > 5 ) {
+			return $this->check(
+				'identity',
+				__( 'Định danh', 'smart-login' ),
+				self::WARN,
+				sprintf(
+					/* translators: 1: identity mode, 2: number of country codes. */
+					__( '%1$s. Đang chấp nhận %2$d mã quốc gia — mỗi mã mở thêm là một đường để đốt tin nhắn.', 'smart-login' ),
+					$modes[ $mode ] ?? $mode,
+					count( $codes )
+				),
+				'auth',
+				__( 'Xem danh sách', 'smart-login' )
+			);
+		}
 
 		return $this->check(
 			'identity',
 			__( 'Định danh', 'smart-login' ),
 			self::OK,
-			$modes[ $mode ] ?? $mode,
+			Settings::phone_enabled()
+				? sprintf(
+					/* translators: 1: identity mode, 2: comma-separated country codes. */
+					__( '%1$s. Mã quốc gia: %2$s.', 'smart-login' ),
+					$modes[ $mode ] ?? $mode,
+					'+' . implode( ', +', $codes )
+				)
+				: ( $modes[ $mode ] ?? $mode ),
 			'auth'
 		);
 	}

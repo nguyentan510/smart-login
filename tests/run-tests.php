@@ -264,6 +264,47 @@ foreach ( $invalid as $number ) {
 }
 
 // ---------------------------------------------------------------------
+section( 'Phone — country-code allowlist (Phase 9.2)' );
+
+// Empty means "the default country code only", not "anything". The whole
+// migration story rests on that reading, so it is the first thing asserted.
+Settings::update( array( 'identity.allowed_country_codes' => '' ) );
+
+check( 'an empty allowlist falls back to the default country code', array( '84' ), Phone::allowed_codes() );
+check( 'a Vietnamese mobile is still valid', true, Phone::is_valid( '84969789475' ) );
+
+// The pumping case. Before 9.2 this returned true: is_valid() applied carrier
+// rules only to 84 and let every other country through a generic length check.
+check( 'a Kenyan number is refused at the default', false, Phone::is_valid( '254712345678' ) );
+check( 'a UK number is refused at the default', false, Phone::is_valid( '447700900123' ) );
+
+Settings::update( array( 'identity.allowed_country_codes' => '84, 254' ) );
+check( 'widening the list admits the country', true, Phone::is_valid( '254712345678' ) );
+check( 'and does not admit one still off the list', false, Phone::is_valid( '447700900123' ) );
+check( 'the list tolerates spaces and separators', array( '84', '254' ), Phone::allowed_codes() );
+
+// A widened list must not weaken the numbering-plan check on the codes that
+// have one. 84 keeps its carrier prefixes whatever else is allowed.
+check( 'a widened list does not weaken the Vietnamese prefix check', false, Phone::is_valid( '84123456789' ) );
+
+// The documented escape hatch has to survive the new branch, in both
+// directions — a filter that can only tighten is not the last word.
+Settings::update( array( 'identity.allowed_country_codes' => '84' ) );
+add_filter(
+	'smart_login_phone_is_valid',
+	static function ( $valid, $canonical ) {
+		return 0 === strpos( $canonical, '254' ) ? true : $valid;
+	},
+	10,
+	2
+);
+
+check( 'the filter can still admit a number the allowlist refused', true, Phone::is_valid( '254712345678' ) );
+remove_all_filters( 'smart_login_phone_is_valid' );
+
+Settings::update( array( 'identity.allowed_country_codes' => '' ) );
+
+// ---------------------------------------------------------------------
 section( 'Phone::to_local / mask' );
 
 check( 'to_local', '0969789475', Phone::to_local( '84969789475' ) );

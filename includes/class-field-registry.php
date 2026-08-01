@@ -111,7 +111,7 @@ final class FieldRegistry {
 
 	private static function auth_fields(): array {
 		return array(
-			'identity.mode'              => array(
+			'identity.mode'                  => array(
 				'type'    => 'select',
 				'default' => 'phone_only',
 				'tab'     => 'auth',
@@ -124,7 +124,7 @@ final class FieldRegistry {
 				),
 				'help'    => __( 'Quyết định trường định danh trên màn hình đăng nhập/đăng ký.', 'smart-login' ),
 			),
-			'identity.country_code'      => array(
+			'identity.country_code'          => array(
 				'type'     => 'select',
 				'default'  => '84',
 				'tab'      => 'auth',
@@ -147,7 +147,15 @@ final class FieldRegistry {
 				'sanitize' => 'country_code',
 				'help'     => __( 'Số nhập dạng <code>0969789475</code> sẽ được chuẩn hoá thành <code>84969789475</code>.', 'smart-login' ),
 			),
-			'identity.synthetic_domain'  => array(
+			'identity.allowed_country_codes' => array(
+				'type'    => 'text',
+				'default' => '',
+				'tab'     => 'auth',
+				'section' => 'identity',
+				'label'   => __( 'Mã quốc gia được phép', 'smart-login' ),
+				'help'    => __( 'Danh sách cách nhau bằng dấu phẩy, ví dụ <code>84,65,1</code>. <strong>Để trống nghĩa là chỉ chấp nhận mã quốc gia mặc định ở trên</strong> — không phải chấp nhận mọi quốc gia. Mở rộng danh sách này làm tăng rủi ro bị đốt tin nhắn qua các đầu số quốc tế.', 'smart-login' ),
+			),
+			'identity.synthetic_domain'      => array(
 				'type'     => 'text',
 				'default'  => 'phone.invalid',
 				'tab'      => 'auth',
@@ -156,7 +164,7 @@ final class FieldRegistry {
 				'sanitize' => 'domain',
 				'help'     => __( 'Dùng cho tài khoản chỉ có số điện thoại. Nên giữ đuôi <code>.invalid</code> — theo RFC 2606 domain này không bao giờ phân giải được, nên không thể phát sinh email bounce.', 'smart-login' ),
 			),
-			'signup.min_password_length' => array(
+			'signup.min_password_length'     => array(
 				'type'    => 'number',
 				'default' => 8,
 				'min'     => 6,
@@ -165,7 +173,7 @@ final class FieldRegistry {
 				'section' => 'signup',
 				'label'   => __( 'Độ dài mật khẩu tối thiểu', 'smart-login' ),
 			),
-			'signup.terms_url'           => array(
+			'signup.terms_url'               => array(
 				'type'    => 'page',
 				'default' => '',
 				'tab'     => 'auth',
@@ -173,7 +181,7 @@ final class FieldRegistry {
 				'label'   => __( 'Link điều kiện áp dụng', 'smart-login' ),
 				'help'    => __( 'Để trống nếu không có trang điều khoản riêng.', 'smart-login' ),
 			),
-			'signup.redirect_register'   => array(
+			'signup.redirect_register'       => array(
 				'type'    => 'page',
 				'default' => '',
 				'tab'     => 'auth',
@@ -181,7 +189,7 @@ final class FieldRegistry {
 				'label'   => __( 'Sau khi đăng ký', 'smart-login' ),
 				'help'    => __( 'Để trống để dùng trang Tài khoản của WooCommerce.', 'smart-login' ),
 			),
-			'signup.redirect_login'      => array(
+			'signup.redirect_login'          => array(
 				'type'    => 'page',
 				'default' => '',
 				'tab'     => 'auth',
@@ -189,7 +197,7 @@ final class FieldRegistry {
 				'label'   => __( 'Sau khi đăng nhập', 'smart-login' ),
 				'help'    => __( 'Để trống để dùng trang Tài khoản của WooCommerce.', 'smart-login' ),
 			),
-			'login.max_attempts'         => array(
+			'login.max_attempts'             => array(
 				'type'    => 'number',
 				'default' => 5,
 				'min'     => 0,
@@ -198,7 +206,7 @@ final class FieldRegistry {
 				'section' => 'login',
 				'label'   => __( 'Số lần sai trước khi khoá', 'smart-login' ),
 			),
-			'login.lockout_minutes'      => array(
+			'login.lockout_minutes'          => array(
 				'type'    => 'number',
 				'default' => 15,
 				'min'     => 1,
@@ -207,7 +215,7 @@ final class FieldRegistry {
 				'section' => 'login',
 				'label'   => __( 'Thời gian khoá (phút)', 'smart-login' ),
 			),
-			'login.otp_new_device'       => array(
+			'login.otp_new_device'           => array(
 				'type'    => 'checkbox',
 				'default' => 0,
 				'tab'     => 'auth',
