@@ -22,6 +22,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 6 — Provider lifecycle**
 - [x] **Phase 7 — Release preparation**
 - [ ] **Phase 8 — Account surface**
+- [ ] **Phase 9 — Abuse boundary**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -29,6 +30,11 @@ independent and may be reordered or dropped.
 Phase 8 is a second body of work on top of a finished refactor: the identity
 model is right, the screen that exposes it is not. Its sub-phases are ordered by
 risk, not by visibility — the user-facing redesign is deliberately last.
+
+Phase 9 is a third: the identity model is right, the screen is right, and neither
+counts anything across the whole site. Its ordering is not preference — three of
+its sub-phases are blocked on another, and shipping them out of order converts a
+security control into an outage.
 
 ---
 
@@ -566,6 +572,63 @@ appearance. 8.3 is what makes the plugin whole without WooCommerce, and must lan
 before 8.4 so the redesign has somewhere to live other than the Woo page. 8.5 and
 8.6 are independent and may be reordered or dropped.
 
+---
+
+## Phase 9 — Abuse boundary
+
+Normative spec: [`abuse-boundary.md`](abuse-boundary.md) — the single-axis
+problem, the budget/breaker distinction, the fail-open/fail-closed asymmetry, the
+ownership boundary and the defaults table all live there.
+
+Execution briefs: [`abuse-boundary/`](abuse-boundary/), one file per sub-phase.
+**Status lives here and only here.**
+
+Short version: every control the plugin has is scoped to one destination or one
+IP, so an attacker rotating both meets no ceiling. `handle_identify()` sends an
+SMS to any number on earth with no account and no challenge; `Phone::is_valid()`
+accepts any country code outside `84`; and the enumeration branch passes through
+no limiter at all while the README says it does.
+
+### Sub-phases
+
+- [ ] **9.0** [Guard rails](abuse-boundary/9.0-guard-rails.md) — eight rules,
+      landed red, seven for controls that do not exist yet
+- [ ] **9.1** [Site budget](abuse-boundary/9.1-site-budget.md) — the missing
+      axis, plus the phase's single DB version bump
+- [ ] **9.2** [Country allowlist](abuse-boundary/9.2-country-allowlist.md) —
+      cheapest control in the phase, removes most of the pumping incentive
+- [ ] **9.3** [Delivery limits](abuse-boundary/9.3-delivery-limits.md) — clamped
+      timeout, real backoff, circuit breaker; queueing rejected with reasons
+- [ ] **9.4** [Identify limit](abuse-boundary/9.4-identify-limit.md) — closes the
+      enumeration oracle and makes the README true
+- [ ] **9.5** [Trusted proxy](abuse-boundary/9.5-trusted-proxy.md) — CIDR
+      allowlist, not a boolean; readiness fails on the spoofable configuration
+- [ ] **9.6** [Login IP ceiling](abuse-boundary/9.6-login-ip-ceiling.md) —
+      password spraying; **blocked on 9.5**
+- [ ] **9.7** [REST guard parity](abuse-boundary/9.7-rest-guard-parity.md) — the
+      JS sends no stamp, so the existing check is inert; JS ships first
+- [ ] **9.8** [Adaptive captcha](abuse-boundary/9.8-adaptive-captcha.md) —
+      invisible under normal load; **blocked on 9.1 and 9.3**
+- [ ] **9.9** [Audit and visibility](abuse-boundary/9.9-audit-and-visibility.md) —
+      write cap, operator screen, and the rule that catches a live retention bug
+- [ ] **9.10** [Housekeeping](abuse-boundary/9.10-housekeeping.md) — measure the
+      address cache premise before fixing it; decide the shim templates
+
+---
+
+**Ordering rationale.** 9.0 first, for the reason the Postscript below gives.
+9.1–9.4 are the release blockers for any site sending paid SMS, and 9.2 is
+sequenced early inside that group because it is an afternoon's work that removes
+most of the attacker's payoff. **9.5 must precede 9.6**: a per-IP login ceiling on
+a site behind a CDN with proxy trust off locks out every visitor sharing an edge
+address, so shipping 9.6 first is an outage, not a control. **9.8 is blocked on
+9.1 and 9.3** — it reads budget pressure and breaker state, and its own outbound
+call must inherit 9.3's timeout discipline. 9.9 and 9.10 are independent and may
+be reordered or dropped.
+
+**9.1 owns the only `SMART_LOGIN_DB_VERSION` bump.** Anything else wanting a
+schema change folds into it rather than bumping again.
+
 ## Risks
 
 | Risk | Mitigation |
@@ -578,3 +641,9 @@ before 8.4 so the redesign has somewhere to live other than the Woo page. 8.5 an
 | Taking over the Woo save path breaks third-party plugins invisibly | `WC_Form_Handler` keeps saving on the Woo page; the renderer emits all four `woocommerce_edit_account_form*` hooks |
 | The redesign lands on a page only reachable with WooCommerce active | 8.3 precedes 8.4, so the standalone surface exists before it is redesigned |
 | 8.6 repeats the Phase 4 / Phase 7 rename failure at 445× the scale | Sequenced last, gated on a dangling-string scan, and declinable in writing |
+| A site-wide ceiling set too low blocks a real launch, gets switched off, and never comes back | Generous defaults; 9.9's screen makes tuning evidence-based rather than a guess |
+| 9.6 causes mass lockout behind a CDN | Hard-sequenced after 9.5; loose default; readiness warns on the exact dangerous combination |
+| The country allowlist rejects a legitimate foreign customer | Default matches today's effective behaviour for VN sites; `smart_login_phone_is_valid` stays the last word; widening is one text field |
+| 9.7's timing check rejects in-flight JS clients on deploy | JS ships as a separate, earlier commit; the check is skipped when no stamp is present |
+| The kill switch becomes a DoS — an attacker halts OTP for everyone | The deliberate trade: a halted hour costs less than a drained balance. Bounded by `halt_minutes`, alerted on, clearable from the admin screen |
+| New settings scatter across existing tabs and get lost | One new `security` tab; existing keys are **not** moved, so the admin suite's tab-membership assertions do not churn |
