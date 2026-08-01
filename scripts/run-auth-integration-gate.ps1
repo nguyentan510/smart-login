@@ -85,4 +85,12 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 & $integrationPhp @phpArgs 'tests/integration/run-provider-gates.php'
+if ($LASTEXITCODE -ne 0) {
+    exit $LASTEXITCODE
+}
+
+# Phase 9. The pure suite drives every abuse control through a stub wpdb that
+# never parses SQL, so the site-wide counter, the new index and the halt option
+# are unproven until they run here.
+& $integrationPhp @phpArgs 'tests/integration/run-abuse-gate.php'
 exit $LASTEXITCODE

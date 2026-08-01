@@ -638,6 +638,12 @@ no limiter at all while the README says it does.
 - [ ] **9.10** [Housekeeping](abuse-boundary/9.10-housekeeping.md) — measure the
       address cache premise before fixing it; decide the shim templates
 
+**Integration gate.** `tests/integration/run-abuse-gate.php` covers what the stub
+`$wpdb` cannot: the DB 5 index under `dbDelta`, `count_recent_all()` as real SQL,
+the halt option round trip, the readiness rows, and `in_cidr()` on the runtime's
+own PHP. Wired into `scripts/run-auth-integration-gate.ps1`. Green on WordPress
+7.0.2 / PHP 8.2.29 as of 9.5.
+
 ---
 
 **Ordering rationale.** 9.0 first, for the reason the Postscript below gives.

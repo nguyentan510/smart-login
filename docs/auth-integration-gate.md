@@ -27,6 +27,19 @@ SMART_LOGIN_PROVIDER_LINKING_OK
 SMART_LOGIN_ZALO_STAGING_SMOKE_OK
 ```
 
+Finally it runs the Phase 9 abuse gate. The pure suite drives every control in
+that phase through a stub `$wpdb` that never parses SQL and a stub option layer
+that never reaches MySQL, so three things are unproven until this runs: that
+`KEY created_at` survives `dbDelta` and is the index MySQL actually picks, that
+`OtpRepository::count_recent_all()` is valid SQL whose count moves with a real
+row, and that the kill switch round-trips through the real option layer. It also
+renders the readiness rows and re-checks `Client::in_cidr()` on the WordPress
+runtime's PHP build rather than the one the unit suite happens to use.
+
+```text
+SMART_LOGIN_ABUSE_GATE_OK
+```
+
 If the runtime is unavailable, the gate exits non-zero and emits
 `SMART_LOGIN_AUTH_INTEGRATION_BLOCKED`. That is an environment blocker, not a
 production-readiness claim.
