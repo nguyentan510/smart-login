@@ -620,8 +620,13 @@ no limiter at all while the README says it does.
       resolves and returns without issuing a code when the subject is unknown, so
       it never reached any limiter. Both doors now spend one budget. 238 → 245.
       **The four release blockers are done.**
-- [ ] **9.5** [Trusted proxy](abuse-boundary/9.5-trusted-proxy.md) — CIDR
-      allowlist, not a boolean; readiness fails on the spoofable configuration
+- [x] **9.5** [Trusted proxy](abuse-boundary/9.5-trusted-proxy.md) — CIDR
+      allowlist, not a boolean; readiness fails on the spoofable configuration.
+      **Reversed a decision the brief had made**: `smart_login_trust_proxy_headers`
+      no longer grants trust on its own, because an escape hatch that reopens the
+      hole is not one. Managed deployments pair it with the new
+      `smart_login_trusted_proxy_cidrs`. 245 → 266, the phase's largest jump —
+      CIDR parsing is where the sharp edges are
 - [ ] **9.6** [Login IP ceiling](abuse-boundary/9.6-login-ip-ceiling.md) —
       password spraying; **blocked on 9.5**
 - [ ] **9.7** [REST guard parity](abuse-boundary/9.7-rest-guard-parity.md) — the

@@ -71,6 +71,21 @@ class RateLimiter {
 		}
 
 		$per_ip = Settings::get_int( 'otp.max_per_ip_hour', 10 );
+
+		// count_recent_by_ip( null ) returns 0, so a request with no usable
+		// address switches the per-IP limit off. That stays — CLI, cron and
+		// unusual SAPI contexts legitimately have no REMOTE_ADDR, and the
+		// site-wide budget already covers what this misses. What does not stay is
+		// the silence: a limit that has quietly stopped applying should be
+		// visible in the log rather than inferred from a surprise.
+		if ( $per_ip > 0 && null === Client::ip_binary() ) {
+			$this->warn_once(
+				'smart_login_warned_no_ip',
+				'no_client_ip',
+				'The per-IP send limit cannot apply to a request with no usable address.'
+			);
+		}
+
 		if ( $per_ip > 0 && $this->repo->count_recent_by_ip( Client::ip_binary(), HOUR_IN_SECONDS ) >= $per_ip ) {
 			return new WP_Error(
 				'smart_login_ip_limit',
@@ -100,6 +115,30 @@ class RateLimiter {
 		 * @param string        $intent
 		 */
 		return apply_filters( 'smart_login_check_otp_send', true, $destination, $intent );
+	}
+
+	/**
+	 * Record an operational warning at most once an hour.
+	 *
+	 * Throttled because the conditions worth warning about are the ones that
+	 * repeat on every request, and an audit log that floods is one nobody reads —
+	 * the same reasoning 9.9 applies to high-volume events.
+	 */
+	private function warn_once( string $transient, string $reason, string $detail ): void {
+		if ( get_transient( $transient ) ) {
+			return;
+		}
+
+		set_transient( $transient, 1, HOUR_IN_SECONDS );
+
+		AuditLog::record(
+			AuditLog::RATE_LIMITED,
+			'',
+			array(
+				'reason' => $reason,
+				'detail' => $detail,
+			)
+		);
 	}
 
 	// -----------------------------------------------------------------

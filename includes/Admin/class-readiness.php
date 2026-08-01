@@ -52,6 +52,7 @@ final class Readiness {
 			$this->identity(),
 			$this->delivery(),
 			$this->budget(),
+			$this->proxy(),
 			$this->form_placement(),
 			$this->address_data(),
 			$this->providers(),
@@ -220,6 +221,84 @@ final class Readiness {
 				$hour > 0 ? (string) $hour : __( 'không giới hạn', 'smart-login' ),
 				$day > 0 ? (string) $day : __( 'không giới hạn', 'smart-login' )
 			),
+			'security'
+		);
+	}
+
+	/**
+	 * Whether the plugin is seeing the visitor's address or the CDN's.
+	 *
+	 * This row exists because the control it describes had no interface at all:
+	 * proxy handling was a filter mentioned once at the bottom of the README, so
+	 * a site behind Cloudflare counted every visitor against one edge address and
+	 * nothing said so. Every per-IP limit in the plugin was quietly measuring the
+	 * wrong thing.
+	 */
+	private function proxy(): array {
+		$trusting = Settings::is_on( 'security.trust_proxy' );
+		$cidrs    = \SmartLogin\Security\Client::trusted_cidrs();
+
+		if ( $trusting && ! $cidrs ) {
+			return $this->check(
+				'proxy',
+				__( 'Proxy và địa chỉ IP', 'smart-login' ),
+				self::FAIL,
+				__( 'Đang bật tin proxy nhưng chưa khai dải IP nào, nên plugin không tin header của ai cả. Khai dải IP của proxy để giới hạn theo IP hoạt động đúng.', 'smart-login' ),
+				'security',
+				__( 'Khai dải IP', 'smart-login' )
+			);
+		}
+
+		// A /0 accepts the entire address space, which is the spoofable
+		// configuration this control exists to prevent, arriving via the box
+		// meant to prevent it.
+		foreach ( $cidrs as $cidr ) {
+			if ( 1 === preg_match( '#/0\s*$#', $cidr ) ) {
+				return $this->check(
+					'proxy',
+					__( 'Proxy và địa chỉ IP', 'smart-login' ),
+					self::FAIL,
+					sprintf(
+						/* translators: %s: the offending CIDR. */
+						__( 'Dải %s nhận mọi địa chỉ, nên bất kỳ ai cũng tự khai được IP của mình. Hãy khai đúng dải của proxy.', 'smart-login' ),
+						$cidr
+					),
+					'security',
+					__( 'Sửa dải IP', 'smart-login' )
+				);
+			}
+		}
+
+		if ( ! $trusting && \SmartLogin\Security\Client::looks_proxied() ) {
+			return $this->check(
+				'proxy',
+				__( 'Proxy và địa chỉ IP', 'smart-login' ),
+				self::WARN,
+				__( 'Request này đến qua Cloudflare nhưng plugin đang bỏ qua header proxy, nên mọi khách bị tính chung một địa chỉ. Giới hạn theo IP vì thế vừa chặn oan người thật vừa không chặn được kẻ tấn công.', 'smart-login' ),
+				'security',
+				__( 'Cấu hình proxy', 'smart-login' )
+			);
+		}
+
+		if ( $trusting ) {
+			return $this->check(
+				'proxy',
+				__( 'Proxy và địa chỉ IP', 'smart-login' ),
+				self::OK,
+				sprintf(
+					/* translators: %d: number of trusted ranges. */
+					_n( 'Tin header proxy từ %d dải đã khai.', 'Tin header proxy từ %d dải đã khai.', count( $cidrs ), 'smart-login' ),
+					count( $cidrs )
+				),
+				'security'
+			);
+		}
+
+		return $this->check(
+			'proxy',
+			__( 'Proxy và địa chỉ IP', 'smart-login' ),
+			self::OK,
+			__( 'Dùng địa chỉ kết nối trực tiếp. Đúng khi site không đứng sau proxy nào.', 'smart-login' ),
 			'security'
 		);
 	}

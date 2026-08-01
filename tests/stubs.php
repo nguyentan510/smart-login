@@ -105,6 +105,14 @@ function remove_all_filters( $hook = '' ) {
 	return true;
 }
 
+function __return_true() {
+	return true;
+}
+
+function __return_false() {
+	return false;
+}
+
 function has_filter( $hook, $callback = false ) {
 	return ! empty( $GLOBALS['sl_filters'][ $hook ] );
 }

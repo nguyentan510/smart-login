@@ -35,6 +35,7 @@ use SmartLogin\OTP\Transports\WebhookTransport;
 use SmartLogin\OTP\OtpRepository;
 use SmartLogin\OTP\OtpService;
 use SmartLogin\OTP\Placeholders;
+use SmartLogin\Security\Client;
 use SmartLogin\Security\RateLimiter;
 use SmartLogin\Settings;
 
@@ -334,6 +335,94 @@ foreach ( array( '0969789475', '+84969789475', '096 978 9475', '096-978-9475' ) 
 }
 
 check( 'phone formatting variants share one lock key', 1, count( array_unique( $lock_keys ) ) );
+
+// ---------------------------------------------------------------------
+section( 'Client::in_cidr — v4 and v6 (Phase 9.5)' );
+
+check( 'exact v4 host', true, Client::in_cidr( '1.2.3.4', '1.2.3.4' ) );
+check( 'v4 inside /24', true, Client::in_cidr( '1.2.3.200', '1.2.3.0/24' ) );
+check( 'v4 outside /24', false, Client::in_cidr( '1.2.4.1', '1.2.3.0/24' ) );
+check( 'v4 on a non-byte boundary, inside', true, Client::in_cidr( '173.245.63.255', '173.245.48.0/20' ) );
+check( 'v4 on a non-byte boundary, outside', false, Client::in_cidr( '173.245.64.0', '173.245.48.0/20' ) );
+check( 'v6 inside /32', true, Client::in_cidr( '2400:cb00:1::5', '2400:cb00::/32' ) );
+check( 'v6 outside /32', false, Client::in_cidr( '2400:cb01::1', '2400:cb00::/32' ) );
+check( 'v4 address against a v6 range never matches', false, Client::in_cidr( '1.2.3.4', '2400:cb00::/32' ) );
+check( 'v6 address against a v4 range never matches', false, Client::in_cidr( '2400:cb00::1', '1.2.3.0/24' ) );
+
+// The dangerous parse. `10.0.0.0/oops` must not become /0 and trust everything,
+// which is what a plain (int) cast on the suffix would have produced.
+check( 'a non-numeric prefix length is rejected, not read as /0', false, Client::in_cidr( '203.0.113.7', '10.0.0.0/oops' ) );
+check( 'an out-of-range prefix length is rejected', false, Client::in_cidr( '1.2.3.4', '1.2.3.0/33' ) );
+check( 'garbage is rejected', false, Client::in_cidr( '1.2.3.4', 'not-an-address' ) );
+check( 'an empty range matches nothing', false, Client::in_cidr( '1.2.3.4', '' ) );
+
+// ---------------------------------------------------------------------
+section( 'Client::ip — a header is trusted only from a trusted peer (Phase 9.5)' );
+
+$GLOBALS['sl_filters']            = array();
+$_SERVER['REMOTE_ADDR']           = '203.0.113.9';
+$_SERVER['HTTP_CF_CONNECTING_IP'] = '198.51.100.7';
+
+Settings::update(
+	array(
+		'security.trust_proxy'         => 0,
+		'security.trusted_proxy_cidrs' => '',
+	)
+);
+check( 'trust off: REMOTE_ADDR wins', '203.0.113.9', Client::ip() );
+
+// The configuration the whole design exists to refuse: trust enabled, but no
+// range says which peers may be believed.
+Settings::update( array( 'security.trust_proxy' => 1 ) );
+check( 'trust on with no ranges: the header is still ignored', '203.0.113.9', Client::ip() );
+
+// An untrusted peer sending the identical header gets nowhere. This is the
+// origin-bypass case — attacker reaches the origin directly and forges a fresh
+// client IP per request.
+Settings::update( array( 'security.trusted_proxy_cidrs' => '198.51.100.0/24' ) );
+check( 'a peer outside the ranges is not believed', '203.0.113.9', Client::ip() );
+
+// The same header from a peer inside the ranges is honoured.
+Settings::update( array( 'security.trusted_proxy_cidrs' => '203.0.113.0/24' ) );
+check( 'a peer inside the ranges is believed', '198.51.100.7', Client::ip() );
+
+// A trusted peer forwarding rubbish must not produce a bogus identity.
+$_SERVER['HTTP_CF_CONNECTING_IP'] = 'not-an-ip';
+check( 'an unparseable forwarded value falls back to the peer', '203.0.113.9', Client::ip() );
+
+// X-Forwarded-For is a chain; the client is leftmost.
+unset( $_SERVER['HTTP_CF_CONNECTING_IP'] );
+$_SERVER['HTTP_X_FORWARDED_FOR'] = '198.51.100.8, 70.41.3.18';
+check( 'the leftmost entry of a forwarded chain is the client', '198.51.100.8', Client::ip() );
+
+// The legacy filter enables trust but no longer grants it on its own: with no
+// ranges configured there is still no peer it is willing to believe.
+Settings::update(
+	array(
+		'security.trust_proxy'         => 0,
+		'security.trusted_proxy_cidrs' => '',
+	)
+);
+add_filter( 'smart_login_trust_proxy_headers', '__return_true' );
+check( 'the legacy filter alone does not grant trust', '203.0.113.9', Client::ip() );
+
+// Paired with a range filter, a managed deployment still works without settings.
+add_filter(
+	'smart_login_trusted_proxy_cidrs',
+	static function () {
+		return array( '203.0.113.0/24' );
+	}
+);
+check( 'filter-configured deployments still work', '198.51.100.8', Client::ip() );
+
+$GLOBALS['sl_filters'] = array();
+unset( $_SERVER['HTTP_X_FORWARDED_FOR'] );
+Settings::update(
+	array(
+		'security.trust_proxy'         => 0,
+		'security.trusted_proxy_cidrs' => '',
+	)
+);
 
 // ---------------------------------------------------------------------
 section( 'RateLimiter — the identify oracle costs something (Phase 9.4)' );

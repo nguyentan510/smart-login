@@ -56,6 +56,7 @@ final class FieldRegistry {
 			'woo'      => __( 'WooCommerce', 'smart-login' ),
 			'budget'   => __( 'Trần gửi toàn site', 'smart-login' ),
 			'breaker'  => __( 'Ngắt mạch kênh gửi', 'smart-login' ),
+			'network'  => __( 'Proxy và địa chỉ IP', 'smart-login' ),
 			'audit'    => __( 'Nhật ký & dọn dẹp', 'smart-login' ),
 			'dev'      => __( 'Phát triển', 'smart-login' ),
 		);
@@ -643,6 +644,23 @@ final class FieldRegistry {
 				'section' => 'budget',
 				'label'   => __( 'Số lần tra định danh / IP / giờ', 'smart-login' ),
 				'help'    => __( 'Màn hình đăng nhập tra xem một số điện thoại đã có tài khoản chưa. Không giới hạn thì danh sách khách hàng của bạn có thể bị dò sạch mà không tốn gì. Đặt 0 để bỏ giới hạn.', 'smart-login' ),
+			),
+			'security.trust_proxy'              => array(
+				'type'    => 'checkbox',
+				'default' => 0,
+				'tab'     => 'security',
+				'section' => 'network',
+				'label'   => __( 'Site đứng sau proxy tin cậy', 'smart-login' ),
+				'help'    => __( 'Bật khi site thực sự nằm sau Cloudflare hoặc một load balancer của bạn. Nếu không điền dải IP bên dưới thì bật cái này <strong>không có tác dụng gì</strong> — và đó là chủ ý: tin header từ một máy chưa xác minh còn tệ hơn không tin gì cả.', 'smart-login' ),
+			),
+			'security.trusted_proxy_cidrs'      => array(
+				'type'    => 'textarea',
+				'default' => '',
+				'rows'    => 4,
+				'tab'     => 'security',
+				'section' => 'network',
+				'label'   => __( 'Dải IP của proxy', 'smart-login' ),
+				'help'    => __( 'Dạng CIDR, mỗi dòng một dải — ví dụ <code>173.245.48.0/20</code>. Cloudflare công bố danh sách tại <code>https://www.cloudflare.com/ips/</code>. Plugin <strong>không kèm sẵn</strong> danh sách này: một danh sách cứng sẽ lạc hậu âm thầm, và lúc đó nó thành lỗ hổng chứ không còn là biện pháp bảo vệ.', 'smart-login' ),
 			),
 			'security.breaker_threshold'        => array(
 				'type'    => 'number',

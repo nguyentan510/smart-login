@@ -300,6 +300,27 @@ Zalo OA/ZNS không thuộc Login Provider và chưa được triển khai trong 
 
 ---
 
+## Site đứng sau Cloudflare hay proxy
+
+**Bắt buộc đọc nếu site của bạn dùng CDN.** Mặc định plugin chỉ tin `REMOTE_ADDR` — địa chỉ duy nhất client không giả mạo được. Sau Cloudflare, `REMOTE_ADDR` là IP máy chủ biên của Cloudflare, nên **mọi khách bị tính chung một địa chỉ**: giới hạn theo IP vừa chặn oan người thật vừa không chặn được kẻ tấn công, và nhật ký ghi lại IP vô dụng cho việc điều tra.
+
+Sửa ở tab **Chống lạm dụng → Proxy và địa chỉ IP**: bật *Site đứng sau proxy tin cậy* **và** dán dải IP của proxy (Cloudflare công bố tại `https://www.cloudflare.com/ips/`).
+
+Cần cả hai. Bật cờ mà không khai dải thì plugin không tin header của ai cả — đó là chủ ý, không phải thiếu sót: nếu chỉ cần một cái cờ, kẻ tấn công tìm được IP gốc của server sẽ đi thẳng vào đó và tự khai IP mới cho từng request, làm bay sạch mọi giới hạn theo IP. **Header chỉ đáng tin khi máy gửi nó đáng tin.** Màn hình Tổng quan báo đỏ nếu bạn bật cờ mà quên khai dải.
+
+Plugin **không kèm sẵn** danh sách IP Cloudflare: một danh sách cứng sẽ lạc hậu âm thầm, và lúc đó nó thành lỗ hổng chứ không còn là biện pháp bảo vệ.
+
+Với deployment quản lý tập trung, dùng filter thay cho Settings:
+
+```php
+add_filter( 'smart_login_trust_proxy_headers', '__return_true' );
+add_filter( 'smart_login_trusted_proxy_cidrs', fn() => array( '173.245.48.0/20', '2400:cb00::/32' ) );
+```
+
+Cả hai đều cần. Trước đây `smart_login_trust_proxy_headers` một mình là đủ; nay không còn, vì một lối thoát hiểm mở lại đúng lỗ hổng thì không phải lối thoát hiểm.
+
+---
+
 ## Bảo mật
 
 - Mã OTP sinh bằng `random_int()`, chỉ lưu dạng HMAC-SHA256, so sánh bằng `hash_equals()`.
