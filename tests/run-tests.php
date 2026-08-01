@@ -13,8 +13,10 @@
 
 require __DIR__ . '/stubs.php';
 
+use SmartLogin\Address\AddressFields;
 use SmartLogin\Address\AddressNormalizer;
 use SmartLogin\Address\AddressRepository;
+use SmartLogin\Address\WooAddress;
 use SmartLogin\Auth\AuthContext;
 use SmartLogin\Auth\OAuthTransactionStore;
 use SmartLogin\Auth\PendingSession;
@@ -512,6 +514,63 @@ if ( ! AddressRepository::is_dataset_installed() ) {
 	check( 'is_valid_pair accepts a real pair', true, AddressRepository::is_valid_pair( $first_ward, $first_province ) );
 	check( 'is_valid_pair rejects a crossed pair', false, AddressRepository::is_valid_pair( $first_ward, $other_province ) );
 	check( 'unknown ward code is rejected', false, AddressRepository::is_valid_pair( '99999', $first_province ) );
+}
+
+// ---------------------------------------------------------------------
+section( 'Address boundary — one set of keys, two hosts (Phase 8.5)' );
+
+/*
+ * The profile card and WooCommerce's own Addresses tab edit the same address.
+ * They must therefore leave the same three values behind, in the same shapes:
+ * billing_state holds the province CODE (shipping zones match on it),
+ * billing_city holds the ward NAME (order emails and invoices print it), and
+ * the ward code lives in its own meta key.
+ *
+ * Two writers for one address is the arrangement most likely to rot quietly —
+ * nothing errors when they drift, the data just stops agreeing with itself.
+ */
+if ( AddressRepository::is_dataset_installed() ) {
+	$boundary_province = (string) array_key_first( AddressRepository::provinces() );
+	$boundary_wards    = AddressRepository::wards( $boundary_province );
+	$boundary_ward     = (string) array_key_first( $boundary_wards );
+	$boundary_name     = $boundary_wards[ $boundary_ward ]['name'];
+
+	// Host 1: the plugin's own form.
+	$clean = AddressFields::validate(
+		array(
+			AddressFields::FIELD_PROVINCE => $boundary_province,
+			AddressFields::FIELD_WARD     => $boundary_ward,
+			AddressFields::FIELD_STREET   => '12 Trần Duy Hưng',
+		)
+	);
+	check( 'the profile form accepts a real pair', false, is_wp_error( $clean ) );
+
+	if ( ! is_wp_error( $clean ) ) {
+		AddressFields::save_for_user( 4001, $clean );
+	}
+
+	// Host 2: WooCommerce saved its own form, then WooAddress resolves the code
+	// it posted into the name Woo wants to store.
+	update_user_meta( 4002, 'billing_state', $boundary_province );
+	update_user_meta( 4002, 'billing_city', $boundary_ward );
+	update_user_meta( 4002, 'billing_address_1', '12 Trần Duy Hưng' );
+	( new WooAddress() )->store_customer_ward( 4002, 'billing' );
+
+	foreach ( array( 'billing_state', 'billing_city', 'billing_address_1', AddressFields::META_WARD_CODE ) as $shared_key ) {
+		check(
+			'both hosts agree on ' . $shared_key,
+			get_user_meta( 4001, $shared_key, true ),
+			get_user_meta( 4002, $shared_key, true )
+		);
+	}
+
+	check( 'province is stored as a code, so shipping zones still match', $boundary_province, get_user_meta( 4001, 'billing_state', true ) );
+	check( 'ward is stored as a name, so invoices read properly', $boundary_name, get_user_meta( 4001, 'billing_city', true ) );
+	check( 'the ward code is kept alongside it', $boundary_ward, get_user_meta( 4001, AddressFields::META_WARD_CODE, true ) );
+
+	// Shipping is left alone on purpose: a customer may deliver somewhere other
+	// than they are billed, and the profile card only ever edits the default.
+	check( 'the profile form never touches shipping', '', get_user_meta( 4001, 'shipping_city', true ) );
 }
 
 // ---------------------------------------------------------------------

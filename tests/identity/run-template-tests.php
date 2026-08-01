@@ -326,6 +326,54 @@ foreach ( $fixtures as $template => $args ) {
 }
 
 // ---------------------------------------------------------------------
+sl_section( 'The ward select explains why it is inert (Phase 8.5)' );
+
+/*
+ * The fixture above renders it with a province already chosen, which is the
+ * state where there is nothing to explain. This renders the other one — the
+ * state a first-time visitor actually sees.
+ */
+$sl_render_address = static function ( array $wards ) use ( $fixtures, $root ): string {
+	$args = $fixtures['partials/address-fields'];
+	$args['wards'] = $wards;
+	$args['values']['ward_code'] = $wards ? $args['values']['ward_code'] : '';
+
+	ob_start();
+	( static function ( string $sl_file, array $sl_args ): void {
+		extract( $sl_args, EXTR_SKIP ); // phpcs:ignore WordPress.PHP.DontExtract
+		include $sl_file;
+	} )( $root . 'partials/address-fields.php', $args );
+
+	return (string) ob_get_clean();
+};
+
+$sl_waiting = $sl_render_address( array() );
+$sl_ready   = $sl_render_address( $fixtures['partials/address-fields']['wards'] );
+
+sl_assert(
+	'a ward select with nothing to offer says so',
+	false !== strpos( $sl_waiting, 'Chọn Tỉnh/Thành phố trước' ),
+	'A grey box that never says why reads as broken rather than as waiting.'
+);
+
+sl_assert(
+	'the explanation is attached to the control, not just near it',
+	(bool) preg_match( '/aria-describedby="[^"]*-ward-hint"/', $sl_waiting ),
+	'Screen readers get the reason only if the select points at it.'
+);
+
+sl_assert(
+	'the explanation is absent once wards are available',
+	false === strpos( $sl_ready, 'Chọn Tỉnh/Thành phố trước' ),
+	'An instruction that no longer applies is worse than none.'
+);
+
+sl_assert(
+	'the select is only disabled while it is empty',
+	false !== strpos( $sl_waiting, 'disabled' ) && false === strpos( $sl_ready, 'disabled' )
+);
+
+// ---------------------------------------------------------------------
 sl_section( 'Every template on disk is either rendered here or excluded in writing' );
 
 /*

@@ -57,13 +57,22 @@ $sl_req = ! empty( $required );
 				?>
 				<span class="sl-required">*</span><?php endif; ?>
 		</label>
+		<?php
+		/*
+		 * Inert until a province is chosen, because there is nothing to choose
+		 * from until then — but a grey box that never says why reads as broken
+		 * rather than as waiting. The hint is tied to the control through
+		 * aria-describedby so it is not only a visual explanation.
+		 */
+		$sl_ward_waiting = empty( $wards );
+		?>
 		<select
 			class="sl-input sl-address__ward"
 			id="<?php echo esc_attr( $sl_uid ); ?>-ward"
 			name="<?php echo esc_attr( AddressFields::FIELD_WARD ); ?>"
 			data-sl-ward
 			<?php echo $sl_req ? 'required' : ''; ?>
-			<?php echo empty( $wards ) ? 'disabled' : ''; ?>
+			<?php echo $sl_ward_waiting ? 'disabled aria-describedby="' . esc_attr( $sl_uid ) . '-ward-hint"' : ''; ?>
 		>
 			<option value=""><?php esc_html_e( '— Chọn Phường/Xã —', 'smart-login' ); ?></option>
 			<?php foreach ( $wards as $sl_code => $sl_ward ) : ?>
@@ -72,6 +81,12 @@ $sl_req = ! empty( $required );
 				</option>
 			<?php endforeach; ?>
 		</select>
+
+		<?php if ( $sl_ward_waiting ) : ?>
+			<p class="sl-hint" id="<?php echo esc_attr( $sl_uid ); ?>-ward-hint" data-sl-ward-hint>
+				<?php esc_html_e( 'Chọn Tỉnh/Thành phố trước để hiện danh sách Phường/Xã.', 'smart-login' ); ?>
+			</p>
+		<?php endif; ?>
 
 		<noscript>
 			<p class="sl-hint">

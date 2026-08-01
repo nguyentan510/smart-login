@@ -366,12 +366,24 @@
 	 * @param {Combo|null}        wardCombo
 	 */
 	function link( provinceSelect, wardSelect, wardCombo ) {
+		// The server renders this when it hands over an empty ward list, so the
+		// grey select explains itself before any script runs. Once the list
+		// arrives the explanation is wrong, so it goes with it.
+		var wardHint = ( wardSelect.closest( '.sl-field' ) || document ).querySelector( '[data-sl-ward-hint]' );
+
+		function showHint( waiting ) {
+			if ( wardHint ) {
+				wardHint.hidden = ! waiting;
+			}
+		}
+
 		function load( preserve ) {
 			var code = provinceSelect.value;
 
 			if ( ! code ) {
 				fillWardSelect( wardSelect, [], '' );
 				wardSelect.disabled = true;
+				showHint( true );
 				if ( wardCombo ) {
 					wardCombo.setDisabled( true );
 					wardCombo.syncFromSelect();
@@ -386,6 +398,7 @@
 			return fetchWards( code ).then( function ( wards ) {
 				fillWardSelect( wardSelect, wards, preserve );
 				wardSelect.disabled = wards.length === 0;
+				showHint( wards.length === 0 );
 
 				if ( wardCombo ) {
 					wardCombo.setDisabled( wards.length === 0 );

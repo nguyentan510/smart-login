@@ -550,8 +550,10 @@ Google linked.
 - [x] **Removal by request** — Mã giới thiệu and Tìm nhanh địa chỉ deleted from
       the whole codebase, including `data/search-index.php` (312 KB) and the
       build step behind it. Three fitness rules keep them gone
-- [ ] **8.5** [Address boundary](account-surface/8.5-address-boundary.md) — one
-      picker, two hosts
+- [x] **8.5** [Address boundary](account-surface/8.5-address-boundary.md) — one
+      picker, two hosts. Already unified where it counts; the plan's step 2
+      would have been a regression and was dropped. The boundary is now
+      asserted instead, and the ward select explains itself
 - [ ] **8.6** [Interface language](account-surface/8.6-interface-language.md) —
       a decision, declinable in writing
 
