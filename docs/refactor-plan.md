@@ -21,7 +21,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 5 — Profile boundary**
 - [x] **Phase 6 — Provider lifecycle**
 - [x] **Phase 7 — Release preparation**
-- [ ] **Phase 8 — Account surface**
+- [x] **Phase 8 — Account surface**
 - [x] **Phase 9 — Abuse boundary**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
@@ -560,8 +560,12 @@ Google linked.
       picker, two hosts. Already unified where it counts; the plan's step 2
       would have been a regression and was dropped. The boundary is now
       asserted instead, and the ward select explains itself
-- [ ] **8.6** [Interface language](account-surface/8.6-interface-language.md) —
-      a decision, declinable in writing
+- [x] **8.6** [Interface language](account-surface/8.6-interface-language.md) —
+      **declined in writing for 1.0.1.** The plugin targets Vietnamese sites and
+      Vietnamese msgids are the honest encoding of that. The delay was not free:
+      the sweep grew 445 → 605 strings while the decision stayed open, which is
+      the effect the brief predicted and the reason it is closed rather than
+      deferred again. The `.pot` is regenerated and current
 
 ---
 

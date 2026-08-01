@@ -4,9 +4,52 @@
 
 ## [1.0.1] — chưa phát hành
 
-Bản này viết lại tầng định danh. Chi tiết thiết kế ở
-[`docs/identity-model.md`](docs/identity-model.md), quá trình ở
+Bản này viết lại tầng định danh và dựng ranh giới chống lạm dụng. Chi tiết thiết
+kế ở [`docs/identity-model.md`](docs/identity-model.md) và
+[`docs/abuse-boundary.md`](docs/abuse-boundary.md), quá trình ở
 [`docs/refactor-plan.md`](docs/refactor-plan.md).
+
+### Chống lạm dụng
+
+Mọi giới hạn trước đây đều tính theo **một** số điện thoại hoặc **một** IP — đúng
+hai trục kẻ tấn công xoay vòng được. Không có gì đếm trên phạm vi cả website, nên
+một botnet đổi cả hai trục không gặp trần nào.
+
+- **Trần gửi mã toàn site theo giờ và theo ngày**, kèm kill switch tự động và
+  email cảnh báo. Đây là trần duy nhất không thể đi vòng bằng cách đổi IP hay đổi
+  số. Chạm trần thì việc gửi tạm dừng; màn hình Tổng quan có nút mở lại thủ công.
+- **Chỉ gửi tới mã quốc gia đã cho phép** (mặc định: chỉ mã mặc định). Trước đây
+  mọi mã ngoài `84` chỉ bị kiểm độ dài 8–15 chữ số, nghĩa là mã xác thực có thể bị
+  nhắm tới đầu số premium ở nước mà kẻ tấn công ăn chia doanh thu với nhà mạng.
+- **Bước tra định danh nay có hạn mức theo IP.** Trước đây `RateLimiter` chỉ được
+  gọi từ trong `OtpService::issue()`, tức nhánh *"chưa có tài khoản"*; một số đã
+  đăng ký đi thẳng tới màn hình mật khẩu mà không qua giới hạn nào, nên danh sách
+  khách hàng có thể bị dò sạch miễn phí. Màn hình Quên mật khẩu có cùng lỗ hổng và
+  nay dùng chung hạn mức đó.
+- **Trần đăng nhập sai theo IP.** Khoá cũ tính theo cặp `(tài khoản, IP)` nên
+  không thấy được kiểu rải mật khẩu: một mật khẩu phổ biến thử trên hàng nghìn tài
+  khoản chỉ ghi một lần sai cho mỗi tài khoản.
+- **Timeout gửi bị chặn cứng ở 15 giây và có ngắt mạch.** Mỗi lần gửi giữ một
+  tiến trình PHP; ở 10 request/giây, timeout 10 giây chiếm 100 tiến trình trong
+  khi pool PHP-FPM điển hình chỉ có 20–50 — thứ sập là cả website.
+- **Cấu hình proxy tin cậy theo dải CIDR.** Sau Cloudflare, `REMOTE_ADDR` là IP
+  máy chủ biên, nên mọi khách bị tính chung một địa chỉ và mọi giới hạn theo IP
+  vừa chặn oan vừa vô dụng. Chỉ một cái cờ là không đủ: header chỉ đáng tin khi
+  máy gửi nó nằm trong dải đã khai.
+- **Xác minh chống robot tuỳ chọn** (Turnstile / hCaptcha), mặc định chỉ hiện khi
+  site đang bị ép. Ngày thường trình duyệt khách không tải script bên thứ ba nào.
+- **Nhật ký không còn khuếch đại cuộc tấn công nó ghi lại.** Vượt trần mỗi loại sự
+  kiện chỉ ghi một dòng tổng hợp cho cả giờ; các sự kiện quan trọng không bao giờ
+  bị bỏ.
+
+### Sửa lỗi
+
+- **Thời gian giữ nhật ký và bản ghi OTP mà quản trị viên đặt nay mới thực sự có
+  tác dụng.** `Installer::cleanup()` đọc key phẳng `otp_retention_days` và
+  `audit_retention_days` trong khi bản viết lại phần cài đặt đã đổi chúng thành
+  `advanced.*`. Cả hai lần đọc đều trượt và âm thầm rơi về hằng số 7/90.
+- **`/address/*` trả về 304 khi client đã có bản mới nhất**, thay vì tải lại toàn
+  bộ dữ liệu để rồi báo không có gì thay đổi.
 
 ### Bảo mật
 
