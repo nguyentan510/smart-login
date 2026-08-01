@@ -91,6 +91,10 @@ class Assets {
 			array(
 				'restUrl'   => esc_url_raw( rest_url( 'smart-login/v1/' ) ),
 				'nonce'     => wp_create_nonce( 'wp_rest' ),
+				// The same signed timestamp the HTML forms carry. Until it was
+				// sent, RequestGuard::verify_rest() had nothing to inspect on the
+				// JS path — it was not weak there, it was inert.
+				'stamp'     => \SmartLogin\Security\RequestGuard::stamp( 'rest' ),
 				'otpLength' => min( 8, max( 4, Settings::get_int( 'otp.length', 6 ) ) ),
 				'i18n'      => array(
 					'resend'      => __( 'Gửi lại', 'smart-login' ),

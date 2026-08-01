@@ -310,19 +310,12 @@ sl_assert(
 // =====================================================================
 sl_section( 'Rule 6 — every REST route callback reaches the form guard (9.7)' );
 
-$sl_rest_src   = sl_source( 'includes/Frontend/class-rest-controller.php' );
-$sl_routes     = sl_method_body( $sl_rest_src, 'register_routes' );
-$sl_unguarded  = array();
-$sl_callbacks  = array();
+$sl_rest_src  = sl_source( 'includes/Frontend/class-rest-controller.php' );
+$sl_routes    = sl_method_body( $sl_rest_src, 'register_routes' );
+$sl_callbacks = array();
 
 if ( preg_match_all( "/=>\s*'(handle_[a-z_]+)'/", $sl_routes, $sl_m ) ) {
 	$sl_callbacks = array_unique( $sl_m[1] );
-}
-
-foreach ( $sl_callbacks as $sl_callback ) {
-	if ( false === strpos( sl_method_body( $sl_rest_src, $sl_callback ), 'verify_rest' ) ) {
-		$sl_unguarded[] = $sl_callback . '()';
-	}
 }
 
 sl_assert(
@@ -331,15 +324,41 @@ sl_assert(
 	'The extraction found nothing, which means the rule is measuring its own regex rather than the code.'
 );
 
+// Reachability, not repetition. The guard lives in the shared permission
+// callback, so eleven copies would be eleven chances to forget the twelfth. What
+// has to hold is that every route is gated and the gate calls the guard.
+$sl_permissions = array();
+
+if ( preg_match_all( "/'permission_callback'\s*=>\s*array\(\s*\\\$this,\s*'([a-z_]+)'/", $sl_routes, $sl_m ) ) {
+	$sl_permissions = array_unique( $sl_m[1] );
+}
+
 sl_assert(
-	sprintf( 'all %d route callbacks call RequestGuard::verify_rest()', count( $sl_callbacks ) ),
-	array() === $sl_unguarded,
-	'verify_rest() is called from handle_register() and nowhere else. And the JS sends no honeypot and no timestamp, so even where it is called there is nothing for it to inspect.'
+	'every route is gated by a permission callback this class owns',
+	array() !== $sl_permissions
+		&& array() === array_diff( $sl_permissions, array( 'check_permission', 'check_contact_permission' ) ),
+	'A route registered with __return_true, or with a gate not listed here, bypasses the guard entirely.'
 );
 
-foreach ( $sl_unguarded as $sl_offender ) {
-	sl_note( '→ ' . $sl_offender );
-}
+sl_assert(
+	'check_permission() runs RequestGuard::verify_rest()',
+	false !== strpos( sl_method_body( $sl_rest_src, 'check_permission' ), 'verify_rest' ),
+	'Ten of eleven callbacks called nothing before 9.7, and the JS sent no honeypot and no timestamp — so even the one that did call it had nothing to inspect.'
+);
+
+sl_assert(
+	'check_contact_permission() delegates to check_permission()',
+	false !== strpos( sl_method_body( $sl_rest_src, 'check_contact_permission' ), 'check_permission' ),
+	'The authenticated routes must not acquire a second, weaker gate.'
+);
+
+// The other half of 9.7: a guard with nothing to inspect is inert, not strict.
+sl_assert(
+	'the JS sends the honeypot and the signed timestamp',
+	false !== strpos( sl_source( 'assets/js/smart-login.js' ), 'smart_login_ts' )
+		&& false !== strpos( sl_source( 'assets/js/smart-login.js' ), 'smart_login_website' ),
+	'RequestGuard::verify_rest() can only check fields the client actually sends.'
+);
 
 // =====================================================================
 sl_section( 'Rule 7 — the audit log stops amplifying the attack it records (9.9)' );

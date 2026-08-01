@@ -456,6 +456,14 @@
 			}
 
 			function request( path, payload ) {
+				// The honeypot and the signed timestamp the HTML forms carry.
+				// Without them RequestGuard::verify_rest() has nothing to inspect,
+				// so the guard was inert on this path rather than merely weak.
+				var body = Object.assign( {}, payload || {} );
+
+				body.smart_login_ts = String( data.stamp || '' );
+				body.smart_login_website = '';
+
 				return window.fetch( String( data.restUrl || '' ) + path, {
 					method: 'POST',
 					credentials: 'same-origin',
@@ -463,7 +471,7 @@
 						'Content-Type': 'application/json',
 						'X-WP-Nonce': String( data.nonce || '' )
 					},
-					body: JSON.stringify( payload )
+					body: JSON.stringify( body )
 				} ).then( function ( response ) {
 					return response.json().catch( function () {
 						return {};

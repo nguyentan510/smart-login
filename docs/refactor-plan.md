@@ -632,8 +632,11 @@ no limiter at all while the README says it does.
       covered 9.1–9.9 but not this. A success clears the account counter and
       deliberately **not** the address one, since one hit among a thousand
       guesses is what a successful spray looks like. 266 → 272
-- [ ] **9.7** [REST guard parity](abuse-boundary/9.7-rest-guard-parity.md) — the
-      JS sends no stamp, so the existing check is inert; JS ships first
+- [x] **9.7** [REST guard parity](abuse-boundary/9.7-rest-guard-parity.md) — the
+      JS sent no stamp, so the existing check was inert rather than lax. One
+      shared gate in `check_permission()` rather than eleven copies, and rule 6
+      rewritten to check reachability instead of repetition. **The suite went
+      fully green here and is now `required`.** 280 → 285
 - [ ] **9.8** [Adaptive captcha](abuse-boundary/9.8-adaptive-captcha.md) —
       invisible under normal load; **blocked on 9.1 and 9.3**
 - [x] **9.9** [Audit and visibility](abuse-boundary/9.9-audit-and-visibility.md) —

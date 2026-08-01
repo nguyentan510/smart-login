@@ -89,13 +89,14 @@ $suites = array(
 		'kind' => 'required',
 	),
 	array(
-		// Phase 9. Lands `spec` and red on purpose: nine of its assertions
-		// describe controls that do not exist yet, and two describe a defect
-		// already in production. Promoted to `required` when green, for the same
-		// reason Phase 5 promoted the identity suites.
+		// Phase 9. Landed `spec` and red on purpose — nine of its assertions
+		// described controls that did not exist and two described a defect
+		// already in production. 9.7 turned the last one green, so it is promoted
+		// here for the reason Phase 5 promoted the identity suites: a passing
+		// suite left non-blocking can only serve to hide the next regression.
 		'name' => 'Abuse boundary',
 		'file' => 'security/run-abuse-tests.php',
-		'kind' => 'spec',
+		'kind' => 'required',
 	),
 );
 

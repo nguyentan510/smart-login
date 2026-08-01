@@ -119,6 +119,20 @@ class RestController {
 			);
 		}
 
+		// The honeypot and fill-time guard, once, for every route rather than
+		// repeated in eleven callbacks. Ten of them called nothing before 9.7, and
+		// a rule that requires eleven copies is a rule that will be short one the
+		// day somebody adds a twelfth route.
+		//
+		// Worth stating plainly next to the nonce above: for anonymous visitors
+		// the wp_rest nonce is constant for 12-24 hours across all of them, so it
+		// is a CSRF control and nothing more. The rate limits are what stop bots.
+		$guard = RequestGuard::verify_rest( 'rest', $request->get_params() );
+
+		if ( is_wp_error( $guard ) ) {
+			return $guard;
+		}
+
 		return true;
 	}
 
@@ -138,12 +152,7 @@ class RestController {
 	public function handle_register( WP_REST_Request $request ) {
 		$params = $request->get_params();
 
-		$guard = RequestGuard::verify_rest( 'register', $params );
-
-		if ( is_wp_error( $guard ) ) {
-			return $this->error( $guard );
-		}
-
+		// The guard runs in check_permission() for every route, this one included.
 		$handler = new RegisterHandler( $this->otp() );
 		$result  = $handler->start( $params );
 

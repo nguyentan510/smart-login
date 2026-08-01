@@ -39,6 +39,7 @@ use SmartLogin\Installer;
 use SmartLogin\Security\AuditLog;
 use SmartLogin\Security\Client;
 use SmartLogin\Security\RateLimiter;
+use SmartLogin\Security\RequestGuard;
 use SmartLogin\Settings;
 
 $passed = 0;
@@ -337,6 +338,25 @@ foreach ( array( '0969789475', '+84969789475', '096 978 9475', '096-978-9475' ) 
 }
 
 check( 'phone formatting variants share one lock key', 1, count( array_unique( $lock_keys ) ) );
+
+// ---------------------------------------------------------------------
+section( 'RequestGuard::verify_rest — parity with the form path (Phase 9.7)' );
+
+check( 'a tripped honeypot is refused', true, is_wp_error( RequestGuard::verify_rest( 'rest', array( 'smart_login_website' => 'bot' ) ) ) );
+
+// A stamp younger than the minimum fill time is a machine, not a person.
+$fresh = RequestGuard::stamp( 'rest' );
+check( 'a stamp from this instant is too fast', 'smart_login_too_fast', RequestGuard::verify_rest( 'rest', array( 'smart_login_ts' => $fresh ) )->get_error_code() );
+
+// A forged signature must not pass, whatever the timestamp says.
+check( 'a forged stamp is refused', 'smart_login_bad_stamp', RequestGuard::verify_rest( 'rest', array( 'smart_login_ts' => ( time() - 60 ) . '.deadbeef' ) )->get_error_code() );
+
+// Signed for a different action is a different secret.
+check( 'a stamp signed for another action is refused', 'smart_login_bad_stamp', RequestGuard::verify_rest( 'rest', array( 'smart_login_ts' => RequestGuard::stamp( 'login' ) ) )->get_error_code() );
+
+// The assertion that keeps this from being a breaking change: a cookie-less
+// native client sends no stamp at all and must still be served.
+check( 'a request with no stamp still passes', true, RequestGuard::verify_rest( 'rest', array() ) );
 
 // ---------------------------------------------------------------------
 section( 'AuditLog — the log stops amplifying the attack (Phase 9.9)' );

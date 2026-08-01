@@ -254,6 +254,10 @@ wp-content/themes/your-theme/woocommerce/myaccount/form-edit-account.php
 
 Namespace `smart-login/v1`. Mọi endpoint dùng `POST` và cần header `X-WP-Nonce` (nonce `wp_rest`).
 
+> **Nonce không phải biện pháp chống bot.** Với khách chưa đăng nhập, WordPress cấp cùng một `wp_rest` nonce cho **tất cả** trong 12–24 giờ, nên bot lấy một lần dùng cả ngày. Nó chống CSRF, chỉ vậy. Thứ thực sự chặn lạm dụng là các hạn mức ở tab **Chống lạm dụng** — chúng nằm trong `RateLimiter`, nên áp dụng cho cả REST lẫn form.
+>
+> Client trình duyệt còn gửi kèm `smart_login_ts` (timestamp có chữ ký) và ô honeypot `smart_login_website`. Client không dùng cookie (app native) có thể **bỏ qua cả hai** — server chỉ kiểm khi chúng có mặt.
+
 | Endpoint | Tham số |
 |---|---|
 | `/register` | `identity`, `password`, `full_name`, `dob`, `gender`, `terms` |
