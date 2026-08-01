@@ -84,6 +84,23 @@ class LoginHandler {
 			return $user;
 		}
 
+		// The address-wide lock is checked first and answers with the same
+		// message. A sprayer must not be able to tell "this account is locked"
+		// from "your address is locked" — the difference would tell them which
+		// of their guesses had been landing.
+		$ip_remaining = $this->limiter->ip_lock_remaining();
+
+		if ( $ip_remaining > 0 ) {
+			return new WP_Error(
+				'smart_login_locked',
+				sprintf(
+					/* translators: %d: minutes remaining. */
+					__( 'Tài khoản tạm thời bị khoá do đăng nhập sai nhiều lần. Vui lòng thử lại sau %d phút.', 'smart-login' ),
+					max( 1, (int) ceil( $ip_remaining / MINUTE_IN_SECONDS ) )
+				)
+			);
+		}
+
 		$remaining = $this->limiter->login_lock_remaining( (string) $username );
 
 		if ( $remaining <= 0 ) {

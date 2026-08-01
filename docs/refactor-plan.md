@@ -627,8 +627,11 @@ no limiter at all while the README says it does.
       hole is not one. Managed deployments pair it with the new
       `smart_login_trusted_proxy_cidrs`. 245 → 266, the phase's largest jump —
       CIDR parsing is where the sharp edges are
-- [ ] **9.6** [Login IP ceiling](abuse-boundary/9.6-login-ip-ceiling.md) —
-      password spraying; **blocked on 9.5**
+- [x] **9.6** [Login IP ceiling](abuse-boundary/9.6-login-ip-ceiling.md) —
+      password spraying. Needed a **new** guard rail first: 9.0's eight rules
+      covered 9.1–9.9 but not this. A success clears the account counter and
+      deliberately **not** the address one, since one hit among a thousand
+      guesses is what a successful spray looks like. 266 → 272
 - [ ] **9.7** [REST guard parity](abuse-boundary/9.7-rest-guard-parity.md) — the
       JS sends no stamp, so the existing check is inert; JS ships first
 - [ ] **9.8** [Adaptive captcha](abuse-boundary/9.8-adaptive-captcha.md) —

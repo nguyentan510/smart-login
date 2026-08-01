@@ -272,6 +272,42 @@ foreach ( $sl_unguarded_lookups as $sl_offender ) {
 }
 
 // =====================================================================
+sl_section( 'Rule 9 — the login path has a ceiling of its own (9.6)' );
+
+// Password spraying — one common password against ten thousand accounts from one
+// address — never trips a lock keyed on (identity, IP): each account records a
+// single failure and none reaches five. Structural rather than behavioural,
+// because the behaviour is pinned in run-tests.php; what this stops is somebody
+// quietly deleting the second counter later.
+$sl_limiter_src = sl_source( 'includes/Security/class-rate-limiter.php' );
+
+// Checked in two hops rather than as one string in one body. Delegating to a
+// private helper is ordinary structure, not evasion, and a rule that forbids it
+// is testing a spelling — the mistake rule 3c made in 9.3. Each hop still means
+// something: delete the call and the first fails, gut the helper and the second
+// does.
+sl_assert(
+	'record_login_failure() reaches the IP counter',
+	false !== strpos( sl_method_body( $sl_limiter_src, 'record_login_failure' ), 'record_ip_failure' ),
+	'A lock keyed on (identity, IP) gives the sprayer a fresh budget per account, which is the whole attack.'
+);
+
+sl_assert(
+	'record_ip_failure() is keyed on the address alone',
+	false !== strpos( sl_method_body( $sl_limiter_src, 'record_ip_failure' ), 'ip_lock_key' ),
+	'Mixing the identity back into this key would recreate the hole it was added to close.'
+);
+
+sl_assert(
+	'gate_lockout() consults the IP lock as well as the identity lock',
+	false !== strpos(
+		sl_method_body( sl_source( 'includes/Auth/class-login-handler.php' ), 'gate_lockout' ),
+		'ip_lock_remaining'
+	),
+	'A counter nothing reads is a counter that does not exist. gate_lockout() is on the authenticate filter, so it covers wp-login.php, WooCommerce and application passwords in one place.'
+);
+
+// =====================================================================
 sl_section( 'Rule 6 — every REST route callback reaches the form guard (9.7)' );
 
 $sl_rest_src   = sl_source( 'includes/Frontend/class-rest-controller.php' );

@@ -326,6 +326,40 @@ class RateLimiter {
 	}
 
 	/**
+	 * The second counter, keyed on the address alone.
+	 *
+	 * `login_key()` mixes the identity in, which is right for brute force against
+	 * one account and useless against spraying: one common password tried across
+	 * ten thousand accounts records a single failure on each, and none of them
+	 * ever reaches `login.max_attempts`. Spraying is the more common of the two
+	 * attacks and it walked straight through until this existed.
+	 */
+	private function ip_lock_key(): string {
+		return 'smart_login_iplock_' . md5( (string) Client::ip() );
+	}
+
+	/**
+	 * @return int Seconds remaining on the address-wide lock, 0 when open.
+	 */
+	public function ip_lock_remaining(): int {
+		if ( Settings::get_int( 'security.max_login_failures_per_ip_hour', 30 ) <= 0 ) {
+			return 0;
+		}
+
+		if ( '' === Client::ip() ) {
+			return 0;
+		}
+
+		$data = get_transient( $this->ip_lock_key() );
+
+		if ( ! is_array( $data ) || empty( $data['locked_until'] ) ) {
+			return 0;
+		}
+
+		return max( 0, (int) $data['locked_until'] - time() );
+	}
+
+	/**
 	 * @return int Seconds remaining, 0 when not locked.
 	 */
 	public function login_lock_remaining( string $identity ): int {
@@ -339,6 +373,8 @@ class RateLimiter {
 	}
 
 	public function record_login_failure( string $identity ): void {
+		$this->record_ip_failure();
+
 		$max = Settings::get_int( 'login.max_attempts', 5 );
 
 		if ( $max <= 0 ) {
@@ -368,6 +404,56 @@ class RateLimiter {
 		set_transient( $key, $data, $window );
 	}
 
+	/**
+	 * Count one failure against the address, whoever it was aimed at.
+	 *
+	 * Every failure counts, including ones for identifiers that resolve to
+	 * nothing: spraying uses valid identifiers, and excluding unresolved ones
+	 * would hand an attacker a free way to probe which is which.
+	 */
+	private function record_ip_failure(): void {
+		$max = Settings::get_int( 'security.max_login_failures_per_ip_hour', 30 );
+
+		if ( $max <= 0 || '' === Client::ip() ) {
+			return;
+		}
+
+		$key  = $this->ip_lock_key();
+		$data = get_transient( $key );
+		$data = is_array( $data ) ? $data : array(
+			'count'        => 0,
+			'locked_until' => 0,
+		);
+
+		++$data['count'];
+
+		$window = HOUR_IN_SECONDS;
+
+		if ( $data['count'] >= $max ) {
+			$minutes              = max( 1, Settings::get_int( 'security.ip_lockout_minutes', 15 ) );
+			$data['locked_until'] = time() + ( $minutes * MINUTE_IN_SECONDS );
+			$data['count']        = 0;
+			$window               = $minutes * MINUTE_IN_SECONDS;
+
+			AuditLog::record(
+				AuditLog::LOCKOUT,
+				'',
+				array(
+					'scope'   => 'ip',
+					'minutes' => $minutes,
+				)
+			);
+		}
+
+		set_transient( $key, $data, $window );
+	}
+
+	/**
+	 * A success clears the account's own counter, but deliberately **not** the
+	 * address-wide one. One correct password among a thousand guesses is what a
+	 * successful spray looks like, so letting it reset the sweep counter would
+	 * hand the attacker a way to keep going indefinitely.
+	 */
 	public function clear_login_failures( string $identity ): void {
 		delete_transient( $this->login_key( $identity ) );
 	}

@@ -337,6 +337,61 @@ foreach ( array( '0969789475', '+84969789475', '096 978 9475', '096-978-9475' ) 
 check( 'phone formatting variants share one lock key', 1, count( array_unique( $lock_keys ) ) );
 
 // ---------------------------------------------------------------------
+section( 'RateLimiter — password spraying has a ceiling (Phase 9.6)' );
+
+Settings::update(
+	array(
+		'security.max_login_failures_per_ip_hour' => 5,
+		'security.ip_lockout_minutes'             => 15,
+		'login.max_attempts'                      => 5,
+	)
+);
+
+$GLOBALS['sl_transients'] = array();
+$_SERVER['REMOTE_ADDR']   = '203.0.113.40';
+
+$spray = new RateLimiter( new OtpRepository() );
+
+// Five failures against five *different* accounts. The per-account counter never
+// gets past one, which is exactly why spraying used to walk straight through.
+foreach ( array( '0969789101', '0969789102', '0969789103', '0969789104', '0969789105' ) as $victim ) {
+	$spray->record_login_failure( $victim );
+}
+
+check( 'no single account is locked by a spray', 0, $spray->login_lock_remaining( '0969789101' ) );
+check( 'but the address is', true, $spray->ip_lock_remaining() > 0 );
+
+// A different address is untouched — the ceiling must not be global.
+$_SERVER['REMOTE_ADDR'] = '203.0.113.41';
+check( 'a different address is unaffected', 0, $spray->ip_lock_remaining() );
+
+// A success on one account must not clear the sweep counter: one correct
+// password among a thousand guesses is what a successful spray looks like.
+$_SERVER['REMOTE_ADDR'] = '203.0.113.40';
+$spray->clear_login_failures( '0969789101' );
+check( 'a success does not clear the address-wide lock', true, $spray->ip_lock_remaining() > 0 );
+
+// The per-account lock still works on its own, unchanged by any of this.
+$GLOBALS['sl_transients'] = array();
+$_SERVER['REMOTE_ADDR']   = '203.0.113.42';
+Settings::update( array( 'security.max_login_failures_per_ip_hour' => 0 ) );
+
+for ( $i = 0; $i < 5; $i++ ) {
+	$spray->record_login_failure( '0969789200' );
+}
+
+check( 'the per-account lock still trips at its own threshold', true, $spray->login_lock_remaining( '0969789200' ) > 0 );
+check( 'and 0 disables the address ceiling', 0, $spray->ip_lock_remaining() );
+
+Settings::update(
+	array(
+		'security.max_login_failures_per_ip_hour' => 30,
+		'security.ip_lockout_minutes'             => 15,
+	)
+);
+$GLOBALS['sl_transients'] = array();
+
+// ---------------------------------------------------------------------
 section( 'Client::in_cidr — v4 and v6 (Phase 9.5)' );
 
 check( 'exact v4 host', true, Client::in_cidr( '1.2.3.4', '1.2.3.4' ) );

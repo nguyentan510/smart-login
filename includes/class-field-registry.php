@@ -608,7 +608,7 @@ final class FieldRegistry {
 	 */
 	private static function security_fields(): array {
 		return array(
-			'security.max_per_site_hour'        => array(
+			'security.max_per_site_hour'              => array(
 				'type'    => 'number',
 				'default' => 100,
 				'min'     => 0,
@@ -617,7 +617,7 @@ final class FieldRegistry {
 				'label'   => __( 'Số mã tối đa / toàn site / giờ', 'smart-login' ),
 				'help'    => __( 'Chạm trần thì việc gửi mã bị tạm dừng và admin nhận email. Đặt 0 để bỏ giới hạn — <strong>không khuyến nghị nếu bạn trả tiền cho mỗi tin nhắn</strong>.', 'smart-login' ),
 			),
-			'security.max_per_site_day'         => array(
+			'security.max_per_site_day'               => array(
 				'type'    => 'number',
 				'default' => 500,
 				'min'     => 0,
@@ -626,7 +626,7 @@ final class FieldRegistry {
 				'label'   => __( 'Số mã tối đa / toàn site / ngày', 'smart-login' ),
 				'help'    => __( 'Đặt 0 để bỏ giới hạn.', 'smart-login' ),
 			),
-			'security.halt_minutes'             => array(
+			'security.halt_minutes'                   => array(
 				'type'    => 'number',
 				'default' => 60,
 				'min'     => 5,
@@ -636,7 +636,7 @@ final class FieldRegistry {
 				'label'   => __( 'Tạm dừng trong (phút)', 'smart-login' ),
 				'help'    => __( 'Sau khoảng thời gian này việc gửi mã tự mở lại.', 'smart-login' ),
 			),
-			'security.max_identify_per_ip_hour' => array(
+			'security.max_identify_per_ip_hour'       => array(
 				'type'    => 'number',
 				'default' => 30,
 				'min'     => 0,
@@ -645,7 +645,25 @@ final class FieldRegistry {
 				'label'   => __( 'Số lần tra định danh / IP / giờ', 'smart-login' ),
 				'help'    => __( 'Màn hình đăng nhập tra xem một số điện thoại đã có tài khoản chưa. Không giới hạn thì danh sách khách hàng của bạn có thể bị dò sạch mà không tốn gì. Đặt 0 để bỏ giới hạn.', 'smart-login' ),
 			),
-			'security.trust_proxy'              => array(
+			'security.max_login_failures_per_ip_hour' => array(
+				'type'    => 'number',
+				'default' => 30,
+				'min'     => 0,
+				'tab'     => 'security',
+				'section' => 'budget',
+				'label'   => __( 'Số lần đăng nhập sai / IP / giờ', 'smart-login' ),
+				'help'    => __( 'Bắt kiểu tấn công rải mật khẩu: thử một mật khẩu phổ biến trên hàng nghìn tài khoản. Khoá theo tài khoản không thấy được kiểu này vì mỗi tài khoản chỉ sai một lần. Để rộng rãi — văn phòng, trường học và mạng di động dồn nhiều người thật vào một IP. Đặt 0 để bỏ giới hạn.', 'smart-login' ),
+			),
+			'security.ip_lockout_minutes'             => array(
+				'type'    => 'number',
+				'default' => 15,
+				'min'     => 1,
+				'max'     => 1440,
+				'tab'     => 'security',
+				'section' => 'budget',
+				'label'   => __( 'Khoá IP trong (phút)', 'smart-login' ),
+			),
+			'security.trust_proxy'                    => array(
 				'type'    => 'checkbox',
 				'default' => 0,
 				'tab'     => 'security',
@@ -653,7 +671,7 @@ final class FieldRegistry {
 				'label'   => __( 'Site đứng sau proxy tin cậy', 'smart-login' ),
 				'help'    => __( 'Bật khi site thực sự nằm sau Cloudflare hoặc một load balancer của bạn. Nếu không điền dải IP bên dưới thì bật cái này <strong>không có tác dụng gì</strong> — và đó là chủ ý: tin header từ một máy chưa xác minh còn tệ hơn không tin gì cả.', 'smart-login' ),
 			),
-			'security.trusted_proxy_cidrs'      => array(
+			'security.trusted_proxy_cidrs'            => array(
 				'type'    => 'textarea',
 				'default' => '',
 				'rows'    => 4,
@@ -662,7 +680,7 @@ final class FieldRegistry {
 				'label'   => __( 'Dải IP của proxy', 'smart-login' ),
 				'help'    => __( 'Dạng CIDR, mỗi dòng một dải — ví dụ <code>173.245.48.0/20</code>. Cloudflare công bố danh sách tại <code>https://www.cloudflare.com/ips/</code>. Plugin <strong>không kèm sẵn</strong> danh sách này: một danh sách cứng sẽ lạc hậu âm thầm, và lúc đó nó thành lỗ hổng chứ không còn là biện pháp bảo vệ.', 'smart-login' ),
 			),
-			'security.breaker_threshold'        => array(
+			'security.breaker_threshold'              => array(
 				'type'    => 'number',
 				'default' => 5,
 				'min'     => 0,
@@ -672,7 +690,7 @@ final class FieldRegistry {
 				'label'   => __( 'Số lần lỗi liên tiếp trước khi ngắt', 'smart-login' ),
 				'help'    => __( 'Khi kênh gửi lỗi liên tiếp đủ số lần này, plugin ngừng gọi nó và trả lỗi ngay — không giữ tiến trình PHP để chờ một gateway đã chết. Đặt 0 để tắt.', 'smart-login' ),
 			),
-			'security.breaker_cooldown'         => array(
+			'security.breaker_cooldown'               => array(
 				'type'    => 'number',
 				'default' => 300,
 				'min'     => 30,

@@ -270,11 +270,21 @@ final class Readiness {
 		}
 
 		if ( ! $trusting && \SmartLogin\Security\Client::looks_proxied() ) {
+			// Worse than merely inaccurate when a per-IP ceiling is switched on:
+			// every visitor then shares one counter, so the control that exists to
+			// stop an attacker locks out the customers instead. Named on screen
+			// rather than left to the sub-phase ordering.
+			$ip_ceilings = Settings::get_int( 'security.max_login_failures_per_ip_hour', 30 ) > 0
+				|| Settings::get_int( 'security.max_identify_per_ip_hour', 30 ) > 0
+				|| Settings::get_int( 'otp.max_per_ip_hour', 10 ) > 0;
+
 			return $this->check(
 				'proxy',
 				__( 'Proxy và địa chỉ IP', 'smart-login' ),
 				self::WARN,
-				__( 'Request này đến qua Cloudflare nhưng plugin đang bỏ qua header proxy, nên mọi khách bị tính chung một địa chỉ. Giới hạn theo IP vì thế vừa chặn oan người thật vừa không chặn được kẻ tấn công.', 'smart-login' ),
+				$ip_ceilings
+					? __( 'Request này đến qua Cloudflare nhưng plugin đang bỏ qua header proxy, nên mọi khách bị tính chung một địa chỉ. Đang có giới hạn theo IP đang bật, nghĩa là chúng sẽ khoá nhầm khách thật trước khi chạm được kẻ tấn công.', 'smart-login' )
+					: __( 'Request này đến qua Cloudflare nhưng plugin đang bỏ qua header proxy, nên nhật ký ghi địa chỉ của CDN thay vì của khách.', 'smart-login' ),
 				'security',
 				__( 'Cấu hình proxy', 'smart-login' )
 			);
