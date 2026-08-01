@@ -223,6 +223,54 @@ sl_assert(
 	'RateLimiter is reached only from inside OtpService::issue(), i.e. the "no such account" branch. A subject that exists returns the password screen having passed no limiter, so the registered numbers can be enumerated at zero cost — and the README claims otherwise.'
 );
 
+// Pinning today's call site alone would let the gap reopen through a route added
+// later. There is no /identify REST route now; the rule is what keeps any future
+// one from resolving a subject without spending the same budget.
+$sl_unguarded_lookups = array();
+
+foreach ( sl_plugin_sources() as $sl_relative => $sl_contents ) {
+	if ( false === strpos( $sl_contents, '->resolve(' ) ) {
+		continue;
+	}
+
+	// Each exemption is a resolve() an anonymous visitor cannot drive as an
+	// oracle, and each one has to be justified here rather than waved through.
+	$sl_allowed = array(
+		// The directory is the thing being called, not a caller.
+		'includes/Identity/class-identity-directory.php',
+		// Behind wp_authenticate(); metered by the login lockout instead.
+		'includes/Auth/class-login-handler.php',
+		// Requires a signed-in user.
+		'includes/Auth/class-identity-link-service.php',
+		'includes/Auth/class-contact-verification-service.php',
+		// Reached only after an OTP has been verified, so the code that got here
+		// was already paid for at issue time.
+		'includes/Auth/class-account-provisioner.php',
+		'includes/Auth/class-register-handler.php',
+		'includes/Identity/class-user-manager.php',
+		// Runs on the provider callback, which carries a signed OAuth state.
+		'includes/Auth/class-provider-auth-controller.php',
+	);
+
+	if ( in_array( $sl_relative, $sl_allowed, true ) ) {
+		continue;
+	}
+
+	if ( false === strpos( $sl_contents, 'check_identify' ) ) {
+		$sl_unguarded_lookups[] = $sl_relative;
+	}
+}
+
+sl_assert(
+	'no entry point resolves a subject without spending the identify budget',
+	array() === $sl_unguarded_lookups,
+	'A REST /identify route added later would reopen the enumeration oracle that this sub-phase closed on the form path.'
+);
+
+foreach ( $sl_unguarded_lookups as $sl_offender ) {
+	sl_note( '→ ' . $sl_offender );
+}
+
 // =====================================================================
 sl_section( 'Rule 6 — every REST route callback reaches the form guard (9.7)' );
 

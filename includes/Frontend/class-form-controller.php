@@ -306,6 +306,16 @@ class FormController {
 			return;
 		}
 
+		// Before the lookup, not after. The lookup is the enumeration oracle —
+		// it reveals whether a subject is registered by which screen comes back —
+		// so a limit applied afterwards would leave the oracle intact.
+		$allowed = ( new RateLimiter() )->check_identify( $identity );
+
+		if ( is_wp_error( $allowed ) ) {
+			$this->fail( $allowed, Flow::STEP_IDENTIFY );
+			return;
+		}
+
 		$directory = new IdentityDirectory();
 		$claim     = $directory->channels()->claim_any( $identity );
 

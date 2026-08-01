@@ -49,6 +49,17 @@ class PasswordResetHandler {
 			);
 		}
 
+		// The same budget the identifier-first screen spends, and for the same
+		// reason. When the subject is unknown this method returns below without
+		// issuing a code, so it never reaches RateLimiter::check_otp_send() —
+		// leaving forgot-password as a free, unmetered enumeration oracle even
+		// after the identify screen was closed. Two doors, one lock.
+		$allowed = ( new RateLimiter() )->check_identify( $raw );
+
+		if ( is_wp_error( $allowed ) ) {
+			return $allowed;
+		}
+
 		// A synthetic placeholder address is rejected by MailChannel::is_valid(),
 		// so it cannot produce a claim at all — no special case needed here.
 		$claim = $this->directory->channels()->claim_any( $raw );

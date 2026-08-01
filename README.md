@@ -101,7 +101,9 @@ Người dùng nhập SĐT (hoặc email). Plugin chuẩn hoá về E.164 (`0969
 - **Đã có chủ sở hữu** → màn hình nhập mật khẩu.
 - **Chưa có, hoặc chủ cũ đã từ bỏ số này** → bắt đầu đăng ký.
 
-Việc rẽ nhánh có tiết lộ một định danh đã được đăng ký hay chưa. Đây là đánh đổi có chủ ý: form đăng ký cũ vốn đã tiết lộ điều đó qua thông báo lỗi, và `RateLimiter` chặn dò quét theo IP lẫn theo đích đến.
+Việc rẽ nhánh có tiết lộ một định danh đã được đăng ký hay chưa. Đây là đánh đổi có chủ ý: form đăng ký cũ vốn đã tiết lộ điều đó qua thông báo lỗi.
+
+Bản thân bước tra cứu được tính vào một hạn mức riêng theo IP (mặc định 30 lần/giờ, đổi được ở tab **Chống lạm dụng**), áp dụng **trước** khi tra và **giống hệt nhau ở cả hai nhánh** — nếu không, chính thông báo từ chối lại trở thành cái oracle mà nó sinh ra để đóng. Màn hình Quên mật khẩu dùng chung hạn mức đó, vì nó cũng tra danh bạ và cũng không tốn tin nhắn nào khi định danh không tồn tại.
 
 ### Đăng ký
 1. Gửi mã 6 số, hiệu lực 5 phút. **Chưa tạo tài khoản** — chỉ có một bản ghi OTP tạm giữ đúng định danh. Nếu gửi thất bại, bản ghi bị xoá và người dùng nhận thông báo rõ ràng, không bao giờ mắc kẹt ở màn hình chờ mã không tồn tại.

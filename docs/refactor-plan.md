@@ -614,8 +614,12 @@ no limiter at all while the README says it does.
       SMTP too and leaves the admin's "Gửi thử" button outside it. Half-open is a
       count, not a flag, so concurrent probes cannot race. Rule 3c had to be
       rewritten: it was pinned to one spelling of the clamp. 226 → 238
-- [ ] **9.4** [Identify limit](abuse-boundary/9.4-identify-limit.md) — closes the
-      enumeration oracle and makes the README true
+- [x] **9.4** [Identify limit](abuse-boundary/9.4-identify-limit.md) — closes the
+      enumeration oracle and makes the README true. The future-proofing half of
+      rule 4 found a **second** free oracle: `PasswordResetHandler::start()`
+      resolves and returns without issuing a code when the subject is unknown, so
+      it never reached any limiter. Both doors now spend one budget. 238 → 245.
+      **The four release blockers are done.**
 - [ ] **9.5** [Trusted proxy](abuse-boundary/9.5-trusted-proxy.md) — CIDR
       allowlist, not a boolean; readiness fails on the spoofable configuration
 - [ ] **9.6** [Login IP ceiling](abuse-boundary/9.6-login-ip-ceiling.md) —

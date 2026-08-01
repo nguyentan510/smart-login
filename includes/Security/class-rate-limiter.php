@@ -103,6 +103,67 @@ class RateLimiter {
 	}
 
 	// -----------------------------------------------------------------
+	// Identifier lookup
+	// -----------------------------------------------------------------
+
+	/**
+	 * Gate the identifier-first lookup, before it answers.
+	 *
+	 * The lookup **is** the oracle: it reports whether a subject is registered by
+	 * which screen it returns. Until this existed, `RateLimiter` was reached only
+	 * from inside `OtpService::issue()` — the "no such account" branch — so a
+	 * subject that *did* exist went straight to the password screen having passed
+	 * no limit at all. The site's registered numbers could be enumerated at zero
+	 * cost and unbounded rate, and the README claimed otherwise.
+	 *
+	 * Keyed on IP alone. The identity is the attacker's variable; keying on it
+	 * would hand out a fresh budget per guess, which is the defect being fixed.
+	 *
+	 * @return true|WP_Error
+	 */
+	public function check_identify( string $identity ) {
+		$max = Settings::get_int( 'security.max_identify_per_ip_hour', 30 );
+
+		if ( $max <= 0 ) {
+			return true;
+		}
+
+		$ip = Client::ip();
+
+		if ( '' === $ip ) {
+			// No address to attribute this to. Fail open, as the OTP per-IP limit
+			// does, because the site-wide budget already covers what this misses
+			// and CLI or unusual SAPI contexts are legitimate.
+			return true;
+		}
+
+		// A fixed hourly bucket rather than a rolling window: it expires on its
+		// own, needs no sweeping, and costs one transient. It allows roughly a
+		// 2x burst across the hour boundary, which is accepted — a rolling
+		// window would cost more than the problem does.
+		$key   = 'smart_login_idfy_' . md5( $ip . '|' . gmdate( 'YmdH' ) );
+		$count = (int) get_transient( $key );
+
+		if ( $count >= $max ) {
+			AuditLog::record(
+				AuditLog::RATE_LIMITED,
+				self::mask_identity( $identity ),
+				array( 'reason' => 'identify' )
+			);
+
+			return new WP_Error(
+				'smart_login_identify_limit',
+				__( 'Hệ thống ghi nhận quá nhiều yêu cầu từ thiết bị của bạn. Vui lòng thử lại sau.', 'smart-login' ),
+				array( 'retry_after' => HOUR_IN_SECONDS )
+			);
+		}
+
+		set_transient( $key, $count + 1, HOUR_IN_SECONDS );
+
+		return true;
+	}
+
+	// -----------------------------------------------------------------
 	// Site-wide budget and kill switch
 	// -----------------------------------------------------------------
 

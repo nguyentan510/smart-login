@@ -607,7 +607,7 @@ final class FieldRegistry {
 	 */
 	private static function security_fields(): array {
 		return array(
-			'security.max_per_site_hour' => array(
+			'security.max_per_site_hour'        => array(
 				'type'    => 'number',
 				'default' => 100,
 				'min'     => 0,
@@ -616,7 +616,7 @@ final class FieldRegistry {
 				'label'   => __( 'Số mã tối đa / toàn site / giờ', 'smart-login' ),
 				'help'    => __( 'Chạm trần thì việc gửi mã bị tạm dừng và admin nhận email. Đặt 0 để bỏ giới hạn — <strong>không khuyến nghị nếu bạn trả tiền cho mỗi tin nhắn</strong>.', 'smart-login' ),
 			),
-			'security.max_per_site_day'  => array(
+			'security.max_per_site_day'         => array(
 				'type'    => 'number',
 				'default' => 500,
 				'min'     => 0,
@@ -625,7 +625,7 @@ final class FieldRegistry {
 				'label'   => __( 'Số mã tối đa / toàn site / ngày', 'smart-login' ),
 				'help'    => __( 'Đặt 0 để bỏ giới hạn.', 'smart-login' ),
 			),
-			'security.halt_minutes'      => array(
+			'security.halt_minutes'             => array(
 				'type'    => 'number',
 				'default' => 60,
 				'min'     => 5,
@@ -635,7 +635,16 @@ final class FieldRegistry {
 				'label'   => __( 'Tạm dừng trong (phút)', 'smart-login' ),
 				'help'    => __( 'Sau khoảng thời gian này việc gửi mã tự mở lại.', 'smart-login' ),
 			),
-			'security.breaker_threshold' => array(
+			'security.max_identify_per_ip_hour' => array(
+				'type'    => 'number',
+				'default' => 30,
+				'min'     => 0,
+				'tab'     => 'security',
+				'section' => 'budget',
+				'label'   => __( 'Số lần tra định danh / IP / giờ', 'smart-login' ),
+				'help'    => __( 'Màn hình đăng nhập tra xem một số điện thoại đã có tài khoản chưa. Không giới hạn thì danh sách khách hàng của bạn có thể bị dò sạch mà không tốn gì. Đặt 0 để bỏ giới hạn.', 'smart-login' ),
+			),
+			'security.breaker_threshold'        => array(
 				'type'    => 'number',
 				'default' => 5,
 				'min'     => 0,
@@ -645,7 +654,7 @@ final class FieldRegistry {
 				'label'   => __( 'Số lần lỗi liên tiếp trước khi ngắt', 'smart-login' ),
 				'help'    => __( 'Khi kênh gửi lỗi liên tiếp đủ số lần này, plugin ngừng gọi nó và trả lỗi ngay — không giữ tiến trình PHP để chờ một gateway đã chết. Đặt 0 để tắt.', 'smart-login' ),
 			),
-			'security.breaker_cooldown'  => array(
+			'security.breaker_cooldown'         => array(
 				'type'    => 'number',
 				'default' => 300,
 				'min'     => 30,

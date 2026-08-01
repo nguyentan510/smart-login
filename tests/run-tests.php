@@ -336,6 +336,41 @@ foreach ( array( '0969789475', '+84969789475', '096 978 9475', '096-978-9475' ) 
 check( 'phone formatting variants share one lock key', 1, count( array_unique( $lock_keys ) ) );
 
 // ---------------------------------------------------------------------
+section( 'RateLimiter — the identify oracle costs something (Phase 9.4)' );
+
+Settings::update( array( 'security.max_identify_per_ip_hour' => 3 ) );
+$GLOBALS['sl_transients'] = array();
+$_SERVER['REMOTE_ADDR']   = '203.0.113.20';
+
+$idfy = new RateLimiter( new OtpRepository() );
+
+// Three different identifiers. Keying on the identity would give each its own
+// budget, which is exactly the hole being closed, so all three must share one.
+check( 'first lookup allowed', true, true === $idfy->check_identify( '0969789001' ) );
+check( 'second lookup allowed', true, true === $idfy->check_identify( '0969789002' ) );
+check( 'third lookup allowed', true, true === $idfy->check_identify( '0969789003' ) );
+
+$over = $idfy->check_identify( '0969789004' );
+check( 'a fourth distinct identifier from one IP is refused', true, is_wp_error( $over ) );
+check( 'the refusal is the identify limit', 'smart_login_identify_limit', is_wp_error( $over ) ? $over->get_error_code() : '' );
+
+// The whole point: refusal must not depend on whether the subject exists, or
+// the limit becomes the oracle it was meant to close.
+$_SERVER['REMOTE_ADDR'] = '203.0.113.21';
+check( 'a different IP has its own budget', true, true === $idfy->check_identify( '0969789004' ) );
+
+Settings::update( array( 'security.max_identify_per_ip_hour' => 0 ) );
+$GLOBALS['sl_transients'] = array();
+$_SERVER['REMOTE_ADDR']   = '203.0.113.22';
+for ( $i = 0; $i < 10; $i++ ) {
+	$idfy->check_identify( '096978900' . $i );
+}
+check( 'a limit of 0 disables the check', true, true === $idfy->check_identify( '0969789999' ) );
+
+Settings::update( array( 'security.max_identify_per_ip_hour' => 30 ) );
+$GLOBALS['sl_transients'] = array();
+
+// ---------------------------------------------------------------------
 section( 'RateLimiter — site-wide budget and kill switch (Phase 9.1)' );
 
 /**
