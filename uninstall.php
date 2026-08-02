@@ -23,9 +23,14 @@ $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}smartlogin_identities" ); // 
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}smartlogin_identity_history" ); // phpcs:ignore WordPress.DB
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}smart_login_external_identities" ); // phpcs:ignore WordPress.DB
 
-// Options.
+// Options. The two secret stores are listed separately from the settings option
+// because that is where they live: a sealed secret never round-trips through
+// smart_login_settings, so deleting that one leaves them behind. The captcha
+// entry is the pre-10.2 location and stays until no install can still hold one.
 delete_option( 'smart_login_settings' );
 delete_option( 'smart_login_provider_secrets' );
+delete_option( 'smart_login_field_secrets' );
+delete_option( 'smart_login_captcha_secret' );
 delete_option( 'smart_login_db_version' );
 
 // User meta created by the plugin.

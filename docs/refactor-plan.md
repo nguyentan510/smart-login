@@ -729,10 +729,17 @@ automation can neither send an OTP nor react to one.
       have gone red on the `ROUTES` constant because it was pinned to a spelling.
       Rule 1 is now behavioural, for the reason 9.3 had to rewrite rule 3c.
       11 → 17
-- [ ] **10.2** [Generic secret storage](delivery-routing/10.2-secret-storage.md)
-      — `store_secret()` matches one path literal and prunes the plaintext
-      regardless (`class-settings.php:219-234`), so a second `secret` field would
-      accept input and discard it silently. Blocks 10.3, which declares one
+- [x] **10.2** [Generic secret storage](delivery-routing/10.2-secret-storage.md)
+      — one option keyed by registry path, following `ProviderCredentials`'
+      shape; the legacy location is a constant map consulted by the reader, so
+      `store_secret()` stays branch-free and rule 2 stays satisfiable. Clearing
+      had to reach the pre-10.2 copy or the secret **came back on the next read**.
+      The fallback test passed while asserting nothing until the new location was
+      emptied first — the exact failure the brief was rewritten to prevent,
+      reproduced by the test written to prevent it. The rename sweep found
+      `uninstall.php` orphaning the captcha secret (fixed) and gating everything
+      on a flat key (recorded, not fixed). **Suite promoted to `required`:**
+      17 → 22 passed, 0 failed
 - [ ] **10.3** [Automation transport](delivery-routing/10.3-automation-transport.md)
       — the signed envelope, HTTPS enforced at save, its own breaker. **This is
       the sub-phase that lets the plaintext code leave the site**; the spec's
@@ -812,6 +819,20 @@ single-subject phase. Four items, from a wireframe review:
 3. Promote `ProviderCards` to a reusable channel card. **If Phase 12 is
    reordered before 10.6, this item must lead it** — 10.6 builds four screens on
    that component, and building them first means writing the card twice.
+**Found in 10.2, deliberately not fixed there:** `uninstall.php:12` gates the
+whole routine on `$smart_login_settings['delete_data_on_uninstall']` — a **flat**
+key. The setting has been `advanced.delete_data_on_uninstall` since the settings
+rewrite, and `Installer::migrate_flat_keys()` lists that exact pair
+(`class-installer.php:149`), so the stored option is nested and the gate reads
+`null` on every install that has ever been migrated. The opt-in therefore never
+opens: an administrator who ticks *Xoá dữ liệu khi gỡ* gets nothing deleted.
+
+Same defect family as the one CLAUDE.md already records for
+`Installer::cleanup()`'s flat retention keys — that instance was fixed and this
+one was not. Left out of 10.2 because it is not about secret storage and because
+making an uninstall routine actually destroy data deserves its own guard rail and
+its own commit, not a line inside someone else's.
+
 4. A `Kiểm tra` tab that runs a real OAuth round trip through
    `OAuthTransactionStore` and reports the provider's own error. The only item
    here needing genuinely new code, and the reason the phase is separate: a

@@ -17,6 +17,8 @@
 
 namespace SmartLogin;
 
+use SmartLogin\Security\SecretBox;
+
 defined( 'ABSPATH' ) || exit;
 
 class Settings {
@@ -25,6 +27,29 @@ class Settings {
 
 	/** Hidden field naming the tab a save came from. */
 	const TAB_FIELD = '_sl_tab';
+
+	/**
+	 * Where every `type => 'secret'` field is sealed, keyed by its registry path.
+	 *
+	 * ProviderCredentials had the right shape already — one option, many keys, no
+	 * branch per key. This is that, applied to the registry.
+	 */
+	const SECRET_OPTION = 'smart_login_field_secrets';
+
+	/**
+	 * Secrets that were sealed somewhere else before 10.2 keyed them by path.
+	 *
+	 * A lookup rather than a branch, and a shrinking one: an entry earns its keep
+	 * only until every install has re-saved that field. Without it the change of
+	 * key would strand the stored value in place — readable by nothing, deletable
+	 * by nothing, and silently replaced by an empty string.
+	 */
+	const LEGACY_SECRETS = array(
+		'security.captcha_secret' => array(
+			'option' => \SmartLogin\Security\Captcha::SECRET_OPTION,
+			'key'    => 'captcha',
+		),
+	);
 
 	/** @var array|null Runtime cache, always in registry shape. */
 	private static $cache = null;
@@ -221,15 +246,46 @@ class Settings {
 	}
 
 	/**
-	 * Route a secret to whichever store owns it.
+	 * Seal a secret under its registry path, or erase it when blank.
+	 *
+	 * This used to match one path literal and do nothing for any other, while
+	 * absorb_secret_fields() pruned the plaintext from the option array either
+	 * way — so a `secret` field whose path nobody remembered to add here was a
+	 * control that accepted input and discarded it without a word.
 	 */
-	private static function store_secret( string $path, string $secret ): void {
-		if ( 'security.captcha_secret' === $path ) {
-			if ( '' === $secret ) {
-				\SmartLogin\Security\Captcha::clear_secret();
-			} else {
-				\SmartLogin\Security\Captcha::store_secret( $secret );
-			}
+	public static function store_secret( string $path, string $secret ): void {
+		if ( '' === $secret ) {
+			SecretBox::forget( self::SECRET_OPTION, $path );
+		} else {
+			SecretBox::put( self::SECRET_OPTION, $path, $secret );
+		}
+
+		// Either way the pre-10.2 copy goes. Leaving it behind on a clear would
+		// resurrect the secret the administrator just deleted, because the read
+		// below falls back to exactly that location.
+		self::forget_legacy_secret( $path );
+	}
+
+	/**
+	 * Read a sealed secret by registry path, wherever it currently lives.
+	 */
+	public static function read_secret( string $path ): string {
+		$secret = SecretBox::get( self::SECRET_OPTION, $path );
+
+		if ( '' !== $secret ) {
+			return $secret;
+		}
+
+		$legacy = self::LEGACY_SECRETS[ $path ] ?? null;
+
+		return $legacy ? SecretBox::get( $legacy['option'], $legacy['key'] ) : '';
+	}
+
+	private static function forget_legacy_secret( string $path ): void {
+		$legacy = self::LEGACY_SECRETS[ $path ] ?? null;
+
+		if ( $legacy ) {
+			SecretBox::forget( $legacy['option'], $legacy['key'] );
 		}
 	}
 
