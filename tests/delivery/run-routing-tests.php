@@ -168,18 +168,65 @@ sl_forbid_pattern(
 	'Six files may do this and each is justified in the allowlist above. A seventh means a transport decision is spreading — route through TransportRouter instead.'
 );
 
-// The rule above cannot see the defect it exists to prevent, because the offender
-// is on its allowlist. This one can: routing must consult a setting, not only a
-// string test.
-$sl_router_body = sl_method_body(
-	sl_source( 'includes/OTP/Transports/class-transport-router.php' ),
-	'transport_for'
+/*
+ * The rule above cannot see the defect it exists to prevent, because the
+ * offender is on its allowlist. These can.
+ *
+ * Asserted on behaviour rather than on the source: a structural check for the
+ * setting's name inside transport_for() would have gone red the moment 10.1 put
+ * the paths in a class constant, which is a better shape and not a regression.
+ * What matters is that changing the setting changes the answer.
+ */
+$sl_routing_router = new TransportRouter(
+	array(
+		'sms'        => new SL_Fake_Transport( true ),
+		'email'      => new SL_Fake_Transport( true ),
+		'automation' => new SL_Fake_Transport( true ),
+	)
 );
 
-sl_assert(
-	'transport_for() reads the routing table',
-	'' !== $sl_router_body && false !== strpos( $sl_router_body, 'delivery.route_' ),
-	'The transport is decided entirely by the shape of the destination, so no site can point a channel anywhere else. See docs/delivery-routing.md D1.'
+sl_check(
+	'a phone destination follows the routing table',
+	'automation',
+	( static function () use ( $sl_routing_router ): string {
+		Settings::update( array( 'delivery.route_phone' => 'automation' ) );
+		$answer = $sl_routing_router->transport_for( '84969789475' );
+		Settings::update( array( 'delivery.route_phone' => 'sms' ) );
+
+		return $answer;
+	} )()
+);
+
+sl_check(
+	'an email destination follows the routing table',
+	'automation',
+	( static function () use ( $sl_routing_router ): string {
+		Settings::update( array( 'delivery.route_email' => 'automation' ) );
+		$answer = $sl_routing_router->transport_for( 'ban@example.com' );
+		Settings::update( array( 'delivery.route_email' => 'email' ) );
+
+		return $answer;
+	} )()
+);
+
+// The defaults must reproduce what the '@' test used to answer, byte for byte.
+// This is the whole no-migration argument, so it is asserted directly rather
+// than inferred from the suites staying green.
+sl_check( 'a phone number defaults to the SMS gateway', 'sms', $sl_routing_router->transport_for( '84969789475' ) );
+sl_check( 'an email address defaults to wp_mail()', 'email', $sl_routing_router->transport_for( 'ban@example.com' ) );
+
+// A stored value naming a transport nothing registers must not resolve to
+// nothing: a filter that used to add a transport can be removed at any time.
+sl_check(
+	'an unresolvable stored route falls back to the built-in',
+	'sms',
+	( static function () use ( $sl_routing_router ): string {
+		Settings::update( array( 'delivery.route_phone' => 'a-transport-nobody-registered' ) );
+		$answer = $sl_routing_router->transport_for( '84969789475' );
+		Settings::update( array( 'delivery.route_phone' => 'sms' ) );
+
+		return $answer;
+	} )()
 );
 
 // =====================================================================

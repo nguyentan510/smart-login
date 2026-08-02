@@ -272,6 +272,28 @@ final class FieldRegistry {
 
 	private static function delivery_fields(): array {
 		return array(
+			'delivery.route_phone'         => array(
+				'type'    => 'select',
+				'default' => 'sms',
+				'tab'     => 'delivery',
+				'section' => 'otp',
+				'label'   => __( 'Gửi mã tới số điện thoại bằng', 'smart-login' ),
+				'choices' => array(
+					'sms' => __( 'Gateway SMS', 'smart-login' ),
+				),
+				'help'    => __( 'Kênh chịu trách nhiệm gửi và báo thành công hay thất bại.', 'smart-login' ),
+			),
+			'delivery.route_email'         => array(
+				'type'    => 'select',
+				'default' => 'email',
+				'tab'     => 'delivery',
+				'section' => 'otp',
+				'label'   => __( 'Gửi mã tới email bằng', 'smart-login' ),
+				'choices' => array(
+					'email' => __( 'SMTP của WordPress', 'smart-login' ),
+				),
+				'help'    => __( 'Dùng <code>wp_mail()</code>, nên mọi plugin SMTP sẵn có đều hoạt động.', 'smart-login' ),
+			),
 			'otp.preset'                   => array(
 				'type'    => 'select',
 				'default' => 'balanced',

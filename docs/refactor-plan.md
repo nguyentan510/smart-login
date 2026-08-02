@@ -719,10 +719,16 @@ automation can neither send an OTP nor react to one.
       `transport_for()` sits beside it. **Corrected 10.2 before executing it** —
       there are already two secret stores and neither is keyed by field path, so
       that brief's "no migration" was false
-- [ ] **10.1** [Routing table](delivery-routing/10.1-routing-table.md) — splits
-      `transport_for()` into channel derivation plus a table lookup. Ships
-      invisible: defaults reproduce today's behaviour, so every required suite
-      must come back at its **previous count**, not merely green
+- [x] **10.1** [Routing table](delivery-routing/10.1-routing-table.md) — splits
+      `transport_for()` into `channel_for()` plus a table lookup, with the
+      fallback beside the setting it backs. Shipped invisible: every required
+      suite came back at its previous count, and the defaults reproducing the old
+      `'@'` answer is asserted directly rather than inferred. Two rules from
+      different phases constrained it from both sides — the abuse suite forbids
+      reading an undeclared key by literal, and this suite's own rule 1 would
+      have gone red on the `ROUTES` constant because it was pinned to a spelling.
+      Rule 1 is now behavioural, for the reason 9.3 had to rewrite rule 3c.
+      11 → 17
 - [ ] **10.2** [Generic secret storage](delivery-routing/10.2-secret-storage.md)
       — `store_secret()` matches one path literal and prunes the plaintext
       regardless (`class-settings.php:219-234`), so a second `secret` field would
