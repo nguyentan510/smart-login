@@ -98,6 +98,16 @@ $suites = array(
 		'file' => 'security/run-abuse-tests.php',
 		'kind' => 'required',
 	),
+	array(
+		// Phase 10, landed red at 10.0 before any production file moved. Two of
+		// its rules fail on a defect in the tree today; four report PENDING
+		// rather than passing vacuously, because a rule that passes for want of
+		// a subject states the opposite of the truth. Promoted to `required`
+		// when it goes green.
+		'name' => 'Delivery routing',
+		'file' => 'delivery/run-routing-tests.php',
+		'kind' => 'spec',
+	),
 );
 
 $results  = array();

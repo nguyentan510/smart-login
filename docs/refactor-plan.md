@@ -23,6 +23,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 7 — Release preparation**
 - [x] **Phase 8 — Account surface**
 - [x] **Phase 9 — Abuse boundary**
+- [ ] **Phase 10 — Delivery routing and the automation bus**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -35,6 +36,11 @@ Phase 9 is a third: the identity model is right, the screen is right, and neithe
 counts anything across the whole site. Its ordering is not preference — three of
 its sub-phases are blocked on another, and shipping them out of order converts a
 security control into an outage.
+
+Phase 10 is a fourth: everything above is right and none of it can be reached by
+anything the site owner runs elsewhere. Its ordering is also not preference —
+10.6 is the visible sub-phase and it is last, because the tab redesign that keeps
+being asked for is a presentation of a routing model that does not exist yet.
 
 ---
 
@@ -681,6 +687,114 @@ be reordered or dropped.
 **9.1 owns the only `SMART_LOGIN_DB_VERSION` bump.** Anything else wanting a
 schema change folds into it rather than bumping again.
 
+---
+
+## Phase 10 — Delivery routing and the automation bus
+
+Normative spec: [`delivery-routing.md`](delivery-routing.md) — the routing
+decision, the two roles of one endpoint, the signed envelope, the security
+position and the ownership boundary all live there.
+
+Execution briefs: [`delivery-routing/`](delivery-routing/), one file per
+sub-phase. **Status lives here and only here.**
+
+Short version: one line decides how every code travels —
+`( false !== strpos( $destination, '@' ) ) ? 'email' : 'sms'`
+(`class-transport-router.php:41`). The shape of the destination is the whole
+routing policy, so a site cannot point either channel at an automation platform,
+and the `smart_login_otp_transports` filter registers transports that nothing
+will ever route to. Separately, nineteen audit event constants exist and none of
+them leaves the site; `smart_login_otp_sent` fires without the code, so external
+automation can neither send an OTP nor react to one.
+
+### Sub-phases
+
+- [x] **10.0** [Guard rails](delivery-routing/10.0-guard-rails.md) — landed red
+      as intended: `3 passed, 3 failed, 6 pending`, no production file touched,
+      every other suite at its previous count. The brief predicted rule 5 would
+      *pass*; it would have passed for want of a subject, so it became PENDING —
+      a rule that passes because the thing it checks does not exist states the
+      opposite of the truth. Rule 1 needed splitting in two: the allowlist form
+      cannot fail on the routing authority itself, so a direct assertion on
+      `transport_for()` sits beside it. **Corrected 10.2 before executing it** —
+      there are already two secret stores and neither is keyed by field path, so
+      that brief's "no migration" was false
+- [ ] **10.1** [Routing table](delivery-routing/10.1-routing-table.md) — splits
+      `transport_for()` into channel derivation plus a table lookup. Ships
+      invisible: defaults reproduce today's behaviour, so every required suite
+      must come back at its **previous count**, not merely green
+- [ ] **10.2** [Generic secret storage](delivery-routing/10.2-secret-storage.md)
+      — `store_secret()` matches one path literal and prunes the plaintext
+      regardless (`class-settings.php:219-234`), so a second `secret` field would
+      accept input and discard it silently. Blocks 10.3, which declares one
+- [ ] **10.3** [Automation transport](delivery-routing/10.3-automation-transport.md)
+      — the signed envelope, HTTPS enforced at save, its own breaker. **This is
+      the sub-phase that lets the plaintext code leave the site**; the spec's
+      security section is the argument and this brief is the controls
+- [ ] **10.4** [Event bus](delivery-routing/10.4-event-bus.md) — non-blocking
+      fan-out hooked at the single `AuditLog::record()` funnel, so a new event
+      constant is busable without a second edit. Off by default; never carries the
+      code; second breaker, which is the whole point
+- [ ] **10.5** [Readiness and cost](delivery-routing/10.5-readiness-and-cost.md)
+      — two admin-facing numbers that 10.1–10.3 quietly break: readiness
+      constructs its transports directly, and the spend estimate counts rows
+      where `transport = 'sms'`, which reads zero the moment phone is routed
+      elsewhere
+- [ ] **10.6** [Delivery tab](delivery-routing/10.6-delivery-tab.md) — the
+      original request. Four sub-tabs, each a real slug because saving is
+      tab-scoped; second-level nav; the SMS preset default moves off `custom`
+
+---
+
+**Ordering rationale.** 10.0 first, for the reason the Postscript gives. **10.2
+must precede 10.3** — 10.3 declares the plugin's second `secret` field, and
+against today's code that field would lose its value with no error anywhere.
+**10.1 must precede 10.3**: routing has to exist before there is anywhere for a
+new transport to be routed from, and keeping them apart is what lets 10.1 be
+verified as a no-op. **10.5 must not precede 10.3**, since the defects it repairs
+are introduced by it. 10.4 is independent of 10.5 and 10.6 and may be dropped
+without affecting them.
+
+**10.6 is last on purpose.** It is the visible sub-phase and the one that was
+asked for first. Every earlier attempt to design that tab was an attempt to
+design the routing model, which is why the answer kept coming out as more
+headings on the same page.
+
+**No `SMART_LOGIN_DB_VERSION` bump.** Nothing in this phase changes the schema;
+10.5 reuses the `identity_channel` column already present, with the
+derive-when-empty fallback `OtpService:336-345` established.
+
+**Phase 11, not started:** email template groups. One `email.subject` /
+`email.body` pair serves all four intents (`class-field-registry.php:488-512`),
+so a password-reset mail is worded identically to a login mail, and `{{intent}}`
+can be interpolated but not branched on. Separate phase, deliberately not folded
+into 10.6.
+
+**Phase 12, not started:** the provider surface and the shared channel card.
+Split out of Phase 10 on purpose — it touches the same admin screens but has
+nothing to do with delivery routing, and folding it in would dilute an otherwise
+single-subject phase. Four items, from a wireframe review:
+
+1. **A defect, not a redesign.** The provider card's status badge reads
+   `ProviderCredentials::is_configured()` — credentials only
+   (`class-provider-cards.php:55,88`). What decides whether a provider actually
+   runs is `is_available()` = `enabled && is_configured`
+   (`class-google-provider.php:32-35`). A provider with credentials saved and
+   `Kích hoạt` left off therefore shows a green **Sẵn sàng** while no button
+   appears on the front end. The badge must read the same function the runtime
+   reads, with a rule asserting the two cannot disagree — otherwise 10.6 copies
+   the defect into the channel cards.
+2. Master toggle into the card header; `providers.auto_link_email` above the grid
+   where its scope is visible, not below it as a trailing form row.
+3. Promote `ProviderCards` to a reusable channel card. **If Phase 12 is
+   reordered before 10.6, this item must lead it** — 10.6 builds four screens on
+   that component, and building them first means writing the card twice.
+4. A `Kiểm tra` tab that runs a real OAuth round trip through
+   `OAuthTransactionStore` and reports the provider's own error. The only item
+   here needing genuinely new code, and the reason the phase is separate: a
+   redirect URI cannot be verified remotely, so the only honest test is the real
+   one.
+
 ## Risks
 
 | Risk | Mitigation |
@@ -699,3 +813,8 @@ schema change folds into it rather than bumping again.
 | 9.7's timing check rejects in-flight JS clients on deploy | JS ships as a separate, earlier commit; the check is skipped when no stamp is present |
 | The kill switch becomes a DoS — an attacker halts OTP for everyone | The deliberate trade: a halted hour costs less than a drained balance. Bounded by `halt_minutes`, alerted on, clearable from the admin screen |
 | New settings scatter across existing tabs and get lost | One new `security` tab; existing keys are **not** moved, so the admin suite's tab-membership assertions do not churn |
+| 10.3 sends the plaintext OTP to a third party — a property the plugin currently holds | Accepted deliberately and argued in the spec. HTTPS enforced at save, HMAC signature, timestamp and delivery id for replay rejection, existing redaction applied unchanged. The residual risk — an endpoint the admin should not have trusted — is stated in the help text rather than implied away |
+| 10.1 changes routing for every OTP the plugin has ever sent | Defaults reproduce today's behaviour exactly; acceptance is *unchanged suite counts*, not green suites, so an invisible change that is not invisible fails |
+| A bus endpoint going down takes sign-in with it | Two breakers, not one, and rule 6 asserts a failing bus leaves `issue()` returning an array. This is the decision most likely to be "simplified" later, so it has a rule rather than a comment |
+| 10.6 splits one tab into four and a field lands on none of them | Acceptance walks `FieldRegistry::all()` and renders every tab — the exactly-one-tab property the registry exists to guarantee |
+| The `generic` preset default makes an existing site's SMS stop working | Only new installs; a site that has saved the tab has `custom` stored, and `Settings::sanitize()` writes stored values. Asserted directly |
