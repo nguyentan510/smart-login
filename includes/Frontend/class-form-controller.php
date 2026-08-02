@@ -710,7 +710,10 @@ class FormController {
 		$result = $this->otp()->resend( $session['token'] );
 
 		if ( is_wp_error( $result ) ) {
-			// Keep the user on the OTP screen; the old code may still be valid.
+			// Keep the user on the OTP screen. The code they already have is
+			// still valid — issue() retires the previous ones only after a
+			// delivery succeeds, so a failed resend costs them nothing. Before
+			// 10.7 this comment was here and was false.
 			Notices::add_wp_error( $result );
 			$this->restore_otp_step( $session['token'], $session['intent'] );
 			return;

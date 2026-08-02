@@ -24,8 +24,112 @@ require __DIR__ . '/../stubs.php';
 require __DIR__ . '/../harness.php';
 
 use SmartLogin\FieldRegistry;
+use SmartLogin\OTP\OtpRepository;
+use SmartLogin\OTP\OtpService;
+use SmartLogin\OTP\Transports\TransportInterface;
 use SmartLogin\OTP\Transports\TransportRouter;
+use SmartLogin\OTP\Transports\WebhookTransport;
+use SmartLogin\Security\RateLimiter;
 use SmartLogin\Settings;
+
+/**
+ * An in-memory OTP store, so the ordering inside issue() can be asserted on
+ * behaviour rather than on the shape of the source.
+ *
+ * The stub $wpdb cannot serve this: it does not parse SQL, so consume and insert
+ * are indistinguishable through it. OtpService takes its repository by
+ * constructor, so the seam needed for an honest assertion is one the production
+ * code already offers.
+ */
+class SL_Fake_Otp_Repository extends OtpRepository {
+
+	/** @var array<int,array<string,mixed>> */
+	public $rows = array();
+
+	/** @var string[] Operation names, in the order issue() performed them. */
+	public $ops = array();
+
+	/** @var int */
+	private $next_id = 1;
+
+	public function consume_open_codes( string $destination, string $intent, int $except_id = 0 ): void {
+		$this->ops[] = 'consume';
+
+		foreach ( $this->rows as $id => $row ) {
+			if ( $id === $except_id ) {
+				continue;
+			}
+
+			if ( $row['destination'] === $destination && $row['intent'] === $intent && null === $row['consumed_at'] ) {
+				$this->rows[ $id ]['consumed_at'] = '2026-08-02 00:00:00';
+			}
+		}
+	}
+
+	public function insert( array $data ): int {
+		$this->ops[] = 'insert';
+
+		$id                       = $this->next_id++;
+		$data['consumed_at']      = null;
+		$data['id']               = $id;
+		$this->rows[ $id ]        = $data;
+
+		return $id;
+	}
+
+	public function delete( int $id ): void {
+		$this->ops[] = 'delete';
+
+		unset( $this->rows[ $id ] );
+	}
+
+	/** @return array<int,array<string,mixed>> Rows still redeemable. */
+	public function live_rows(): array {
+		return array_filter( $this->rows, static fn( array $row ): bool => null === $row['consumed_at'] );
+	}
+}
+
+/** A transport whose outcome the test chooses. */
+class SL_Fake_Transport implements TransportInterface {
+
+	/** @var bool */
+	private $succeeds;
+
+	public function __construct( bool $succeeds ) {
+		$this->succeeds = $succeeds;
+	}
+
+	public function id(): string {
+		return 'sms';
+	}
+
+	public function is_available(): bool {
+		return true;
+	}
+
+	public function send( string $destination, string $code, array $ctx ) {
+		return $this->succeeds
+			? true
+			: new WP_Error( 'sl_test_gateway_down', 'gateway down' );
+	}
+}
+
+/** Limits are 9's subject, not this suite's. */
+class SL_Allow_Limiter extends RateLimiter {
+
+	public function check_otp_send( string $destination, string $intent ) {
+		return true;
+	}
+}
+
+/** Build a service whose transport succeeds or fails on demand. */
+function sl_service_with( SL_Fake_Otp_Repository $repo, bool $succeeds ): OtpService {
+	return new OtpService(
+		$repo,
+		new TransportRouter( array( 'sms' => new SL_Fake_Transport( $succeeds ) ) ),
+		new SL_Allow_Limiter( $repo )
+	);
+}
 
 // =====================================================================
 sl_section( 'Rule 1 — one place decides how a code travels (10.1)' );
@@ -287,5 +391,101 @@ if ( null === FieldRegistry::get( 'automation.url' ) ) {
 		$sl_saved['automation']['url'] ?? ''
 	);
 }
+
+// =====================================================================
+sl_section( 'Rule 8 — a failed send leaves the code already delivered usable (10.7)' );
+
+/*
+ * A lifecycle rule rather than a routing one, riding in this suite because a
+ * third file for two rules costs more than it explains — and because 10.3
+ * multiplies exactly this failure surface by adding a transport the site does
+ * not operate.
+ */
+$sl_repo = new SL_Fake_Otp_Repository();
+
+// One code, delivered.
+$sl_first = sl_service_with( $sl_repo, true )->issue( '84900000001', OtpService::INTENT_LOGIN );
+
+sl_assert(
+	'the first code is issued',
+	is_array( $sl_first ),
+	'Setup failed, so everything below is meaningless: ' . ( is_wp_error( $sl_first ) ? $sl_first->get_error_message() : 'unknown' )
+);
+
+// The user is now holding it. They press Gửi lại and the gateway is down.
+$sl_repo->ops = array();
+$sl_second    = sl_service_with( $sl_repo, false )->issue( '84900000001', OtpService::INTENT_LOGIN );
+
+sl_assert(
+	'a failed resend reports the failure',
+	is_wp_error( $sl_second ),
+	'The send failed but issue() returned success.'
+);
+
+sl_check(
+	'the code the user is holding is still redeemable',
+	1,
+	count( $sl_repo->live_rows() )
+);
+
+sl_assert(
+	'nothing is consumed before the send is known to have worked',
+	! in_array( 'consume', array_slice( $sl_repo->ops, 0, array_search( 'insert', $sl_repo->ops, true ) ?: 0 ), true )
+		&& 1 === count( $sl_repo->live_rows() ),
+	'consume_open_codes() runs at class-otp-service.php:100, before the send at :136. A gateway failure therefore destroys a code the user already has and the rollback leaves them with neither. Operations seen: ' . implode( ' → ', $sl_repo->ops )
+);
+
+// The other half: on success the newest code must still be the only one.
+$sl_repo->ops = array();
+$sl_third     = sl_service_with( $sl_repo, true )->issue( '84900000001', OtpService::INTENT_LOGIN );
+
+sl_assert(
+	'a successful resend does retire the previous code',
+	is_array( $sl_third ) && 1 === count( $sl_repo->live_rows() ),
+	'Moving the consume must not lose the property it exists for: exactly one live code per destination and intent.'
+);
+
+// =====================================================================
+sl_section( 'Rule 9 — every outbound channel has a ceiling on worker time (10.7)' );
+
+$sl_clamps_smtp = false;
+
+foreach ( sl_plugin_sources() as $sl_contents ) {
+	if ( false !== strpos( $sl_contents, 'phpmailer_init' ) ) {
+		$sl_clamps_smtp = true;
+		break;
+	}
+}
+
+sl_assert(
+	'the SMTP send is bounded like the HTTP send',
+	$sl_clamps_smtp,
+	sprintf(
+		'WebhookTransport caps one send at %ds and explains why. wp_mail() is uncapped: PHPMailer defaults to Timeout = Timelimit = 300, twenty times the ceiling, on the channel that is enabled by default. The breaker bounds how often a dead channel is called, not how long one call may hold a worker.',
+		WebhookTransport::MAX_TIMEOUT
+	)
+);
+
+// The clamp is right for a six-digit code and wrong for a WooCommerce invoice,
+// so "registered" is only half the property — it must also be gone afterwards.
+Settings::update( array( 'email.enabled' => 1 ) );
+
+$sl_mail = new SmartLogin\OTP\Transports\MailTransport();
+$sl_mail->send( 'nguoi.dung@example.com', '482913', array( 'intent' => 'login' ) );
+
+sl_assert(
+	'the clamp is removed once the plugin\'s own mail is sent',
+	! has_filter( 'phpmailer_init' ),
+	'A ceiling left registered applies to every later wp_mail() on the request, including mail this plugin did not send.'
+);
+
+$sl_probe = new stdClass();
+$sl_mail->clamp_timeout( $sl_probe );
+
+sl_check(
+	'the ceiling matches the one the HTTP send uses',
+	WebhookTransport::MAX_TIMEOUT,
+	$sl_probe->Timeout ?? 0
+);
 
 sl_summary( 'Delivery routing' );

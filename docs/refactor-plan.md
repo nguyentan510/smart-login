@@ -743,11 +743,28 @@ automation can neither send an OTP nor react to one.
 - [ ] **10.6** [Delivery tab](delivery-routing/10.6-delivery-tab.md) — the
       original request. Four sub-tabs, each a real slug because saving is
       tab-scoped; second-level nav; the SMS preset default moves off `custom`
+- [x] **10.7** [Consume ordering and the worker-hold ceiling](delivery-routing/10.7-consume-ordering.md)
+      — **numbered last, sequenced first**, the way 9.10 landed before 9.8. Two
+      defects already in the tree, neither about routing, both made worse by
+      10.3 adding a transport the site does not operate. `consume_open_codes()`
+      ran *before* the send, so a gateway failure destroyed a code the user was
+      holding and the screen then told them it had already been used — the red
+      run printed the whole defect as `consume → insert → delete`. And
+      `wp_mail()` was uncapped at PHPMailer's 300s while the HTTP send has been
+      capped at 15s since 9.3, which the breaker does not cover because it
+      bounds frequency, not duration. Needed `add_action`/`remove_action` in the
+      stub registry, which surfaced a redeclaration in `admin-stubs.php` — the
+      same removal 9.0 made there for `add_filter`. 3 → 11 in the delivery
+      suite; every required suite unchanged, checked against a worktree of
+      `83ac1e4`
 
 ---
 
-**Ordering rationale.** 10.0 first, for the reason the Postscript gives. **10.2
-must precede 10.3** — 10.3 declares the plugin's second `secret` field, and
+**Ordering rationale.** 10.0 first, for the reason the Postscript gives. **10.7
+runs second, despite its number** — it repairs two defects that are in the tree
+today and that 10.3 makes worse by adding a third transport; sub-phase numbers
+here are allocation order, not execution order, as 9.10 landing before 9.8
+already established. **10.2 must precede 10.3** — 10.3 declares the plugin's second `secret` field, and
 against today's code that field would lose its value with no error anywhere.
 **10.1 must precede 10.3**: routing has to exist before there is anywhere for a
 new transport to be routed from, and keeping them apart is what lets 10.1 be

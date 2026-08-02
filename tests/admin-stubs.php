@@ -52,13 +52,12 @@ function wp_die( $message = '', $title = '', $args = array() ) {
 	throw new RuntimeException( 'wp_die: ' . ( is_string( $message ) ? $message : '' ) );
 }
 
-function add_action( $hook, $callback, $priority = 10, $accepted = 1 ) {
-	return true;
-}
-
-// add_filter() is no longer declared here: stubs.php now carries a real
-// registry, and this file is only ever loaded after it. A second no-op
-// declaration would be a redeclaration fatal, and the no-op would win nothing.
+// add_filter() and add_action() are no longer declared here: stubs.php now
+// carries a real registry, and this file is only ever loaded after it. A second
+// no-op declaration would be a redeclaration fatal, and the no-op would win
+// nothing. add_action() joined the registry in 10.7, for the same reason
+// add_filter() did in 9.0 — a stub that cannot express "registered, then
+// removed" cannot assert that MailTransport takes its SMTP clamp back off.
 
 function add_menu_page( ...$args ) {
 	return 'toplevel_page_smart-login';
