@@ -174,6 +174,37 @@ class OtpRepository {
 	}
 
 	/**
+	 * How many codes went out to one identity channel in the last N seconds.
+	 *
+	 * Counting by channel rather than by transport is what survives routing: a
+	 * site that points `phone` at the automation endpoint is still sending real
+	 * SMS and still spending real money, but no row says `transport = 'sms'` any
+	 * more, so the old count read zero while the bill kept arriving.
+	 *
+	 * Rows written before 10.5 may hold an empty `identity_channel` — nothing
+	 * filled it unless a handler passed a claim — and are not counted. Left
+	 * uncorrected rather than migrated: the column is populated on every write
+	 * now, the plugin has never run in production, and a backfill would need a
+	 * schema version bump this phase deliberately does not take.
+	 *
+	 * @param string $channel PhoneChannel::ID or MailChannel::ID.
+	 * @param int    $seconds Window.
+	 */
+	public function count_recent_by_channel( string $channel, int $seconds ): int {
+		global $wpdb;
+
+		$table = $this->table();
+
+		return (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$table} WHERE identity_channel = %s AND created_at > %s", // phpcs:ignore WordPress.DB.PreparedSQL
+				$channel,
+				gmdate( 'Y-m-d H:i:s', time() - $seconds )
+			)
+		);
+	}
+
+	/**
 	 * How many codes went out across the whole site in the last N seconds.
 	 *
 	 * The only counter here not scoped to a destination or an IP, which is the

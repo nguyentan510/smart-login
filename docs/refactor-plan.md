@@ -766,11 +766,21 @@ automation can neither send an OTP nor react to one.
       below the cap would rebuild 9.9's amplification defect and aim it at
       someone else's server; the cost is that disabling the audit log disables
       the bus, which is in the help text. 35 → 45, **no PENDING left**
-- [ ] **10.5** [Readiness and cost](delivery-routing/10.5-readiness-and-cost.md)
-      — two admin-facing numbers that 10.1–10.3 quietly break: readiness
-      constructs its transports directly, and the spend estimate counts rows
-      where `transport = 'sms'`, which reads zero the moment phone is routed
-      elsewhere
+- [x] **10.5** [Readiness and cost](delivery-routing/10.5-readiness-and-cost.md)
+      — readiness asks the router which transport serves each enabled channel
+      instead of constructing the two it used to assume, and the spend estimate
+      counts by identity channel instead of `transport = 'sms'`, which read zero
+      the moment a site routed phone at automation while the messages and the
+      bill kept going. **The brief planned to compensate at read time and that
+      was the wrong end**: `OtpService` was storing an empty `identity_channel`
+      whenever no handler passed a claim, so it now derives one at insert and the
+      counter is a plain `WHERE`. `MailTransport::is_available()` deliberately
+      **not** tightened — the router consults it to decide whether to attempt a
+      send, so a stricter version would refuse mail on hosts where `wp_mail()`
+      works; the dishonesty was readiness treating it as proof, which is now a
+      WARN naming what can actually be stood behind. Phase 9's rule 8 caught this
+      sub-phase reading a key built by concatenation. 61 → 66 admin, 45 → 46
+      delivery
 - [ ] **10.6** [Delivery tab](delivery-routing/10.6-delivery-tab.md) — the
       original request. Four sub-tabs, each a real slug because saving is
       tab-scoped; second-level nav; the SMS preset default moves off `custom`

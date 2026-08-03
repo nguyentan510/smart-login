@@ -104,7 +104,14 @@ class OtpService {
 			array(
 				'token'            => $token,
 				'intent'           => $intent,
-				'identity_channel' => (string) ( $payload['channel'] ?? $ctx['identity_channel'] ?? '' ),
+				// Derived when nothing supplies it, rather than stored empty.
+				// This column used to be blank on every code issued by a handler
+				// that did not happen to pass a claim — login and password reset
+				// among them — which left anything counting by channel guessing
+				// from the destination string later. Asking the routing authority
+				// keeps that test in the one file allowed to make it.
+				'identity_channel' => (string) ( $payload['channel'] ?? $ctx['identity_channel'] ?? '' )
+					?: TransportRouter::channel_for( $destination ),
 				'transport'        => $transport,
 				'destination'      => $destination,
 				'code_hash'        => $this->hash_code( $code ),

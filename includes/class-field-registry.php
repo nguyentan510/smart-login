@@ -768,8 +768,13 @@ final class FieldRegistry {
 				'min'     => 0,
 				'tab'     => 'security',
 				'section' => 'budget',
-				'label'   => __( 'Giá mỗi tin nhắn (VNĐ)', 'smart-login' ),
-				'help'    => __( 'Chỉ dùng để ước tính chi phí hiển thị trên màn hình Tổng quan. Đặt 0 để ẩn.', 'smart-login' ),
+				// The key still says `sms`; since 10.5 the number it multiplies is
+				// every OTP sent to a phone number, whichever transport carried
+				// it. Renaming the key would cross includes/, tests/ and docs/
+				// for no behavioural gain, and this project has been bitten five
+				// times by exactly that. The label carries the meaning instead.
+				'label'   => __( 'Giá mỗi mã gửi tới số điện thoại (VNĐ)', 'smart-login' ),
+				'help'    => __( 'Chỉ dùng để ước tính chi phí trên màn hình Tổng quan, và tính cho mọi mã gửi tới số điện thoại — kể cả khi kênh đó đang định tuyến qua automation. Đặt 0 để ẩn.', 'smart-login' ),
 			),
 			'security.captcha_provider'               => array(
 				'type'    => 'select',

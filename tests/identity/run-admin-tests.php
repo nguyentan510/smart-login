@@ -214,6 +214,130 @@ sl_check(
 	$delivery_after['status'] ?? 'missing'
 );
 
+/*
+ * 10.5. The two cases above stay exactly as they were — they still describe
+ * valid configurations — and these extend them to the one 10.1 made possible:
+ * a channel whose route points somewhere other than its built-in transport.
+ *
+ * Before 10.5 this check constructed WebhookTransport and MailTransport
+ * directly, so it answered about transports the site might not be using. Here
+ * the SMS gateway is configured and healthy, and the site is still broken.
+ */
+Settings::update(
+	array(
+		'identity.mode'        => 'both',
+		'sms.enabled'          => 1,
+		'sms.url'              => 'https://gateway.example.test/send',
+		'email.enabled'        => 1,
+		'delivery.route_phone' => 'automation',
+		'delivery.route_email' => 'email',
+		'automation.url'       => '',
+	)
+);
+Settings::store_secret( 'automation.secret', '' );
+
+$routed = null;
+
+foreach ( ( new \SmartLogin\Admin\Readiness() )->checks() as $check ) {
+	if ( 'delivery' === $check['key'] ) {
+		$routed = $check;
+	}
+}
+
+sl_check(
+	'a channel routed at an unconfigured transport is reported as blocking',
+	\SmartLogin\Admin\Readiness::FAIL,
+	$routed['status'] ?? 'missing'
+);
+
+sl_assert(
+	'and the detail names the routed transport, not the built-in one',
+	false !== strpos( (string) ( $routed['detail'] ?? '' ), 'automation' ),
+	'"Chưa cấu hình: SMS" would send the administrator to gateway settings that are already correct. Detail was: ' . ( $routed['detail'] ?? '' )
+);
+
+Settings::update( array( 'automation.url' => 'https://hooks.example.test/otp' ) );
+Settings::store_secret( 'automation.secret', 'admin-suite-signing-secret' );
+
+$routed_after = null;
+
+foreach ( ( new \SmartLogin\Admin\Readiness() )->checks() as $check ) {
+	if ( 'delivery' === $check['key'] ) {
+		$routed_after = $check;
+	}
+}
+
+sl_assert(
+	'configuring the routed transport clears it',
+	\SmartLogin\Admin\Readiness::FAIL !== ( $routed_after['status'] ?? 'missing' ),
+	'Still blocking after the endpoint was configured: ' . ( $routed_after['detail'] ?? '' )
+);
+
+// ---------------------------------------------------------------------
+sl_section( 'The spend estimate follows the channel, not the transport' );
+
+/*
+ * The stub $wpdb returns one global whatever the query, so counting by channel
+ * and counting by transport are indistinguishable through it. Readiness takes
+ * its repository by constructor for that reason, the same seam RateLimiter
+ * already offered.
+ */
+class SL_Spend_Repository extends \SmartLogin\OTP\OtpRepository {
+
+	/** @var string[] */
+	public $asked = array();
+
+	public function count_recent_all( int $seconds ): int {
+		return 3;
+	}
+
+	public function count_recent_by_channel( string $channel, int $seconds ): int {
+		$this->asked[] = 'by_channel:' . $channel;
+
+		return \SmartLogin\Identity\Channels\PhoneChannel::ID === $channel ? 3 : 0;
+	}
+
+	public function count_recent_by_transport( string $transport, int $seconds ): int {
+		$this->asked[] = 'by_transport:' . $transport;
+
+		return 0;
+	}
+}
+
+// Three phone codes carried by the automation transport: no row says
+// transport = 'sms', so the pre-10.5 counter priced them all at nothing while
+// the messages went out and the bill arrived.
+Settings::update(
+	array(
+		'otp.sms_unit_cost'          => 350,
+		'security.max_per_site_hour' => 100,
+	)
+);
+
+$spend_repo = new SL_Spend_Repository();
+$budget     = null;
+
+foreach ( ( new \SmartLogin\Admin\Readiness( $spend_repo ) )->checks() as $check ) {
+	if ( 'budget' === $check['key'] ) {
+		$budget = $check;
+	}
+}
+
+sl_assert(
+	'the estimate prices phone codes whichever transport carried them',
+	(bool) preg_match( '/1[.,]050/', (string) ( $budget['detail'] ?? '' ) ),
+	'3 codes at 350 should read 1.050 đ. Detail was: ' . ( $budget['detail'] ?? '' )
+);
+
+sl_assert(
+	'and it asks by channel rather than by transport',
+	in_array( 'by_channel:phone', $spend_repo->asked, true )
+		&& ! in_array( 'by_transport:sms', $spend_repo->asked, true ),
+	'Counters asked: ' . implode( ', ', $spend_repo->asked )
+);
+
+Settings::store_secret( 'automation.secret', '' );
+
 // ---------------------------------------------------------------------
 sl_section( 'Choosing a gateway replaces eleven fields with three' );
 

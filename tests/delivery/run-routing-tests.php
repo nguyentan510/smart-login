@@ -127,11 +127,23 @@ class SL_Allow_Limiter extends RateLimiter {
 	}
 }
 
-/** Build a service whose transport succeeds or fails on demand. */
+/**
+ * Build a service whose transports succeed or fail on demand.
+ *
+ * Both channels are registered, not only `sms`: with the map holding one id the
+ * router resolves an email destination to a transport that is not there, the
+ * send fails and the row is rolled back — so a test about anything else would
+ * silently be a test about a missing transport.
+ */
 function sl_service_with( SL_Fake_Otp_Repository $repo, bool $succeeds ): OtpService {
 	return new OtpService(
 		$repo,
-		new TransportRouter( array( 'sms' => new SL_Fake_Transport( $succeeds ) ) ),
+		new TransportRouter(
+			array(
+				'sms'   => new SL_Fake_Transport( $succeeds ),
+				'email' => new SL_Fake_Transport( $succeeds ),
+			)
+		),
 		new SL_Allow_Limiter( $repo )
 	);
 }
@@ -775,5 +787,28 @@ sl_check(
 	WebhookTransport::MAX_TIMEOUT,
 	$sl_probe->Timeout ?? 0
 );
+
+// =====================================================================
+sl_section( 'Rule 13 — every issued code records the channel it belongs to (10.5)' );
+
+Settings::update( array( 'delivery.route_phone' => 'sms' ) );
+
+$sl_channel_repo = new SL_Fake_Otp_Repository();
+sl_service_with( $sl_channel_repo, true )->issue( '84900000011', OtpService::INTENT_LOGIN );
+sl_service_with( $sl_channel_repo, true )->issue( 'nguoi.dung@example.com', OtpService::INTENT_LOGIN );
+
+$sl_recorded = array();
+
+foreach ( $sl_channel_repo->rows as $sl_row ) {
+	$sl_recorded[] = (string) ( $sl_row['identity_channel'] ?? '' );
+}
+
+sort( $sl_recorded );
+
+// Left empty, the column made every per-channel count a guess from the
+// destination string — which is the read-time compensation 10.5 exists to avoid.
+sl_check( 'the channel is stored, not left blank', array( 'email', 'phone' ), $sl_recorded );
+
+Settings::store_secret( 'automation.secret', '' );
 
 sl_summary( 'Delivery routing' );

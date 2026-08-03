@@ -23,9 +23,10 @@ namespace SmartLogin\Admin;
 
 use SmartLogin\Address\AddressRepository;
 use SmartLogin\Auth\Providers\ProviderRegistry;
+use SmartLogin\Identity\Channels\MailChannel;
+use SmartLogin\Identity\Channels\PhoneChannel;
 use SmartLogin\Installer;
-use SmartLogin\OTP\Transports\MailTransport;
-use SmartLogin\OTP\Transports\WebhookTransport;
+use SmartLogin\OTP\Transports\TransportRouter;
 use SmartLogin\Settings;
 
 defined( 'ABSPATH' ) || exit;
@@ -43,6 +44,19 @@ final class Readiness {
 
 	/** Deliberately not in use; not a problem. */
 	const OFF = 'off';
+
+	/** @var \SmartLogin\OTP\OtpRepository */
+	private $repo;
+
+	/**
+	 * The repository is injectable for the reason RateLimiter's is: the stub
+	 * `$wpdb` returns one global whatever the query, so counting by channel and
+	 * counting by transport are indistinguishable through it, and a test driven
+	 * that way would assert nothing.
+	 */
+	public function __construct( ?\SmartLogin\OTP\OtpRepository $repo = null ) {
+		$this->repo = $repo ?? new \SmartLogin\OTP\OtpRepository();
+	}
 
 	/**
 	 * @return array<int,array{key:string,label:string,status:string,detail:string,action:string,action_label:string}>
@@ -133,15 +147,54 @@ final class Readiness {
 	private function delivery(): array {
 		$broken = array();
 
-		if ( Settings::phone_enabled() && ! ( new WebhookTransport() )->is_available() ) {
-			$broken[] = __( 'SMS', 'smart-login' );
+		// Asks the router which transport actually serves each channel, rather
+		// than constructing the two it used to assume. Before 10.1 that
+		// assumption was true; after it, a channel pointed at the automation
+		// endpoint was checked against a webhook nobody was using.
+		$router   = new TransportRouter();
+		$channels = array();
+
+		if ( Settings::phone_enabled() ) {
+			$channels[ PhoneChannel::ID ] = __( 'Số điện thoại', 'smart-login' );
 		}
 
-		if ( Settings::email_enabled() && ! ( new MailTransport() )->is_available() ) {
-			$broken[] = __( 'Email', 'smart-login' );
+		if ( Settings::email_enabled() ) {
+			$channels[ MailChannel::ID ] = __( 'Email', 'smart-login' );
+		}
+
+		foreach ( $channels as $channel => $label ) {
+			// Read through the router's own table, not by building the path from
+			// a literal prefix — the abuse suite forbids that for good reason,
+			// and it caught this line: a key assembled by concatenation is a key
+			// nothing can check against the registry.
+			$route        = TransportRouter::ROUTES[ $channel ];
+			$transport_id = (string) Settings::get( $route['setting'], '' );
+			$transport    = $router->get( $transport_id ) ? $transport_id : $route['fallback'];
+
+			if ( ! $router->is_available( $transport ) ) {
+				$broken[] = sprintf(
+					/* translators: 1: identity channel, 2: transport id. */
+					__( '%1$s (đang định tuyến qua "%2$s")', 'smart-login' ),
+					$label,
+					$transport
+				);
+			}
 		}
 
 		if ( ! $broken ) {
+			$unproven = $this->mail_path_unproven( $channels );
+
+			if ( '' !== $unproven ) {
+				return $this->check(
+					'delivery',
+					__( 'Kênh gửi mã', 'smart-login' ),
+					self::WARN,
+					$unproven,
+					'delivery',
+					__( 'Gửi thử', 'smart-login' )
+				);
+			}
+
 			return $this->check(
 				'delivery',
 				__( 'Kênh gửi mã', 'smart-login' ),
@@ -163,6 +216,50 @@ final class Readiness {
 			'delivery',
 			__( 'Cấu hình ngay', 'smart-login' )
 		);
+	}
+
+	/**
+	 * Why "Đã sẵn sàng" was a claim the email channel could not support.
+	 *
+	 * `MailTransport::is_available()` reads one checkbox and nothing else, so it
+	 * can never report itself unready — and this check used to treat that as
+	 * proof. The SMS channel cannot lie the same way because its own check also
+	 * requires a URL.
+	 *
+	 * There is no honest synchronous probe for "can this site send mail":
+	 * `wp_mail()` returning true means PHP handed the message to an MTA, which is
+	 * not delivery, and finding out costs a real send. So this reports what can
+	 * be stood behind — nothing has ever gone out through it, and the host shows
+	 * no configured mail path — and says so as a WARN, because the site may well
+	 * be fine and a FAIL would cry wolf on every fresh install.
+	 *
+	 * @param array<string,string> $channels Enabled identity channels.
+	 */
+	private function mail_path_unproven( array $channels ): string {
+		if ( ! isset( $channels[ MailChannel::ID ] ) ) {
+			return '';
+		}
+
+		if ( 'email' !== (string) Settings::get( 'delivery.route_email', 'email' ) ) {
+			return '';
+		}
+
+		// An SMTP plugin registers one of these long before this screen renders.
+		// MailTransport's own phpmailer_init clamp is added around its send and
+		// removed again, so it cannot produce a false negative here.
+		if ( has_filter( 'phpmailer_init' ) || has_filter( 'pre_wp_mail' ) || has_filter( 'wp_mail_from' ) ) {
+			return '';
+		}
+
+		if ( '' !== trim( (string) ini_get( 'sendmail_path' ) ) ) {
+			return '';
+		}
+
+		if ( $this->repo->count_recent_by_channel( MailChannel::ID, 30 * DAY_IN_SECONDS ) > 0 ) {
+			return '';
+		}
+
+		return __( 'Kênh email đang bật nhưng chưa từng gửi được mã nào, máy chủ không khai báo đường gửi thư và không thấy plugin SMTP nào. Bật một plugin SMTP hoặc dùng nút Gửi thử để xác nhận trước khi mở đăng ký.', 'smart-login' );
 	}
 
 	/**
@@ -215,9 +312,11 @@ final class Readiness {
 		// that were chosen for plausibility rather than measured from any real
 		// site's traffic, so an operator needs to see how close they run before
 		// the kill switch introduces them to the number.
-		$repo = new \SmartLogin\OTP\OtpRepository();
-		$used = $repo->count_recent_all( HOUR_IN_SECONDS );
-		$sms  = $repo->count_recent_by_transport( 'sms', DAY_IN_SECONDS );
+		$used = $this->repo->count_recent_all( HOUR_IN_SECONDS );
+		// By channel, not by transport. Counting `transport = 'sms'` read zero
+		// the moment a site routed phone at the automation endpoint — while the
+		// automation kept sending real messages and the bill kept arriving.
+		$sms  = $this->repo->count_recent_by_channel( PhoneChannel::ID, DAY_IN_SECONDS );
 		$cost = Settings::get_int( 'otp.sms_unit_cost', 0 );
 
 		$detail = sprintf(
