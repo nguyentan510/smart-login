@@ -707,4 +707,78 @@ Settings::flush_cache();
 sl_check( 'an existing choice of Tuỳ chỉnh survives the new default', \SmartLogin\GatewayPresets::CUSTOM, Settings::get( 'sms.preset' ) );
 
 // ---------------------------------------------------------------------
+sl_section( 'The provider badge cannot disagree with the runtime' );
+
+/*
+ * The card read ProviderCredentials::is_configured() — credentials only — while
+ * what decides whether a provider actually runs is is_available(), which is
+ * `enabled && is_configured` (class-google-provider.php:32-35). A site with
+ * credentials saved and Kích hoạt left off therefore showed a green **Sẵn sàng**
+ * while no button rendered on the front end.
+ *
+ * Asserted as agreement rather than by matching a string: the badge must move
+ * whenever `available()` does, whatever it happens to say.
+ */
+$badge_states = array();
+
+foreach (
+	array(
+		'off, no credentials'  => array( 'enabled' => 0, 'client_id' => '' ),
+		'off, credentials set' => array( 'enabled' => 0, 'client_id' => 'client-id-here' ),
+		'on, no credentials'   => array( 'enabled' => 1, 'client_id' => '' ),
+		'on, credentials set'  => array( 'enabled' => 1, 'client_id' => 'client-id-here' ),
+	) as $label => $state
+) {
+	Settings::update(
+		array(
+			'providers.google.enabled'   => $state['enabled'],
+			'providers.google.client_id' => $state['client_id'],
+		)
+	);
+
+	if ( '' !== $state['client_id'] ) {
+		\SmartLogin\Auth\Providers\ProviderCredentials::store_secret( 'google', 'google-secret' );
+	} else {
+		\SmartLogin\Auth\Providers\ProviderCredentials::clear_secret( 'google' );
+	}
+
+	$card = sl_capture(
+		static function () use ( $screen ): void {
+			$screen->render( 'providers' );
+		}
+	)['html'];
+
+	$runtime_ready = array_key_exists( 'google', ( new \SmartLogin\Auth\Providers\ProviderRegistry() )->available() );
+	$badge_ready   = false !== strpos( $card, 'sl-provider-status is-ready' );
+
+	$badge_states[ $label ] = array(
+		'runtime' => $runtime_ready,
+		'badge'   => $badge_ready,
+	);
+}
+
+$disagreements = array();
+
+foreach ( $badge_states as $label => $state ) {
+	if ( $state['runtime'] !== $state['badge'] ) {
+		$disagreements[] = sprintf(
+			'%s — runtime %s, badge %s',
+			$label,
+			$state['runtime'] ? 'available' : 'unavailable',
+			$state['badge'] ? 'ready' : 'not ready'
+		);
+	}
+}
+
+sl_check( 'the ready badge agrees with ProviderRegistry::available()', array(), $disagreements );
+
+// Three states, not two: "credentials saved but switched off" is the one the
+// old badge could not express, and it is the one an administrator hits.
+sl_assert(
+	'a configured but disabled provider says so rather than showing green',
+	false === $badge_states['off, credentials set']['badge'],
+	'This is the defect: credentials present, Kích hoạt off, and the card claimed Sẵn sàng while no button rendered anywhere.'
+);
+
+// ---------------------------------------------------------------------
 sl_summary( 'Admin screens' );

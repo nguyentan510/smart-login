@@ -14,6 +14,7 @@
 namespace SmartLogin\Admin;
 
 use SmartLogin\Auth\Providers\ProviderCredentials;
+use SmartLogin\Auth\Providers\ProviderRegistry;
 use SmartLogin\Settings;
 
 defined( 'ABSPATH' ) || exit;
@@ -53,6 +54,7 @@ final class ProviderCards {
 	 */
 	private function card( string $provider, string $label, array $fields, string $secret_field, string $clear_field ): void {
 		$configured    = ProviderCredentials::is_configured( $provider );
+		$state         = $this->state( $provider, $configured );
 		$has_secret    = '' !== ProviderCredentials::secret( $provider );
 		$source        = ProviderCredentials::source( $provider );
 		$source_labels = array(
@@ -85,8 +87,8 @@ final class ProviderCards {
 						?>
 					</p>
 				</div>
-				<span class="sl-provider-status <?php echo $configured ? 'is-ready' : 'is-missing'; ?>">
-					<?php echo $configured ? esc_html__( 'Sẵn sàng', 'smart-login' ) : esc_html__( 'Thiếu credentials', 'smart-login' ); ?>
+				<span class="sl-provider-status <?php echo esc_attr( $state['class'] ); ?>">
+					<?php echo esc_html( $state['label'] ); ?>
 				</span>
 			</header>
 
@@ -161,6 +163,56 @@ final class ProviderCards {
 			</div>
 		</section>
 		<?php
+	}
+
+	/**
+	 * Three states, because two could not tell the truth.
+	 *
+	 * The badge used to read `is_configured()` — credentials present — while what
+	 * decides whether a provider runs is `is_available()`, which is
+	 * `enabled && is_configured`. Filling the credentials in and leaving Kích
+	 * hoạt off therefore produced a green **Sẵn sàng** on a provider whose button
+	 * never rendered anywhere: the screen asserting a control that did not exist,
+	 * which is the failure this project keeps finding in its own documentation.
+	 *
+	 * It asks the registry rather than recomputing the condition, so the badge
+	 * and the front end cannot drift apart — a second copy of `enabled &&
+	 * configured` here would be the same defect one refactor away.
+	 *
+	 * @return array{class:string,label:string}
+	 */
+	private function state( string $provider, bool $configured ): array {
+		if ( array_key_exists( $provider, ( new ProviderRegistry() )->available() ) ) {
+			return array(
+				'class' => 'is-ready',
+				'label' => __( 'Đang hoạt động', 'smart-login' ),
+			);
+		}
+
+		if ( $configured ) {
+			return array(
+				'class' => 'is-idle',
+				'label' => __( 'Đã cấu hình · chưa bật', 'smart-login' ),
+			);
+		}
+
+		// Read by variable, not by literal: the path is chosen by the provider,
+		// the same way FieldRenderer reads. A literal built by concatenation is a
+		// key nothing can check against the registry, and the abuse suite's
+		// rule 8 caught the first version of this line saying exactly that.
+		$enabled_path = 'providers.' . $provider . '.enabled';
+
+		if ( Settings::is_on( $enabled_path ) ) {
+			return array(
+				'class' => 'is-missing',
+				'label' => __( 'Đã bật · thiếu credentials', 'smart-login' ),
+			);
+		}
+
+		return array(
+			'class' => 'is-missing',
+			'label' => __( 'Chưa cấu hình', 'smart-login' ),
+		);
 	}
 
 	private function docs( string $provider ): void {

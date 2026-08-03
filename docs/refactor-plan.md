@@ -844,15 +844,19 @@ Split out of Phase 10 on purpose — it touches the same admin screens but has
 nothing to do with delivery routing, and folding it in would dilute an otherwise
 single-subject phase. Four items, from a wireframe review:
 
-1. **A defect, not a redesign.** The provider card's status badge reads
-   `ProviderCredentials::is_configured()` — credentials only
-   (`class-provider-cards.php:55,88`). What decides whether a provider actually
-   runs is `is_available()` = `enabled && is_configured`
-   (`class-google-provider.php:32-35`). A provider with credentials saved and
-   `Kích hoạt` left off therefore shows a green **Sẵn sàng** while no button
-   appears on the front end. The badge must read the same function the runtime
-   reads, with a rule asserting the two cannot disagree — otherwise 10.6 copies
-   the defect into the channel cards.
+1. ~~**A defect, not a redesign.**~~ **Done, ahead of the rest of the phase.**
+   The badge read `ProviderCredentials::is_configured()` — credentials only —
+   while what decides whether a provider runs is `is_available()` =
+   `enabled && is_configured`, so a provider with credentials saved and
+   `Kích hoạt` left off showed a green **Sẵn sàng** with no button anywhere.
+
+   It asks `ProviderRegistry::available()` now rather than recomputing the
+   condition, and there are three states instead of two: the one it could not
+   express was *configured but switched off*, which is the one an administrator
+   actually hits. The guard rail asserts agreement with `available()` across all
+   four combinations rather than matching a string, so the badge cannot drift
+   from the runtime whatever it says. Phase 9's rule 8 caught the fix reading a
+   key built by concatenation.
 2. Master toggle into the card header; `providers.auto_link_email` above the grid
    where its scope is visible, not below it as a trailing form row.
 3. Promote `ProviderCards` to a reusable channel card. **If Phase 12 is
