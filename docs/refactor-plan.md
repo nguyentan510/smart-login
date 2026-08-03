@@ -24,6 +24,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 8 — Account surface**
 - [x] **Phase 9 — Abuse boundary**
 - [x] **Phase 10 — Delivery routing and the automation bus**
+- [ ] **Phase 11 — Mail templates**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -833,11 +834,67 @@ headings on the same page.
 10.5 reuses the `identity_channel` column already present, with the
 derive-when-empty fallback `OtpService:336-345` established.
 
-**Phase 11, not started:** email template groups. One `email.subject` /
-`email.body` pair serves all four intents (`class-field-registry.php:488-512`),
-so a password-reset mail is worded identically to a login mail, and `{{intent}}`
-can be interpolated but not branched on. Separate phase, deliberately not folded
-into 10.6.
+**Phase 11 has its own spec now** — see below. It was recorded here from 10.2
+onwards as "email template groups, not started".
+
+---
+
+## Phase 11 — Mail templates
+
+Normative spec: [`mail-templates.md`](mail-templates.md) — the three kinds of
+mail, the per-intent keying, the token-scoping argument and what is deliberately
+excluded all live there.
+
+Execution briefs: [`mail-templates/`](mail-templates/), one file per sub-phase.
+**Status lives here and only here.**
+
+Short version: the plugin sends three kinds of mail and can template one of
+them. `email.subject` / `email.body` serves all four intents, so a password
+reset arrives worded identically to a login code; `{{intent}}` can be
+interpolated but never branched on. The two admin alerts
+(`class-rate-limiter.php:267`, `class-circuit-breaker.php:163`) compose their own
+text inline and cannot be reworded, redirected or switched off. And there is no
+layout at all — with `email.is_html` on, the body *is* the whole document.
+
+### Sub-phases
+
+- [ ] **11.0** [Guard rails](mail-templates/11.0-guard-rails.md) — six rules,
+      landed red, no production file touched. Rules 4–6 must report PENDING
+      rather than passing for want of a subject: the mistake 10.0 made with its
+      rule 5 and had to correct
+- [ ] **11.1** [Template registry](mail-templates/11.1-template-registry.md) —
+      one row per message, fields generated from it, and resolution in one place
+      with the shared pair as the middle fallback. Overrides default to **empty**,
+      because pre-filling every box would kill the fallback and turn one wording
+      into five copies to maintain
+- [ ] **11.2** [HTML layout](mail-templates/11.2-html-layout.md) — table-based
+      and inline-styled on purpose, because Outlook ignores `<style>` blocks;
+      wraps once, theme-overridable, and leaves plain text byte-identical
+- [ ] **11.3** [Admin alerts](mail-templates/11.3-admin-alerts.md) — the two
+      hard-coded messages join the registry and gain an off switch. The reason
+      off is allowed is 10.4: both events already reach an automation endpoint
+      through the bus, so a configured site receives each twice and can silence
+      neither
+- [ ] **11.4** [Mail screen](mail-templates/11.4-mail-screen.md) — a second-level
+      tab under Gửi mã, grouped the way an administrator thinks rather than the
+      way the registry stores. Last, for the reason 10.6 was
+
+---
+
+**Ordering rationale.** 11.0 first. **11.1 before everything else**, since it is
+the model the other three present, extend and edit. 11.2 and 11.3 are
+independent of each other and either may be dropped. **11.4 is last** and is the
+visible one — the same trap as 10.6, where every attempt to design the screen was
+really an attempt to design the model.
+
+**No schema change.** Every new value is a registry path in the existing option.
+
+**Deliberately excluded: a login-alert email.** 10.4 delivers it better —
+`AuditLog::LOGIN_SUCCESS` is one tick from an automation endpoint that can mail,
+message or ticket it, with the site owner choosing wording, channel and
+recipient. A login-alert mail here would mean the plugin growing recipients,
+throttling and a "was this you" flow, none of which is a template. A decision,
+not an oversight.
 
 **Phase 12, not started:** the provider surface and the shared channel card.
 Split out of Phase 10 on purpose — it touches the same admin screens but has
