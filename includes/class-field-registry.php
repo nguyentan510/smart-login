@@ -47,6 +47,7 @@ final class FieldRegistry {
 			'delivery'            => __( 'Gửi mã', 'smart-login' ),
 			'delivery-sms'        => __( 'Kênh SMS', 'smart-login' ),
 			'delivery-email'      => __( 'Kênh Email', 'smart-login' ),
+			'delivery-mail'       => __( 'Nội dung email', 'smart-login' ),
 			'delivery-automation' => __( 'Automation', 'smart-login' ),
 			'profile'             => __( 'Hồ sơ & Địa chỉ', 'smart-login' ),
 			'security'            => __( 'Chống lạm dụng', 'smart-login' ),
@@ -67,6 +68,7 @@ final class FieldRegistry {
 		return array(
 			'delivery-sms'        => 'delivery',
 			'delivery-email'      => 'delivery',
+			'delivery-mail'       => 'delivery',
 			'delivery-automation' => 'delivery',
 		);
 	}
@@ -102,6 +104,7 @@ final class FieldRegistry {
 			'sms'        => __( 'Gửi qua SMS', 'smart-login' ),
 			'email'      => __( 'Gửi qua email', 'smart-login' ),
 			'automation' => __( 'Automation / Webhook', 'smart-login' ),
+			'templates'  => __( 'Mẫu nội dung', 'smart-login' ),
 			'fields'     => __( 'Trường hồ sơ', 'smart-login' ),
 			'address'    => __( 'Địa chỉ 2 cấp', 'smart-login' ),
 			'woo'        => __( 'WooCommerce', 'smart-login' ),
@@ -135,6 +138,10 @@ final class FieldRegistry {
 			self::auth_fields(),
 			self::provider_fields(),
 			self::delivery_fields(),
+			// Generated, not typed. One row in MailRegistry produces the subject
+			// and body pair for a message, so a message cannot be editable
+			// without being declared or declared without being editable.
+			\SmartLogin\Mail\MailRegistry::fields(),
 			self::profile_fields(),
 			self::security_fields(),
 			self::advanced_fields(),

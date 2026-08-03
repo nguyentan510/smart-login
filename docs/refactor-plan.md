@@ -867,11 +867,18 @@ layout at all — with `email.is_html` on, the body *is* the whole document.
       catch that feature breaking it. Rule 1 could not be a regex: two files name
       `wp_mail()` inside strings where naming it is the whole point, so it
       tokenises and finds real call sites instead of text
-- [ ] **11.1** [Template registry](mail-templates/11.1-template-registry.md) —
-      one row per message, fields generated from it, and resolution in one place
-      with the shared pair as the middle fallback. Overrides default to **empty**,
-      because pre-filling every box would kill the fallback and turn one wording
-      into five copies to maintain
+- [x] **11.1** [Template registry](mail-templates/11.1-template-registry.md) —
+      one row per message, fields generated from it, resolution in one place.
+      Overrides default to **empty**, because pre-filling every box would kill
+      the fallback and turn one wording into five copies to maintain. **The
+      brief's fallback order could not work**: `email.subject` ships with a
+      non-empty default, so the shared level always matched and no per-message
+      default was ever reachable — the whole sub-phase would have shipped as a
+      no-op with its tests passing, since rule 2 only asks that a message
+      resolves to *something*. The middle level now compares against the field's
+      registry default, and each of the three is asserted separately. Found by
+      asserting behaviour, not plumbing. 2 → 18; regression 317 → 322 and admin
+      95 → 101, because generated fields are fields
 - [ ] **11.2** [HTML layout](mail-templates/11.2-html-layout.md) — table-based
       and inline-styled on purpose, because Outlook ignores `<style>` blocks;
       wraps once, theme-overridable, and leaves plain text byte-identical

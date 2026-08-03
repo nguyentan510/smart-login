@@ -258,4 +258,96 @@ sl_check(
 	false !== strpos( $sl_sent, '482913' )
 );
 
+// =====================================================================
+sl_section( 'Resolution — three levels, and each one reachable (11.1)' );
+
+if ( ! $sl_has_registry ) {
+	sl_pending( 'a reset code is worded differently from a login code', 'MailRegistry — 11.1' );
+} else {
+	// Nothing customised anywhere: each message uses its own default.
+	delete_option( Settings::OPTION );
+	Settings::flush_cache();
+
+	$sl_login   = call_user_func( array( SL_MAIL_REGISTRY, 'resolve' ), 'login' );
+	$sl_recover = call_user_func( array( SL_MAIL_REGISTRY, 'resolve' ), 'recover' );
+
+	sl_assert(
+		'a reset code is worded differently from a login code',
+		$sl_login['subject'] !== $sl_recover['subject'] && $sl_login['body'] !== $sl_recover['body'],
+		'This is the defect the phase exists for: PasswordResetHandler goes through issue() with intent recover and arrived reading "Mã xác thực của bạn là…", identical to a login code.'
+	);
+
+	sl_assert(
+		'the reset wording actually mentions the password',
+		false !== strpos( $sl_recover['subject'] . $sl_recover['body'], 'mật khẩu' ),
+		'Different is not enough; it has to say what it is.'
+	);
+
+	// A site that edited the shared pair keeps that wording everywhere, which is
+	// the no-migration property. Asserted rather than assumed.
+	Settings::update( array( 'email.subject' => 'Mã của {{site_name}}: {{code}}' ) );
+
+	sl_check(
+		'an edited shared subject still governs every message',
+		'Mã của {{site_name}}: {{code}}',
+		call_user_func( array( SL_MAIL_REGISTRY, 'resolve' ), 'recover' )['subject']
+	);
+
+	// And an override beats both.
+	Settings::update( array( 'email.templates.recover.subject' => 'Đặt lại mật khẩu: {{code}}' ) );
+
+	sl_check(
+		'a per-message override beats the shared pair',
+		'Đặt lại mật khẩu: {{code}}',
+		call_user_func( array( SL_MAIL_REGISTRY, 'resolve' ), 'recover' )['subject']
+	);
+
+	sl_check(
+		'and its siblings are unaffected',
+		'Mã của {{site_name}}: {{code}}',
+		call_user_func( array( SL_MAIL_REGISTRY, 'resolve' ), 'login' )['subject']
+	);
+
+	// Clearing the override restores inheritance rather than emptying the mail.
+	Settings::update( array( 'email.templates.recover.subject' => '' ) );
+
+	sl_check(
+		'clearing an override restores inheritance',
+		'Mã của {{site_name}}: {{code}}',
+		call_user_func( array( SL_MAIL_REGISTRY, 'resolve' ), 'recover' )['subject']
+	);
+
+	// The tester sends intent `test`, which has no row. It must still render.
+	delete_option( Settings::OPTION );
+	Settings::flush_cache();
+
+	$sl_test = call_user_func( array( SL_MAIL_REGISTRY, 'resolve_intent' ), 'test' );
+
+	sl_assert(
+		'an intent with no row still resolves, so the admin tester works',
+		'' !== trim( $sl_test['subject'] ) && '' !== trim( $sl_test['body'] ),
+		'The Gửi thử button sends intent "test". A tester that cannot render is a tester nobody can check a gateway with.'
+	);
+}
+
+// =====================================================================
+sl_section( 'Token scoping (11.1)' );
+
+if ( $sl_has_registry ) {
+	$sl_scoped = \SmartLogin\OTP\Placeholders::available_tokens( 'recover' );
+	$sl_global = \SmartLogin\OTP\Placeholders::available_tokens();
+
+	sl_assert(
+		'a message shows only the tokens it declares',
+		count( $sl_scoped ) > 0 && count( $sl_scoped ) <= count( $sl_global ),
+		'Showing every token beside every template is how {{ip}} ends up in an OTP mail and renders as nothing.'
+	);
+
+	sl_check(
+		'and the unscoped list is unchanged for the SMS section',
+		true,
+		isset( $sl_global['{{code}}'] ) && isset( $sl_global['{{phone_local}}'] )
+	);
+}
+
 sl_summary( 'Mail templates' );

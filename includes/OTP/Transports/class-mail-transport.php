@@ -9,6 +9,7 @@
 namespace SmartLogin\OTP\Transports;
 
 use SmartLogin\Identity\UserManager;
+use SmartLogin\Mail\MailRegistry;
 use SmartLogin\OTP\Placeholders;
 use SmartLogin\Settings;
 use WP_Error;
@@ -46,9 +47,14 @@ class MailTransport implements TransportInterface {
 			);
 		}
 
+		// Which wording, chosen by intent, is the registry's business; this
+		// transport's job is still exactly one thing — hand a rendered subject
+		// and body to wp_mail(). A message added later costs no change here.
+		$message = MailRegistry::resolve_intent( (string) ( $ctx['intent'] ?? '' ) );
+
 		$map     = Placeholders::build( $destination, $code, $ctx );
-		$subject = Placeholders::render( (string) Settings::get( 'email.subject', '' ), $map );
-		$body    = Placeholders::render( (string) Settings::get( 'email.body', '' ), $map );
+		$subject = Placeholders::render( $message['subject'], $map );
+		$body    = Placeholders::render( $message['body'], $map );
 		$is_html = Settings::is_on( 'email.is_html' );
 
 		$headers = array();

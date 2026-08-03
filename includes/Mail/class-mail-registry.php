@@ -1,0 +1,268 @@
+<?php
+/**
+ * Every message this plugin can send, declared exactly once.
+ *
+ * Before this, one `email.subject` / `email.body` pair served all four OTP
+ * intents, so a password reset arrived worded identically to a login code —
+ * `{{intent}}` was exposed to templates but could only be printed, never branched
+ * on. The obvious fix is four more pairs of fields; the reason that is the wrong
+ * fix is the one FieldRegistry's own docblock gives, one level up: four
+ * hand-written pairs are four places that have to agree about what exists, and
+ * nothing checks them.
+ *
+ * Here a row declares the message and the settings are generated from it. A
+ * message cannot be editable without being declared, and cannot be declared
+ * without being editable, because both read this array.
+ *
+ * @package SmartLogin
+ */
+
+namespace SmartLogin\Mail;
+
+use SmartLogin\Auth\AuthAction;
+use SmartLogin\Settings;
+
+defined( 'ABSPATH' ) || exit;
+
+final class MailRegistry {
+
+	/**
+	 * Tokens every OTP message may use.
+	 *
+	 * A named constant rather than a global list, so a message added later
+	 * inherits nothing by accident. That is the whole of D3: a token outside a
+	 * message's set renders as a silent empty string, and silence is how this
+	 * project has lost five renames.
+	 */
+	const OTP_TOKENS = array(
+		'destination',
+		'phone',
+		'phone_local',
+		'phone_plus',
+		'email',
+		'code',
+		'intent',
+		'transport',
+		'ttl_seconds',
+		'ttl_minutes',
+		'expires_at',
+		'site_name',
+		'site_url',
+		'user_name',
+		'delivery_id',
+	);
+
+	/** Where an override for a message is stored. */
+	const PATH_PREFIX = 'email.templates.';
+
+	/**
+	 * The shared pair every message falls back to.
+	 *
+	 * Kept rather than replaced by four copies of the same text. It is what makes
+	 * this phase a no-op for any site that never opens the screen, and deleting a
+	 * fallback in favour of copies is how drift starts.
+	 */
+	const FALLBACK_SUBJECT = 'email.subject';
+	const FALLBACK_BODY    = 'email.body';
+
+	/**
+	 * @return array<string,array> Keyed by the path segment the override uses.
+	 */
+	public static function all(): array {
+		$messages = array(
+			'register'     => array(
+				'group'   => 'otp',
+				'intent'  => AuthAction::REGISTER,
+				'label'   => __( 'Mã đăng ký', 'smart-login' ),
+				'when'    => __( 'Khi người dùng bắt đầu tạo tài khoản mới.', 'smart-login' ),
+				'tokens'  => self::OTP_TOKENS,
+				'subject' => 'Mã xác thực đăng ký {{code}} - {{site_name}}',
+				'body'    => "Xin chào,\n\nMã xác thực để tạo tài khoản tại {{site_name}} là: {{code}}\nMã có hiệu lực trong {{ttl_minutes}} phút.\n\nNếu bạn không yêu cầu mã này, vui lòng bỏ qua email.\n\n{{site_name}}",
+			),
+			'login'        => array(
+				'group'   => 'otp',
+				'intent'  => AuthAction::LOGIN,
+				'label'   => __( 'Mã đăng nhập', 'smart-login' ),
+				'when'    => __( 'Khi người dùng đăng nhập bằng mã thay cho mật khẩu, hoặc từ thiết bị lạ.', 'smart-login' ),
+				'tokens'  => self::OTP_TOKENS,
+				'subject' => 'Mã đăng nhập {{code}} - {{site_name}}',
+				'body'    => "Xin chào,\n\nMã đăng nhập của bạn tại {{site_name}} là: {{code}}\nMã có hiệu lực trong {{ttl_minutes}} phút.\n\nNếu không phải bạn đang đăng nhập, hãy đổi mật khẩu ngay.\n\n{{site_name}}",
+			),
+			'recover'      => array(
+				'group'   => 'otp',
+				'intent'  => AuthAction::RECOVER,
+				'label'   => __( 'Đặt lại mật khẩu', 'smart-login' ),
+				'when'    => __( 'Khi người dùng bấm Quên mật khẩu.', 'smart-login' ),
+				'tokens'  => self::OTP_TOKENS,
+				'subject' => 'Mã đặt lại mật khẩu {{code}} - {{site_name}}',
+				'body'    => "Xin chào,\n\nBạn vừa yêu cầu đặt lại mật khẩu tại {{site_name}}.\nMã xác nhận: {{code}}\nMã có hiệu lực trong {{ttl_minutes}} phút.\n\nNếu bạn không yêu cầu, hãy bỏ qua email này — mật khẩu hiện tại vẫn giữ nguyên.\n\n{{site_name}}",
+			),
+			'add_identity' => array(
+				'group'   => 'otp',
+				'intent'  => AuthAction::ADD_IDENTITY,
+				'label'   => __( 'Xác minh liên hệ mới', 'smart-login' ),
+				'when'    => __( 'Khi người dùng thêm hoặc đổi số điện thoại, email trong tài khoản.', 'smart-login' ),
+				'tokens'  => self::OTP_TOKENS,
+				'subject' => 'Mã xác minh {{destination}} - {{site_name}}',
+				'body'    => "Xin chào,\n\nMã xác minh cho {{destination}} tại {{site_name}} là: {{code}}\nMã có hiệu lực trong {{ttl_minutes}} phút.\n\nNếu bạn không thực hiện thay đổi này, hãy kiểm tra lại tài khoản của mình.\n\n{{site_name}}",
+			),
+		);
+
+		/**
+		 * Register additional messages.
+		 *
+		 * A row needs `group`, `label`, `tokens`, `subject` and `body`; `intent`
+		 * only when an OTP should route to it. The settings are generated, so
+		 * nothing else has to be edited to make one editable.
+		 *
+		 * @param array<string,array> $messages
+		 */
+		return (array) apply_filters( 'smart_login_mail_messages', $messages );
+	}
+
+	public static function get( string $id ): ?array {
+		return self::all()[ $id ] ?? null;
+	}
+
+	/**
+	 * The settings the registry contributes, in FieldRegistry's own shape.
+	 *
+	 * Defaults are **empty**, not the row's text. Empty means "use the
+	 * fallback"; pre-filling every box would make the fallback dead on arrival
+	 * and turn one wording into five copies for the administrator to maintain.
+	 *
+	 * @return array<string,array>
+	 */
+	public static function fields(): array {
+		$fields = array();
+
+		foreach ( self::all() as $id => $row ) {
+			$fields[ self::PATH_PREFIX . $id . '.subject' ] = array(
+				'type'    => 'text',
+				'default' => '',
+				'tab'     => 'delivery-mail',
+				'section' => 'templates',
+				/* translators: %s: message name. */
+				'label'   => sprintf( __( '%s — tiêu đề', 'smart-login' ), $row['label'] ),
+				'help'    => $row['when'],
+			);
+
+			$fields[ self::PATH_PREFIX . $id . '.body' ] = array(
+				'type'     => 'textarea',
+				'rows'     => 8,
+				'default'  => '',
+				'tab'      => 'delivery-mail',
+				'section'  => 'templates',
+				/* translators: %s: message name. */
+				'label'    => sprintf( __( '%s — nội dung', 'smart-login' ), $row['label'] ),
+				'sanitize' => 'rich_text',
+				'help'     => __( 'Để trống để dùng mẫu mặc định.', 'smart-login' ),
+			);
+		}
+
+		return $fields;
+	}
+
+	/**
+	 * The subject and body actually sent for a message.
+	 *
+	 * Three levels, and the middle one is what keeps every existing install on
+	 * exactly the text it has today: the administrator's override for this
+	 * message, then the shared pair they may already have edited, then the row's
+	 * own default.
+	 *
+	 * @return array{subject:string,body:string}
+	 */
+	public static function resolve( string $id ): array {
+		$row = self::get( $id );
+
+		return array(
+			'subject' => self::pick(
+				(string) Settings::get( self::PATH_PREFIX . $id . '.subject', '' ),
+				self::FALLBACK_SUBJECT,
+				(string) ( $row['subject'] ?? '' )
+			),
+			'body'    => self::pick(
+				(string) Settings::get( self::PATH_PREFIX . $id . '.body', '' ),
+				self::FALLBACK_BODY,
+				(string) ( $row['body'] ?? '' )
+			),
+		);
+	}
+
+	/**
+	 * The message an OTP of this intent uses.
+	 *
+	 * An intent with no row — the admin tester sends `test` — resolves to the
+	 * shared pair rather than to nothing, because a tester that cannot render is
+	 * a tester nobody can use to check a gateway.
+	 *
+	 * @return array{subject:string,body:string}
+	 */
+	public static function resolve_intent( string $intent ): array {
+		$id = self::id_for_intent( $intent );
+
+		if ( '' !== $id ) {
+			return self::resolve( $id );
+		}
+
+		return array(
+			'subject' => (string) Settings::get( self::FALLBACK_SUBJECT, '' ),
+			'body'    => (string) Settings::get( self::FALLBACK_BODY, '' ),
+		);
+	}
+
+	public static function id_for_intent( string $intent ): string {
+		foreach ( self::all() as $id => $row ) {
+			if ( ( $row['intent'] ?? '' ) === $intent ) {
+				return (string) $id;
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Which tokens this message may use. Empty id means every token there is.
+	 *
+	 * @return string[]
+	 */
+	public static function tokens( string $id ): array {
+		$row = self::get( $id );
+
+		return $row ? (array) ( $row['tokens'] ?? array() ) : array();
+	}
+
+	/**
+	 * Override, then a shared pair the administrator actually edited, then the
+	 * message's own default.
+	 *
+	 * The middle level compares against the shared field's *registry default*,
+	 * not against the empty string. The brief specified "override, else shared,
+	 * else default" and that ordering is unusable: `email.subject` ships with a
+	 * non-empty default, so the shared pair would always be non-empty and win,
+	 * and no per-message default would ever be reachable. The whole phase would
+	 * have shipped resolving every intent to the same wording it already had.
+	 *
+	 * Comparing against the declared default is what separates "the site has its
+	 * own wording, keep using it everywhere" from "nobody has touched this".
+	 *
+	 * @param string $override    Stored value for this message.
+	 * @param string $shared_path Registry path of the shared fallback field.
+	 * @param string $default     The message's own default.
+	 */
+	private static function pick( string $override, string $shared_path, string $default ): string {
+		if ( '' !== trim( $override ) ) {
+			return $override;
+		}
+
+		$shared     = (string) Settings::get( $shared_path, '' );
+		$ships_with = (string) ( \SmartLogin\FieldRegistry::get( $shared_path )['default'] ?? '' );
+
+		if ( '' !== trim( $shared ) && $shared !== $ships_with ) {
+			return $shared;
+		}
+
+		return '' !== trim( $default ) ? $default : $shared;
+	}
+}

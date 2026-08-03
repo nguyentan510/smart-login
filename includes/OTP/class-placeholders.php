@@ -86,8 +86,42 @@ class Placeholders {
 
 	/**
 	 * The token list shown as help text on the settings screen.
+	 *
+	 * With a message id, only the tokens that message declares. Showing the full
+	 * list beside every template is how an administrator pastes `{{ip}}` into an
+	 * OTP mail and receives a silent empty string — the failure Phase 11 exists
+	 * to prevent, and the one this project has met five times through renames.
+	 *
+	 * Without an id it still returns everything, because the SMS section
+	 * legitimately shows the whole set.
+	 *
+	 * @param string $message_id Optional MailRegistry row id.
 	 */
-	public static function available_tokens(): array {
+	public static function available_tokens( string $message_id = '' ): array {
+		$all = self::token_table();
+
+		if ( '' === $message_id ) {
+			return $all;
+		}
+
+		$allowed = \SmartLogin\Mail\MailRegistry::tokens( $message_id );
+		$scoped  = array();
+
+		foreach ( $allowed as $token ) {
+			$key = '{{' . $token . '}}';
+
+			if ( isset( $all[ $key ] ) ) {
+				$scoped[ $key ] = $all[ $key ];
+			}
+		}
+
+		return $scoped;
+	}
+
+	/**
+	 * Every token the plugin knows how to expand, with its description.
+	 */
+	private static function token_table(): array {
 		return array(
 			'{{destination}}' => __( 'Số điện thoại hoặc email nhận mã', 'smart-login' ),
 			'{{phone}}'       => __( 'SĐT dạng E.164 không dấu cộng — 84969789475', 'smart-login' ),
