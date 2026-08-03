@@ -98,6 +98,10 @@ $sl_mail_callers = sl_find_calls(
 	array(
 		// Delivers a code. Its subject and body come from the registry.
 		'includes/OTP/Transports/class-mail-transport.php',
+		// Sends everything that is not a code — the operational alerts. Also
+		// from the registry, and 11.3 moved the two inline callers behind it.
+		// Two senders, and the point of this rule is that there is never a third.
+		'includes/Mail/class-mailer.php',
 	)
 );
 
@@ -349,5 +353,103 @@ if ( $sl_has_registry ) {
 		isset( $sl_global['{{code}}'] ) && isset( $sl_global['{{phone_local}}'] )
 	);
 }
+
+// =====================================================================
+sl_section( 'The operational alerts still fire, and can now be silenced (11.3)' );
+
+delete_option( Settings::OPTION );
+Settings::flush_cache();
+update_option( 'admin_email', 'quantri@example.com' );
+
+$GLOBALS['sl_mails'] = array();
+
+// The breaker opens on the threshold-th consecutive failure and announces once.
+$sl_breaker = new SmartLogin\OTP\Transports\CircuitBreaker( 'sms' );
+
+for ( $sl_i = 0; $sl_i < Settings::get_int( 'security.breaker_threshold', 5 ); $sl_i++ ) {
+	$sl_breaker->record_failure();
+}
+
+sl_check( 'opening the breaker sends exactly one mail', 1, count( $GLOBALS['sl_mails'] ) );
+
+$sl_alert = $GLOBALS['sl_mails'][0] ?? array();
+
+sl_check( 'and it goes to the site admin', 'quantri@example.com', $sl_alert['to'] ?? '' );
+
+sl_assert(
+	'the wording survived the move to the registry',
+	false !== strpos( (string) ( $sl_alert['subject'] ?? '' ), 'Kênh gửi mã đang lỗi liên tục' )
+		&& false !== strpos( (string) ( $sl_alert['message'] ?? '' ), 'ngắt mạch chặn' ),
+	'Moving a message behind a registry must not reword it: ' . ( $sl_alert['subject'] ?? '' )
+);
+
+sl_assert(
+	'its tokens expanded rather than printing as braces',
+	false === strpos( (string) ( $sl_alert['subject'] ?? '' ) . ( $sl_alert['message'] ?? '' ), '{{' ),
+	'An unexpanded token is the silent-empty-string failure with the braces left in: ' . ( $sl_alert['message'] ?? '' )
+);
+
+// Off. This is the part that did not exist: both events already reach an
+// automation endpoint through the 10.4 bus, so a configured site was receiving
+// each alert twice and could silence neither.
+Settings::update( array( 'email.templates.breaker_open.enabled' => 0 ) );
+
+$GLOBALS['sl_mails'] = array();
+$GLOBALS['sl_transients'] = array();
+
+$sl_off = new SmartLogin\OTP\Transports\CircuitBreaker( 'sms' );
+
+for ( $sl_i = 0; $sl_i < Settings::get_int( 'security.breaker_threshold', 5 ); $sl_i++ ) {
+	$sl_off->record_failure();
+}
+
+sl_check( 'switching the alert off stops the mail', 0, count( $GLOBALS['sl_mails'] ) );
+
+// The record is not the notification. Turning the mail off must not blind the
+// log, which is the evidence an operator reads afterwards.
+$sl_logged = false;
+
+foreach ( (array) ( $GLOBALS['wpdb']->writes ?? array() ) as $sl_write ) {
+	if ( 'insert' === ( $sl_write['op'] ?? '' ) && 'transport_breaker_open' === ( $sl_write['data']['event'] ?? '' ) ) {
+		$sl_logged = true;
+	}
+}
+
+sl_check( 'and the audit record is still written', true, $sl_logged );
+
+// An override reaches an operational alert like any other message.
+Settings::update(
+	array(
+		'email.templates.breaker_open.enabled' => 1,
+		'email.templates.breaker_open.subject' => 'GẤP: kênh {{transport}} chết',
+	)
+);
+
+$GLOBALS['sl_mails']      = array();
+$GLOBALS['sl_transients'] = array();
+
+$sl_custom = new SmartLogin\OTP\Transports\CircuitBreaker( 'automation' );
+
+for ( $sl_i = 0; $sl_i < Settings::get_int( 'security.breaker_threshold', 5 ); $sl_i++ ) {
+	$sl_custom->record_failure();
+}
+
+sl_check(
+	'an administrator override reaches an operational alert',
+	'GẤP: kênh automation chết',
+	$GLOBALS['sl_mails'][0]['subject'] ?? ''
+);
+
+// No recipient configured is not an error, and must not be a fatal.
+update_option( 'admin_email', '' );
+$GLOBALS['sl_mails'] = array();
+
+sl_check(
+	'no admin address means no mail and no failure',
+	false,
+	SmartLogin\Mail\Mailer::send( 'budget_halted', SmartLogin\Mail\Mailer::admin_address(), array() )
+);
+
+sl_check( 'and nothing was sent', 0, count( $GLOBALS['sl_mails'] ) );
 
 sl_summary( 'Mail templates' );

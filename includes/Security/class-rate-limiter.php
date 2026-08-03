@@ -12,6 +12,7 @@
 namespace SmartLogin\Security;
 
 use SmartLogin\Identity\ChannelRegistry;
+use SmartLogin\Mail\Mailer;
 use SmartLogin\OTP\OtpRepository;
 use SmartLogin\Settings;
 use WP_Error;
@@ -258,28 +259,13 @@ class RateLimiter {
 	 * One mail per halt, to the site admin.
 	 */
 	private function notify_admin( string $window, int $ceiling, int $minutes ): void {
-		$to = (string) get_option( 'admin_email', '' );
-
-		if ( '' === $to ) {
-			return;
-		}
-
-		wp_mail(
-			$to,
-			sprintf(
-				/* translators: %s: site name. */
-				__( '[%s] Đã tạm dừng gửi mã xác thực', 'smart-login' ),
-				get_bloginfo( 'name' )
-			),
-			sprintf(
-				/* translators: 1: ceiling, 2: hour or day, 3: minutes halted. */
-				__(
-					"Smart Login đã chạm trần %1\$d mã xác thực trong một %2\$s và tạm dừng gửi trong %3\$d phút.\n\nĐây thường là dấu hiệu bị lạm dụng để đốt tin nhắn. Hãy mở Smart Login → Nhật ký để xem lưu lượng gần đây trước khi nâng trần.",
-					'smart-login'
-				),
-				$ceiling,
-				'day' === $window ? __( 'ngày', 'smart-login' ) : __( 'giờ', 'smart-login' ),
-				$minutes
+		Mailer::send(
+			'budget_halted',
+			Mailer::admin_address(),
+			array(
+				'ceiling'      => (string) $ceiling,
+				'window'       => 'day' === $window ? __( 'ngày', 'smart-login' ) : __( 'giờ', 'smart-login' ),
+				'halt_minutes' => (string) $minutes,
 			)
 		);
 	}

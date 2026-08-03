@@ -101,7 +101,15 @@ class Placeholders {
 		$all = self::token_table();
 
 		if ( '' === $message_id ) {
-			return $all;
+			// The SMS section asks with no id and must keep getting exactly the
+			// list it always had. The operational tokens below are reachable only
+			// through the message that declares them — offering {{ceiling}} beside
+			// an SMS body would be the same defect this scoping exists to remove,
+			// pointed the other way.
+			return array_intersect_key(
+				$all,
+				array_flip( self::braced( \SmartLogin\Mail\MailRegistry::OTP_TOKENS ) )
+			);
 		}
 
 		$allowed = \SmartLogin\Mail\MailRegistry::tokens( $message_id );
@@ -118,26 +126,44 @@ class Placeholders {
 		return $scoped;
 	}
 
+	/** @param string[] $tokens @return string[] */
+	private static function braced( array $tokens ): array {
+		return array_map(
+			static fn( string $token ): string => '{{' . $token . '}}',
+			$tokens
+		);
+	}
+
 	/**
 	 * Every token the plugin knows how to expand, with its description.
+	 *
+	 * One table for every message, filtered per message on the way out. Two
+	 * tables would be two places to describe `{{site_name}}`.
 	 */
 	private static function token_table(): array {
 		return array(
-			'{{destination}}' => __( 'Số điện thoại hoặc email nhận mã', 'smart-login' ),
-			'{{phone}}'       => __( 'SĐT dạng E.164 không dấu cộng — 84969789475', 'smart-login' ),
-			'{{phone_local}}' => __( 'SĐT dạng nội địa — 0969789475', 'smart-login' ),
-			'{{phone_plus}}'  => __( 'SĐT dạng quốc tế — +84969789475', 'smart-login' ),
-			'{{email}}'       => __( 'Email nhận mã (rỗng nếu gửi SMS)', 'smart-login' ),
-			'{{code}}'        => __( 'Mã OTP', 'smart-login' ),
-			'{{intent}}'      => __( 'Mục đích: register / login / recover / add_identity', 'smart-login' ),
-			'{{transport}}'   => __( 'Kênh gửi: sms / email', 'smart-login' ),
-			'{{ttl_seconds}}' => __( 'Thời gian hiệu lực tính bằng giây', 'smart-login' ),
-			'{{ttl_minutes}}' => __( 'Thời gian hiệu lực tính bằng phút', 'smart-login' ),
-			'{{expires_at}}'  => __( 'Thời điểm hết hạn', 'smart-login' ),
-			'{{site_name}}'   => __( 'Tên website', 'smart-login' ),
-			'{{site_url}}'    => __( 'Địa chỉ website', 'smart-login' ),
-			'{{user_name}}'   => __( 'Họ tên người dùng (nếu có)', 'smart-login' ),
-			'{{delivery_id}}' => __( 'Mã giao nhận ổn định giữa các lần retry', 'smart-login' ),
+			'{{destination}}'  => __( 'Số điện thoại hoặc email nhận mã', 'smart-login' ),
+			'{{phone}}'        => __( 'SĐT dạng E.164 không dấu cộng — 84969789475', 'smart-login' ),
+			'{{phone_local}}'  => __( 'SĐT dạng nội địa — 0969789475', 'smart-login' ),
+			'{{phone_plus}}'   => __( 'SĐT dạng quốc tế — +84969789475', 'smart-login' ),
+			'{{email}}'        => __( 'Email nhận mã (rỗng nếu gửi SMS)', 'smart-login' ),
+			'{{code}}'         => __( 'Mã OTP', 'smart-login' ),
+			'{{intent}}'       => __( 'Mục đích: register / login / recover / add_identity', 'smart-login' ),
+			'{{transport}}'    => __( 'Kênh gửi: sms / email', 'smart-login' ),
+			'{{ttl_seconds}}'  => __( 'Thời gian hiệu lực tính bằng giây', 'smart-login' ),
+			'{{ttl_minutes}}'  => __( 'Thời gian hiệu lực tính bằng phút', 'smart-login' ),
+			'{{expires_at}}'   => __( 'Thời điểm hết hạn', 'smart-login' ),
+			'{{site_name}}'    => __( 'Tên website', 'smart-login' ),
+			'{{site_url}}'     => __( 'Địa chỉ website', 'smart-login' ),
+			'{{user_name}}'    => __( 'Họ tên người dùng (nếu có)', 'smart-login' ),
+			'{{delivery_id}}'  => __( 'Mã giao nhận ổn định giữa các lần retry', 'smart-login' ),
+
+			// Operational alerts only. Never offered beside an OTP template,
+			// because there they would always render empty.
+			'{{ceiling}}'      => __( 'Trần vừa bị chạm', 'smart-login' ),
+			'{{window}}'       => __( 'Khoảng thời gian của trần: giờ hoặc ngày', 'smart-login' ),
+			'{{halt_minutes}}' => __( 'Số phút tạm dừng gửi', 'smart-login' ),
+			'{{cooldown}}'     => __( 'Số giây trước khi thử lại kênh gửi', 'smart-login' ),
 		);
 	}
 }

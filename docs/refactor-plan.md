@@ -882,11 +882,15 @@ layout at all — with `email.is_html` on, the body *is* the whole document.
 - [ ] **11.2** [HTML layout](mail-templates/11.2-html-layout.md) — table-based
       and inline-styled on purpose, because Outlook ignores `<style>` blocks;
       wraps once, theme-overridable, and leaves plain text byte-identical
-- [ ] **11.3** [Admin alerts](mail-templates/11.3-admin-alerts.md) — the two
+- [x] **11.3** [Admin alerts](mail-templates/11.3-admin-alerts.md) — the two
       hard-coded messages join the registry and gain an off switch. The reason
       off is allowed is 10.4: both events already reach an automation endpoint
-      through the bus, so a configured site receives each twice and can silence
-      neither
+      through the bus, so a configured site received each twice and could silence
+      neither. `Mailer` is the second and last sender — `MailTransport` could
+      have taken them and it would have been worse, since it is routed, breaker-
+      guarded and answerable for delivery, and the breaker is what sends one of
+      them. Switching a mail off leaves the **audit record** written, asserted:
+      the log is evidence, the mail is a notification. 18 → 28, rule 1 green
 - [ ] **11.4** [Mail screen](mail-templates/11.4-mail-screen.md) — a second-level
       tab under Gửi mã, grouped the way an administrator thinks rather than the
       way the registry stores. Last, for the reason 10.6 was

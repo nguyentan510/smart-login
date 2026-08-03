@@ -13,6 +13,7 @@
 
 namespace SmartLogin\OTP\Transports;
 
+use SmartLogin\Mail\Mailer;
 use SmartLogin\Security\AuditLog;
 use SmartLogin\Settings;
 
@@ -154,27 +155,14 @@ class CircuitBreaker {
 			)
 		);
 
-		$to = (string) get_option( 'admin_email', '' );
-
-		if ( '' === $to ) {
-			return;
-		}
-
-		wp_mail(
-			$to,
-			sprintf(
-				/* translators: %s: site name. */
-				__( '[%s] Kênh gửi mã đang lỗi liên tục', 'smart-login' ),
-				get_bloginfo( 'name' )
-			),
-			sprintf(
-				/* translators: 1: transport id, 2: seconds. */
-				__(
-					"Smart Login đã tạm ngắt kênh \"%1\$s\" sau nhiều lần gửi thất bại liên tiếp, và sẽ thử lại sau %2\$d giây.\n\nTrong lúc này người dùng không nhận được mã. Hãy kiểm tra gateway, rồi dùng nút Gửi thử ở tab Gửi mã — nút đó không bị ngắt mạch chặn.",
-					'smart-login'
-				),
-				$this->transport,
-				$this->cooldown()
+		// The audit record above is the log; this is the notification. Turning
+		// the mail off leaves the record — and the bus event — untouched.
+		Mailer::send(
+			'breaker_open',
+			Mailer::admin_address(),
+			array(
+				'transport' => $this->transport,
+				'cooldown'  => (string) $this->cooldown(),
 			)
 		);
 	}
