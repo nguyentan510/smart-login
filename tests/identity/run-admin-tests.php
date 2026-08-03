@@ -343,9 +343,15 @@ sl_section( 'Choosing a gateway replaces eleven fields with three' );
 
 // Through sanitize() and into the option, which is the path a real save takes —
 // update() plants values directly and would skip the preset derivation entirely.
+/*
+ * Two saves, not one. Since 10.6 the gateway lives on `delivery-sms` and the OTP
+ * profile on `delivery`, and a save writes only the fields carried by the tab it
+ * names — so posting both together would silently drop half of it. That is the
+ * boundary the split exists to create, asserted here by relying on it.
+ */
 $saved_delivery = Settings::sanitize(
 	array(
-		Settings::TAB_FIELD => 'delivery',
+		Settings::TAB_FIELD => 'delivery-sms',
 		'sms'               => array(
 			'enabled'     => 1,
 			'preset'      => 'esms',
@@ -355,12 +361,28 @@ $saved_delivery = Settings::sanitize(
 				'brandname'  => 'SHOPTEST',
 			),
 		),
-		'otp'               => array( 'preset' => 'balanced' ),
 	)
 );
 
 update_option( Settings::OPTION, $saved_delivery );
 Settings::flush_cache();
+
+update_option(
+	Settings::OPTION,
+	Settings::sanitize(
+		array(
+			Settings::TAB_FIELD => 'delivery',
+			'otp'               => array( 'preset' => 'balanced' ),
+		)
+	)
+);
+Settings::flush_cache();
+
+sl_check(
+	'the gateway saved from another tab survives',
+	'esms',
+	Settings::get( 'sms.preset' )
+);
 
 sl_check( 'saving a preset derives the gateway URL', 'https://rest.esms.vn/MainService.svc/json/SendMultipleMessage_V4_post_json/', Settings::get( 'sms.url' ) );
 sl_check( 'saving a preset derives the success condition', 'CodeResult', Settings::get( 'sms.success_path' ) );
@@ -368,7 +390,7 @@ sl_check( 'saving a preset applies the OTP profile', 300, Settings::get_int( 'ot
 
 $delivery_html = sl_capture(
 	static function () use ( $screen ): void {
-		$screen->render( 'delivery' );
+		$screen->render( 'delivery-sms' );
 	}
 )['html'];
 
@@ -463,8 +485,12 @@ Settings::update(
 );
 
 foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
-	if ( 'delivery' === $tab ) {
-		continue; // The tab that owns the credential is allowed to show it.
+	if ( 'delivery-sms' === $tab ) {
+		// The tab that owns the credential is allowed to show it. Since 10.6
+		// that is the SMS screen, not the whole delivery family — which makes
+		// this assertion stricter than it was: the three sibling tabs are now
+		// checked rather than exempted along with it.
+		continue;
 	}
 
 	$rendered = sl_capture(
@@ -503,15 +529,182 @@ $nav = sl_capture(
 
 sl_assert( 'nav renders', null === $nav['error'], (string) $nav['error'] );
 
+/*
+ * Rendered once per tab, not once in total. Since 10.6 the second-level tabs
+ * appear only while their family is open, so a single render of one tab could
+ * never link them all — and asserting against that render would have meant
+ * either deleting the rule or exempting the new tabs from it.
+ *
+ * The property is unchanged and now checked more thoroughly: a tab that exists
+ * in the registry must be reachable from the navigation drawn when it is the
+ * active tab. A tab reachable from nowhere is a tab whose settings can only be
+ * saved by typing the URL.
+ */
 $unlinked = array();
 
 foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
-	if ( false === strpos( $nav['html'], 'tab=' . $tab ) ) {
+	$strip = sl_capture(
+		static function () use ( $tab ): void {
+			SettingsPage::nav( $tab );
+		}
+	);
+
+	if ( null !== $strip['error'] || false === strpos( $strip['html'], 'tab=' . $tab . '"' ) ) {
 		$unlinked[] = $tab;
 	}
 }
 
-sl_check( 'every tab is reachable from the strip', array(), $unlinked );
+sl_check( 'every tab is reachable from the navigation', array(), $unlinked );
+
+// A child tab must also link back to the rest of its family, or the split has
+// produced four screens with no way between them.
+$sub = sl_capture(
+	static function (): void {
+		SettingsPage::nav( 'delivery-automation' );
+	}
+);
+
+$siblings_missing = array();
+
+foreach ( array( 'delivery', 'delivery-sms', 'delivery-email' ) as $sibling ) {
+	if ( false === strpos( $sub['html'], 'tab=' . $sibling . '"' ) ) {
+		$siblings_missing[] = $sibling;
+	}
+}
+
+sl_check( 'a second-level tab links to its siblings', array(), $siblings_missing );
+
+sl_assert(
+	'and the parent is highlighted in the top strip',
+	false !== strpos( $sub['html'], 'nav-tab nav-tab-active' ),
+	'With no top-level tab marked active, the whole delivery family looks unselected while one of its screens is open.'
+);
+
+// ---------------------------------------------------------------------
+sl_section( 'Splitting the delivery screen kept every invariant' );
+
+/*
+ * The property FieldRegistry exists to guarantee, checked across the split
+ * rather than within one tab: a field is drawn by exactly one screen. Four
+ * screens where there was one is four chances for a field to be claimed twice
+ * or by nobody, and both failures are silent.
+ */
+$drawn_on = array();
+
+foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
+	$html = sl_capture(
+		static function () use ( $screen, $tab ): void {
+			$screen->render( $tab );
+		}
+	)['html'];
+
+	foreach ( FieldRegistry::all() as $path => $field ) {
+		if ( '' === (string) ( $field['tab'] ?? '' ) || ! empty( $field['conditional'] ) ) {
+			continue;
+		}
+
+		if ( false !== strpos( $html, 'name="' . \SmartLogin\Admin\FieldRenderer::name( $path ) ) ) {
+			$drawn_on[ $path ][] = $tab;
+		}
+	}
+}
+
+$wrong_home = array();
+
+foreach ( FieldRegistry::all() as $path => $field ) {
+	if ( '' === (string) ( $field['tab'] ?? '' ) || ! empty( $field['conditional'] ) ) {
+		continue;
+	}
+
+	if ( array( $field['tab'] ) !== ( $drawn_on[ $path ] ?? array() ) ) {
+		$wrong_home[] = $path . ' → ' . implode( ',', $drawn_on[ $path ] ?? array( 'nowhere' ) );
+	}
+}
+
+sl_check( 'every field is drawn by exactly the tab that claims it', array(), $wrong_home );
+
+// Saving one screen of a family must not disturb its siblings. This is the
+// whole reason each is a real tab rather than a JS filter over one form.
+Settings::update(
+	array(
+		'automation.url'     => 'https://hooks.example.test/keep-me',
+		'automation.timeout' => 9,
+		'email.subject'      => 'Giữ nguyên {{code}}',
+		'email.is_html'      => 1,
+	)
+);
+
+$before_siblings = array(
+	'automation.url'     => Settings::get( 'automation.url' ),
+	'automation.timeout' => Settings::get_int( 'automation.timeout' ),
+	'email.subject'      => Settings::get( 'email.subject' ),
+	'email.is_html'      => Settings::get_int( 'email.is_html' ),
+);
+
+update_option(
+	Settings::OPTION,
+	Settings::sanitize(
+		array(
+			Settings::TAB_FIELD => 'delivery-sms',
+			'sms'               => array(
+				'enabled' => 1,
+				'preset'  => \SmartLogin\GatewayPresets::CUSTOM,
+				'url'     => 'https://gateway.example.test/changed',
+			),
+		)
+	)
+);
+Settings::flush_cache();
+
+$disturbed = array();
+
+foreach ( $before_siblings as $path => $value ) {
+	$now = is_int( $value ) ? Settings::get_int( $path ) : Settings::get( $path );
+
+	if ( $now !== $value ) {
+		$disturbed[] = $path;
+	}
+}
+
+sl_check( 'saving the SMS screen leaves its sibling screens untouched', array(), $disturbed );
+sl_check( 'and the screen that was saved did change', 'https://gateway.example.test/changed', Settings::get( 'sms.url' ) );
+
+// ---------------------------------------------------------------------
+sl_section( 'A fresh install opens on the easy gateway screen' );
+
+// The default moved off `custom`, which used to present thirteen raw fields
+// including a free-text JSON body to whoever had configured the least.
+sl_check( 'the shipped default preset is the generic webhook', 'generic', FieldRegistry::get( 'sms.preset' )['default'] );
+
+delete_option( Settings::OPTION );
+Settings::flush_cache();
+
+$fresh = sl_capture(
+	static function () use ( $screen ): void {
+		$screen->render( 'delivery-sms' );
+	}
+)['html'];
+
+sl_assert(
+	'a fresh install asks for one endpoint, not a JSON body',
+	false !== strpos( $fresh, \SmartLogin\Admin\FieldRenderer::name( 'sms.credentials' ) . '[endpoint]' ),
+	'The generic preset asks for a single URL; anything else means the default did not take.'
+);
+
+// A site that has already chosen `custom` keeps it: sanitize() writes stored
+// values, so the new default only reaches installs that have never saved.
+update_option(
+	Settings::OPTION,
+	Settings::sanitize(
+		array(
+			Settings::TAB_FIELD => 'delivery-sms',
+			'sms'               => array( 'preset' => \SmartLogin\GatewayPresets::CUSTOM ),
+		)
+	)
+);
+Settings::flush_cache();
+
+sl_check( 'an existing choice of Tuỳ chỉnh survives the new default', \SmartLogin\GatewayPresets::CUSTOM, Settings::get( 'sms.preset' ) );
 
 // ---------------------------------------------------------------------
 sl_summary( 'Admin screens' );

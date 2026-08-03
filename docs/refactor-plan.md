@@ -23,7 +23,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 7 — Release preparation**
 - [x] **Phase 8 — Account surface**
 - [x] **Phase 9 — Abuse boundary**
-- [ ] **Phase 10 — Delivery routing and the automation bus**
+- [x] **Phase 10 — Delivery routing and the automation bus**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -781,9 +781,20 @@ automation can neither send an OTP nor react to one.
       WARN naming what can actually be stood behind. Phase 9's rule 8 caught this
       sub-phase reading a key built by concatenation. 61 → 66 admin, 45 → 46
       delivery
-- [ ] **10.6** [Delivery tab](delivery-routing/10.6-delivery-tab.md) — the
-      original request. Four sub-tabs, each a real slug because saving is
-      tab-scoped; second-level nav; the SMS preset default moves off `custom`
+- [x] **10.6** [Delivery tab](delivery-routing/10.6-delivery-tab.md) — the
+      original request, and last because a screen can only present a routing
+      model that exists. Twenty-eight controls on one page became four screens
+      of 9 / 13 / 6 / 7, each a real tab slug because saving is tab-scoped;
+      `tabs()` stays flat and `tab_parents()` carries the hierarchy, since
+      nesting the registry would teach `posted_fields()` about depth for no
+      gain. Three existing assertions had to be rewritten and two came out
+      stronger — the credential-leak rule now checks the three siblings it used
+      to exempt, and the tab-strip rule renders the navigation once per tab
+      instead of once in total. **The gate passed while covering less**: it
+      rendered only `delivery`, which after the move claims nine fields instead
+      of thirty-five, so it now renders all four. 301 → 316 regression, 66 → 93
+      admin. Appearance is not asserted — no wp-admin session, and one was not
+      created
 - [x] **10.7** [Consume ordering and the worker-hold ceiling](delivery-routing/10.7-consume-ordering.md)
       — **numbered last, sequenced first**, the way 9.10 landed before 9.8. Two
       defects already in the tree, neither about routing, both made worse by

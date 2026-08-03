@@ -11,8 +11,11 @@
 
 namespace SmartLogin\Admin;
 
+use SmartLogin\Identity\Channels\MailChannel;
 use SmartLogin\Identity\Phone;
+use SmartLogin\OTP\Transports\AutomationTransport;
 use SmartLogin\OTP\Transports\MailTransport;
+use SmartLogin\OTP\Transports\TransportRouter;
 use SmartLogin\OTP\Transports\WebhookTransport;
 
 defined( 'ABSPATH' ) || exit;
@@ -59,7 +62,63 @@ class WebhookTester {
 			$this->test_email( $destination, $code, $ctx );
 		}
 
+		if ( 'automation' === $transport ) {
+			$this->test_automation( $destination, $code, $ctx );
+		}
+
 		$this->test_webhook( $destination, $code, $ctx );
+	}
+
+	/**
+	 * Post a signed envelope, whatever the routing table currently says.
+	 *
+	 * Deliberately independent of the route: an operator checking whether an
+	 * endpoint has come back should not have to point a live channel at it first.
+	 * Like the other two testers this calls the transport directly, so the
+	 * circuit breaker in TransportRouter does not stand in the way — which is the
+	 * whole reason the button is usable while the breaker is open.
+	 */
+	private function test_automation( string $destination, string $code, array $ctx ): void {
+		$transport = new AutomationTransport();
+
+		if ( ! $transport->is_available() ) {
+			wp_send_json_error(
+				array( 'message' => __( 'Endpoint automation chưa có URL hoặc chưa có khoá ký. Hãy lưu cấu hình trước.', 'smart-login' ) )
+			);
+		}
+
+		// A phone number is normalised so the envelope carries the same shape a
+		// real send would; an email address is passed through untouched. Which
+		// one this is comes from the routing authority, not from a seventh copy
+		// of the `@` test — the guard rail caught that on the first run.
+		$canonical = MailChannel::ID === TransportRouter::channel_for( $destination )
+			? $destination
+			: Phone::normalize( $destination );
+
+		if ( '' === $canonical ) {
+			wp_send_json_error( array( 'message' => __( 'Số điện thoại không hợp lệ.', 'smart-login' ) ) );
+		}
+
+		$result = $transport->send( $canonical, $code, $ctx );
+
+		if ( is_wp_error( $result ) ) {
+			$data = (array) $result->get_error_data();
+
+			wp_send_json_error(
+				array(
+					'message'  => $result->get_error_message(),
+					'status'   => $data['status'] ?? 0,
+					'response' => $data['detail'] ?? '',
+				)
+			);
+		}
+
+		wp_send_json_success(
+			array(
+				'ok'      => true,
+				'message' => __( 'Endpoint đã nhận gói tin đã ký. Kiểm tra phía automation để xác nhận chữ ký khớp.', 'smart-login' ),
+			)
+		);
 	}
 
 	private function test_webhook( string $destination, string $code, array $ctx ): void {

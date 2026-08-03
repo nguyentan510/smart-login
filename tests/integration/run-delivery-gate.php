@@ -294,32 +294,73 @@ if ( ! class_exists( 'SmartLogin\\Admin\\Screens\\SettingsScreen' ) ) {
 	}
 
 	if ( '' !== $html ) {
+		// All four screens, not just the parent. 10.6 moved twenty-six of this
+		// tab's fields onto three siblings, and a gate that kept rendering only
+		// `delivery` would have gone on passing while covering far less.
 		$missing = array();
+		$secret_leaked = false;
 
-		foreach ( array_keys( FieldRegistry::for_tab( 'delivery' ) ) as $path ) {
-			$field = FieldRegistry::get( $path );
+		foreach ( array( 'delivery', 'delivery-sms', 'delivery-email', 'delivery-automation' ) as $slug ) {
+			ob_start();
 
-			if ( ! empty( $field['conditional'] ) ) {
+			try {
+				( new \SmartLogin\Admin\Screens\SettingsScreen() )->render( $slug );
+				$screen_html = (string) ob_get_clean();
+			} catch ( Throwable $exception ) {
+				ob_end_clean();
+				$fail( 'rendering "' . $slug . '" threw: ' . $exception->getMessage() );
 				continue;
 			}
 
-			if ( false === strpos( $html, 'name="' . \SmartLogin\Admin\FieldRenderer::name( $path ) ) ) {
-				$missing[] = $path;
+			foreach ( array_keys( FieldRegistry::for_tab( $slug ) ) as $path ) {
+				$field = FieldRegistry::get( $path );
+
+				if ( ! empty( $field['conditional'] ) ) {
+					continue;
+				}
+
+				if ( false === strpos( $screen_html, 'name="' . \SmartLogin\Admin\FieldRenderer::name( $path ) ) ) {
+					$missing[] = $slug . ':' . $path;
+				}
+			}
+
+			// The one thing that must never appear, checked against real output
+			// on every screen rather than only on the one that owns it.
+			if ( false !== strpos( $screen_html, 'integration-signing-secret' ) ) {
+				$secret_leaked = true;
 			}
 		}
 
 		if ( $missing ) {
-			$fail( 'the delivery tab claims fields it does not draw: ' . implode( ', ', $missing ) );
+			$fail( 'a delivery screen claims fields it does not draw: ' . implode( ', ', $missing ) );
 		} else {
-			$ok( 'every delivery field renders, automation section included' );
+			$ok( 'all four delivery screens draw every field they claim' );
 		}
 
-		// The one thing that must never appear, checked against real output
-		// rather than against a stub's idea of it.
-		if ( false !== strpos( $html, 'integration-signing-secret' ) ) {
-			$fail( 'the stored HMAC secret is echoed into the settings page' );
+		if ( $secret_leaked ) {
+			$fail( 'the stored HMAC secret is echoed into a settings page' );
 		} else {
 			$ok( 'the HMAC secret is not written back into the DOM' );
+		}
+
+		// A second-level tab reachable from nowhere is a tab whose settings can
+		// only be saved by typing the URL.
+		ob_start();
+		\SmartLogin\Admin\SettingsPage::nav( 'delivery-automation' );
+		$nav_html = (string) ob_get_clean();
+
+		$unreachable = array();
+
+		foreach ( array( 'delivery', 'delivery-sms', 'delivery-email', 'delivery-automation' ) as $slug ) {
+			if ( false === strpos( $nav_html, 'tab=' . $slug . '"' ) ) {
+				$unreachable[] = $slug;
+			}
+		}
+
+		if ( $unreachable ) {
+			$fail( 'the delivery family is not navigable: ' . implode( ', ', $unreachable ) );
+		} else {
+			$ok( 'the four screens link to each other from the second-level nav' );
 		}
 	}
 }
