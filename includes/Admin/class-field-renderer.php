@@ -14,6 +14,7 @@
 namespace SmartLogin\Admin;
 
 use SmartLogin\GatewayPresets;
+use SmartLogin\Security\AuditLog;
 use SmartLogin\Settings;
 
 defined( 'ABSPATH' ) || exit;
@@ -58,6 +59,11 @@ final class FieldRenderer {
 			self::checkbox( $path, $field );
 			return;
 		}
+
+		if ( 'checkboxes' === $type ) {
+			self::checkboxes( $path, $field );
+			return;
+		}
 		?>
 		<tr>
 			<th scope="row">
@@ -91,6 +97,64 @@ final class FieldRenderer {
 			</td>
 		</tr>
 		<?php
+	}
+
+	/**
+	 * A list of independent switches sharing one stored array.
+	 *
+	 * The empty hidden input is what makes "none ticked" expressible. Without it
+	 * an unticked list is simply absent from $_POST, which sanitize() would read
+	 * as "field not on this tab" and leave the stored value alone — the user
+	 * would be unable to turn the last one off.
+	 *
+	 * @param string $path  Dot path.
+	 * @param array  $field Registry row; `choices` may name a generated source.
+	 */
+	private static function checkboxes( string $path, array $field ): void {
+		$chosen  = (array) Settings::get( $path, array() );
+		$choices = self::choices_for( $field );
+		?>
+		<tr>
+			<th scope="row"><?php echo esc_html( $field['label'] ?? $path ); ?></th>
+			<td>
+				<input type="hidden" name="<?php echo esc_attr( self::name( $path ) ); ?>[]" value="" />
+				<fieldset class="sl-checkboxes">
+					<?php foreach ( $choices as $value => $label ) : ?>
+						<label>
+							<input
+								type="checkbox"
+								name="<?php echo esc_attr( self::name( $path ) ); ?>[]"
+								value="<?php echo esc_attr( (string) $value ); ?>"
+								<?php checked( in_array( (string) $value, array_map( 'strval', $chosen ), true ) ); ?>
+							/>
+							<code><?php echo esc_html( (string) $label ); ?></code>
+						</label>
+					<?php endforeach; ?>
+				</fieldset>
+				<?php self::help( $field ); ?>
+			</td>
+		</tr>
+		<?php
+	}
+
+	/**
+	 * A choices list that is either declared inline or generated.
+	 *
+	 * The audit events are generated from the constants, so a constant added
+	 * later becomes subscribable without anyone remembering to edit a second
+	 * list. That is the same argument the registry itself makes.
+	 *
+	 * @param array $field Registry row.
+	 * @return array<string,string>
+	 */
+	private static function choices_for( array $field ): array {
+		$choices = $field['choices'] ?? array();
+
+		if ( 'audit_events' === $choices ) {
+			return array_combine( AuditLog::events(), AuditLog::events() );
+		}
+
+		return (array) $choices;
 	}
 
 	/**

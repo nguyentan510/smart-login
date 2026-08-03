@@ -752,10 +752,20 @@ automation can neither send an OTP nor react to one.
       the signer signs and sends nothing. Structural half is now "one sender";
       the half that matters is asserted on the bytes `WP_Http` would really
       transmit, reached through `pre_http_request`. 22 → 35
-- [ ] **10.4** [Event bus](delivery-routing/10.4-event-bus.md) — non-blocking
+- [x] **10.4** [Event bus](delivery-routing/10.4-event-bus.md) — non-blocking
       fan-out hooked at the single `AuditLog::record()` funnel, so a new event
-      constant is busable without a second edit. Off by default; never carries the
-      code; second breaker, which is the whole point
+      constant is busable without a second edit. Off by default; never carries
+      the code — asserted with `array_key_exists`, since a masked one is still a
+      field a receiver could come to depend on; second breaker, which is the
+      whole point. **Rule 4 forced the sender out into `AutomationEndpoint`**:
+      the bus needed to post a signed envelope and a second `wp_remote_request()`
+      would have been a second place to forget the signature. Second time a
+      structural rule was right about the shape and wrong about the file, and
+      both times the code moved rather than the rule. Shares the audit log's
+      hourly cap on purpose — an HTTP call costs more than an `INSERT`, so a bus
+      below the cap would rebuild 9.9's amplification defect and aim it at
+      someone else's server; the cost is that disabling the audit log disables
+      the bus, which is in the help text. 35 → 45, **no PENDING left**
 - [ ] **10.5** [Readiness and cost](delivery-routing/10.5-readiness-and-cost.md)
       — two admin-facing numbers that 10.1–10.3 quietly break: readiness
       constructs its transports directly, and the spend estimate counts rows

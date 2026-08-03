@@ -26,7 +26,10 @@ require __DIR__ . '/../harness.php';
 use SmartLogin\FieldRegistry;
 use SmartLogin\OTP\OtpRepository;
 use SmartLogin\OTP\OtpService;
+use SmartLogin\OTP\Transports\AutomationTransport;
+use SmartLogin\OTP\Transports\EventBus;
 use SmartLogin\OTP\Transports\TransportInterface;
+use SmartLogin\Security\AuditLog;
 use SmartLogin\OTP\Transports\TransportRouter;
 use SmartLogin\OTP\Transports\WebhookTransport;
 use SmartLogin\Security\Captcha;
@@ -381,9 +384,12 @@ sl_forbid_pattern(
 	'exactly one file puts an automation request on the wire',
 	'/wp_remote_(?:request|post|get)\(/',
 	array(
-		// The sender. Every send here goes through EnvelopeSigner first, which
-		// the signature assertion below is what proves.
-		'includes/OTP/Transports/class-automation-transport.php',
+		// The sender, and its only job. 10.4 moved the call here out of
+		// AutomationTransport so the bus could reuse it — this rule is what
+		// noticed, which is the argument for expressing it structurally at all.
+		// Both roles therefore sign, because signing is the first thing post()
+		// does and there is no path around it.
+		'includes/OTP/Transports/class-automation-endpoint.php',
 		// Pre-existing callers, none of them carrying an OTP envelope.
 		'includes/OTP/Transports/class-webhook-transport.php',
 		'includes/Security/class-captcha.php',
@@ -498,18 +504,116 @@ if ( array() === $sl_route_fields ) {
 // =====================================================================
 sl_section( 'Rule 6 — a failing bus never reaches the OTP path (10.4)' );
 
-if ( '' === sl_source( 'includes/OTP/Transports/class-event-bus.php' ) ) {
-	sl_pending(
-		'a bus failure leaves issue() returning a result and the OTP row intact',
-		'EventBus — 10.4'
-	);
-	sl_pending(
-		'the bus breaker and the transport breaker are separate keys',
-		'EventBus — 10.4'
-	);
-} else {
-	sl_note( 'EventBus exists — replace these pendings with the live assertions from the 10.4 brief.' );
+Settings::update(
+	array(
+		'automation.url'          => 'https://hooks.example.com/otp',
+		'advanced.audit_enabled'  => 1,
+		'automation.events'       => array( AuditLog::OTP_SENT ),
+		'delivery.route_phone'    => 'sms',
+	)
+);
+Settings::store_secret( 'automation.secret', 'shared-signing-secret' );
+
+// The bus endpoint is down; the SMS transport is fine.
+$GLOBALS['sl_http_response'] = array(
+	'response' => array( 'code' => 500 ),
+	'body'     => 'bus is down',
+);
+
+$sl_bus_repo             = new SL_Fake_Otp_Repository();
+$GLOBALS['sl_http_requests'] = array();
+
+$sl_issued = sl_service_with( $sl_bus_repo, true )->issue( '84900000009', OtpService::INTENT_LOGIN );
+
+sl_assert(
+	'a failing bus leaves issue() returning a result',
+	is_array( $sl_issued ),
+	'The bus reached the OTP path. It must never be able to: ' . ( is_wp_error( $sl_issued ) ? $sl_issued->get_error_message() : '' )
+);
+
+sl_check( 'and the OTP row survives', 1, count( $sl_bus_repo->live_rows() ) );
+
+// The two breakers must be different keys, or an analytics endpoint going down
+// stops sign-in. Asserted on the transient names rather than on behaviour,
+// because the behaviour only diverges on the day it matters.
+sl_assert(
+	'the bus breaker and the transport breaker are separate keys',
+	EventBus::BREAKER_ID !== ( new AutomationTransport() )->id(),
+	'Sharing a breaker would let a dead bus endpoint open the circuit that OTP delivery consults.'
+);
+
+// What went out, and what must not have.
+$sl_bus_bodies = array();
+
+foreach ( $GLOBALS['sl_http_requests'] as $sl_req ) {
+	$sl_decoded = json_decode( (string) ( $sl_req['args']['body'] ?? '' ), true );
+
+	if ( is_array( $sl_decoded ) && ( $sl_decoded['event'] ?? '' ) === AuditLog::OTP_SENT ) {
+		$sl_bus_bodies[] = array(
+			'payload' => $sl_decoded,
+			'args'    => $sl_req['args'],
+		);
+	}
 }
+
+sl_check( 'a subscribed event produces exactly one request', 1, count( $sl_bus_bodies ) );
+
+if ( $sl_bus_bodies ) {
+	$sl_env = $sl_bus_bodies[0]['payload'];
+
+	// array_key_exists, not empty(): a masked or blank code would still be a
+	// code-shaped field the receiver could come to depend on.
+	sl_check( 'the bus envelope has no code key at all', false, array_key_exists( 'code', $sl_env ) );
+
+	sl_check(
+		'the destination is masked, as the audit log already masks it',
+		true,
+		false === strpos( (string) ( $sl_env['destination'] ?? '' ), '84900000009' )
+	);
+
+	sl_check( 'the bus does not wait for an answer', false, $sl_bus_bodies[0]['args']['blocking'] ?? true );
+}
+
+// An unsubscribed event must produce no request at all — not a filtered one.
+Settings::update( array( 'automation.events' => array() ) );
+$GLOBALS['sl_http_requests'] = array();
+
+sl_service_with( new SL_Fake_Otp_Repository(), true )->issue( '84900000010', OtpService::INTENT_LOGIN );
+
+sl_check( 'an unsubscribed event produces no request', 0, count( $GLOBALS['sl_http_requests'] ) );
+
+// Recursion: the failure record goes through AuditLog::record(), which
+// dispatches. One attempt, not a chain.
+Settings::update( array( 'automation.events' => array( AuditLog::AUTOMATION_BUS_FAILED ) ) );
+$GLOBALS['sl_http_requests'] = array();
+
+( new EventBus() )->dispatch( AuditLog::AUTOMATION_BUS_FAILED, '', array() );
+
+sl_check(
+	'reporting a bus failure does not re-enter the bus',
+	1,
+	count( $GLOBALS['sl_http_requests'] )
+);
+
+// A stored event name that no longer exists must not survive a save.
+$sl_events_saved = Settings::sanitize(
+	array(
+		Settings::TAB_FIELD => (string) ( FieldRegistry::get( 'automation.events' )['tab'] ?? '' ),
+		'automation'        => array(
+			'events' => array( '', AuditLog::LOGIN_SUCCESS, 'an_event_that_was_removed' ),
+		),
+	)
+);
+
+sl_check(
+	'only known event names are stored',
+	array( AuditLog::LOGIN_SUCCESS ),
+	$sl_events_saved['automation']['events'] ?? array()
+);
+
+unset( $GLOBALS['sl_http_response'] );
+Settings::update( array( 'automation.events' => array() ) );
+Settings::store_secret( 'automation.secret', '' );
 
 // =====================================================================
 sl_section( 'Rule 7 — the automation endpoint refuses plaintext HTTP (10.3)' );

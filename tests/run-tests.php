@@ -1396,6 +1396,16 @@ function sl_sample_value( string $path, array $field ) {
 
 		case 'headers':
 			return array( array( 'key' => 'X-Test', 'value' => 'sample' ) );
+
+		case 'https_url':
+			return 'https://hooks.example.com/sample';
+
+		case 'audit_events':
+			// Has to be a real constant. The sanitiser intersects with the
+			// known events precisely so a stale name cannot survive a save, so
+			// an invented sample would measure that rule instead of the
+			// plumbing this assertion is about.
+			return array( \SmartLogin\Security\AuditLog::LOGIN_SUCCESS );
 	}
 
 	switch ( $field['type'] ?? 'text' ) {

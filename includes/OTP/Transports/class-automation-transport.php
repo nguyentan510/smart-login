@@ -33,17 +33,19 @@ class AutomationTransport implements TransportInterface {
 
 	const EVENT_OTP_SEND = 'otp.send';
 
+	/** @var AutomationEndpoint */
+	private $endpoint;
+
+	public function __construct( ?AutomationEndpoint $endpoint = null ) {
+		$this->endpoint = $endpoint ?? new AutomationEndpoint();
+	}
+
 	public function id(): string {
 		return 'automation';
 	}
 
-	/**
-	 * No secret means no signature, which means an endpoint receiving live codes
-	 * it cannot authenticate. That configuration is not offered.
-	 */
 	public function is_available(): bool {
-		return '' !== trim( (string) Settings::get( 'automation.url', '' ) )
-			&& '' !== Settings::read_secret( 'automation.secret' );
+		return $this->endpoint->is_configured();
 	}
 
 	/**
@@ -61,8 +63,7 @@ class AutomationTransport implements TransportInterface {
 		$ttl         = (int) ( $ctx['ttl_seconds'] ?? Settings::get_int( 'otp.ttl', 300 ) );
 		$expires_ts  = (int) ( $ctx['expires_ts'] ?? ( time() + $ttl ) );
 
-		$envelope = array(
-			'event'       => self::EVENT_OTP_SEND,
+		$envelope = AutomationEndpoint::base_envelope( self::EVENT_OTP_SEND, $delivery_id ) + array(
 			// Named rather than inferred. Placeholders blanks {{email}} for a
 			// phone destination and {{phone}} for an email one, which would
 			// leave the receiver working out the channel from which field is
@@ -73,9 +74,6 @@ class AutomationTransport implements TransportInterface {
 			'code'        => $code,
 			'ttl_seconds' => $ttl,
 			'expires_at'  => gmdate( 'c', $expires_ts ),
-			'delivery_id' => $delivery_id,
-			'site'        => home_url( '/' ),
-			'timestamp'   => time(),
 		);
 
 		/**
@@ -96,36 +94,9 @@ class AutomationTransport implements TransportInterface {
 		$envelope['code']        = $code;
 		$envelope['delivery_id'] = $delivery_id;
 
-		$signed = EnvelopeSigner::sign( $envelope, Settings::read_secret( 'automation.secret' ) );
-
-		$headers = $signed['headers'];
-
-		foreach ( (array) Settings::get( 'automation.headers', array() ) as $row ) {
-			if ( empty( $row['key'] ) || isset( $headers[ $row['key'] ] ) ) {
-				continue;
-			}
-
-			$headers[ $row['key'] ] = (string) ( $row['value'] ?? '' );
-		}
-
-		// Clamped here as well as by the registry, for the reason
-		// WebhookTransport records: a value stored under an older, looser
-		// ceiling survives until somebody happens to re-save that tab.
-		$timeout = min(
-			WebhookTransport::MAX_TIMEOUT,
-			max( 1, Settings::get_int( 'automation.timeout', 5 ) )
-		);
-
-		$args = array(
-			'method'      => 'POST',
-			'timeout'     => $timeout,
-			'redirection' => 0,
-			'headers'     => $headers,
-			'body'        => $signed['body'],
-			'user-agent'  => 'SmartLogin/' . SMART_LOGIN_VERSION . '; ' . home_url( '/' ),
-		);
-
-		$response = wp_remote_request( (string) Settings::get( 'automation.url', '' ), $args );
+		// Blocking, because this role is answerable for the delivery. The bus
+		// role uses the same endpoint and does not wait.
+		$response = $this->endpoint->post( $envelope, true );
 
 		if ( is_wp_error( $response ) ) {
 			return $this->failed( $response->get_error_message(), 0, $code );

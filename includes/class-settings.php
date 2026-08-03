@@ -460,6 +460,18 @@ class Settings {
 			case 'https_url':
 				return self::sanitize_https_url( $raw, $path );
 
+			case 'audit_events':
+				// Intersected with the constants, so a stale stored name cannot
+				// keep being looked for after the event it named is gone. The
+				// empty strings come from the hidden input that makes "none
+				// ticked" expressible at all.
+				return array_values(
+					array_intersect(
+						array_filter( array_map( 'strval', (array) $raw ) ),
+						\SmartLogin\Security\AuditLog::events()
+					)
+				);
+
 			case 'country_code':
 				return preg_replace( '/[^0-9]/', '', (string) $raw ) ?: $field['default'];
 

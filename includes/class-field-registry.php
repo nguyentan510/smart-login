@@ -563,6 +563,16 @@ final class FieldRegistry {
 				'label'   => __( 'Timeout (giây)', 'smart-login' ),
 				'help'    => __( 'Cùng trần cứng với kênh SMS, và vì cùng một lý do: mỗi lần gửi giữ một tiến trình PHP trong đúng khoảng này.', 'smart-login' ),
 			),
+			'automation.events'            => array(
+				'type'     => 'checkboxes',
+				'default'  => array(),
+				'tab'      => 'delivery',
+				'section'  => 'automation',
+				'label'    => __( 'Sự kiện gửi kèm', 'smart-login' ),
+				'choices'  => 'audit_events',
+				'sanitize' => 'audit_events',
+				'help'     => __( 'Gửi không chờ phản hồi, <strong>không bao giờ kèm mã OTP</strong>, và dùng chung trần đếm mỗi giờ với nhật ký — nên tắt nhật ký là tắt luôn phần này.', 'smart-login' ),
+			),
 			'automation.success_path'      => array(
 				'type'    => 'text',
 				'default' => '',

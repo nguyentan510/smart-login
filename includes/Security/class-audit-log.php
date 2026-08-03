@@ -37,6 +37,36 @@ class AuditLog {
 	const IDENTITY_RETIRED       = 'identity_retired';
 	const CONTACT_PENDING        = 'contact_pending';
 	const CONTACT_VERIFIED       = 'contact_verified';
+	const AUTOMATION_BUS_FAILED  = 'automation_bus_failed';
+
+	/**
+	 * Every event name, derived from the constants above.
+	 *
+	 * Generated rather than typed out, so a constant added later is subscribable
+	 * without a second edit — the same argument FieldRegistry makes for settings.
+	 * Array constants are skipped; only the string ones are events.
+	 *
+	 * @return string[]
+	 */
+	public static function events(): array {
+		static $events = null;
+
+		if ( null !== $events ) {
+			return $events;
+		}
+
+		$events = array();
+
+		foreach ( ( new \ReflectionClass( self::class ) )->getConstants() as $value ) {
+			if ( is_string( $value ) ) {
+				$events[] = $value;
+			}
+		}
+
+		sort( $events );
+
+		return $events;
+	}
 
 	/**
 	 * @param string $event           One of the constants above.
@@ -62,6 +92,9 @@ class AuditLog {
 		self::PROVIDER_FAILED,
 		self::PROVIDER_LINKED,
 		self::PROVIDER_UNLINKED,
+		// The only record that a fire-and-forget channel failed. Sampling the
+		// evidence of a silent failure is the worst of both.
+		self::AUTOMATION_BUS_FAILED,
 	);
 
 	public static function record( string $event, string $identity_masked = '', array $meta = array(), int $user_id = 0 ): void {
@@ -72,6 +105,23 @@ class AuditLog {
 		if ( ! self::may_write( $event ) ) {
 			return;
 		}
+
+		$meta = self::scrub( $meta );
+
+		/*
+		 * The bus rides the same funnel, and deliberately the same cap.
+		 *
+		 * 9.9 made this log stop amplifying the attack it records: past the
+		 * hourly cap an event writes one summary row instead of thousands. An
+		 * outbound HTTP call costs strictly more than an INSERT, so a bus that
+		 * fired below the cap would rebuild that defect one layer up and aim it
+		 * at somebody else's server.
+		 *
+		 * The cost is a real coupling, written down here and in the help text
+		 * rather than discovered: turning the audit log off turns the bus off
+		 * too, because `may_write()` is never reached.
+		 */
+		( new \SmartLogin\OTP\Transports\EventBus() )->dispatch( $event, $identity_masked, $meta, $user_id );
 
 		self::write( $event, $identity_masked, $meta, $user_id );
 	}
