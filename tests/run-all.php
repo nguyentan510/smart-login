@@ -110,6 +110,15 @@ $suites = array(
 		'file' => 'delivery/run-routing-tests.php',
 		'kind' => 'required',
 	),
+	array(
+		// Phase 11, landed red at 11.0 before any production file moved. Two
+		// rules fail on defects in the tree; three report PENDING rather than
+		// passing for want of a subject; one pins behaviour that already holds,
+		// so 11.2 cannot quietly break it. Promoted when it goes green.
+		'name' => 'Mail templates',
+		'file' => 'mail/run-template-tests.php',
+		'kind' => 'spec',
+	),
 );
 
 $results  = array();

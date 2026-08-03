@@ -858,10 +858,15 @@ layout at all — with `email.is_html` on, the body *is* the whole document.
 
 ### Sub-phases
 
-- [ ] **11.0** [Guard rails](mail-templates/11.0-guard-rails.md) — six rules,
-      landed red, no production file touched. Rules 4–6 must report PENDING
-      rather than passing for want of a subject: the mistake 10.0 made with its
-      rule 5 and had to correct
+- [x] **11.0** [Guard rails](mail-templates/11.0-guard-rails.md) — landed red as
+      intended: `2 passed, 2 failed, 7 pending`, no production file touched,
+      every other suite at its previous count. **The brief was wrong twice in
+      one paragraph, in opposite directions**: rule 3 would have passed
+      vacuously and became PENDING, and rule 6 was listed as PENDING when it is
+      assertable today — a rule that arrives with the feature it guards cannot
+      catch that feature breaking it. Rule 1 could not be a regex: two files name
+      `wp_mail()` inside strings where naming it is the whole point, so it
+      tokenises and finds real call sites instead of text
 - [ ] **11.1** [Template registry](mail-templates/11.1-template-registry.md) —
       one row per message, fields generated from it, and resolution in one place
       with the shared pair as the middle fallback. Overrides default to **empty**,
