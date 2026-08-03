@@ -9,7 +9,27 @@ defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 
 $smart_login_settings = get_option( 'smart_login_settings', array() );
 
-if ( empty( $smart_login_settings['delete_data_on_uninstall'] ) ) {
+/*
+ * `advanced.delete_data_on_uninstall`, not the flat key this read for years.
+ *
+ * The settings rewrite made the option nested and Installer::migrate_flat_keys()
+ * lists this exact pair, so the flat subscript resolved to null on every install
+ * that had ever been migrated — which is all of them. empty( null ) is true, so
+ * the routine returned immediately and an administrator who ticked *Xoá dữ liệu
+ * khi gỡ* got nothing deleted, silently.
+ *
+ * The plugin is not loaded here, so this cannot ask Settings for the value and
+ * has to know the shape. tests/run-tests.php asserts every subscript chain in
+ * this file names a path FieldRegistry declares, which is the only thing that
+ * would have caught the original.
+ *
+ * No fallback to the flat key. The first version of this fix kept one, and the
+ * new rule immediately flagged it — correctly, because a rule cannot tell a
+ * deliberate legacy read from the typo it exists to catch. It also protected
+ * against nothing: Installer::maybe_upgrade() runs on every load and migrates
+ * the shape before an uninstall could ever be reached.
+ */
+if ( empty( $smart_login_settings['advanced']['delete_data_on_uninstall'] ) ) {
 	return;
 }
 

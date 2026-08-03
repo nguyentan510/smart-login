@@ -858,7 +858,26 @@ single-subject phase. Four items, from a wireframe review:
 3. Promote `ProviderCards` to a reusable channel card. **If Phase 12 is
    reordered before 10.6, this item must lead it** — 10.6 builds four screens on
    that component, and building them first means writing the card twice.
-**Found in 10.2, deliberately not fixed there:** `uninstall.php:12` gates the
+**Fixed after Phase 10 closed, in its own commit with its own guard rail.** The
+gate now reads `advanced.delete_data_on_uninstall`, and `tests/run-tests.php`
+asserts that every `$smart_login_settings[...]` subscript chain in `uninstall.php`
+names a path `FieldRegistry` declares — the abuse suite's rule 8 could never see
+this file, because it scans `Settings::get()` calls and `uninstall.php` runs
+without the plugin loaded.
+
+The first attempt kept a fallback to the flat key and the new rule flagged it
+immediately. Correct: a rule cannot tell a deliberate legacy read from the typo
+it exists to catch, and the fallback protected against nothing anyway, since
+`Installer::maybe_upgrade()` migrates the shape on every load long before an
+uninstall could run.
+
+**Behaviour change worth naming:** an install with that box ticked now actually
+loses its tables, options and user meta on uninstall. That is what the setting
+has always claimed to do.
+
+Original finding, kept for the record:
+
+**Found in 10.2, deliberately not fixed there:** `uninstall.php:12` gated the
 whole routine on `$smart_login_settings['delete_data_on_uninstall']` — a **flat**
 key. The setting has been `advanced.delete_data_on_uninstall` since the settings
 rewrite, and `Installer::migrate_flat_keys()` lists that exact pair

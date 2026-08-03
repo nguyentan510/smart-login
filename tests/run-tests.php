@@ -1582,6 +1582,39 @@ check( 'admin script switches provider setup and docs panels', true, false !== s
 check( 'provider failure no longer redirects from current callback URL', false, false !== strpos( $provider_controller, 'wp_safe_redirect( Flow::url(' ) );
 
 // ---------------------------------------------------------------------
+section( 'The uninstall gate reads a key that exists' );
+
+/*
+ * uninstall.php runs without the plugin loaded, so it cannot ask Settings for
+ * anything — it reads the raw option array by subscript. That puts it outside
+ * the abuse suite's rule 8, which only sees Settings::get() calls, and it is
+ * exactly where this project's recurring defect lives: a flat key left behind
+ * when the settings rewrite made the option nested.
+ *
+ * Installer::migrate_flat_keys() is the list of pairs that moved. A subscript
+ * chain in uninstall.php naming a path the registry does not declare reads null
+ * for ever, and the reader has no way to notice — here, that means an opt-in the
+ * administrator ticked never opens.
+ */
+$uninstall_source = file_get_contents( dirname( __DIR__ ) . '/uninstall.php' );
+$declared_paths   = array_keys( \SmartLogin\FieldRegistry::all() );
+$undeclared_reads = array();
+
+if ( preg_match_all( '/\$smart_login_settings((?:\[\s*\'[^\']+\'\s*\])+)/', $uninstall_source, $matches ) ) {
+	foreach ( $matches[1] as $subscripts ) {
+		preg_match_all( "/'([^']+)'/", $subscripts, $keys );
+
+		$path = implode( '.', $keys[1] );
+
+		if ( ! in_array( $path, $declared_paths, true ) ) {
+			$undeclared_reads[] = $path;
+		}
+	}
+}
+
+check( 'uninstall.php reads no settings key FieldRegistry does not declare', array(), $undeclared_reads );
+
+// ---------------------------------------------------------------------
 printf( "\n%d passed, %d failed\n", $passed, $failed );
 
 exit( $failed > 0 ? 1 : 0 );
