@@ -740,20 +740,18 @@ automation can neither send an OTP nor react to one.
       `uninstall.php` orphaning the captcha secret (fixed) and gating everything
       on a flat key (recorded, not fixed). **Suite promoted to `required`:**
       17 → 22 passed, 0 failed
-- [ ] **10.3** [Automation transport](delivery-routing/10.3-automation-transport.md)
-      — **landed, not yet qualified.** Code complete and the pure suite green at
-      35 passed / 0 failed, but `tests/integration/run-delivery-gate.php` has
-      never run: the Local site was stopped, so WordPress could not bootstrap.
-      BLOCKED is not a pass, and the four things that gate exists to prove are
-      the four a stub cannot — the sanitize callback on the real save path,
-      `add_settings_error()` outside wp-admin, the signature over what `WP_Http`
-      would actually send, and the delivery tab rendering the new section. Stays
-      unticked until it reports `SMART_LOGIN_DELIVERY_GATE_OK`. 10.0's rule 4 was
-      wrong — it named the signer as the sender, when the signer signs and sends
-      nothing; rewritten so the structural half is "one sender" and the half that
-      matters is asserted on the transmitted bytes. 22 → 35. **This is the
-      sub-phase that lets the plaintext code leave the site** — the spec's
-      security section is the argument, the brief is the controls
+- [x] **10.3** [Automation transport](delivery-routing/10.3-automation-transport.md)
+      — the signed envelope, HTTPS refused at save, its own breaker for free from
+      the router. **The sub-phase that lets the plaintext code leave the site**;
+      the spec's security section is the argument and the brief is the controls.
+      Committed first with this row **unticked**: the gate was written but the
+      Local site was stopped, and BLOCKED is not a pass. Ticked only once
+      `SMART_LOGIN_DELIVERY_GATE_OK` came back — along with the other five
+      markers, since 10.1, 10.2, 10.3 and 10.7 all touch code the earlier gates
+      exercise. 10.0's rule 4 was wrong: it named the signer as the sender, when
+      the signer signs and sends nothing. Structural half is now "one sender";
+      the half that matters is asserted on the bytes `WP_Http` would really
+      transmit, reached through `pre_http_request`. 22 → 35
 - [ ] **10.4** [Event bus](delivery-routing/10.4-event-bus.md) — non-blocking
       fan-out hooked at the single `AuditLog::record()` funnel, so a new event
       constant is busable without a second edit. Off by default; never carries the
