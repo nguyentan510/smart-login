@@ -19,8 +19,9 @@ class TransportRouter {
 
 	public function __construct( ?array $transports = null ) {
 		$this->transports = $transports ?? array(
-			'sms'   => new WebhookTransport(),
-			'email' => new MailTransport(),
+			'sms'        => new WebhookTransport(),
+			'email'      => new MailTransport(),
+			'automation' => new AutomationTransport(),
 		);
 
 		/**
@@ -61,7 +62,7 @@ class TransportRouter {
 	 * What used to be decided here as well, and is not any more, is how the code
 	 * travels.
 	 */
-	public function channel_for( string $destination ): string {
+	public static function channel_for( string $destination ): string {
 		return ( false !== strpos( $destination, '@' ) ) ? 'email' : 'phone';
 	}
 
@@ -74,7 +75,7 @@ class TransportRouter {
 	 * would ever route to. See docs/delivery-routing.md D1.
 	 */
 	public function transport_for( string $destination ): string {
-		$route = self::ROUTES[ $this->channel_for( $destination ) ];
+		$route = self::ROUTES[ self::channel_for( $destination ) ];
 
 		// Read by variable, not by literal: the path is chosen by the channel.
 		$routed = (string) Settings::get( $route['setting'], '' );

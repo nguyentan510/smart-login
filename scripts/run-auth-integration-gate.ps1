@@ -93,4 +93,13 @@ if ($LASTEXITCODE -ne 0) {
 # never parses SQL, so the site-wide counter, the new index and the halt option
 # are unproven until they run here.
 & $integrationPhp @phpArgs 'tests/integration/run-abuse-gate.php'
+if ($LASTEXITCODE -ne 0) {
+    exit $LASTEXITCODE
+}
+
+# Phase 10. The pure suite stubs wp_remote_request() and never loads wp-admin,
+# so the sanitize callback's rejection, add_settings_error(), the signature over
+# what WP_Http would really send, and the delivery tab rendering the automation
+# section are all unproven until they run here.
+& $integrationPhp @phpArgs 'tests/integration/run-delivery-gate.php'
 exit $LASTEXITCODE

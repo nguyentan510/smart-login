@@ -366,30 +366,98 @@ sl_assert(
 // =====================================================================
 sl_section( 'Rule 4 — automation sends only through the signer (10.3)' );
 
-$sl_signer = sl_source( 'includes/OTP/Transports/class-envelope-signer.php' );
+/*
+ * 10.0 wrote this rule as "only the signer may call wp_remote_*", which assumed
+ * the signer would also be the sender. It is not: EnvelopeSigner::sign() returns
+ * a body and its headers and puts nothing on the wire, because a class that
+ * signs and sends can only be asked to do one of them at a time by anyone who
+ * later wants the other.
+ *
+ * So the structural half of the rule is "one sender", and the property that
+ * actually matters — the sender signs — is asserted on behaviour below, where
+ * the transmitted bytes are checked against the HMAC.
+ */
+sl_forbid_pattern(
+	'exactly one file puts an automation request on the wire',
+	'/wp_remote_(?:request|post|get)\(/',
+	array(
+		// The sender. Every send here goes through EnvelopeSigner first, which
+		// the signature assertion below is what proves.
+		'includes/OTP/Transports/class-automation-transport.php',
+		// Pre-existing callers, none of them carrying an OTP envelope.
+		'includes/OTP/Transports/class-webhook-transport.php',
+		'includes/Security/class-captcha.php',
+		'includes/Auth/Providers/class-google-provider.php',
+		'includes/Auth/Providers/class-zalo-provider.php',
+		'includes/Auth/Providers/class-google-id-token-verifier.php',
+	),
+	'An unsigned request carrying an OTP is the failure mode HMAC exists to prevent.'
+);
 
-if ( '' === $sl_signer ) {
-	sl_pending(
-		'no automation code calls wp_remote_* outside the signer',
-		'EnvelopeSigner — 10.3'
-	);
-} else {
-	sl_forbid_pattern(
-		'no automation code calls wp_remote_* outside the signer',
-		'/wp_remote_(?:request|post|get)\(/',
-		array(
-			// The one place a signed envelope is put on the wire.
-			'includes/OTP/Transports/class-envelope-signer.php',
-			// Pre-existing transports, out of the automation namespace.
-			'includes/OTP/Transports/class-webhook-transport.php',
-			'includes/Security/class-captcha.php',
-			'includes/Auth/Providers/class-google-provider.php',
-			'includes/Auth/Providers/class-zalo-provider.php',
-			'includes/Auth/Providers/class-google-id-token-verifier.php',
-		),
-		'An unsigned request carrying an OTP is the failure mode HMAC exists to prevent.'
-	);
-}
+Settings::update(
+	array(
+		'automation.url'     => 'https://hooks.example.com/otp',
+		'delivery.route_phone' => 'automation',
+	)
+);
+Settings::store_secret( 'automation.secret', 'shared-signing-secret' );
+
+$sl_automation                 = new SmartLogin\OTP\Transports\AutomationTransport();
+$GLOBALS['sl_http_requests']   = array();
+$GLOBALS['sl_http_response']   = array(
+	'response' => array( 'code' => 200 ),
+	'body'     => '{"ok":true}',
+);
+
+$sl_sent = $sl_automation->send(
+	'84969789475',
+	'482913',
+	array(
+		'intent'      => 'login',
+		'ttl_seconds' => 300,
+		'expires_ts'  => 1754136300,
+	)
+);
+
+sl_assert( 'the automation transport delivers on a 2xx', true === $sl_sent, 'Expected true, got a WP_Error.' );
+
+$sl_request = $GLOBALS['sl_http_requests'][0] ?? array();
+$sl_body    = (string) ( $sl_request['args']['body'] ?? '' );
+$sl_headers = (array) ( $sl_request['args']['headers'] ?? array() );
+$sl_payload = json_decode( $sl_body, true );
+
+sl_check( 'the envelope names the event', 'otp.send', $sl_payload['event'] ?? '' );
+sl_check( 'the envelope names the channel explicitly', 'phone', $sl_payload['channel'] ?? '' );
+sl_check( 'the envelope carries the code', '482913', $sl_payload['code'] ?? '' );
+
+// The signature must be computed over the exact bytes sent. Recomputing it from
+// a re-encode would pass on any implementation and prove nothing, so this signs
+// the transmitted string itself.
+sl_check(
+	'the signature verifies against the body as transmitted',
+	'sha256=' . hash_hmac( 'sha256', $sl_body, 'shared-signing-secret' ),
+	$sl_headers['X-Smart-Login-Signature'] ?? ''
+);
+
+sl_assert(
+	'the receiver is given what it needs to reject a replay',
+	! empty( $sl_headers['X-Smart-Login-Timestamp'] ) && ! empty( $sl_headers['X-Smart-Login-Delivery'] ),
+	'A signature alone does not stop the same envelope being posted again.'
+);
+
+sl_check(
+	'the send is bounded by the same ceiling as every other channel',
+	true,
+	( (int) ( $sl_request['args']['timeout'] ?? 0 ) ) <= WebhookTransport::MAX_TIMEOUT
+);
+
+// Without a secret there is no signature, so the endpoint would receive live
+// codes it cannot authenticate. That configuration is not offered.
+Settings::store_secret( 'automation.secret', '' );
+sl_check( 'no secret means the transport is not available', false, $sl_automation->is_available() );
+Settings::store_secret( 'automation.secret', 'shared-signing-secret' );
+
+unset( $GLOBALS['sl_http_response'] );
 
 // =====================================================================
 sl_section( 'Rule 5 — the routing table cannot dangle (10.1)' );
@@ -446,27 +514,67 @@ if ( '' === sl_source( 'includes/OTP/Transports/class-event-bus.php' ) ) {
 // =====================================================================
 sl_section( 'Rule 7 — the automation endpoint refuses plaintext HTTP (10.3)' );
 
-if ( null === FieldRegistry::get( 'automation.url' ) ) {
-	sl_pending(
-		'saving an http:// endpoint stores nothing and keeps the previous value',
-		'automation.url — 10.3'
-	);
-} else {
-	Settings::update( array( 'automation.url' => 'https://hooks.example.com/otp' ) );
+Settings::update( array( 'automation.url' => 'https://hooks.example.com/otp' ) );
 
-	$sl_saved = Settings::sanitize(
-		array(
-			Settings::TAB_FIELD => (string) ( FieldRegistry::get( 'automation.url' )['tab'] ?? '' ),
-			'automation'        => array( 'url' => 'http://hooks.example.com/otp' ),
-		)
-	);
+$sl_tab = (string) ( FieldRegistry::get( 'automation.url' )['tab'] ?? '' );
 
-	sl_check(
-		'saving an http:// endpoint keeps the previous value',
-		'https://hooks.example.com/otp',
-		$sl_saved['automation']['url'] ?? ''
-	);
-}
+$sl_rejected = Settings::sanitize(
+	array(
+		Settings::TAB_FIELD => $sl_tab,
+		'automation'        => array( 'url' => 'http://hooks.example.com/otp' ),
+	)
+);
+
+// Keeping the previous value matters as much as the rejection. Blanking it on a
+// mistyped scheme would leave a channel routed at an endpoint that is not there.
+sl_check(
+	'saving an http:// endpoint keeps the previous value',
+	'https://hooks.example.com/otp',
+	$sl_rejected['automation']['url'] ?? ''
+);
+
+$sl_accepted = Settings::sanitize(
+	array(
+		Settings::TAB_FIELD => $sl_tab,
+		'automation'        => array( 'url' => 'https://other.example.com/hook' ),
+	)
+);
+
+sl_check(
+	'an https:// endpoint saves normally',
+	'https://other.example.com/hook',
+	$sl_accepted['automation']['url'] ?? ''
+);
+
+// =====================================================================
+sl_section( 'Rule 10 — a channel routed at an unconfigured transport fails closed (10.3)' );
+
+Settings::update( array( 'automation.url' => '' ) );
+
+$sl_unconfigured = new TransportRouter(
+	array(
+		'sms'        => new SL_Fake_Transport( true ),
+		'email'      => new SL_Fake_Transport( true ),
+		'automation' => new SmartLogin\OTP\Transports\AutomationTransport(),
+	)
+);
+
+Settings::update( array( 'delivery.route_phone' => 'automation' ) );
+
+$sl_closed = $sl_unconfigured->send( '84969789475', '482913', array( 'intent' => 'login' ) );
+
+sl_assert(
+	'an unconfigured automation endpoint refuses rather than falling through',
+	is_wp_error( $sl_closed ),
+	'A routed transport that cannot send must say so. Silently using the built-in would mean the routing table is advisory, and an administrator who pointed a channel somewhere would never learn it did not go there.'
+);
+
+Settings::update(
+	array(
+		'delivery.route_phone' => 'sms',
+		'automation.url'       => '',
+	)
+);
 
 // =====================================================================
 sl_section( 'Rule 8 — a failed send leaves the code already delivered usable (10.7)' );

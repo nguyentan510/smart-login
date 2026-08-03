@@ -24,6 +24,8 @@
 
 namespace SmartLogin;
 
+use SmartLogin\OTP\Transports\WebhookTransport;
+
 defined( 'ABSPATH' ) || exit;
 
 final class FieldRegistry {
@@ -43,23 +45,24 @@ final class FieldRegistry {
 	/** Section headings, in render order within their tab. */
 	public static function sections(): array {
 		return array(
-			'identity' => __( 'Định danh', 'smart-login' ),
-			'signup'   => __( 'Đăng ký và điều hướng', 'smart-login' ),
-			'login'    => __( 'Bảo mật đăng nhập', 'smart-login' ),
-			'provider' => __( 'Nhà cung cấp', 'smart-login' ),
-			'linking'  => __( 'Chính sách liên kết tài khoản', 'smart-login' ),
-			'otp'      => __( 'Mã xác thực', 'smart-login' ),
-			'sms'      => __( 'Gửi qua SMS', 'smart-login' ),
-			'email'    => __( 'Gửi qua email', 'smart-login' ),
-			'fields'   => __( 'Trường hồ sơ', 'smart-login' ),
-			'address'  => __( 'Địa chỉ 2 cấp', 'smart-login' ),
-			'woo'      => __( 'WooCommerce', 'smart-login' ),
-			'budget'   => __( 'Trần gửi toàn site', 'smart-login' ),
-			'breaker'  => __( 'Ngắt mạch kênh gửi', 'smart-login' ),
-			'captcha'  => __( 'Xác minh chống robot', 'smart-login' ),
-			'network'  => __( 'Proxy và địa chỉ IP', 'smart-login' ),
-			'audit'    => __( 'Nhật ký & dọn dẹp', 'smart-login' ),
-			'dev'      => __( 'Phát triển', 'smart-login' ),
+			'identity'   => __( 'Định danh', 'smart-login' ),
+			'signup'     => __( 'Đăng ký và điều hướng', 'smart-login' ),
+			'login'      => __( 'Bảo mật đăng nhập', 'smart-login' ),
+			'provider'   => __( 'Nhà cung cấp', 'smart-login' ),
+			'linking'    => __( 'Chính sách liên kết tài khoản', 'smart-login' ),
+			'otp'        => __( 'Mã xác thực', 'smart-login' ),
+			'sms'        => __( 'Gửi qua SMS', 'smart-login' ),
+			'email'      => __( 'Gửi qua email', 'smart-login' ),
+			'automation' => __( 'Automation / Webhook', 'smart-login' ),
+			'fields'     => __( 'Trường hồ sơ', 'smart-login' ),
+			'address'    => __( 'Địa chỉ 2 cấp', 'smart-login' ),
+			'woo'        => __( 'WooCommerce', 'smart-login' ),
+			'budget'     => __( 'Trần gửi toàn site', 'smart-login' ),
+			'breaker'    => __( 'Ngắt mạch kênh gửi', 'smart-login' ),
+			'captcha'    => __( 'Xác minh chống robot', 'smart-login' ),
+			'network'    => __( 'Proxy và địa chỉ IP', 'smart-login' ),
+			'audit'      => __( 'Nhật ký & dọn dẹp', 'smart-login' ),
+			'dev'        => __( 'Phát triển', 'smart-login' ),
 		);
 	}
 
@@ -279,7 +282,8 @@ final class FieldRegistry {
 				'section' => 'otp',
 				'label'   => __( 'Gửi mã tới số điện thoại bằng', 'smart-login' ),
 				'choices' => array(
-					'sms' => __( 'Gateway SMS', 'smart-login' ),
+					'sms'        => __( 'Gateway SMS', 'smart-login' ),
+					'automation' => __( 'Automation / Webhook', 'smart-login' ),
 				),
 				'help'    => __( 'Kênh chịu trách nhiệm gửi và báo thành công hay thất bại.', 'smart-login' ),
 			),
@@ -290,9 +294,10 @@ final class FieldRegistry {
 				'section' => 'otp',
 				'label'   => __( 'Gửi mã tới email bằng', 'smart-login' ),
 				'choices' => array(
-					'email' => __( 'SMTP của WordPress', 'smart-login' ),
+					'email'      => __( 'SMTP của WordPress', 'smart-login' ),
+					'automation' => __( 'Automation / Webhook', 'smart-login' ),
 				),
-				'help'    => __( 'Dùng <code>wp_mail()</code>, nên mọi plugin SMTP sẵn có đều hoạt động.', 'smart-login' ),
+				'help'    => __( 'Mặc định dùng <code>wp_mail()</code>, nên mọi plugin SMTP sẵn có đều hoạt động.', 'smart-login' ),
 			),
 			'otp.preset'                   => array(
 				'type'    => 'select',
@@ -522,6 +527,58 @@ final class FieldRegistry {
 				'label'   => __( 'Định dạng', 'smart-login' ),
 				'help'    => __( 'Gửi dưới dạng HTML', 'smart-login' ),
 			),
+			'automation.url'               => array(
+				'type'     => 'url',
+				'default'  => '',
+				'tab'      => 'delivery',
+				'section'  => 'automation',
+				'label'    => __( 'Endpoint', 'smart-login' ),
+				'sanitize' => 'https_url',
+				'help'     => __( 'Bắt buộc <code>https://</code>. Mã xác thực rời khỏi website tới địa chỉ này, nên chữ ký HMAC chỉ chứng minh <em>ai gửi</em> — nó không làm cho một endpoint đáng ngờ trở nên an toàn.', 'smart-login' ),
+			),
+			'automation.secret'            => array(
+				'type'    => 'secret',
+				'default' => '',
+				'tab'     => 'delivery',
+				'section' => 'automation',
+				'label'   => __( 'Khoá ký (HMAC)', 'smart-login' ),
+				'help'    => __( 'Dùng để ký từng gói tin bằng SHA-256. Chưa có khoá thì kênh này không được dùng, vì endpoint sẽ nhận mã thật mà không xác thực được nguồn.', 'smart-login' ),
+			),
+			'automation.headers'           => array(
+				'type'     => 'headers',
+				'default'  => array(),
+				'tab'      => 'delivery',
+				'section'  => 'automation',
+				'label'    => __( 'Headers bổ sung', 'smart-login' ),
+				'sanitize' => 'headers',
+				'help'     => __( 'Các header do plugin sinh ra không thể bị ghi đè ở đây.', 'smart-login' ),
+			),
+			'automation.timeout'           => array(
+				'type'    => 'number',
+				'default' => 5,
+				'min'     => 2,
+				'max'     => WebhookTransport::MAX_TIMEOUT,
+				'tab'     => 'delivery',
+				'section' => 'automation',
+				'label'   => __( 'Timeout (giây)', 'smart-login' ),
+				'help'    => __( 'Cùng trần cứng với kênh SMS, và vì cùng một lý do: mỗi lần gửi giữ một tiến trình PHP trong đúng khoảng này.', 'smart-login' ),
+			),
+			'automation.success_path'      => array(
+				'type'    => 'text',
+				'default' => '',
+				'tab'     => 'delivery',
+				'section' => 'automation',
+				'label'   => __( 'Đường dẫn JSON báo thành công', 'smart-login' ),
+				'help'    => __( 'Để trống thì chỉ cần HTTP 2xx là coi như thành công.', 'smart-login' ),
+			),
+			'automation.success_value'     => array(
+				'type'    => 'text',
+				'default' => '',
+				'tab'     => 'delivery',
+				'section' => 'automation',
+				'label'   => __( 'Giá trị mong đợi', 'smart-login' ),
+			),
+
 			'email.body'                   => array(
 				'type'     => 'textarea',
 				'rows'     => 10,

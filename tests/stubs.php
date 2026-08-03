@@ -297,16 +297,28 @@ function current_time( $type, $gmt = false ) {
 	return 'timestamp' === $type ? time() : gmdate( 'Y-m-d H:i:s' );
 }
 
+/**
+ * The canned reply every outbound call receives.
+ *
+ * A 500 by default, which is what makes the captcha guard rail meaningful and
+ * what every suite written before 10.3 assumes. A test that needs a different
+ * answer assigns to $GLOBALS['sl_http_response'] and puts it back, so the
+ * unset default behaves exactly as the fixed 500 always did.
+ */
+function sl_stub_http_response() {
+	return $GLOBALS['sl_http_response'] ?? array(
+		'response' => array( 'code' => 500 ),
+		'body'     => 'gateway failure',
+	);
+}
+
 function wp_remote_request( $url, $args ) {
 	$GLOBALS['sl_http_requests'][] = array(
 		'url'  => $url,
 		'args' => $args,
 	);
 
-	return array(
-		'response' => array( 'code' => 500 ),
-		'body'     => 'gateway failure',
-	);
+	return sl_stub_http_response();
 }
 
 /**

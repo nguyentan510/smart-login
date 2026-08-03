@@ -191,7 +191,7 @@ class Settings {
 		$fields = self::posted_fields( $input );
 
 		foreach ( $fields as $path => $field ) {
-			self::plant( $clean, $path, self::sanitize_field( $field, self::dig( $input, $path ) ) );
+			self::plant( $clean, $path, self::sanitize_field( $field, self::dig( $input, $path ), $path ) );
 		}
 
 		// Presets are applied after the plain fields, because they overwrite some
@@ -411,9 +411,9 @@ class Settings {
 	 * @param mixed $raw   Submitted value, or null when absent.
 	 * @return mixed
 	 */
-	private static function sanitize_field( array $field, $raw ) {
+	private static function sanitize_field( array $field, $raw, string $path = '' ) {
 		if ( isset( $field['sanitize'] ) ) {
-			return self::sanitize_special( (string) $field['sanitize'], $raw, $field );
+			return self::sanitize_special( (string) $field['sanitize'], $raw, $field, $path );
 		}
 
 		switch ( $field['type'] ?? 'text' ) {
@@ -455,8 +455,11 @@ class Settings {
 	 * @param array  $field Registry row, for its default.
 	 * @return mixed
 	 */
-	private static function sanitize_special( string $rule, $raw, array $field ) {
+	private static function sanitize_special( string $rule, $raw, array $field, string $path = '' ) {
 		switch ( $rule ) {
+			case 'https_url':
+				return self::sanitize_https_url( $raw, $path );
+
 			case 'country_code':
 				return preg_replace( '/[^0-9]/', '', (string) $raw ) ?: $field['default'];
 
@@ -486,6 +489,54 @@ class Settings {
 			default:
 				return sanitize_text_field( (string) $raw );
 		}
+	}
+
+	/**
+	 * An endpoint that will carry a live OTP, so plaintext HTTP is refused.
+	 *
+	 * Refused at save rather than at send: saving is the only moment the
+	 * administrator is present to be told why. A send-time check would surface as
+	 * users not receiving codes, days later, with the cause three screens away.
+	 *
+	 * The rejected value does **not** blank the field. Clearing an endpoint
+	 * because someone mistyped the scheme would leave a channel routed at nothing
+	 * — a worse outcome than the typo, and a silent one.
+	 *
+	 * @param mixed  $raw
+	 * @param string $path Registry path, used to recover the stored value.
+	 */
+	private static function sanitize_https_url( $raw, string $path ): string {
+		$url = esc_url_raw( trim( (string) $raw ) );
+
+		if ( '' === $url || 0 === stripos( $url, 'https://' ) ) {
+			return $url;
+		}
+
+		// A local n8n has no certificate, and refusing http there makes the
+		// feature untestable before it is deployed. Written down here and in the
+		// help text rather than left as a surprise.
+		if ( self::is_local_environment() && 0 === stripos( $url, 'http://' ) ) {
+			return $url;
+		}
+
+		if ( function_exists( 'add_settings_error' ) ) {
+			add_settings_error(
+				self::OPTION,
+				'smart_login_https_required',
+				__( 'Endpoint phải dùng https://. Mã xác thực đi qua địa chỉ này nên không chấp nhận HTTP thường. Giá trị cũ được giữ nguyên.', 'smart-login' ),
+				'error'
+			);
+		}
+
+		return '' !== $path ? (string) self::get( $path, '' ) : '';
+	}
+
+	private static function is_local_environment(): bool {
+		if ( ! function_exists( 'wp_get_environment_type' ) ) {
+			return false;
+		}
+
+		return in_array( wp_get_environment_type(), array( 'local', 'development' ), true );
 	}
 
 	/**
