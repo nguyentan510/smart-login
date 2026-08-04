@@ -7,6 +7,9 @@
 
 namespace SmartLogin\Auth;
 
+use SmartLogin\Auth\Providers\LoginProviderInterface;
+use SmartLogin\Auth\Providers\ProviderCredentials;
+use SmartLogin\Auth\Providers\ProviderIdentity;
 use SmartLogin\Auth\Providers\ProviderRegistry;
 use SmartLogin\Frontend\Flow;
 use SmartLogin\Frontend\Notices;
@@ -15,6 +18,9 @@ use SmartLogin\Security\AuditLog;
 defined( 'ABSPATH' ) || exit;
 
 final class ProviderAuthController {
+
+	/** Where a finished connection test leaves its result, per administrator. */
+	const TEST_RESULT_PREFIX = 'smart_login_provider_test_';
 
 	private ProviderRegistry $providers;
 	private OAuthTransactionStore $transactions;
@@ -45,6 +51,18 @@ final class ProviderAuthController {
 		return wp_nonce_url( $url, 'smart_login_provider_start_' . $provider );
 	}
 
+	/**
+	 * The same start URL, flagged as a diagnostic.
+	 *
+	 * It carries the identical nonce, because it is the identical entry point —
+	 * `start()` reads `sl_test` only after verifying that nonce, and pairs it
+	 * with a `manage_options` check, since this exchanges the site's own
+	 * credentials and is not a thing a visitor may cause.
+	 */
+	public static function test_url( string $provider ): string {
+		return add_query_arg( 'sl_test', '1', self::start_url( $provider ) );
+	}
+
 	public function available(): array {
 		return $this->providers->available();
 	}
@@ -56,8 +74,20 @@ final class ProviderAuthController {
 		if ( ! wp_verify_nonce( (string) wp_unslash( $_GET['_wpnonce'] ?? '' ), 'smart_login_provider_start_' . $provider_id ) ) { // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 			$this->fail( new \WP_Error( 'smart_login_bad_nonce', __( 'Phiên đăng nhập đã hết hạn. Vui lòng thử lại.', 'smart-login' ) ) );
 		}
-		$provider = $this->providers->get( $provider_id );
-		if ( ! $provider || ! $provider->is_available() ) {
+		// A connection test, not a login. Administrators only — this exchanges the
+		// site's own credentials with the provider, which is not a thing a
+		// visitor may cause, and the nonce above is scoped to the provider rather
+		// than to the capability.
+		$is_test = ! empty( $_GET['sl_test'] ) && current_user_can( 'manage_options' ); // phpcs:ignore WordPress.Security.NonceVerification
+
+		$provider = $is_test
+			? $this->test_provider( $provider_id )
+			: $this->providers->get( $provider_id );
+
+		// A test may run against a provider that is configured but switched off;
+		// a login may not. `is_available()` is `enabled && configured`, so this is
+		// what keeps a disabled provider from ever creating a login transaction.
+		if ( ! $provider || ( ! $is_test && ! $provider->is_available() ) ) {
 			$this->fail( new \WP_Error( 'smart_login_provider_unavailable', __( 'Phương thức đăng nhập chưa sẵn sàng.', 'smart-login' ) ) );
 		}
 		// wp_validate_redirect() returns '' for any host outside the allowed list,
@@ -83,7 +113,21 @@ final class ProviderAuthController {
 		// The state token is looked up verbatim in the transaction store, which is
 		// the validation. Sanitising it would only break the comparison.
 		$state = (string) wp_unslash( $_REQUEST['state'] ?? '' ); // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-		if ( ! $provider || ! $provider->is_available() ) {
+
+		/*
+		 * Availability is checked after the transaction is known, not here.
+		 *
+		 * A connection test has to be able to run against a provider that is
+		 * configured but switched off — that is precisely the state a test exists
+		 * to get an administrator out of, and requiring them to enable it first
+		 * means showing a possibly-broken button to real visitors while they
+		 * check.
+		 *
+		 * That is safe because a *login* transaction for a disabled provider
+		 * cannot exist: start() still refuses to create one. The re-check below
+		 * is the second lock on the same door.
+		 */
+		if ( ! $provider ) {
 			$this->fail( new \WP_Error( 'smart_login_provider_unavailable', __( 'Phương thức đăng nhập chưa sẵn sàng.', 'smart-login' ) ) );
 		}
 		if ( ! empty( $_REQUEST['error'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
@@ -109,6 +153,13 @@ final class ProviderAuthController {
 			);
 			$this->fail( $transaction );
 		}
+		$is_test = OAuthTransactionStore::is_test( $transaction );
+
+		// The check moved from the top of this method. Anything that is not a
+		// test still needs the provider switched on before it goes any further.
+		if ( ! $is_test && ! $provider->is_available() ) {
+			$this->fail( new \WP_Error( 'smart_login_provider_unavailable', __( 'Phương thức đăng nhập chưa sẵn sàng.', 'smart-login' ) ) );
+		}
 		$request                 = wp_unslash( $_REQUEST ); // phpcs:ignore WordPress.Security.NonceVerification
 		$request['_transaction'] = $transaction;
 		$identity                = $provider->complete( $request );
@@ -123,6 +174,22 @@ final class ProviderAuthController {
 			);
 			$this->fail( $identity );
 		}
+
+		/*
+		 * The line this whole sub-phase exists to hold.
+		 *
+		 * Everything above is what a test is for: the code exchange, the token,
+		 * and the identity the provider actually returned. Everything below
+		 * writes — AccountProvisioner resolves or creates a user, SessionIssuer
+		 * signs them in. A diagnostic that fell through here would log the
+		 * administrator in and, on an account that does not exist yet, provision
+		 * one, and nobody would notice, because signing in successfully is what
+		 * success looks like.
+		 */
+		if ( $is_test ) {
+			$this->report_test( $provider_id, $identity );
+		}
+
 		$resolved = ( new AccountProvisioner() )->resolve( $identity, $transaction );
 		if ( is_wp_error( $resolved ) ) {
 			$this->fail( $resolved );
@@ -150,6 +217,87 @@ final class ProviderAuthController {
 			$result->user_id
 		);
 		wp_safe_redirect( ( new PostAuthRedirector() )->redirect( $result, $context->intended_url ) );
+		exit;
+	}
+
+	/**
+	 * The same provider, with a store that stamps its transaction as a test.
+	 *
+	 * Rebuilt rather than mutated: the registry's instance is the one every other
+	 * request uses, and a provider that could be switched into test mode after
+	 * construction is a provider that could be left there.
+	 *
+	 * Only the two shipped classes are rebuilt. A third-party provider from
+	 * `smart_login_providers` cannot be, because nothing guarantees its
+	 * constructor takes a store — so it simply has no test button, which is a
+	 * better failure than a test that silently signs somebody in.
+	 */
+	private function test_provider( string $provider_id ): ?LoginProviderInterface {
+		$store = new OAuthTransactionStore( OAuthTransactionStore::MODE_TEST );
+
+		switch ( $provider_id ) {
+			case 'google':
+				return new \SmartLogin\Auth\Providers\GoogleProvider( $store );
+
+			case 'zalo':
+				return new \SmartLogin\Auth\Providers\ZaloProvider( $store );
+
+			default:
+				return null;
+		}
+	}
+
+	/**
+	 * The result of the last connection test this administrator ran, once.
+	 *
+	 * @return array|null
+	 */
+	public static function take_test_result(): ?array {
+		$key    = self::TEST_RESULT_PREFIX . get_current_user_id();
+		$result = get_transient( $key );
+
+		if ( ! is_array( $result ) ) {
+			return null;
+		}
+
+		delete_transient( $key );
+
+		return $result;
+	}
+
+	/**
+	 * Report a successful round trip and stop, without writing anything.
+	 *
+	 * Deliberately a redirect back to the provider tab rather than a rendered
+	 * page: the administrator started this from that screen and the result
+	 * belongs there, and a transient carries it across the redirect so nothing
+	 * lands in the URL.
+	 */
+	private function report_test( string $provider_id, ProviderIdentity $identity ): void {
+		AuditLog::record(
+			AuditLog::PROVIDER_LOGIN,
+			'',
+			array(
+				'provider' => $provider_id,
+				'mode'     => OAuthTransactionStore::MODE_TEST,
+			)
+		);
+
+		set_transient(
+			self::TEST_RESULT_PREFIX . get_current_user_id(),
+			array(
+				'provider' => $provider_id,
+				'ok'       => true,
+				// The subject, not the email: enough to prove the exchange
+				// returned a real identity, and not a value worth storing even
+				// for the five minutes this lives.
+				'subject'  => substr( (string) $identity->subject, 0, 12 ) . '…',
+				'callback' => ProviderCredentials::redirect_uri( $provider_id ),
+			),
+			5 * MINUTE_IN_SECONDS
+		);
+
+		wp_safe_redirect( admin_url( 'admin.php?page=smart-login&tab=providers' ) );
 		exit;
 	}
 

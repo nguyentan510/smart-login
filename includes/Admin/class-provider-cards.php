@@ -13,6 +13,7 @@
 
 namespace SmartLogin\Admin;
 
+use SmartLogin\Auth\ProviderAuthController;
 use SmartLogin\Auth\Providers\ProviderCredentials;
 use SmartLogin\Auth\Providers\ProviderRegistry;
 use SmartLogin\Settings;
@@ -36,11 +37,47 @@ final class ProviderCards {
 			</p>
 		</div>
 
+		<?php $this->shared_policy( $fields ); ?>
+
 		<div class="sl-provider-grid">
 			<?php
 			$this->card( 'google', __( 'Google Login', 'smart-login' ), $fields, 'google_client_secret', 'google_clear_secret' );
 			$this->card( 'zalo', __( 'Zalo Login', 'smart-login' ), $fields, 'zalo_app_secret', 'zalo_clear_secret' );
 			?>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Settings that govern every card, drawn above every card.
+	 *
+	 * `auto_link_email` decides whether a verified provider email may silently
+	 * adopt an existing account — for all providers, and it is the most
+	 * consequential control on this screen. It used to render as its own section
+	 * *below* the grid, where it reads as a footnote to whichever card happened
+	 * to be last.
+	 *
+	 * @param array<string,array> $fields Every registry row on this tab.
+	 */
+	private function shared_policy( array $fields ): void {
+		$shared = array_filter(
+			$fields,
+			static fn( array $field ): bool => 'linking' === ( $field['section'] ?? '' ),
+		);
+
+		if ( ! $shared ) {
+			return;
+		}
+		?>
+		<div class="sl-provider-policy">
+			<h3><?php esc_html_e( 'Áp dụng cho mọi nhà cung cấp bên dưới', 'smart-login' ); ?></h3>
+			<table class="form-table" role="presentation">
+				<?php
+				foreach ( $shared as $path => $field ) {
+					FieldRenderer::render( $path, $field );
+				}
+				?>
+			</table>
 		</div>
 		<?php
 	}
@@ -66,15 +103,20 @@ final class ProviderCards {
 			? __( 'Google Client Secret', 'smart-login' )
 			: __( 'Zalo App Secret', 'smart-login' );
 
-		// Whatever the registry declares for this provider, in declared order.
+		// Whatever the registry declares for this provider, in declared order —
+		// minus the switch, which the header above now draws. Excluded here
+		// rather than left to render twice: two inputs with the same name means
+		// the second one wins the save, and which is second is markup order.
 		$own = array_filter(
 			$fields,
-			static fn( string $path ): bool => 0 === strpos( $path, 'providers.' . $provider . '.' ),
+			static fn( string $path ): bool => 0 === strpos( $path, 'providers.' . $provider . '.' )
+				&& 'providers.' . $provider . '.enabled' !== $path,
 			ARRAY_FILTER_USE_KEY
 		);
 		?>
 		<section class="sl-provider-card" data-provider-card="<?php echo esc_attr( $provider ); ?>">
 			<header class="sl-provider-card__header">
+				<?php $this->master_switch( $provider, $label ); ?>
 				<div>
 					<h3><?php echo esc_html( $label ); ?></h3>
 					<p>
@@ -95,6 +137,9 @@ final class ProviderCards {
 			<div class="sl-provider-tabs" role="tablist" aria-label="<?php echo esc_attr( $label ); ?>">
 				<button type="button" class="button-link is-active" role="tab" aria-selected="true" data-provider-tab="setup">
 					<?php esc_html_e( 'Thiết lập', 'smart-login' ); ?>
+				</button>
+				<button type="button" class="button-link" role="tab" aria-selected="false" data-provider-tab="check">
+					<?php esc_html_e( 'Kiểm tra', 'smart-login' ); ?>
 				</button>
 				<button type="button" class="button-link" role="tab" aria-selected="false" data-provider-tab="docs">
 					<?php esc_html_e( 'Hướng dẫn', 'smart-login' ); ?>
@@ -158,10 +203,52 @@ final class ProviderCards {
 				</table>
 			</div>
 
+			<div class="sl-provider-panel" data-provider-panel="check" hidden>
+				<?php $this->check_panel( $provider, $configured ); ?>
+			</div>
+
 			<div class="sl-provider-panel sl-provider-docs" data-provider-panel="docs" hidden>
 				<?php $this->docs( $provider ); ?>
 			</div>
 		</section>
+		<?php
+	}
+
+	/**
+	 * The on/off switch, in the header beside the badge that reports on it.
+	 *
+	 * Rendered here rather than by `FieldRenderer::checkbox()` because that emits
+	 * a whole `<tr>`, and teaching it a second mode for one caller costs more
+	 * than eight lines of markup.
+	 *
+	 * The hidden companion input comes with it and is not optional: without it an
+	 * unticked box posts nothing, `Settings::sanitize()` reads absence as "this
+	 * field is not on the posted tab", and a provider could be switched on but
+	 * never off. Same trap 10.4's checkbox list hit, same answer.
+	 */
+	private function master_switch( string $provider, string $label ): void {
+		// By variable, not by literal: the path is chosen by the provider, the
+		// same way FieldRenderer reads. Phase 9's rule 8 forbids the other form.
+		$path = 'providers.' . $provider . '.enabled';
+		?>
+		<label class="sl-provider-switch">
+			<input type="hidden" name="<?php echo esc_attr( FieldRenderer::name( $path ) ); ?>" value="0" />
+			<input
+				type="checkbox"
+				name="<?php echo esc_attr( FieldRenderer::name( $path ) ); ?>"
+				value="1"
+				<?php checked( Settings::is_on( $path ) ); ?>
+			/>
+			<span class="screen-reader-text">
+				<?php
+				printf(
+					/* translators: %s: provider name. */
+					esc_html__( 'Kích hoạt %s', 'smart-login' ),
+					esc_html( $label )
+				);
+				?>
+			</span>
+		</label>
 		<?php
 	}
 
@@ -213,6 +300,57 @@ final class ProviderCards {
 			'class' => 'is-missing',
 			'label' => __( 'Chưa cấu hình', 'smart-login' ),
 		);
+	}
+
+	/**
+	 * A real round trip, because a redirect URI cannot be checked any other way.
+	 *
+	 * SMS and email both have Gửi thử; this screen had nothing, and its commonest
+	 * failure — a redirect URI registered one character differently — is
+	 * invisible until a real visitor meets it. No provider will answer "is this
+	 * URI registered", so the only honest test is to perform the exchange and
+	 * repeat what came back.
+	 *
+	 * Offered whether or not the provider is switched on. Configured-but-off is
+	 * exactly the state a test exists to get out of, and requiring the switch
+	 * first would mean showing a possibly-broken button to real visitors while
+	 * the administrator checks.
+	 */
+	private function check_panel( string $provider, bool $configured ): void {
+		if ( ! $configured ) {
+			printf(
+				'<p class="description">%s</p>',
+				esc_html__( 'Điền Client ID và Secret rồi Lưu thay đổi trước khi kiểm tra.', 'smart-login' )
+			);
+
+			return;
+		}
+
+		$result = ProviderAuthController::take_test_result();
+
+		if ( is_array( $result ) && ( $result['provider'] ?? '' ) === $provider ) {
+			printf(
+				'<div class="notice notice-success inline"><p>%s</p></div>',
+				esc_html__( 'Vòng đăng nhập chạy được. Không có tài khoản nào được tạo và không ai được đăng nhập — đây chỉ là phép thử.', 'smart-login' )
+			);
+		}
+		?>
+		<p class="description">
+			<?php esc_html_e( 'Mở một vòng đăng nhập thật với nhà cung cấp rồi dừng lại ngay khi nhận được danh tính. Không tạo tài khoản, không đăng nhập, không liên kết gì.', 'smart-login' ); ?>
+		</p>
+		<p>
+			<a
+				class="button"
+				href="<?php echo esc_url( ProviderAuthController::test_url( $provider ) ); ?>"
+				target="_blank"
+				rel="noopener noreferrer"
+			><?php esc_html_e( 'Chạy kiểm tra', 'smart-login' ); ?></a>
+		</p>
+		<p class="description">
+			<?php esc_html_e( 'Nếu nhà cung cấp báo lỗi, thông báo của họ sẽ hiện ra — thường gặp nhất là redirect URI khai báo lệch so với URL dưới đây.', 'smart-login' ); ?>
+		</p>
+		<p><code><?php echo esc_html( ProviderCredentials::redirect_uri( $provider ) ); ?></code></p>
+		<?php
 	}
 
 	private function docs( string $provider ): void {

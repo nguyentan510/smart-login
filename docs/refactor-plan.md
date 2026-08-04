@@ -25,6 +25,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 9 — Abuse boundary**
 - [x] **Phase 10 — Delivery routing and the automation bus**
 - [x] **Phase 11 — Mail templates**
+- [x] **Phase 12 — The provider surface**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -990,6 +991,53 @@ its own commit, not a line inside someone else's.
    here needing genuinely new code, and the reason the phase is separate: a
    redirect URI cannot be verified remotely, so the only honest test is the real
    one.
+
+**Phase 12 has its own spec now** — see below. The four items above are what the
+wireframe review produced; item 1 shipped early, item 3 is not being built, and
+the reasons are recorded in the spec rather than left as a silent omission.
+
+---
+
+## Phase 12 — The provider surface
+
+Normative spec: [`provider-surface.md`](provider-surface.md) — where the two
+controls belong, why the connection test has to be a real round trip, and why the
+shared channel card is not being built.
+
+Execution briefs: [`provider-surface/`](provider-surface/), one file per
+sub-phase. **Status lives here and only here.**
+
+### Sub-phases
+
+- [x] **12.0** [Guard rails](provider-surface/12.0-guard-rails.md) — three rules,
+      landed red, into the admin suite rather than a fourth suite of its own.
+      Rule 3 must report PENDING rather than passing for want of a subject: the
+      mistake 10.0 made and 11.0 repeated
+- [x] **12.1** [Card layout](provider-surface/12.1-card-layout.md) — the master
+      switch moves beside the badge that reports on it; `auto_link_email` moves
+      above the grid it governs. Presentation only, so the acceptance is that
+      **no count moves** except the two assertions it turns green. The hidden
+      companion input travels with the checkbox, or a provider can never be
+      switched *off*
+- [x] **12.2** [Connection test](provider-surface/12.2-connection-test.md) — a
+      third transaction mode that stops after the exchange. **The whole design is
+      one sentence staying true**: a test round trip must never issue a session,
+      create a user or link an identity. `callback()` reaches
+      `SessionIssuer::issue()` today, so a diagnostic reusing that path would sign
+      the administrator in and provision an account, and nobody would notice
+      because signing in successfully is what success looks like
+
+---
+
+**Item 3 is not being built, and this is the reason.** The wireframe proposed
+promoting `ProviderCards` into a shared channel card because 10.6 was going to
+build four screens on it. **10.6 shipped without it** — the five delivery screens
+are `form-table`s, qualified against a real WordPress and merged — so the premise
+expired. Building it now would mean retrofitting five working screens onto a
+component with no defect driving it and no second consumer asking for it;
+`sl-provider-card` still has exactly one caller. A shared abstraction with one
+caller is a rename with extra steps. Reversible the day a second surface needs a
+card with a status to tell the truth about.
 
 ## Risks
 

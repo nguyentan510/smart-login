@@ -48,6 +48,19 @@ function wp_next_scheduled( $hook, $args = array() ) {
 	return $GLOBALS['sl_next_scheduled'] ?? false;
 }
 
+/**
+ * The URL half of a nonce. `wp_create_nonce()` is in template-stubs.php already.
+ *
+ * Added in 12.2, when the provider card started drawing a start URL for its
+ * connection test. Nothing in an admin test had rendered one before, so the
+ * absence only surfaced once a *configured* provider reached the new panel —
+ * an unconfigured one returns before it, which is why running the screen on its
+ * own did not reproduce the fatal.
+ */
+function wp_nonce_url( $actionurl, $action = -1, $name = '_wpnonce' ) {
+	return add_query_arg( $name, wp_create_nonce( $action ), $actionurl );
+}
+
 function wp_die( $message = '', $title = '', $args = array() ) {
 	throw new RuntimeException( 'wp_die: ' . ( is_string( $message ) ? $message : '' ) );
 }

@@ -874,4 +874,175 @@ sl_assert(
 );
 
 // ---------------------------------------------------------------------
+sl_section( 'The provider screen puts its controls where they belong (12.1)' );
+
+Settings::update(
+	array(
+		'providers.google.enabled' => 1,
+		'providers.zalo.enabled'   => 0,
+	)
+);
+
+$providers_html = sl_capture(
+	static function () use ( $screen ): void {
+		$screen->render( 'providers' );
+	}
+)['html'];
+
+/*
+ * Rule 1. The switch is already on the screen — level with Client ID, inside the
+ * table — so this asserts *position*, not presence. It is the control an
+ * administrator touches repeatedly and the one the badge now reports on, and the
+ * two belong beside each other.
+ */
+$header_at = strpos( $providers_html, 'sl-provider-card__header' );
+$switch_at = strpos( $providers_html, 'name="' . \SmartLogin\Admin\FieldRenderer::name( 'providers.google.enabled' ) . '"' );
+$panel_at  = strpos( $providers_html, 'data-provider-panel="setup"' );
+
+sl_assert(
+	'the master switch sits in the card header, not in the table',
+	false !== $header_at && false !== $switch_at && false !== $panel_at
+		&& $switch_at > $header_at && $switch_at < $panel_at,
+	'Kích hoạt is rendered as a form-table row beside Client ID. Turning a provider on and off is routine; filling in credentials happens once.'
+);
+
+/*
+ * Rule 2. auto_link_email decides, for every provider, whether a verified
+ * provider email may silently adopt an existing account — the most consequential
+ * setting on the screen, currently rendered as a section below the grid where it
+ * reads as a footnote to the second card.
+ */
+$policy_at = strpos( $providers_html, 'name="' . \SmartLogin\Admin\FieldRenderer::name( 'providers.auto_link_email' ) . '"' );
+$first_card = strpos( $providers_html, 'sl-provider-card' );
+
+sl_assert(
+	'a policy that governs both cards renders above both cards',
+	false !== $policy_at && false !== $first_card && $policy_at < $first_card,
+	'Rendered below the grid, it reads as belonging to the last card rather than to every one of them.'
+);
+
+/*
+ * Moving a control out of the field renderer is where a layout change turns into
+ * a data change. The header draws the checkbox itself, so it also has to carry
+ * the hidden companion input — without it an unticked box posts nothing,
+ * sanitize() reads absence as "not on this tab", and a provider could be
+ * switched on but never off.
+ *
+ * Asserted through sanitize() rather than by reading the markup, because the
+ * markup is exactly what changed.
+ */
+Settings::update( array( 'providers.google.enabled' => 1 ) );
+
+$saved_off = Settings::sanitize(
+	array(
+		Settings::TAB_FIELD => 'providers',
+		'providers'         => array( 'google' => array( 'enabled' => '0' ) ),
+	)
+);
+
+sl_check( 'a provider can be switched off from the header', 0, $saved_off['providers']['google']['enabled'] ?? 'missing' );
+
+$saved_on = Settings::sanitize(
+	array(
+		Settings::TAB_FIELD => 'providers',
+		'providers'         => array( 'google' => array( 'enabled' => '1' ) ),
+	)
+);
+
+sl_check( 'and switched back on', 1, $saved_on['providers']['google']['enabled'] ?? 'missing' );
+
+/*
+ * Exactly two inputs carry this name: the hidden `0` and the checkbox `1`. Four
+ * would mean the field is drawn in both its new home and its old one, and since
+ * the last one posted wins, which value is stored would be decided by markup
+ * order — the failure mode of moving a control without removing it.
+ *
+ * Counted rather than matched as one string: the attributes are on separate
+ * lines, so a contiguous `name="…" value="1"` never appears and asserting on it
+ * would have failed against correct markup.
+ */
+sl_check(
+	'the switch is drawn in one place only',
+	2,
+	substr_count( $providers_html, 'name="' . \SmartLogin\Admin\FieldRenderer::name( 'providers.google.enabled' ) . '"' )
+);
+
+// ---------------------------------------------------------------------
+sl_section( 'A connection test cannot sign anybody in (12.2)' );
+
+/*
+ * The whole safety argument of 12.2, and the rule that has to exist before the
+ * code does. callback() consumes the transaction and reaches
+ * SessionIssuer::issue() — a diagnostic reusing that path would sign the
+ * administrator in and, on an account that does not exist yet, create one.
+ * Nobody would notice, because signing in successfully is what success looks
+ * like.
+ *
+ * PENDING rather than a vacuous pass: 10.0 made that mistake with its rule 5 and
+ * 11.0 repeated it with its rule 3, and both had to be corrected.
+ */
+/*
+ * Structural half. The branch has to sit after the identity read — everything
+ * above it is what the test exercises — and before AccountProvisioner, which is
+ * the first thing that writes. Asserted on ordering inside callback(), because
+ * "there is a branch" says nothing about which side of the writes it is on.
+ */
+$callback_body = sl_method_body(
+	sl_source( 'includes/Auth/class-provider-auth-controller.php' ),
+	'callback'
+);
+
+$test_branch_at  = strpos( $callback_body, 'report_test' );
+$provisioner_at  = strpos( $callback_body, 'AccountProvisioner' );
+$issuer_at       = strpos( $callback_body, 'SessionIssuer' );
+
+sl_assert(
+	'a test transaction returns before the session issuer',
+	false !== $test_branch_at && false !== $issuer_at && $test_branch_at < $issuer_at,
+	'callback() reaches SessionIssuer::issue(). A diagnostic that fell through would sign the administrator in.'
+);
+
+sl_assert(
+	'and before anything that creates a user or an identity',
+	false !== $test_branch_at && false !== $provisioner_at && $test_branch_at < $provisioner_at,
+	'AccountProvisioner resolves or provisions. A test that reached it would create an account, and nobody would notice — signing in successfully is what success looks like.'
+);
+
+/*
+ * Behavioural half. Transactions live in a transient with a ten-minute TTL, so
+ * one created before this deploy has no `mode` key at all. Defaulting the wrong
+ * way would turn every in-flight redirect across the deploy into a test that
+ * silently refused to sign its user in.
+ */
+sl_check(
+	'a transaction with no mode still signs its user in',
+	false,
+	\SmartLogin\Auth\OAuthTransactionStore::is_test( array( 'provider' => 'google' ) )
+);
+
+sl_check(
+	'a login transaction is not a test',
+	false,
+	\SmartLogin\Auth\OAuthTransactionStore::is_test( ( new \SmartLogin\Auth\OAuthTransactionStore() )->create( 'google' ) )
+);
+
+sl_check(
+	'a test transaction is',
+	true,
+	\SmartLogin\Auth\OAuthTransactionStore::is_test(
+		( new \SmartLogin\Auth\OAuthTransactionStore( \SmartLogin\Auth\OAuthTransactionStore::MODE_TEST ) )->create( 'google' )
+	)
+);
+
+// An unknown value must not become a test by accident — the constructor
+// normalises rather than trusting whatever it is handed.
+sl_check(
+	'only the exact test mode counts as one',
+	false,
+	\SmartLogin\Auth\OAuthTransactionStore::is_test(
+		( new \SmartLogin\Auth\OAuthTransactionStore( 'TEST' ) )->create( 'google' )
+	)
+);
+
+// ---------------------------------------------------------------------
 sl_summary( 'Admin screens' );
