@@ -24,42 +24,102 @@
 
 namespace SmartLogin;
 
+use SmartLogin\OTP\Transports\WebhookTransport;
+
 defined( 'ABSPATH' ) || exit;
 
 final class FieldRegistry {
 
-	/** Tabs that hold fields. The overview screen has none and is not listed. */
+	/**
+	 * Tabs that hold fields. The overview screen has none and is not listed.
+	 *
+	 * Flat on purpose, even though four of these are one family. A save writes
+	 * only the fields carried by the tab named in the POST
+	 * (`Settings::sanitize()`), so every screen with its own Save button has to
+	 * be a tab in its own right — a nested structure here would have meant
+	 * teaching `posted_fields()` about depth for no gain. Hierarchy is
+	 * presentation, and lives in tab_parents().
+	 */
 	public static function tabs(): array {
 		return array(
-			'auth'      => __( 'Đăng nhập & Đăng ký', 'smart-login' ),
-			'providers' => __( 'Đăng nhập nhanh', 'smart-login' ),
-			'delivery'  => __( 'Gửi mã', 'smart-login' ),
-			'profile'   => __( 'Hồ sơ & Địa chỉ', 'smart-login' ),
-			'security'  => __( 'Chống lạm dụng', 'smart-login' ),
-			'advanced'  => __( 'Nâng cao', 'smart-login' ),
+			'auth'                => __( 'Đăng nhập & Đăng ký', 'smart-login' ),
+			'providers'           => __( 'Đăng nhập nhanh', 'smart-login' ),
+			'delivery'            => __( 'Gửi mã', 'smart-login' ),
+			'delivery-sms'        => __( 'Kênh SMS', 'smart-login' ),
+			'delivery-email'      => __( 'Kênh Email', 'smart-login' ),
+			'delivery-mail'       => __( 'Nội dung email', 'smart-login' ),
+			'delivery-automation' => __( 'Automation', 'smart-login' ),
+			'profile'             => __( 'Hồ sơ & Địa chỉ', 'smart-login' ),
+			'security'            => __( 'Chống lạm dụng', 'smart-login' ),
+			'advanced'            => __( 'Nâng cao', 'smart-login' ),
 		);
+	}
+
+	/**
+	 * Which tabs are drawn as a second level under another.
+	 *
+	 * Six top-level tabs became nine when the delivery screen was split, and a
+	 * nine-item `nav-tab-wrapper` is worse than the twenty-eight-control page it
+	 * was meant to fix. The children hang off their parent instead.
+	 *
+	 * @return array<string,string> child slug => parent slug.
+	 */
+	public static function tab_parents(): array {
+		return array(
+			'delivery-sms'        => 'delivery',
+			'delivery-email'      => 'delivery',
+			'delivery-mail'       => 'delivery',
+			'delivery-automation' => 'delivery',
+		);
+	}
+
+	/** The top-level tab a slug belongs to; itself when it has no parent. */
+	public static function parent_tab( string $tab ): string {
+		return self::tab_parents()[ $tab ] ?? $tab;
+	}
+
+	/**
+	 * The label a second-level tab shows for its own parent.
+	 *
+	 * The parent screen is the first entry in its own sub-nav, so it needs a name
+	 * that describes what it holds rather than the family it heads — "Gửi mã" is
+	 * the group, "Chính sách mã" is the page.
+	 */
+	public static function self_label( string $tab ): string {
+		return 'delivery' === $tab
+			? __( 'Chính sách mã', 'smart-login' )
+			: ( self::tabs()[ $tab ] ?? $tab );
 	}
 
 	/** Section headings, in render order within their tab. */
 	public static function sections(): array {
 		return array(
-			'identity' => __( 'Định danh', 'smart-login' ),
-			'signup'   => __( 'Đăng ký và điều hướng', 'smart-login' ),
-			'login'    => __( 'Bảo mật đăng nhập', 'smart-login' ),
-			'provider' => __( 'Nhà cung cấp', 'smart-login' ),
-			'linking'  => __( 'Chính sách liên kết tài khoản', 'smart-login' ),
-			'otp'      => __( 'Mã xác thực', 'smart-login' ),
-			'sms'      => __( 'Gửi qua SMS', 'smart-login' ),
-			'email'    => __( 'Gửi qua email', 'smart-login' ),
-			'fields'   => __( 'Trường hồ sơ', 'smart-login' ),
-			'address'  => __( 'Địa chỉ 2 cấp', 'smart-login' ),
-			'woo'      => __( 'WooCommerce', 'smart-login' ),
-			'budget'   => __( 'Trần gửi toàn site', 'smart-login' ),
-			'breaker'  => __( 'Ngắt mạch kênh gửi', 'smart-login' ),
-			'captcha'  => __( 'Xác minh chống robot', 'smart-login' ),
-			'network'  => __( 'Proxy và địa chỉ IP', 'smart-login' ),
-			'audit'    => __( 'Nhật ký & dọn dẹp', 'smart-login' ),
-			'dev'      => __( 'Phát triển', 'smart-login' ),
+			'identity'     => __( 'Định danh', 'smart-login' ),
+			'signup'       => __( 'Đăng ký và điều hướng', 'smart-login' ),
+			'login'        => __( 'Bảo mật đăng nhập', 'smart-login' ),
+			'provider'     => __( 'Nhà cung cấp', 'smart-login' ),
+			'linking'      => __( 'Chính sách liên kết tài khoản', 'smart-login' ),
+			'routing'      => __( 'Định tuyến', 'smart-login' ),
+			'otp'          => __( 'Mã xác thực', 'smart-login' ),
+			'sms'          => __( 'Gửi qua SMS', 'smart-login' ),
+			'email'        => __( 'Gửi qua email', 'smart-login' ),
+			'automation'   => __( 'Automation / Webhook', 'smart-login' ),
+			// The mail screen, in the order an administrator reads it: what every
+			// message falls back to, the messages themselves, the operational
+			// alerts, then how an HTML one is dressed.
+			'mail_default' => __( 'Mẫu mặc định', 'smart-login' ),
+			'templates'    => __( 'Mã xác thực', 'smart-login' ),
+			'mail_admin'   => __( 'Cảnh báo quản trị', 'smart-login' ),
+			'mail_design'  => __( 'Giao diện email HTML', 'smart-login' ),
+			'fields'       => __( 'Trường hồ sơ', 'smart-login' ),
+			'address'      => __( 'Địa chỉ 2 cấp', 'smart-login' ),
+			'woo'          => __( 'WooCommerce', 'smart-login' ),
+			'budget'       => __( 'Trần gửi toàn site', 'smart-login' ),
+			'breaker'      => __( 'Ngắt mạch kênh gửi', 'smart-login' ),
+			'captcha'      => __( 'Xác minh chống robot', 'smart-login' ),
+			'network'      => __( 'Proxy và địa chỉ IP', 'smart-login' ),
+			'audit'        => __( 'Nhật ký & dọn dẹp', 'smart-login' ),
+			'dev'          => __( 'Phát triển', 'smart-login' ),
 		);
 	}
 
@@ -84,6 +144,10 @@ final class FieldRegistry {
 			self::auth_fields(),
 			self::provider_fields(),
 			self::delivery_fields(),
+			// Generated, not typed. One row in MailRegistry produces the subject
+			// and body pair for a message, so a message cannot be editable
+			// without being declared or declared without being editable.
+			\SmartLogin\Mail\MailRegistry::fields(),
 			self::profile_fields(),
 			self::security_fields(),
 			self::advanced_fields(),
@@ -272,6 +336,30 @@ final class FieldRegistry {
 
 	private static function delivery_fields(): array {
 		return array(
+			'delivery.route_phone'         => array(
+				'type'    => 'select',
+				'default' => 'sms',
+				'tab'     => 'delivery',
+				'section' => 'routing',
+				'label'   => __( 'Gửi mã tới số điện thoại bằng', 'smart-login' ),
+				'choices' => array(
+					'sms'        => __( 'Gateway SMS', 'smart-login' ),
+					'automation' => __( 'Automation / Webhook', 'smart-login' ),
+				),
+				'help'    => __( 'Kênh chịu trách nhiệm gửi và báo thành công hay thất bại.', 'smart-login' ),
+			),
+			'delivery.route_email'         => array(
+				'type'    => 'select',
+				'default' => 'email',
+				'tab'     => 'delivery',
+				'section' => 'routing',
+				'label'   => __( 'Gửi mã tới email bằng', 'smart-login' ),
+				'choices' => array(
+					'email'      => __( 'SMTP của WordPress', 'smart-login' ),
+					'automation' => __( 'Automation / Webhook', 'smart-login' ),
+				),
+				'help'    => __( 'Mặc định dùng <code>wp_mail()</code>, nên mọi plugin SMTP sẵn có đều hoạt động.', 'smart-login' ),
+			),
 			'otp.preset'                   => array(
 				'type'    => 'select',
 				'default' => 'balanced',
@@ -340,15 +428,21 @@ final class FieldRegistry {
 			'sms.enabled'                  => array(
 				'type'    => 'checkbox',
 				'default' => 0,
-				'tab'     => 'delivery',
+				'tab'     => 'delivery-sms',
 				'section' => 'sms',
 				'label'   => __( 'Kích hoạt', 'smart-login' ),
 				'help'    => __( 'Bật kênh gửi SMS qua webhook', 'smart-login' ),
 			),
 			'sms.preset'                   => array(
 				'type'    => 'select',
-				'default' => GatewayPresets::CUSTOM,
-				'tab'     => 'delivery',
+				// `generic` rather than `custom`. A fresh install used to open on
+				// all thirteen raw fields including a free-text JSON body — the
+				// hardest screen in the plugin, shown to the person who has
+				// configured the least. Only new installs are affected: a site
+				// that has ever saved this tab has its own value stored, and
+				// sanitize() writes stored values.
+				'default' => 'generic',
+				'tab'     => 'delivery-sms',
 				'section' => 'sms',
 				'label'   => __( 'Nhà cung cấp', 'smart-login' ),
 				'choices' => GatewayPresets::choices(),
@@ -357,7 +451,7 @@ final class FieldRegistry {
 			'sms.credentials'              => array(
 				'type'        => 'credentials',
 				'default'     => array(),
-				'tab'         => 'delivery',
+				'tab'         => 'delivery-sms',
 				'section'     => 'sms',
 				'label'       => __( 'Thông tin xác thực', 'smart-login' ),
 				'sanitize'    => 'credentials',
@@ -371,7 +465,7 @@ final class FieldRegistry {
 			'sms.url'                      => array(
 				'type'    => 'url',
 				'default' => '',
-				'tab'     => 'delivery',
+				'tab'     => 'delivery-sms',
 				'section' => 'sms',
 				'label'   => __( 'URL', 'smart-login' ),
 				'help'    => __( 'Có thể chứa placeholder, ví dụ <code>https://api.gateway.vn/send?to={{phone_local}}</code>.', 'smart-login' ),
@@ -379,7 +473,7 @@ final class FieldRegistry {
 			'sms.method'                   => array(
 				'type'    => 'select',
 				'default' => 'POST',
-				'tab'     => 'delivery',
+				'tab'     => 'delivery-sms',
 				'section' => 'sms',
 				'label'   => __( 'Phương thức', 'smart-login' ),
 				'choices' => array(
@@ -390,7 +484,7 @@ final class FieldRegistry {
 			'sms.content_type'             => array(
 				'type'    => 'select',
 				'default' => 'application/json',
-				'tab'     => 'delivery',
+				'tab'     => 'delivery-sms',
 				'section' => 'sms',
 				'label'   => __( 'Kiểu dữ liệu', 'smart-login' ),
 				'choices' => array(
@@ -402,7 +496,7 @@ final class FieldRegistry {
 			'sms.headers'                  => array(
 				'type'     => 'headers',
 				'default'  => array(),
-				'tab'      => 'delivery',
+				'tab'      => 'delivery-sms',
 				'section'  => 'sms',
 				'label'    => __( 'Headers', 'smart-login' ),
 				'sanitize' => 'headers',
@@ -411,7 +505,7 @@ final class FieldRegistry {
 				'type'     => 'textarea',
 				'rows'     => 7,
 				'default'  => '{"phone":"{{phone_local}}","content":"{{code}} la ma xac thuc cua ban tai {{site_name}}. Ma co hieu luc {{ttl_minutes}} phut."}',
-				'tab'      => 'delivery',
+				'tab'      => 'delivery-sms',
 				'section'  => 'sms',
 				'label'    => __( 'Body', 'smart-login' ),
 				'sanitize' => 'raw_template',
@@ -422,7 +516,7 @@ final class FieldRegistry {
 				'default' => 5,
 				'min'     => 2,
 				'max'     => 15,
-				'tab'     => 'delivery',
+				'tab'     => 'delivery-sms',
 				'section' => 'sms',
 				'label'   => __( 'Timeout (giây)', 'smart-login' ),
 				'help'    => __( 'Mỗi lần gửi giữ một tiến trình PHP trong đúng khoảng này. Đặt cao là cách nhanh nhất để một gateway chậm làm sập cả website, nên trần cứng là 15 giây kể cả khi giá trị cũ lớn hơn.', 'smart-login' ),
@@ -430,7 +524,7 @@ final class FieldRegistry {
 			'sms.success_path'             => array(
 				'type'    => 'text',
 				'default' => '',
-				'tab'     => 'delivery',
+				'tab'     => 'delivery-sms',
 				'section' => 'sms',
 				'label'   => __( 'Đường dẫn JSON báo thành công', 'smart-login' ),
 				'help'    => __( 'Ví dụ <code>CodeResult</code> hoặc <code>data.status</code>. Để trống thì chỉ cần HTTP 2xx là coi như thành công.', 'smart-login' ),
@@ -438,7 +532,7 @@ final class FieldRegistry {
 			'sms.success_value'            => array(
 				'type'    => 'text',
 				'default' => '',
-				'tab'     => 'delivery',
+				'tab'     => 'delivery-sms',
 				'section' => 'sms',
 				'label'   => __( 'Giá trị mong đợi', 'smart-login' ),
 				'help'    => __( 'Ví dụ <code>100</code>.', 'smart-login' ),
@@ -446,7 +540,7 @@ final class FieldRegistry {
 			'sms.retry'                    => array(
 				'type'    => 'checkbox',
 				'default' => 0,
-				'tab'     => 'delivery',
+				'tab'     => 'delivery-sms',
 				'section' => 'sms',
 				'label'   => __( 'Thử lại', 'smart-login' ),
 				'help'    => __( 'Gọi lại 1 lần sau 2 giây. Chỉ hoạt động khi đã cấu hình header idempotency bên dưới.', 'smart-login' ),
@@ -454,7 +548,7 @@ final class FieldRegistry {
 			'sms.idempotency_header'       => array(
 				'type'     => 'text',
 				'default'  => '',
-				'tab'      => 'delivery',
+				'tab'      => 'delivery-sms',
 				'section'  => 'sms',
 				'label'    => __( 'Header idempotency', 'smart-login' ),
 				'sanitize' => 'header_name',
@@ -464,7 +558,7 @@ final class FieldRegistry {
 			'email.enabled'                => array(
 				'type'    => 'checkbox',
 				'default' => 1,
-				'tab'     => 'delivery',
+				'tab'     => 'delivery-email',
 				'section' => 'email',
 				'label'   => __( 'Kích hoạt', 'smart-login' ),
 				'help'    => __( 'Bật kênh gửi email', 'smart-login' ),
@@ -472,7 +566,7 @@ final class FieldRegistry {
 			'email.from_name'              => array(
 				'type'    => 'text',
 				'default' => '',
-				'tab'     => 'delivery',
+				'tab'     => 'delivery-email',
 				'section' => 'email',
 				'label'   => __( 'Tên người gửi', 'smart-login' ),
 				'help'    => __( 'Để trống để dùng tên website.', 'smart-login' ),
@@ -480,7 +574,7 @@ final class FieldRegistry {
 			'email.from_address'           => array(
 				'type'    => 'email',
 				'default' => '',
-				'tab'     => 'delivery',
+				'tab'     => 'delivery-email',
 				'section' => 'email',
 				'label'   => __( 'Email người gửi', 'smart-login' ),
 				'help'    => __( 'Để trống để dùng cấu hình mặc định của WordPress.', 'smart-login' ),
@@ -488,24 +582,113 @@ final class FieldRegistry {
 			'email.subject'                => array(
 				'type'    => 'text',
 				'default' => 'Mã xác thực {{code}} - {{site_name}}',
-				'tab'     => 'delivery',
-				'section' => 'email',
+				'tab'     => 'delivery-mail',
+				'section' => 'mail_default',
 				'label'   => __( 'Tiêu đề', 'smart-login' ),
 			),
 			'email.is_html'                => array(
 				'type'    => 'checkbox',
 				'default' => 0,
-				'tab'     => 'delivery',
-				'section' => 'email',
+				'tab'     => 'delivery-mail',
+				'section' => 'mail_design',
 				'label'   => __( 'Định dạng', 'smart-login' ),
 				'help'    => __( 'Gửi dưới dạng HTML', 'smart-login' ),
 			),
+			'email.logo_url'               => array(
+				'type'    => 'url',
+				'default' => '',
+				'tab'     => 'delivery-mail',
+				'section' => 'mail_design',
+				'label'   => __( 'Logo trong email', 'smart-login' ),
+				'help'    => __( 'Chỉ dùng khi gửi dạng HTML. Để trống thì hiện tên website. Nhiều ứng dụng email chặn ảnh cho tới khi người nhận bấm hiển thị, nên đừng đặt thông tin quan trọng trong ảnh.', 'smart-login' ),
+			),
+			'email.accent_color'           => array(
+				'type'    => 'text',
+				'default' => '#2271b1',
+				'tab'     => 'delivery-mail',
+				'section' => 'mail_design',
+				'label'   => __( 'Màu nhấn', 'smart-login' ),
+				'help'    => __( 'Dạng <code>#2271b1</code>. Giá trị không hợp lệ sẽ dùng màu mặc định.', 'smart-login' ),
+			),
+			'email.footer_text'            => array(
+				'type'     => 'textarea',
+				'rows'     => 3,
+				'default'  => '',
+				'tab'      => 'delivery-mail',
+				'section'  => 'mail_design',
+				'label'    => __( 'Chân email', 'smart-login' ),
+				'sanitize' => 'rich_text',
+				'help'     => __( 'Ví dụ địa chỉ cửa hàng hoặc câu nhắc không trả lời email này. Để trống để bỏ hẳn phần chân.', 'smart-login' ),
+			),
+
+			'automation.url'               => array(
+				'type'     => 'url',
+				'default'  => '',
+				'tab'      => 'delivery-automation',
+				'section'  => 'automation',
+				'label'    => __( 'Endpoint', 'smart-login' ),
+				'sanitize' => 'https_url',
+				'help'     => __( 'Bắt buộc <code>https://</code>. Mã xác thực rời khỏi website tới địa chỉ này, nên chữ ký HMAC chỉ chứng minh <em>ai gửi</em> — nó không làm cho một endpoint đáng ngờ trở nên an toàn.', 'smart-login' ),
+			),
+			'automation.secret'            => array(
+				'type'    => 'secret',
+				'default' => '',
+				'tab'     => 'delivery-automation',
+				'section' => 'automation',
+				'label'   => __( 'Khoá ký (HMAC)', 'smart-login' ),
+				'help'    => __( 'Dùng để ký từng gói tin bằng SHA-256. Chưa có khoá thì kênh này không được dùng, vì endpoint sẽ nhận mã thật mà không xác thực được nguồn.', 'smart-login' ),
+			),
+			'automation.headers'           => array(
+				'type'     => 'headers',
+				'default'  => array(),
+				'tab'      => 'delivery-automation',
+				'section'  => 'automation',
+				'label'    => __( 'Headers bổ sung', 'smart-login' ),
+				'sanitize' => 'headers',
+				'help'     => __( 'Các header do plugin sinh ra không thể bị ghi đè ở đây.', 'smart-login' ),
+			),
+			'automation.timeout'           => array(
+				'type'    => 'number',
+				'default' => 5,
+				'min'     => 2,
+				'max'     => WebhookTransport::MAX_TIMEOUT,
+				'tab'     => 'delivery-automation',
+				'section' => 'automation',
+				'label'   => __( 'Timeout (giây)', 'smart-login' ),
+				'help'    => __( 'Cùng trần cứng với kênh SMS, và vì cùng một lý do: mỗi lần gửi giữ một tiến trình PHP trong đúng khoảng này.', 'smart-login' ),
+			),
+			'automation.events'            => array(
+				'type'     => 'checkboxes',
+				'default'  => array(),
+				'tab'      => 'delivery-automation',
+				'section'  => 'automation',
+				'label'    => __( 'Sự kiện gửi kèm', 'smart-login' ),
+				'choices'  => 'audit_events',
+				'sanitize' => 'audit_events',
+				'help'     => __( 'Gửi không chờ phản hồi, <strong>không bao giờ kèm mã OTP</strong>, và dùng chung trần đếm mỗi giờ với nhật ký — nên tắt nhật ký là tắt luôn phần này.', 'smart-login' ),
+			),
+			'automation.success_path'      => array(
+				'type'    => 'text',
+				'default' => '',
+				'tab'     => 'delivery-automation',
+				'section' => 'automation',
+				'label'   => __( 'Đường dẫn JSON báo thành công', 'smart-login' ),
+				'help'    => __( 'Để trống thì chỉ cần HTTP 2xx là coi như thành công.', 'smart-login' ),
+			),
+			'automation.success_value'     => array(
+				'type'    => 'text',
+				'default' => '',
+				'tab'     => 'delivery-automation',
+				'section' => 'automation',
+				'label'   => __( 'Giá trị mong đợi', 'smart-login' ),
+			),
+
 			'email.body'                   => array(
 				'type'     => 'textarea',
 				'rows'     => 10,
 				'default'  => "Xin chào,\n\nMã xác thực của bạn là: {{code}}\nMã có hiệu lực trong {{ttl_minutes}} phút.\n\nNếu bạn không yêu cầu mã này, vui lòng bỏ qua email.\n\n{{site_name}}",
-				'tab'      => 'delivery',
-				'section'  => 'email',
+				'tab'      => 'delivery-mail',
+				'section'  => 'mail_default',
 				'label'    => __( 'Nội dung', 'smart-login' ),
 				'sanitize' => 'rich_text',
 				'help'     => __( 'Dùng chung bộ placeholder với phần Gửi qua SMS.', 'smart-login' ),
@@ -677,10 +860,19 @@ final class FieldRegistry {
 				'type'    => 'number',
 				'default' => 0,
 				'min'     => 0,
-				'tab'     => 'security',
-				'section' => 'budget',
-				'label'   => __( 'Giá mỗi tin nhắn (VNĐ)', 'smart-login' ),
-				'help'    => __( 'Chỉ dùng để ước tính chi phí hiển thị trên màn hình Tổng quan. Đặt 0 để ẩn.', 'smart-login' ),
+				// Sits with the OTP policy it prices rather than with the site
+				// budget it used to sit beside: the ceiling is an abuse control,
+				// this is an operating cost, and only one of them is a number the
+				// operator sets from their invoice.
+				'tab'     => 'delivery',
+				'section' => 'otp',
+				// The key still says `sms`; since 10.5 the number it multiplies is
+				// every OTP sent to a phone number, whichever transport carried
+				// it. Renaming the key would cross includes/, tests/ and docs/
+				// for no behavioural gain, and this project has been bitten five
+				// times by exactly that. The label carries the meaning instead.
+				'label'   => __( 'Giá mỗi mã gửi tới số điện thoại (VNĐ)', 'smart-login' ),
+				'help'    => __( 'Chỉ dùng để ước tính chi phí trên màn hình Tổng quan, và tính cho mọi mã gửi tới số điện thoại — kể cả khi kênh đó đang định tuyến qua automation. Đặt 0 để ẩn.', 'smart-login' ),
 			),
 			'security.captcha_provider'               => array(
 				'type'    => 'select',

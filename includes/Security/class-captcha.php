@@ -29,8 +29,17 @@ defined( 'ABSPATH' ) || exit;
 
 final class Captcha {
 
-	/** Where the encrypted provider secret lives. */
+	/**
+	 * Where the encrypted provider secret lived before 10.2.
+	 *
+	 * Kept because Settings::LEGACY_SECRETS points at it: an install that sealed
+	 * a secret here must still be able to read it. New writes go to the generic
+	 * store keyed by SECRET_PATH.
+	 */
 	const SECRET_OPTION = 'smart_login_captcha_secret';
+
+	/** The registry path this secret is declared under. */
+	const SECRET_PATH = 'security.captcha_secret';
 
 	/** Hard ceiling on the verification call, same reasoning as 9.3. */
 	const MAX_TIMEOUT = 5;
@@ -63,16 +72,28 @@ final class Captcha {
 		return trim( (string) Settings::get( 'security.captcha_site_key', '' ) );
 	}
 
+	/**
+	 * Storage belongs to Settings, not to this class.
+	 *
+	 * This accessor and the two below stay as the vocabulary the captcha code
+	 * reads in — is_configured() asks for "the secret", not for a path into a
+	 * store — but they own nothing. Settings::read_secret() is what knows where
+	 * a value sealed before 10.2 still lives.
+	 */
 	public static function secret(): string {
-		return SecretBox::get( self::SECRET_OPTION, 'captcha' );
+		return Settings::read_secret( self::SECRET_PATH );
 	}
 
 	public static function store_secret( string $secret ): bool {
-		return SecretBox::put( self::SECRET_OPTION, 'captcha', $secret );
+		Settings::store_secret( self::SECRET_PATH, $secret );
+
+		return true;
 	}
 
 	public static function clear_secret(): bool {
-		return SecretBox::forget( self::SECRET_OPTION, 'captcha' );
+		Settings::store_secret( self::SECRET_PATH, '' );
+
+		return true;
 	}
 
 	public static function is_configured(): bool {

@@ -127,19 +127,31 @@ class OtpRepository {
 
 	/**
 	 * Invalidate every live code for a destination/intent pair.
-	 * Called before issuing a fresh one so only the newest code works.
+	 *
+	 * Called *after* a fresh code has been delivered, so only the newest one
+	 * works. It used to run before the send, which meant a gateway failure
+	 * destroyed a code the user was already holding — see 10.7.
+	 *
+	 * @param string $destination Canonical phone digits or email address.
+	 * @param string $intent      One of the OtpService::INTENT_* constants.
+	 * @param int    $except_id   Row to leave alone, normally the code just sent.
+	 *                            Excluding by id rather than by recency is
+	 *                            deliberate: two concurrent issues for one
+	 *                            destination would otherwise race to consume
+	 *                            each other.
 	 */
-	public function consume_open_codes( string $destination, string $intent ): void {
+	public function consume_open_codes( string $destination, string $intent, int $except_id = 0 ): void {
 		global $wpdb;
 
 		$table = $this->table();
 
 		$wpdb->query( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			$wpdb->prepare(
-				"UPDATE {$table} SET consumed_at = %s WHERE destination = %s AND intent = %s AND consumed_at IS NULL", // phpcs:ignore WordPress.DB.PreparedSQL
+				"UPDATE {$table} SET consumed_at = %s WHERE destination = %s AND intent = %s AND consumed_at IS NULL AND id <> %d", // phpcs:ignore WordPress.DB.PreparedSQL
 				current_time( 'mysql', true ),
 				$destination,
-				$intent
+				$intent,
+				$except_id
 			)
 		);
 	}
@@ -156,6 +168,37 @@ class OtpRepository {
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$table} WHERE destination = %s AND created_at > %s", // phpcs:ignore WordPress.DB.PreparedSQL
 				$destination,
+				gmdate( 'Y-m-d H:i:s', time() - $seconds )
+			)
+		);
+	}
+
+	/**
+	 * How many codes went out to one identity channel in the last N seconds.
+	 *
+	 * Counting by channel rather than by transport is what survives routing: a
+	 * site that points `phone` at the automation endpoint is still sending real
+	 * SMS and still spending real money, but no row says `transport = 'sms'` any
+	 * more, so the old count read zero while the bill kept arriving.
+	 *
+	 * Rows written before 10.5 may hold an empty `identity_channel` — nothing
+	 * filled it unless a handler passed a claim — and are not counted. Left
+	 * uncorrected rather than migrated: the column is populated on every write
+	 * now, the plugin has never run in production, and a backfill would need a
+	 * schema version bump this phase deliberately does not take.
+	 *
+	 * @param string $channel PhoneChannel::ID or MailChannel::ID.
+	 * @param int    $seconds Window.
+	 */
+	public function count_recent_by_channel( string $channel, int $seconds ): int {
+		global $wpdb;
+
+		$table = $this->table();
+
+		return (int) $wpdb->get_var( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$table} WHERE identity_channel = %s AND created_at > %s", // phpcs:ignore WordPress.DB.PreparedSQL
+				$channel,
 				gmdate( 'Y-m-d H:i:s', time() - $seconds )
 			)
 		);

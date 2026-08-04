@@ -17,6 +17,8 @@
 
 namespace SmartLogin;
 
+use SmartLogin\Security\SecretBox;
+
 defined( 'ABSPATH' ) || exit;
 
 class Settings {
@@ -25,6 +27,29 @@ class Settings {
 
 	/** Hidden field naming the tab a save came from. */
 	const TAB_FIELD = '_sl_tab';
+
+	/**
+	 * Where every `type => 'secret'` field is sealed, keyed by its registry path.
+	 *
+	 * ProviderCredentials had the right shape already — one option, many keys, no
+	 * branch per key. This is that, applied to the registry.
+	 */
+	const SECRET_OPTION = 'smart_login_field_secrets';
+
+	/**
+	 * Secrets that were sealed somewhere else before 10.2 keyed them by path.
+	 *
+	 * A lookup rather than a branch, and a shrinking one: an entry earns its keep
+	 * only until every install has re-saved that field. Without it the change of
+	 * key would strand the stored value in place — readable by nothing, deletable
+	 * by nothing, and silently replaced by an empty string.
+	 */
+	const LEGACY_SECRETS = array(
+		'security.captcha_secret' => array(
+			'option' => \SmartLogin\Security\Captcha::SECRET_OPTION,
+			'key'    => 'captcha',
+		),
+	);
 
 	/** @var array|null Runtime cache, always in registry shape. */
 	private static $cache = null;
@@ -166,7 +191,7 @@ class Settings {
 		$fields = self::posted_fields( $input );
 
 		foreach ( $fields as $path => $field ) {
-			self::plant( $clean, $path, self::sanitize_field( $field, self::dig( $input, $path ) ) );
+			self::plant( $clean, $path, self::sanitize_field( $field, self::dig( $input, $path ), $path ) );
 		}
 
 		// Presets are applied after the plain fields, because they overwrite some
@@ -221,15 +246,46 @@ class Settings {
 	}
 
 	/**
-	 * Route a secret to whichever store owns it.
+	 * Seal a secret under its registry path, or erase it when blank.
+	 *
+	 * This used to match one path literal and do nothing for any other, while
+	 * absorb_secret_fields() pruned the plaintext from the option array either
+	 * way — so a `secret` field whose path nobody remembered to add here was a
+	 * control that accepted input and discarded it without a word.
 	 */
-	private static function store_secret( string $path, string $secret ): void {
-		if ( 'security.captcha_secret' === $path ) {
-			if ( '' === $secret ) {
-				\SmartLogin\Security\Captcha::clear_secret();
-			} else {
-				\SmartLogin\Security\Captcha::store_secret( $secret );
-			}
+	public static function store_secret( string $path, string $secret ): void {
+		if ( '' === $secret ) {
+			SecretBox::forget( self::SECRET_OPTION, $path );
+		} else {
+			SecretBox::put( self::SECRET_OPTION, $path, $secret );
+		}
+
+		// Either way the pre-10.2 copy goes. Leaving it behind on a clear would
+		// resurrect the secret the administrator just deleted, because the read
+		// below falls back to exactly that location.
+		self::forget_legacy_secret( $path );
+	}
+
+	/**
+	 * Read a sealed secret by registry path, wherever it currently lives.
+	 */
+	public static function read_secret( string $path ): string {
+		$secret = SecretBox::get( self::SECRET_OPTION, $path );
+
+		if ( '' !== $secret ) {
+			return $secret;
+		}
+
+		$legacy = self::LEGACY_SECRETS[ $path ] ?? null;
+
+		return $legacy ? SecretBox::get( $legacy['option'], $legacy['key'] ) : '';
+	}
+
+	private static function forget_legacy_secret( string $path ): void {
+		$legacy = self::LEGACY_SECRETS[ $path ] ?? null;
+
+		if ( $legacy ) {
+			SecretBox::forget( $legacy['option'], $legacy['key'] );
 		}
 	}
 
@@ -355,9 +411,9 @@ class Settings {
 	 * @param mixed $raw   Submitted value, or null when absent.
 	 * @return mixed
 	 */
-	private static function sanitize_field( array $field, $raw ) {
+	private static function sanitize_field( array $field, $raw, string $path = '' ) {
 		if ( isset( $field['sanitize'] ) ) {
-			return self::sanitize_special( (string) $field['sanitize'], $raw, $field );
+			return self::sanitize_special( (string) $field['sanitize'], $raw, $field, $path );
 		}
 
 		switch ( $field['type'] ?? 'text' ) {
@@ -399,8 +455,23 @@ class Settings {
 	 * @param array  $field Registry row, for its default.
 	 * @return mixed
 	 */
-	private static function sanitize_special( string $rule, $raw, array $field ) {
+	private static function sanitize_special( string $rule, $raw, array $field, string $path = '' ) {
 		switch ( $rule ) {
+			case 'https_url':
+				return self::sanitize_https_url( $raw, $path );
+
+			case 'audit_events':
+				// Intersected with the constants, so a stale stored name cannot
+				// keep being looked for after the event it named is gone. The
+				// empty strings come from the hidden input that makes "none
+				// ticked" expressible at all.
+				return array_values(
+					array_intersect(
+						array_filter( array_map( 'strval', (array) $raw ) ),
+						\SmartLogin\Security\AuditLog::events()
+					)
+				);
+
 			case 'country_code':
 				return preg_replace( '/[^0-9]/', '', (string) $raw ) ?: $field['default'];
 
@@ -430,6 +501,54 @@ class Settings {
 			default:
 				return sanitize_text_field( (string) $raw );
 		}
+	}
+
+	/**
+	 * An endpoint that will carry a live OTP, so plaintext HTTP is refused.
+	 *
+	 * Refused at save rather than at send: saving is the only moment the
+	 * administrator is present to be told why. A send-time check would surface as
+	 * users not receiving codes, days later, with the cause three screens away.
+	 *
+	 * The rejected value does **not** blank the field. Clearing an endpoint
+	 * because someone mistyped the scheme would leave a channel routed at nothing
+	 * — a worse outcome than the typo, and a silent one.
+	 *
+	 * @param mixed  $raw
+	 * @param string $path Registry path, used to recover the stored value.
+	 */
+	private static function sanitize_https_url( $raw, string $path ): string {
+		$url = esc_url_raw( trim( (string) $raw ) );
+
+		if ( '' === $url || 0 === stripos( $url, 'https://' ) ) {
+			return $url;
+		}
+
+		// A local n8n has no certificate, and refusing http there makes the
+		// feature untestable before it is deployed. Written down here and in the
+		// help text rather than left as a surprise.
+		if ( self::is_local_environment() && 0 === stripos( $url, 'http://' ) ) {
+			return $url;
+		}
+
+		if ( function_exists( 'add_settings_error' ) ) {
+			add_settings_error(
+				self::OPTION,
+				'smart_login_https_required',
+				__( 'Endpoint phải dùng https://. Mã xác thực đi qua địa chỉ này nên không chấp nhận HTTP thường. Giá trị cũ được giữ nguyên.', 'smart-login' ),
+				'error'
+			);
+		}
+
+		return '' !== $path ? (string) self::get( $path, '' ) : '';
+	}
+
+	private static function is_local_environment(): bool {
+		if ( ! function_exists( 'wp_get_environment_type' ) ) {
+			return false;
+		}
+
+		return in_array( wp_get_environment_type(), array( 'local', 'development' ), true );
 	}
 
 	/**

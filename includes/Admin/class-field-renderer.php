@@ -14,6 +14,9 @@
 namespace SmartLogin\Admin;
 
 use SmartLogin\GatewayPresets;
+use SmartLogin\Mail\MailRegistry;
+use SmartLogin\OTP\Placeholders;
+use SmartLogin\Security\AuditLog;
 use SmartLogin\Settings;
 
 defined( 'ABSPATH' ) || exit;
@@ -58,6 +61,11 @@ final class FieldRenderer {
 			self::checkbox( $path, $field );
 			return;
 		}
+
+		if ( 'checkboxes' === $type ) {
+			self::checkboxes( $path, $field );
+			return;
+		}
 		?>
 		<tr>
 			<th scope="row">
@@ -91,6 +99,64 @@ final class FieldRenderer {
 			</td>
 		</tr>
 		<?php
+	}
+
+	/**
+	 * A list of independent switches sharing one stored array.
+	 *
+	 * The empty hidden input is what makes "none ticked" expressible. Without it
+	 * an unticked list is simply absent from $_POST, which sanitize() would read
+	 * as "field not on this tab" and leave the stored value alone — the user
+	 * would be unable to turn the last one off.
+	 *
+	 * @param string $path  Dot path.
+	 * @param array  $field Registry row; `choices` may name a generated source.
+	 */
+	private static function checkboxes( string $path, array $field ): void {
+		$chosen  = (array) Settings::get( $path, array() );
+		$choices = self::choices_for( $field );
+		?>
+		<tr>
+			<th scope="row"><?php echo esc_html( $field['label'] ?? $path ); ?></th>
+			<td>
+				<input type="hidden" name="<?php echo esc_attr( self::name( $path ) ); ?>[]" value="" />
+				<fieldset class="sl-checkboxes">
+					<?php foreach ( $choices as $value => $label ) : ?>
+						<label>
+							<input
+								type="checkbox"
+								name="<?php echo esc_attr( self::name( $path ) ); ?>[]"
+								value="<?php echo esc_attr( (string) $value ); ?>"
+								<?php checked( in_array( (string) $value, array_map( 'strval', $chosen ), true ) ); ?>
+							/>
+							<code><?php echo esc_html( (string) $label ); ?></code>
+						</label>
+					<?php endforeach; ?>
+				</fieldset>
+				<?php self::help( $field ); ?>
+			</td>
+		</tr>
+		<?php
+	}
+
+	/**
+	 * A choices list that is either declared inline or generated.
+	 *
+	 * The audit events are generated from the constants, so a constant added
+	 * later becomes subscribable without anyone remembering to edit a second
+	 * list. That is the same argument the registry itself makes.
+	 *
+	 * @param array $field Registry row.
+	 * @return array<string,string>
+	 */
+	private static function choices_for( array $field ): array {
+		$choices = $field['choices'] ?? array();
+
+		if ( 'audit_events' === $choices ) {
+			return array_combine( AuditLog::events(), AuditLog::events() );
+		}
+
+		return (array) $choices;
 	}
 
 	/**
@@ -140,6 +206,7 @@ final class FieldRenderer {
 			id="<?php echo esc_attr( self::id( $path ) ); ?>"
 			name="<?php echo esc_attr( self::name( $path ) ); ?>"
 			value="<?php echo esc_attr( (string) Settings::get( $path, '' ) ); ?>"
+			placeholder="<?php echo esc_attr( self::inherited( $field ) ); ?>"
 			class="regular-text"
 			<?php echo $extra; // phpcs:ignore WordPress.Security.EscapeOutput -- assembled from escaped parts. ?>
 		/>
@@ -200,8 +267,68 @@ final class FieldRenderer {
 			id="<?php echo esc_attr( self::id( $path ) ); ?>"
 			name="<?php echo esc_attr( self::name( $path ) ); ?>"
 			rows="<?php echo (int) ( $field['rows'] ?? 6 ); ?>"
+			placeholder="<?php echo esc_attr( self::inherited( $field ) ); ?>"
 			class="large-text code"
 		><?php echo esc_textarea( (string) Settings::get( $path, '' ) ); ?></textarea>
+		<?php
+		self::message_tokens( $field );
+	}
+
+	/**
+	 * What an empty template box will actually send.
+	 *
+	 * Shown as the placeholder, so a blank field reads as "inheriting this"
+	 * rather than as "this email has no subject" — which is what a mail screen
+	 * full of empty boxes otherwise looks like, and the reason an administrator
+	 * would paste the default into all eight of them and lose the inheritance
+	 * the registry exists to provide.
+	 */
+	private static function inherited( array $field ): string {
+		$message = (string) ( $field['message'] ?? '' );
+		$part    = (string) ( $field['part'] ?? '' );
+
+		if ( '' === $message || '' === $part ) {
+			return '';
+		}
+
+		return (string) ( MailRegistry::resolve( $message )[ $part ] ?? '' );
+	}
+
+	/**
+	 * The tokens this message understands, collapsed.
+	 *
+	 * Only this message's set. The global table under the SMS section stays
+	 * where it is and keeps showing everything, because there it is right — here
+	 * it would offer an operational token beside an OTP body, which renders as a
+	 * silent empty string and is the whole reason the sets are declared per
+	 * message.
+	 */
+	private static function message_tokens( array $field ): void {
+		$message = (string) ( $field['message'] ?? '' );
+
+		if ( '' === $message || 'body' !== ( $field['part'] ?? '' ) ) {
+			return;
+		}
+
+		$tokens = Placeholders::available_tokens( $message );
+
+		if ( ! $tokens ) {
+			return;
+		}
+		?>
+		<details class="sl-derived sl-message-tokens">
+			<summary><?php esc_html_e( 'Các thẻ dùng được trong mẫu này', 'smart-login' ); ?></summary>
+			<table class="widefat striped sl-tokens">
+				<tbody>
+				<?php foreach ( $tokens as $token => $description ) : ?>
+					<tr>
+						<td style="width:180px"><code><?php echo esc_html( $token ); ?></code></td>
+						<td><?php echo esc_html( $description ); ?></td>
+					</tr>
+				<?php endforeach; ?>
+				</tbody>
+			</table>
+		</details>
 		<?php
 	}
 

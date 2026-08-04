@@ -24,8 +24,11 @@ use SmartLogin\Admin\ProviderCards;
 use SmartLogin\Admin\SettingsPage;
 use SmartLogin\FieldRegistry;
 use SmartLogin\GatewayPresets;
+use SmartLogin\Identity\Channels\PhoneChannel;
 use SmartLogin\Installer;
 use SmartLogin\OTP\Placeholders;
+use SmartLogin\OTP\Transports\EventBus;
+use SmartLogin\OTP\Transports\TransportRouter;
 use SmartLogin\OtpPresets;
 use SmartLogin\Settings;
 
@@ -171,6 +174,57 @@ final class SettingsScreen {
 		if ( 'address' === $section ) {
 			$this->address_dataset_status();
 		}
+
+		if ( 'automation' === $section ) {
+			$this->automation_role();
+		}
+	}
+
+	/**
+	 * Which of the endpoint's two roles is actually live.
+	 *
+	 * Configured-but-not-routed is a valid, common configuration — the bus on,
+	 * no channel pointed here — and it must not read as broken. Equally, an
+	 * administrator who fills this screen in and never changes the routing has
+	 * not enabled OTP delivery, and nothing else on the page would say so.
+	 */
+	private function automation_role(): void {
+		$routes = array();
+
+		foreach ( TransportRouter::ROUTES as $channel => $route ) {
+			if ( 'automation' === (string) Settings::get( $route['setting'], '' ) ) {
+				$routes[] = PhoneChannel::ID === $channel
+					? __( 'số điện thoại', 'smart-login' )
+					: __( 'email', 'smart-login' );
+			}
+		}
+
+		$events = count( EventBus::subscribed() );
+
+		if ( $routes ) {
+			$message = sprintf(
+				/* translators: %s: comma-separated identity channels. */
+				__( 'Đang gửi mã xác thực cho: %s.', 'smart-login' ),
+				implode( ', ', $routes )
+			);
+			$class = 'notice-success';
+		} elseif ( $events > 0 ) {
+			$message = __( 'Chỉ gửi sự kiện, không gửi mã xác thực. Để dùng làm kênh gửi mã, đổi Định tuyến ở tab Chính sách mã.', 'smart-login' );
+			$class   = 'notice-info';
+		} else {
+			$message = __( 'Chưa được dùng. Chọn sự kiện bên dưới, hoặc đổi Định tuyến ở tab Chính sách mã để kênh này gửi mã xác thực.', 'smart-login' );
+			$class   = 'notice-info';
+		}
+
+		if ( $events > 0 ) {
+			$message .= ' ' . sprintf(
+				/* translators: %d: number of subscribed events. */
+				_n( 'Đang theo dõi %d sự kiện.', 'Đang theo dõi %d sự kiện.', $events, 'smart-login' ),
+				$events
+			);
+		}
+
+		printf( '<div class="notice %s inline"><p>%s</p></div>', esc_attr( $class ), esc_html( $message ) );
 	}
 
 	private function after_section( string $section ): void {
@@ -182,6 +236,10 @@ final class SettingsScreen {
 
 			case 'email':
 				$this->tester( 'email' );
+				break;
+
+			case 'automation':
+				$this->tester( 'automation' );
 				break;
 
 			case 'dev':
@@ -242,22 +300,46 @@ final class SettingsScreen {
 		<div class="sl-tester" data-channel="<?php echo esc_attr( $transport ); ?>">
 			<p class="description">
 				<?php
-				echo 'sms' === $transport
-					? esc_html__( 'Lưu cấu hình trước, sau đó gửi một mã thật tới số điện thoại của bạn để kiểm tra.', 'smart-login' )
-					: esc_html__( 'Lưu cấu hình trước, sau đó gửi một mã thật tới email của bạn để kiểm tra.', 'smart-login' );
+				switch ( $transport ) {
+					case 'sms':
+						esc_html_e( 'Lưu cấu hình trước, sau đó gửi một mã thật tới số điện thoại của bạn để kiểm tra.', 'smart-login' );
+						break;
+
+					case 'automation':
+						esc_html_e( 'Lưu cấu hình trước. Nút này gửi một gói tin đã ký tới endpoint bất kể Định tuyến đang trỏ đâu, và không bị ngắt mạch chặn — nên nó là cách kiểm tra xem endpoint đã sống lại chưa.', 'smart-login' );
+						break;
+
+					default:
+						esc_html_e( 'Lưu cấu hình trước, sau đó gửi một mã thật tới email của bạn để kiểm tra.', 'smart-login' );
+				}
 				?>
 			</p>
 			<p>
 				<input
 					type="text"
 					class="regular-text sl-test-destination"
-					placeholder="<?php echo 'sms' === $transport ? esc_attr__( '0969789475', 'smart-login' ) : esc_attr__( 'ban@example.com', 'smart-login' ); ?>"
+					placeholder="<?php echo esc_attr( $this->tester_placeholder( $transport ) ); ?>"
 				/>
 				<button type="button" class="button sl-test-button"><?php esc_html_e( 'Gửi thử', 'smart-login' ); ?></button>
 			</p>
 			<div class="sl-test-result" hidden></div>
 		</div>
 		<?php
+	}
+
+	private function tester_placeholder( string $transport ): string {
+		switch ( $transport ) {
+			case 'sms':
+				return __( '0969789475', 'smart-login' );
+
+			case 'automation':
+				// Either shape is legitimate here: the envelope carries the
+				// channel, so the endpoint is told which one it is being handed.
+				return __( '0969789475 hoặc ban@example.com', 'smart-login' );
+
+			default:
+				return __( 'ban@example.com', 'smart-login' );
+		}
 	}
 
 	private function system_status(): void {

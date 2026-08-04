@@ -105,6 +105,40 @@ function remove_all_filters( $hook = '' ) {
 	return true;
 }
 
+/**
+ * Actions are filters in WordPress, and they are filters here for the same
+ * reason: MailTransport registers `phpmailer_init` around its own send and
+ * removes it again, and a stub that cannot express "registered, then not" cannot
+ * assert the half of 10.7 that keeps the clamp off the site's other mail.
+ */
+function add_action( $hook, $callback, $priority = 10, $accepted_args = 1 ) {
+	return add_filter( $hook, $callback, $priority, $accepted_args );
+}
+
+function remove_filter( $hook, $callback, $priority = 10 ) {
+	if ( empty( $GLOBALS['sl_filters'][ $hook ] ) ) {
+		return false;
+	}
+
+	foreach ( $GLOBALS['sl_filters'][ $hook ] as $index => $filter ) {
+		if ( $filter['cb'] == $callback ) { // phpcs:ignore WordPress.PHP.StrictComparisons -- array callables compare by value.
+			unset( $GLOBALS['sl_filters'][ $hook ][ $index ] );
+
+			return true;
+		}
+	}
+
+	return false;
+}
+
+function remove_action( $hook, $callback, $priority = 10 ) {
+	return remove_filter( $hook, $callback, $priority );
+}
+
+function has_action( $hook, $callback = false ) {
+	return has_filter( $hook, $callback );
+}
+
 function __return_true() {
 	return true;
 }
@@ -162,6 +196,12 @@ function esc_attr( $text ) {
 
 function esc_html( $text ) {
 	return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' );
+}
+
+function wp_strip_all_tags( $text, $remove_breaks = false ) {
+	$text = strip_tags( (string) $text );
+
+	return $remove_breaks ? trim( preg_replace( '/[\r\n\t ]+/', ' ', $text ) ) : $text;
 }
 
 function wp_kses_post( $text ) {
@@ -257,16 +297,28 @@ function current_time( $type, $gmt = false ) {
 	return 'timestamp' === $type ? time() : gmdate( 'Y-m-d H:i:s' );
 }
 
+/**
+ * The canned reply every outbound call receives.
+ *
+ * A 500 by default, which is what makes the captcha guard rail meaningful and
+ * what every suite written before 10.3 assumes. A test that needs a different
+ * answer assigns to $GLOBALS['sl_http_response'] and puts it back, so the
+ * unset default behaves exactly as the fixed 500 always did.
+ */
+function sl_stub_http_response() {
+	return $GLOBALS['sl_http_response'] ?? array(
+		'response' => array( 'code' => 500 ),
+		'body'     => 'gateway failure',
+	);
+}
+
 function wp_remote_request( $url, $args ) {
 	$GLOBALS['sl_http_requests'][] = array(
 		'url'  => $url,
 		'args' => $args,
 	);
 
-	return array(
-		'response' => array( 'code' => 500 ),
-		'body'     => 'gateway failure',
-	);
+	return sl_stub_http_response();
 }
 
 /**

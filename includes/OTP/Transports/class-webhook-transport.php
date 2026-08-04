@@ -190,48 +190,17 @@ class WebhookTransport implements TransportInterface {
 	/**
 	 * A 2xx is necessary but often not sufficient — several Vietnamese gateways
 	 * answer 200 with an error code in the JSON body.
+	 *
+	 * The rule itself lives in TransportProbe, shared with the automation
+	 * transport: two copies of a success test is how one of them ends up being
+	 * the only one anybody fixes.
 	 */
 	private function is_success( $response ): bool {
-		$status = (int) wp_remote_retrieve_response_code( $response );
-
-		if ( $status < 200 || $status >= 300 ) {
-			return false;
-		}
-
-		$path = trim( (string) Settings::get( 'sms.success_path', '' ) );
-
-		if ( '' === $path ) {
-			return true;
-		}
-
-		$decoded = json_decode( (string) wp_remote_retrieve_body( $response ), true );
-
-		if ( ! is_array( $decoded ) ) {
-			return false;
-		}
-
-		$actual   = $this->dig( $decoded, $path );
-		$expected = (string) Settings::get( 'sms.success_value', '' );
-
-		return null !== $actual && (string) $actual === $expected;
-	}
-
-	/**
-	 * Read a dotted path out of a decoded JSON structure.
-	 *
-	 * @return mixed|null
-	 */
-	private function dig( array $data, string $path ) {
-		$cursor = $data;
-
-		foreach ( explode( '.', $path ) as $segment ) {
-			if ( ! is_array( $cursor ) || ! array_key_exists( $segment, $cursor ) ) {
-				return null;
-			}
-			$cursor = $cursor[ $segment ];
-		}
-
-		return is_scalar( $cursor ) ? $cursor : null;
+		return TransportProbe::matches_success(
+			$response,
+			(string) Settings::get( 'sms.success_path', '' ),
+			(string) Settings::get( 'sms.success_value', '' )
+		);
 	}
 
 	private function explain_failure( int $status, string $body ): string {
@@ -268,42 +237,15 @@ class WebhookTransport implements TransportInterface {
 	 * Build a shareable copy of the request with secrets and the code masked.
 	 */
 	private function redact_request( string $url, array $args, string $code ): array {
-		$headers = array();
-
-		foreach ( (array) ( $args['headers'] ?? array() ) as $key => $value ) {
-			$headers[ $key ] = $this->is_secret_header( (string) $key )
-				? '***'
-				: $this->redact( (string) $value, $code );
-		}
-
 		return array(
 			'method'  => $args['method'] ?? 'POST',
-			'url'     => $this->redact( $url, $code ),
-			'headers' => $headers,
-			'body'    => $this->redact( (string) ( $args['body'] ?? '' ), $code ),
+			'url'     => TransportProbe::redact( $url, $code ),
+			'headers' => TransportProbe::redact_headers( (array) ( $args['headers'] ?? array() ), $code ),
+			'body'    => TransportProbe::redact( (string) ( $args['body'] ?? '' ), $code ),
 		);
 	}
 
-	private function is_secret_header( string $name ): bool {
-		$name = strtolower( $name );
-
-		foreach ( array( 'authorization', 'api-key', 'apikey', 'token', 'secret', 'password' ) as $needle ) {
-			if ( false !== strpos( $name, $needle ) ) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	/**
-	 * Never echo a live OTP back into an admin screen or a log file.
-	 */
 	private function redact( string $text, string $code ): string {
-		if ( '' === $code ) {
-			return $text;
-		}
-
-		return str_replace( $code, str_repeat( '*', strlen( $code ) ), $text );
+		return TransportProbe::redact( $text, $code );
 	}
 }

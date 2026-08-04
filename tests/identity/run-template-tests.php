@@ -393,6 +393,13 @@ $sl_uncovered_ok = array(
 
 	// form-edit-account was here until 8.2 and now has a fixture instead.
 	'woocommerce/form-login'     => 'needs a WooCommerce runtime',
+
+	// Not a page: it is the wrapper for an HTML email, and it is rendered — by
+	// tests/mail/run-template-tests.php, which drives it through MailTransport
+	// and asserts the marker, the accent, the footer and the code all arrive.
+	// Excluded from this suite because a fixture here would render it into a
+	// browser context it never sees, not because nothing renders it.
+	'mail/layout'                => 'covered by the mail suite, not a page template',
 );
 
 $sl_on_disk = array();

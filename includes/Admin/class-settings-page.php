@@ -177,15 +177,58 @@ class SettingsPage {
 	 * The tab strip, shared by every settings screen.
 	 */
 	public static function nav( string $active ): void {
+		$parents = FieldRegistry::tab_parents();
+		$family  = FieldRegistry::parent_tab( $active );
 		?>
 		<nav class="nav-tab-wrapper">
-			<?php foreach ( self::tabs() as $slug => $label ) : ?>
+			<?php
+			foreach ( self::tabs() as $slug => $label ) :
+				// Children are not in the top strip; six entries became nine when
+				// the delivery screen split, and a nine-item strip is worse than
+				// the page it was meant to fix.
+				if ( isset( $parents[ $slug ] ) ) {
+					continue;
+				}
+				?>
 				<a
 					href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::SLUG . '&tab=' . $slug ) ); ?>"
-					class="nav-tab <?php echo $slug === $active ? 'nav-tab-active' : ''; ?>"
+					class="nav-tab <?php echo $slug === $family ? 'nav-tab-active' : ''; ?>"
 				><?php echo esc_html( $label ); ?></a>
 			<?php endforeach; ?>
 		</nav>
+		<?php
+		self::sub_nav( $family, $active );
+	}
+
+	/**
+	 * The second level, when the active tab belongs to a family.
+	 *
+	 * The parent is the first entry in its own sub-nav rather than a heading
+	 * above it: it is a screen with fields and a Save button like the others, and
+	 * presenting it as a container would leave no way to reach it.
+	 */
+	private static function sub_nav( string $family, string $active ): void {
+		$children = array_keys( FieldRegistry::tab_parents(), $family, true );
+
+		if ( ! $children ) {
+			return;
+		}
+
+		$siblings = array_merge( array( $family ), $children );
+		$last     = array_key_last( $siblings );
+		?>
+		<ul class="subsubsub sl-subnav">
+			<?php foreach ( $siblings as $index => $slug ) : ?>
+				<li>
+					<a
+						href="<?php echo esc_url( admin_url( 'admin.php?page=' . self::SLUG . '&tab=' . $slug ) ); ?>"
+						class="<?php echo $slug === $active ? 'current' : ''; ?>"
+					><?php echo esc_html( FieldRegistry::self_label( $slug ) ); ?></a>
+					<?php echo $index === $last ? '' : ' |'; ?>
+				</li>
+			<?php endforeach; ?>
+		</ul>
+		<div style="clear:both"></div>
 		<?php
 	}
 

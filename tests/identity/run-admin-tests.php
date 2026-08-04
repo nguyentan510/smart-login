@@ -214,14 +214,144 @@ sl_check(
 	$delivery_after['status'] ?? 'missing'
 );
 
+/*
+ * 10.5. The two cases above stay exactly as they were — they still describe
+ * valid configurations — and these extend them to the one 10.1 made possible:
+ * a channel whose route points somewhere other than its built-in transport.
+ *
+ * Before 10.5 this check constructed WebhookTransport and MailTransport
+ * directly, so it answered about transports the site might not be using. Here
+ * the SMS gateway is configured and healthy, and the site is still broken.
+ */
+Settings::update(
+	array(
+		'identity.mode'        => 'both',
+		'sms.enabled'          => 1,
+		'sms.url'              => 'https://gateway.example.test/send',
+		'email.enabled'        => 1,
+		'delivery.route_phone' => 'automation',
+		'delivery.route_email' => 'email',
+		'automation.url'       => '',
+	)
+);
+Settings::store_secret( 'automation.secret', '' );
+
+$routed = null;
+
+foreach ( ( new \SmartLogin\Admin\Readiness() )->checks() as $check ) {
+	if ( 'delivery' === $check['key'] ) {
+		$routed = $check;
+	}
+}
+
+sl_check(
+	'a channel routed at an unconfigured transport is reported as blocking',
+	\SmartLogin\Admin\Readiness::FAIL,
+	$routed['status'] ?? 'missing'
+);
+
+sl_assert(
+	'and the detail names the routed transport, not the built-in one',
+	false !== strpos( (string) ( $routed['detail'] ?? '' ), 'automation' ),
+	'"Chưa cấu hình: SMS" would send the administrator to gateway settings that are already correct. Detail was: ' . ( $routed['detail'] ?? '' )
+);
+
+Settings::update( array( 'automation.url' => 'https://hooks.example.test/otp' ) );
+Settings::store_secret( 'automation.secret', 'admin-suite-signing-secret' );
+
+$routed_after = null;
+
+foreach ( ( new \SmartLogin\Admin\Readiness() )->checks() as $check ) {
+	if ( 'delivery' === $check['key'] ) {
+		$routed_after = $check;
+	}
+}
+
+sl_assert(
+	'configuring the routed transport clears it',
+	\SmartLogin\Admin\Readiness::FAIL !== ( $routed_after['status'] ?? 'missing' ),
+	'Still blocking after the endpoint was configured: ' . ( $routed_after['detail'] ?? '' )
+);
+
+// ---------------------------------------------------------------------
+sl_section( 'The spend estimate follows the channel, not the transport' );
+
+/*
+ * The stub $wpdb returns one global whatever the query, so counting by channel
+ * and counting by transport are indistinguishable through it. Readiness takes
+ * its repository by constructor for that reason, the same seam RateLimiter
+ * already offered.
+ */
+class SL_Spend_Repository extends \SmartLogin\OTP\OtpRepository {
+
+	/** @var string[] */
+	public $asked = array();
+
+	public function count_recent_all( int $seconds ): int {
+		return 3;
+	}
+
+	public function count_recent_by_channel( string $channel, int $seconds ): int {
+		$this->asked[] = 'by_channel:' . $channel;
+
+		return \SmartLogin\Identity\Channels\PhoneChannel::ID === $channel ? 3 : 0;
+	}
+
+	public function count_recent_by_transport( string $transport, int $seconds ): int {
+		$this->asked[] = 'by_transport:' . $transport;
+
+		return 0;
+	}
+}
+
+// Three phone codes carried by the automation transport: no row says
+// transport = 'sms', so the pre-10.5 counter priced them all at nothing while
+// the messages went out and the bill arrived.
+Settings::update(
+	array(
+		'otp.sms_unit_cost'          => 350,
+		'security.max_per_site_hour' => 100,
+	)
+);
+
+$spend_repo = new SL_Spend_Repository();
+$budget     = null;
+
+foreach ( ( new \SmartLogin\Admin\Readiness( $spend_repo ) )->checks() as $check ) {
+	if ( 'budget' === $check['key'] ) {
+		$budget = $check;
+	}
+}
+
+sl_assert(
+	'the estimate prices phone codes whichever transport carried them',
+	(bool) preg_match( '/1[.,]050/', (string) ( $budget['detail'] ?? '' ) ),
+	'3 codes at 350 should read 1.050 đ. Detail was: ' . ( $budget['detail'] ?? '' )
+);
+
+sl_assert(
+	'and it asks by channel rather than by transport',
+	in_array( 'by_channel:phone', $spend_repo->asked, true )
+		&& ! in_array( 'by_transport:sms', $spend_repo->asked, true ),
+	'Counters asked: ' . implode( ', ', $spend_repo->asked )
+);
+
+Settings::store_secret( 'automation.secret', '' );
+
 // ---------------------------------------------------------------------
 sl_section( 'Choosing a gateway replaces eleven fields with three' );
 
 // Through sanitize() and into the option, which is the path a real save takes —
 // update() plants values directly and would skip the preset derivation entirely.
+/*
+ * Two saves, not one. Since 10.6 the gateway lives on `delivery-sms` and the OTP
+ * profile on `delivery`, and a save writes only the fields carried by the tab it
+ * names — so posting both together would silently drop half of it. That is the
+ * boundary the split exists to create, asserted here by relying on it.
+ */
 $saved_delivery = Settings::sanitize(
 	array(
-		Settings::TAB_FIELD => 'delivery',
+		Settings::TAB_FIELD => 'delivery-sms',
 		'sms'               => array(
 			'enabled'     => 1,
 			'preset'      => 'esms',
@@ -231,12 +361,28 @@ $saved_delivery = Settings::sanitize(
 				'brandname'  => 'SHOPTEST',
 			),
 		),
-		'otp'               => array( 'preset' => 'balanced' ),
 	)
 );
 
 update_option( Settings::OPTION, $saved_delivery );
 Settings::flush_cache();
+
+update_option(
+	Settings::OPTION,
+	Settings::sanitize(
+		array(
+			Settings::TAB_FIELD => 'delivery',
+			'otp'               => array( 'preset' => 'balanced' ),
+		)
+	)
+);
+Settings::flush_cache();
+
+sl_check(
+	'the gateway saved from another tab survives',
+	'esms',
+	Settings::get( 'sms.preset' )
+);
 
 sl_check( 'saving a preset derives the gateway URL', 'https://rest.esms.vn/MainService.svc/json/SendMultipleMessage_V4_post_json/', Settings::get( 'sms.url' ) );
 sl_check( 'saving a preset derives the success condition', 'CodeResult', Settings::get( 'sms.success_path' ) );
@@ -244,7 +390,7 @@ sl_check( 'saving a preset applies the OTP profile', 300, Settings::get_int( 'ot
 
 $delivery_html = sl_capture(
 	static function () use ( $screen ): void {
-		$screen->render( 'delivery' );
+		$screen->render( 'delivery-sms' );
 	}
 )['html'];
 
@@ -339,8 +485,12 @@ Settings::update(
 );
 
 foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
-	if ( 'delivery' === $tab ) {
-		continue; // The tab that owns the credential is allowed to show it.
+	if ( 'delivery-sms' === $tab ) {
+		// The tab that owns the credential is allowed to show it. Since 10.6
+		// that is the SMS screen, not the whole delivery family — which makes
+		// this assertion stricter than it was: the three sibling tabs are now
+		// checked rather than exempted along with it.
+		continue;
 	}
 
 	$rendered = sl_capture(
@@ -379,15 +529,349 @@ $nav = sl_capture(
 
 sl_assert( 'nav renders', null === $nav['error'], (string) $nav['error'] );
 
+/*
+ * Rendered once per tab, not once in total. Since 10.6 the second-level tabs
+ * appear only while their family is open, so a single render of one tab could
+ * never link them all — and asserting against that render would have meant
+ * either deleting the rule or exempting the new tabs from it.
+ *
+ * The property is unchanged and now checked more thoroughly: a tab that exists
+ * in the registry must be reachable from the navigation drawn when it is the
+ * active tab. A tab reachable from nowhere is a tab whose settings can only be
+ * saved by typing the URL.
+ */
 $unlinked = array();
 
 foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
-	if ( false === strpos( $nav['html'], 'tab=' . $tab ) ) {
+	$strip = sl_capture(
+		static function () use ( $tab ): void {
+			SettingsPage::nav( $tab );
+		}
+	);
+
+	if ( null !== $strip['error'] || false === strpos( $strip['html'], 'tab=' . $tab . '"' ) ) {
 		$unlinked[] = $tab;
 	}
 }
 
-sl_check( 'every tab is reachable from the strip', array(), $unlinked );
+sl_check( 'every tab is reachable from the navigation', array(), $unlinked );
+
+// A child tab must also link back to the rest of its family, or the split has
+// produced four screens with no way between them.
+$sub = sl_capture(
+	static function (): void {
+		SettingsPage::nav( 'delivery-automation' );
+	}
+);
+
+$siblings_missing = array();
+
+foreach ( array( 'delivery', 'delivery-sms', 'delivery-email' ) as $sibling ) {
+	if ( false === strpos( $sub['html'], 'tab=' . $sibling . '"' ) ) {
+		$siblings_missing[] = $sibling;
+	}
+}
+
+sl_check( 'a second-level tab links to its siblings', array(), $siblings_missing );
+
+sl_assert(
+	'and the parent is highlighted in the top strip',
+	false !== strpos( $sub['html'], 'nav-tab nav-tab-active' ),
+	'With no top-level tab marked active, the whole delivery family looks unselected while one of its screens is open.'
+);
+
+// ---------------------------------------------------------------------
+sl_section( 'Splitting the delivery screen kept every invariant' );
+
+/*
+ * The property FieldRegistry exists to guarantee, checked across the split
+ * rather than within one tab: a field is drawn by exactly one screen. Four
+ * screens where there was one is four chances for a field to be claimed twice
+ * or by nobody, and both failures are silent.
+ */
+$drawn_on = array();
+
+foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
+	$html = sl_capture(
+		static function () use ( $screen, $tab ): void {
+			$screen->render( $tab );
+		}
+	)['html'];
+
+	foreach ( FieldRegistry::all() as $path => $field ) {
+		if ( '' === (string) ( $field['tab'] ?? '' ) || ! empty( $field['conditional'] ) ) {
+			continue;
+		}
+
+		if ( false !== strpos( $html, 'name="' . \SmartLogin\Admin\FieldRenderer::name( $path ) ) ) {
+			$drawn_on[ $path ][] = $tab;
+		}
+	}
+}
+
+$wrong_home = array();
+
+foreach ( FieldRegistry::all() as $path => $field ) {
+	if ( '' === (string) ( $field['tab'] ?? '' ) || ! empty( $field['conditional'] ) ) {
+		continue;
+	}
+
+	if ( array( $field['tab'] ) !== ( $drawn_on[ $path ] ?? array() ) ) {
+		$wrong_home[] = $path . ' → ' . implode( ',', $drawn_on[ $path ] ?? array( 'nowhere' ) );
+	}
+}
+
+sl_check( 'every field is drawn by exactly the tab that claims it', array(), $wrong_home );
+
+// Saving one screen of a family must not disturb its siblings. This is the
+// whole reason each is a real tab rather than a JS filter over one form.
+Settings::update(
+	array(
+		'automation.url'     => 'https://hooks.example.test/keep-me',
+		'automation.timeout' => 9,
+		'email.subject'      => 'Giữ nguyên {{code}}',
+		'email.is_html'      => 1,
+	)
+);
+
+$before_siblings = array(
+	'automation.url'     => Settings::get( 'automation.url' ),
+	'automation.timeout' => Settings::get_int( 'automation.timeout' ),
+	'email.subject'      => Settings::get( 'email.subject' ),
+	'email.is_html'      => Settings::get_int( 'email.is_html' ),
+);
+
+update_option(
+	Settings::OPTION,
+	Settings::sanitize(
+		array(
+			Settings::TAB_FIELD => 'delivery-sms',
+			'sms'               => array(
+				'enabled' => 1,
+				'preset'  => \SmartLogin\GatewayPresets::CUSTOM,
+				'url'     => 'https://gateway.example.test/changed',
+			),
+		)
+	)
+);
+Settings::flush_cache();
+
+$disturbed = array();
+
+foreach ( $before_siblings as $path => $value ) {
+	$now = is_int( $value ) ? Settings::get_int( $path ) : Settings::get( $path );
+
+	if ( $now !== $value ) {
+		$disturbed[] = $path;
+	}
+}
+
+sl_check( 'saving the SMS screen leaves its sibling screens untouched', array(), $disturbed );
+sl_check( 'and the screen that was saved did change', 'https://gateway.example.test/changed', Settings::get( 'sms.url' ) );
+
+// ---------------------------------------------------------------------
+sl_section( 'A fresh install opens on the easy gateway screen' );
+
+// The default moved off `custom`, which used to present thirteen raw fields
+// including a free-text JSON body to whoever had configured the least.
+sl_check( 'the shipped default preset is the generic webhook', 'generic', FieldRegistry::get( 'sms.preset' )['default'] );
+
+delete_option( Settings::OPTION );
+Settings::flush_cache();
+
+$fresh = sl_capture(
+	static function () use ( $screen ): void {
+		$screen->render( 'delivery-sms' );
+	}
+)['html'];
+
+sl_assert(
+	'a fresh install asks for one endpoint, not a JSON body',
+	false !== strpos( $fresh, \SmartLogin\Admin\FieldRenderer::name( 'sms.credentials' ) . '[endpoint]' ),
+	'The generic preset asks for a single URL; anything else means the default did not take.'
+);
+
+// A site that has already chosen `custom` keeps it: sanitize() writes stored
+// values, so the new default only reaches installs that have never saved.
+update_option(
+	Settings::OPTION,
+	Settings::sanitize(
+		array(
+			Settings::TAB_FIELD => 'delivery-sms',
+			'sms'               => array( 'preset' => \SmartLogin\GatewayPresets::CUSTOM ),
+		)
+	)
+);
+Settings::flush_cache();
+
+sl_check( 'an existing choice of Tuỳ chỉnh survives the new default', \SmartLogin\GatewayPresets::CUSTOM, Settings::get( 'sms.preset' ) );
+
+// ---------------------------------------------------------------------
+sl_section( 'The mail screen' );
+
+delete_option( Settings::OPTION );
+Settings::flush_cache();
+
+$mail_html = sl_capture(
+	static function () use ( $screen ): void {
+		$screen->render( 'delivery-mail' );
+	}
+);
+
+sl_assert( 'the mail screen renders', null === $mail_html['error'], (string) $mail_html['error'] );
+
+$mail_markup = $mail_html['html'];
+
+// Grouped the way an administrator reads it, not the way the registry stores it.
+$section_order = array();
+
+foreach ( array( 'Mẫu mặc định', 'Mã xác thực', 'Cảnh báo quản trị', 'Giao diện email HTML' ) as $heading ) {
+	$section_order[ $heading ] = strpos( $mail_markup, $heading );
+}
+
+sl_check(
+	'every group has a heading',
+	array(),
+	array_keys( array_filter( $section_order, static fn( $at ): bool => false === $at ) )
+);
+
+$ordered = array_values( $section_order );
+sort( $ordered );
+
+sl_check(
+	'and they appear in reading order',
+	$ordered,
+	array_values( $section_order )
+);
+
+/*
+ * The property this screen exists for: an empty box must read as "inheriting
+ * this" rather than as "this email has no subject". Without it an administrator
+ * faced with eight blank fields pastes the default into all of them and loses
+ * the inheritance the registry was built to provide.
+ */
+sl_assert(
+	'an un-overridden template shows what it will actually send',
+	false !== strpos( $mail_markup, 'placeholder="Mã đặt lại mật khẩu {{code}} - {{site_name}}"' ),
+	'The recover subject box is empty and should be showing its inherited value as a placeholder.'
+);
+
+// Scoped tokens, beside the body they belong to.
+sl_assert(
+	'each body offers the tokens its own message declares',
+	substr_count( $mail_markup, 'sl-message-tokens' ) >= 6,
+	'Six messages have a body field; each should carry its own collapsed token list.'
+);
+
+sl_assert(
+	'and an operational token is not offered beside an OTP body',
+	substr_count( $mail_markup, '{{ceiling}}' ) === substr_count( $mail_markup, '{{halt_minutes}}' )
+		&& substr_count( $mail_markup, '{{ceiling}}' ) > 0
+		&& substr_count( $mail_markup, '{{ceiling}}' ) < 6,
+	'{{ceiling}} belongs to the budget alert alone. Appearing beside every body is the silent-empty-string defect waiting to happen.'
+);
+
+// Saving one screen of the delivery family must not disturb the others — the
+// same property 10.6 established, now with a fifth screen in the family.
+Settings::update(
+	array(
+		'sms.url'        => 'https://gateway.example.test/keep',
+		'automation.url' => 'https://hooks.example.test/keep',
+	)
+);
+
+update_option(
+	Settings::OPTION,
+	Settings::sanitize(
+		array(
+			Settings::TAB_FIELD => 'delivery-mail',
+			'email'             => array(
+				'templates' => array(
+					'recover' => array( 'subject' => 'Đặt lại: {{code}}' ),
+				),
+			),
+		)
+	)
+);
+Settings::flush_cache();
+
+sl_check( 'saving the mail screen leaves the SMS gateway alone', 'https://gateway.example.test/keep', Settings::get( 'sms.url' ) );
+sl_check( 'and the automation endpoint alone', 'https://hooks.example.test/keep', Settings::get( 'automation.url' ) );
+sl_check( 'and the override it was given is stored', 'Đặt lại: {{code}}', Settings::get( 'email.templates.recover.subject' ) );
+
+// ---------------------------------------------------------------------
+sl_section( 'The provider badge cannot disagree with the runtime' );
+
+/*
+ * The card read ProviderCredentials::is_configured() — credentials only — while
+ * what decides whether a provider actually runs is is_available(), which is
+ * `enabled && is_configured` (class-google-provider.php:32-35). A site with
+ * credentials saved and Kích hoạt left off therefore showed a green **Sẵn sàng**
+ * while no button rendered on the front end.
+ *
+ * Asserted as agreement rather than by matching a string: the badge must move
+ * whenever `available()` does, whatever it happens to say.
+ */
+$badge_states = array();
+
+foreach (
+	array(
+		'off, no credentials'  => array( 'enabled' => 0, 'client_id' => '' ),
+		'off, credentials set' => array( 'enabled' => 0, 'client_id' => 'client-id-here' ),
+		'on, no credentials'   => array( 'enabled' => 1, 'client_id' => '' ),
+		'on, credentials set'  => array( 'enabled' => 1, 'client_id' => 'client-id-here' ),
+	) as $label => $state
+) {
+	Settings::update(
+		array(
+			'providers.google.enabled'   => $state['enabled'],
+			'providers.google.client_id' => $state['client_id'],
+		)
+	);
+
+	if ( '' !== $state['client_id'] ) {
+		\SmartLogin\Auth\Providers\ProviderCredentials::store_secret( 'google', 'google-secret' );
+	} else {
+		\SmartLogin\Auth\Providers\ProviderCredentials::clear_secret( 'google' );
+	}
+
+	$card = sl_capture(
+		static function () use ( $screen ): void {
+			$screen->render( 'providers' );
+		}
+	)['html'];
+
+	$runtime_ready = array_key_exists( 'google', ( new \SmartLogin\Auth\Providers\ProviderRegistry() )->available() );
+	$badge_ready   = false !== strpos( $card, 'sl-provider-status is-ready' );
+
+	$badge_states[ $label ] = array(
+		'runtime' => $runtime_ready,
+		'badge'   => $badge_ready,
+	);
+}
+
+$disagreements = array();
+
+foreach ( $badge_states as $label => $state ) {
+	if ( $state['runtime'] !== $state['badge'] ) {
+		$disagreements[] = sprintf(
+			'%s — runtime %s, badge %s',
+			$label,
+			$state['runtime'] ? 'available' : 'unavailable',
+			$state['badge'] ? 'ready' : 'not ready'
+		);
+	}
+}
+
+sl_check( 'the ready badge agrees with ProviderRegistry::available()', array(), $disagreements );
+
+// Three states, not two: "credentials saved but switched off" is the one the
+// old badge could not express, and it is the one an administrator hits.
+sl_assert(
+	'a configured but disabled provider says so rather than showing green',
+	false === $badge_states['off, credentials set']['badge'],
+	'This is the defect: credentials present, Kích hoạt off, and the card claimed Sẵn sàng while no button rendered anywhere.'
+);
 
 // ---------------------------------------------------------------------
 sl_summary( 'Admin screens' );

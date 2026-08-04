@@ -137,6 +137,12 @@
 	background: #fcf0f1;
 }
 
+/* Configured but switched off: not an error, and deliberately not green. */
+.smart-login-admin .sl-provider-status.is-idle {
+	color: #8a5700;
+	background: #fcf5e6;
+}
+
 .smart-login-admin .sl-provider-tabs {
 	display: flex;
 	gap: 22px;

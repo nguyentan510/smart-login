@@ -96,9 +96,6 @@ class OtpService {
 		$ttl       = max( 60, Settings::get_int( 'otp.ttl', 300 ) );
 		$code      = $this->generate_code();
 
-		// Only the newest code for a destination/intent may be redeemed.
-		$this->repo->consume_open_codes( $destination, $intent );
-
 		$token   = bin2hex( random_bytes( 32 ) );
 		$now     = time();
 		$expires = $now + $ttl;
@@ -107,7 +104,14 @@ class OtpService {
 			array(
 				'token'            => $token,
 				'intent'           => $intent,
-				'identity_channel' => (string) ( $payload['channel'] ?? $ctx['identity_channel'] ?? '' ),
+				// Derived when nothing supplies it, rather than stored empty.
+				// This column used to be blank on every code issued by a handler
+				// that did not happen to pass a claim — login and password reset
+				// among them — which left anything counting by channel guessing
+				// from the destination string later. Asking the routing authority
+				// keeps that test in the one file allowed to make it.
+				'identity_channel' => (string) ( $payload['channel'] ?? $ctx['identity_channel'] ?? '' )
+					?: TransportRouter::channel_for( $destination ),
 				'transport'        => $transport,
 				'destination'      => $destination,
 				'code_hash'        => $this->hash_code( $code ),
@@ -138,7 +142,9 @@ class OtpService {
 		if ( is_wp_error( $sent ) ) {
 			// Roll the row back so the user is not stranded on an OTP screen
 			// waiting for a message that was never sent — and so the failed
-			// attempt does not eat into their hourly quota.
+			// attempt does not eat into their hourly quota. Nothing else is
+			// undone here, because nothing else has happened yet: the codes
+			// already in the user's hands are retired below, on success only.
 			$this->repo->delete( $row_id );
 
 			AuditLog::record(
@@ -153,6 +159,13 @@ class OtpService {
 
 			return $sent;
 		}
+
+		// Only now is the newest code the only one that works. This used to run
+		// before the send, which read as "keep the table tidy" and behaved as
+		// "a gateway failure takes the user's working code with it": the old row
+		// was consumed, the new one was rolled back, and the screen then told
+		// them the code they were holding had already been used.
+		$this->repo->consume_open_codes( $destination, $intent, $row_id );
 
 		AuditLog::record(
 			AuditLog::OTP_SENT,

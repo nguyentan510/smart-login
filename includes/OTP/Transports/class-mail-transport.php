@@ -9,6 +9,8 @@
 namespace SmartLogin\OTP\Transports;
 
 use SmartLogin\Identity\UserManager;
+use SmartLogin\Mail\MailLayout;
+use SmartLogin\Mail\MailRegistry;
 use SmartLogin\OTP\Placeholders;
 use SmartLogin\Settings;
 use WP_Error;
@@ -46,9 +48,14 @@ class MailTransport implements TransportInterface {
 			);
 		}
 
+		// Which wording, chosen by intent, is the registry's business; this
+		// transport's job is still exactly one thing — hand a rendered subject
+		// and body to wp_mail(). A message added later costs no change here.
+		$message = MailRegistry::resolve_intent( (string) ( $ctx['intent'] ?? '' ) );
+
 		$map     = Placeholders::build( $destination, $code, $ctx );
-		$subject = Placeholders::render( (string) Settings::get( 'email.subject', '' ), $map );
-		$body    = Placeholders::render( (string) Settings::get( 'email.body', '' ), $map );
+		$subject = Placeholders::render( $message['subject'], $map );
+		$body    = Placeholders::render( $message['body'], $map );
 		$is_html = Settings::is_on( 'email.is_html' );
 
 		$headers = array();
@@ -63,6 +70,9 @@ class MailTransport implements TransportInterface {
 
 		if ( $is_html ) {
 			$headers[] = 'Content-Type: text/html; charset=UTF-8';
+			// Wrapped after rendering, so the layout sees the finished text and
+			// the template author never has to think about `<html>`.
+			$body = MailLayout::wrap( $body, $subject );
 		} else {
 			$body = wp_strip_all_tags( $body );
 		}
@@ -85,7 +95,16 @@ class MailTransport implements TransportInterface {
 			$ctx
 		);
 
-		$sent = wp_mail( $destination, $mail['subject'], $mail['body'], $mail['headers'] );
+		add_action( 'phpmailer_init', array( $this, 'clamp_timeout' ) );
+
+		try {
+			$sent = wp_mail( $destination, $mail['subject'], $mail['body'], $mail['headers'] );
+		} finally {
+			// Removed whatever happened. The ceiling is right for a six-digit
+			// code and wrong for an invoice with attachments, and the site's
+			// other mail is not this transport's to reconfigure.
+			remove_action( 'phpmailer_init', array( $this, 'clamp_timeout' ) );
+		}
 
 		if ( ! $sent ) {
 			return new WP_Error(
@@ -95,5 +114,28 @@ class MailTransport implements TransportInterface {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Give the SMTP send the ceiling the HTTP send has had since 9.3.
+	 *
+	 * PHPMailer defaults to `Timeout` and `Timelimit` of 300 seconds, so one
+	 * unreachable mail server can hold a PHP worker for five minutes — twenty
+	 * times what WebhookTransport allows a gateway, on the channel that is on by
+	 * default. The circuit breaker does not cover this: it bounds how often a
+	 * dead channel is called, not how long a single call may take, so the first
+	 * five failures that open it can occupy a worker for a quarter of an hour
+	 * between them.
+	 *
+	 * @param object $mailer PHPMailer instance, typed loosely so the class need
+	 *                       not be loaded in test contexts.
+	 */
+	public function clamp_timeout( $mailer ): void {
+		if ( ! is_object( $mailer ) ) {
+			return;
+		}
+
+		$mailer->Timeout   = WebhookTransport::MAX_TIMEOUT; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+		$mailer->Timelimit = WebhookTransport::MAX_TIMEOUT; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 	}
 }

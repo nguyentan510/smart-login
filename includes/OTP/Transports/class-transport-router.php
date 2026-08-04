@@ -7,6 +7,7 @@
 
 namespace SmartLogin\OTP\Transports;
 
+use SmartLogin\Settings;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
@@ -18,8 +19,9 @@ class TransportRouter {
 
 	public function __construct( ?array $transports = null ) {
 		$this->transports = $transports ?? array(
-			'sms'   => new WebhookTransport(),
-			'email' => new MailTransport(),
+			'sms'        => new WebhookTransport(),
+			'email'      => new MailTransport(),
+			'automation' => new AutomationTransport(),
 		);
 
 		/**
@@ -35,10 +37,50 @@ class TransportRouter {
 	}
 
 	/**
-	 * Email addresses go by email; everything else is a phone number.
+	 * Which transport serves each identity channel, and what to fall back to.
+	 *
+	 * The fallback is not redundant with the field defaults. A stored option can
+	 * name a transport that a filter used to register and no longer does, and
+	 * resolving to the built-in beats resolving to nothing at all.
+	 */
+	const ROUTES = array(
+		'phone' => array(
+			'setting'  => 'delivery.route_phone',
+			'fallback' => 'sms',
+		),
+		'email' => array(
+			'setting'  => 'delivery.route_email',
+			'fallback' => 'email',
+		),
+	);
+
+	/**
+	 * Which identity channel a destination belongs to.
+	 *
+	 * A property of the identifier — an address containing `@` genuinely is an
+	 * email identity — and therefore still decided here rather than configured.
+	 * What used to be decided here as well, and is not any more, is how the code
+	 * travels.
+	 */
+	public static function channel_for( string $destination ): string {
+		return ( false !== strpos( $destination, '@' ) ) ? 'email' : 'phone';
+	}
+
+	/**
+	 * Which transport carries a code to this destination.
+	 *
+	 * Until 10.1 this answered from the shape of the destination alone, so no
+	 * site could point a channel anywhere but the one built-in transport for it —
+	 * and `smart_login_otp_transports` could register transports that nothing
+	 * would ever route to. See docs/delivery-routing.md D1.
 	 */
 	public function transport_for( string $destination ): string {
-		return ( false !== strpos( $destination, '@' ) ) ? 'email' : 'sms';
+		$route = self::ROUTES[ self::channel_for( $destination ) ];
+
+		// Read by variable, not by literal: the path is chosen by the channel.
+		$routed = (string) Settings::get( $route['setting'], '' );
+
+		return $this->get( $routed ) ? $routed : $route['fallback'];
 	}
 
 	public function get( string $id ): ?TransportInterface {

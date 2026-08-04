@@ -98,6 +98,27 @@ $suites = array(
 		'file' => 'security/run-abuse-tests.php',
 		'kind' => 'required',
 	),
+	array(
+		// Phase 10. Landed red at 10.0 before any production file moved, with
+		// four rules reporting PENDING rather than passing vacuously — a rule
+		// that passes for want of a subject states the opposite of the truth.
+		// 10.1, 10.2 and 10.7 turned the last failing one green, so it is
+		// promoted here for the reason Phase 5 promoted the identity suites: a
+		// passing suite left non-blocking can only serve to hide the next
+		// regression. The remaining PENDINGs are 10.3 and 10.4 and do not block.
+		'name' => 'Delivery routing',
+		'file' => 'delivery/run-routing-tests.php',
+		'kind' => 'required',
+	),
+	array(
+		// Phase 11, landed red at 11.0 before any production file moved. Two
+		// rules fail on defects in the tree; three report PENDING rather than
+		// passing for want of a subject; one pins behaviour that already holds,
+		// so 11.2 cannot quietly break it. Promoted when it goes green.
+		'name' => 'Mail templates',
+		'file' => 'mail/run-template-tests.php',
+		'kind' => 'spec',
+	),
 );
 
 $results  = array();
