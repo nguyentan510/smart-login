@@ -82,6 +82,14 @@ final class SettingsScreen {
 	private function section( string $tab, string $section, array $fields ): void {
 		$labels = FieldRegistry::sections();
 
+		// Drawn by the provider cards, above the grid it governs, since 12.1 —
+		// so this screen must not also draw it below. The registry row keeps its
+		// section, because the section is still what groups it; only who renders
+		// it changed.
+		if ( 'linking' === $section && 'providers' === $tab ) {
+			return;
+		}
+
 		printf( '<h2>%s</h2>', esc_html( $labels[ $section ] ?? $section ) );
 
 		$this->before_section( $section );
@@ -89,7 +97,7 @@ final class SettingsScreen {
 		// The provider cards carry their own credential inputs and callback URLs,
 		// so they replace the table rather than sitting beside it.
 		if ( 'provider' === $section ) {
-			( new ProviderCards() )->render( $fields );
+			( new ProviderCards() )->render( FieldRegistry::for_tab( $tab ) );
 			$this->after_section( $section );
 			return;
 		}

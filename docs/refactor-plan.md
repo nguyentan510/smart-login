@@ -1009,11 +1009,11 @@ sub-phase. **Status lives here and only here.**
 
 ### Sub-phases
 
-- [ ] **12.0** [Guard rails](provider-surface/12.0-guard-rails.md) — three rules,
+- [x] **12.0** [Guard rails](provider-surface/12.0-guard-rails.md) — three rules,
       landed red, into the admin suite rather than a fourth suite of its own.
       Rule 3 must report PENDING rather than passing for want of a subject: the
       mistake 10.0 made and 11.0 repeated
-- [ ] **12.1** [Card layout](provider-surface/12.1-card-layout.md) — the master
+- [x] **12.1** [Card layout](provider-surface/12.1-card-layout.md) — the master
       switch moves beside the badge that reports on it; `auto_link_email` moves
       above the grid it governs. Presentation only, so the acceptance is that
       **no count moves** except the two assertions it turns green. The hidden

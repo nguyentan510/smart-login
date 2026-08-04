@@ -921,6 +921,52 @@ sl_assert(
 	'Rendered below the grid, it reads as belonging to the last card rather than to every one of them.'
 );
 
+/*
+ * Moving a control out of the field renderer is where a layout change turns into
+ * a data change. The header draws the checkbox itself, so it also has to carry
+ * the hidden companion input — without it an unticked box posts nothing,
+ * sanitize() reads absence as "not on this tab", and a provider could be
+ * switched on but never off.
+ *
+ * Asserted through sanitize() rather than by reading the markup, because the
+ * markup is exactly what changed.
+ */
+Settings::update( array( 'providers.google.enabled' => 1 ) );
+
+$saved_off = Settings::sanitize(
+	array(
+		Settings::TAB_FIELD => 'providers',
+		'providers'         => array( 'google' => array( 'enabled' => '0' ) ),
+	)
+);
+
+sl_check( 'a provider can be switched off from the header', 0, $saved_off['providers']['google']['enabled'] ?? 'missing' );
+
+$saved_on = Settings::sanitize(
+	array(
+		Settings::TAB_FIELD => 'providers',
+		'providers'         => array( 'google' => array( 'enabled' => '1' ) ),
+	)
+);
+
+sl_check( 'and switched back on', 1, $saved_on['providers']['google']['enabled'] ?? 'missing' );
+
+/*
+ * Exactly two inputs carry this name: the hidden `0` and the checkbox `1`. Four
+ * would mean the field is drawn in both its new home and its old one, and since
+ * the last one posted wins, which value is stored would be decided by markup
+ * order — the failure mode of moving a control without removing it.
+ *
+ * Counted rather than matched as one string: the attributes are on separate
+ * lines, so a contiguous `name="…" value="1"` never appears and asserting on it
+ * would have failed against correct markup.
+ */
+sl_check(
+	'the switch is drawn in one place only',
+	2,
+	substr_count( $providers_html, 'name="' . \SmartLogin\Admin\FieldRenderer::name( 'providers.google.enabled' ) . '"' )
+);
+
 // ---------------------------------------------------------------------
 sl_section( 'A connection test cannot sign anybody in (12.2)' );
 

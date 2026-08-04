@@ -107,6 +107,35 @@
 	border-bottom: 1px solid #dcdcde;
 }
 
+/* The switch leads the title side; the badge keeps the far side to itself. */
+.smart-login-admin .sl-provider-card__header > div {
+	margin-right: auto;
+}
+
+.smart-login-admin .sl-provider-switch {
+	flex: 0 0 auto;
+	margin-top: 2px;
+}
+
+/* A policy that governs every card, above every card. */
+.smart-login-admin .sl-provider-policy {
+	max-width: 1120px;
+	margin: 18px 0 0;
+	padding: 4px 18px 8px;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	background: #fff;
+}
+
+.smart-login-admin .sl-provider-policy h3 {
+	margin: 14px 0 0;
+	font-size: 14px;
+}
+
+.smart-login-admin .sl-provider-policy .form-table th {
+	width: 220px;
+}
+
 .smart-login-admin .sl-provider-card__header h3,
 .smart-login-admin .sl-provider-card__header p {
 	margin: 0;
