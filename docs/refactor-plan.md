@@ -26,6 +26,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 10 — Delivery routing and the automation bus**
 - [x] **Phase 11 — Mail templates**
 - [x] **Phase 12 — The provider surface**
+- [ ] **Phase 13 — The mail surface**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -1038,6 +1039,51 @@ component with no defect driving it and no second consumer asking for it;
 `sl-provider-card` still has exactly one caller. A shared abstraction with one
 caller is a rename with extra steps. Reversible the day a second surface needs a
 card with a status to tell the truth about.
+
+---
+
+## Phase 13 — The mail surface
+
+Normative spec: [`mail-surface.md`](mail-surface.md) — why show/hide is correct here
+and was not in 10.6, why copy-to-edit needs a way back, and why the layout gains
+tokens rather than settings.
+
+Execution briefs: [`mail-surface/`](mail-surface/), one file per sub-phase.
+**Status lives here and only here.**
+
+Short version: Phase 11 gave every message a template and a layout to live in,
+and put all twenty resulting fields on one screen — six of them 8-row textareas.
+That is the wall Phase 10 removed from the delivery tab, rebuilt one phase later
+on a different screen. Meanwhile the layout has no preheader, no button, and
+renders the six digits an OTP mail exists for as running text mid-paragraph.
+
+### Sub-phases
+
+- [ ] **13.0** [Guard rails](mail-surface/13.0-guard-rails.md) — four rules.
+      Rule 4 passes today and must keep passing, which is why it lands now
+      rather than with 13.3: a rule arriving alongside the feature it guards
+      cannot catch that feature breaking it
+- [ ] **13.1** [Message list](mail-surface/13.1-message-list.md) — a generated
+      table with an inheritance column, one panel open at a time. **Every panel
+      still renders**; rendering only the open one is the obvious optimisation
+      and would silently stop five messages being saved
+- [ ] **13.2** [Copy and revert](mail-surface/13.2-copy-and-revert.md) — the
+      copy button undoes 11.4 on its own, so it ships as a pair and the second
+      half is not optional
+- [ ] **13.3** [Layout and tokens](mail-surface/13.3-layout-and-tokens.md) —
+      `{{code_block}}`, `{{button:url|label}}`, a preheader on the registry row,
+      type and dark mode. Both tokens opt-in, and the shipped bodies are
+      deliberately **not** rewritten to use them
+
+---
+
+**Ordering rationale.** 13.0 first. 13.1 before 13.2, because the buttons live
+in the panels the list opens. 13.3 is independent of both and may be dropped.
+
+**Scope decided with the user:** a better default layout plus two tokens, not
+eight more appearance settings and not a layout picker. Most combinations of
+eight appearance settings look worse than the default, and a picker is three
+templates to maintain for a choice made once.
 
 ## Risks
 
