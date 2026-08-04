@@ -296,9 +296,9 @@ final class MailRegistry {
 	 *
 	 * @param string $override    Stored value for this message.
 	 * @param string $shared_path Registry path of the shared fallback field.
-	 * @param string $default     The message's own default.
+	 * @param string $own         The message's own default.
 	 */
-	private static function pick( string $override, string $shared_path, string $default ): string {
+	private static function pick( string $override, string $shared_path, string $own ): string {
 		if ( '' !== trim( $override ) ) {
 			return $override;
 		}
@@ -310,6 +310,6 @@ final class MailRegistry {
 			return $shared;
 		}
 
-		return '' !== trim( $default ) ? $default : $shared;
+		return '' !== trim( $own ) ? $own : $shared;
 	}
 }

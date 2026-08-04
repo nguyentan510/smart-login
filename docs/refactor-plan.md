@@ -879,9 +879,17 @@ layout at all — with `email.is_html` on, the body *is* the whole document.
       registry default, and each of the three is asserted separately. Found by
       asserting behaviour, not plumbing. 2 → 18; regression 317 → 322 and admin
       95 → 101, because generated fields are fields
-- [ ] **11.2** [HTML layout](mail-templates/11.2-html-layout.md) — table-based
+- [x] **11.2** [HTML layout](mail-templates/11.2-html-layout.md) — table-based
       and inline-styled on purpose, because Outlook ignores `<style>` blocks;
-      wraps once, theme-overridable, and leaves plain text byte-identical
+      wraps once, theme-overridable, leaves plain text byte-identical. **The
+      brief missed what made HTML useless**: the shipped bodies are plain text
+      whose blank lines are their only structure, so wrapping them unchanged
+      renders one run-on paragraph in a nice frame — which is what turning HTML
+      on already did. The accent colour is validated against a hex pattern, not
+      escaped, because it lands in a `style` attribute where
+      `red;background:url(…)` survives `esc_attr()` intact. The template suite
+      caught the new file having neither a fixture nor a written exclusion, and
+      got a decision rather than an exemption. 28 → 35, **no PENDING left**
 - [x] **11.3** [Admin alerts](mail-templates/11.3-admin-alerts.md) — the two
       hard-coded messages join the registry and gain an off switch. The reason
       off is allowed is 10.4: both events already reach an automation endpoint

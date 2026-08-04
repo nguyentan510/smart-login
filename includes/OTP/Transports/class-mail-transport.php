@@ -9,6 +9,7 @@
 namespace SmartLogin\OTP\Transports;
 
 use SmartLogin\Identity\UserManager;
+use SmartLogin\Mail\MailLayout;
 use SmartLogin\Mail\MailRegistry;
 use SmartLogin\OTP\Placeholders;
 use SmartLogin\Settings;
@@ -69,6 +70,9 @@ class MailTransport implements TransportInterface {
 
 		if ( $is_html ) {
 			$headers[] = 'Content-Type: text/html; charset=UTF-8';
+			// Wrapped after rendering, so the layout sees the finished text and
+			// the template author never has to think about `<html>`.
+			$body = MailLayout::wrap( $body, $subject );
 		} else {
 			$body = wp_strip_all_tags( $body );
 		}

@@ -20,6 +20,9 @@
  */
 
 require __DIR__ . '/../stubs.php';
+// The HTML layout goes through TemplateLoader, which asks the theme first —
+// so this suite needs the same locate_template() the template suite uses.
+require __DIR__ . '/../template-stubs.php';
 require __DIR__ . '/../harness.php';
 
 use SmartLogin\Auth\AuthAction;
@@ -217,14 +220,85 @@ if ( ! $sl_has_registry ) {
 // =====================================================================
 sl_section( 'Rule 5 — the layout wraps exactly once (11.2)' );
 
-if ( ! class_exists( 'SmartLogin\\Mail\\MailLayout' ) ) {
-	sl_pending(
-		'a body that already contains the layout is not wrapped again',
-		'MailLayout — 11.2'
-	);
-} else {
-	sl_note( 'MailLayout exists — replace this pending with the live assertion from the 11.2 brief.' );
-}
+Settings::update(
+	array(
+		'email.enabled'      => 1,
+		'email.is_html'      => 1,
+		'email.accent_color' => '#123456',
+		'email.footer_text'  => 'Cửa hàng ví dụ, 12 Nguyễn Trãi',
+		'email.subject'      => '',
+		'email.body'         => '',
+	)
+);
+
+$GLOBALS['sl_mails'] = array();
+
+( new MailTransport() )->send( 'nguoi.dung@example.com', '482913', array( 'intent' => 'recover' ) );
+
+$sl_html = $GLOBALS['sl_mails'][0]['message'] ?? '';
+
+sl_check(
+	'an HTML message is wrapped exactly once',
+	1,
+	substr_count( $sl_html, SmartLogin\Mail\MailLayout::MARKER )
+);
+
+sl_assert(
+	'the configured accent and footer reach the message',
+	false !== strpos( $sl_html, '#123456' ) && false !== strpos( $sl_html, 'Cửa hàng ví dụ' ),
+	'The three settings exist to be visible; if they are not in the output they are decoration.'
+);
+
+sl_assert(
+	'the body survived inside the layout',
+	false !== strpos( $sl_html, '482913' ),
+	'A layout that loses the code is worse than no layout.'
+);
+
+// The shipped bodies are written as plain text, so their blank lines are the
+// only structure they have. Handing them to a layout unconverted is what made
+// "turn HTML on" produce one run-on paragraph.
+sl_assert(
+	'plain-text line breaks became paragraphs',
+	substr_count( $sl_html, '<p style=' ) > 1,
+	'The default bodies have blank lines between blocks; without conversion the whole message renders as one paragraph.'
+);
+
+// An administrator pasting a complete document must not get it nested inside
+// another one.
+$GLOBALS['sl_mails'] = array();
+
+Settings::update(
+	array( 'email.templates.recover.body' => "<html><body><p>Mã: {{code}}</p></body></html>" )
+);
+
+( new MailTransport() )->send( 'nguoi.dung@example.com', '482913', array( 'intent' => 'recover' ) );
+
+$sl_pasted = $GLOBALS['sl_mails'][0]['message'] ?? '';
+
+sl_check(
+	'a body that is already a document is not wrapped again',
+	0,
+	substr_count( $sl_pasted, SmartLogin\Mail\MailLayout::MARKER )
+);
+
+sl_check( 'and it is sent as written', 1, substr_count( $sl_pasted, '<html>' ) );
+
+// A colour that would escape the style attribute must not reach it.
+Settings::update(
+	array(
+		'email.templates.recover.body' => '',
+		'email.accent_color'           => 'red;background:url(http://evil.test/x)',
+	)
+);
+
+sl_check(
+	'an invalid accent falls back rather than reaching the style attribute',
+	'#2271b1',
+	SmartLogin\Mail\MailLayout::accent()
+);
+
+Settings::update( array( 'email.accent_color' => '#2271b1' ) );
 
 // =====================================================================
 sl_section( 'Rule 6 — plain text never carries markup (11.2)' );

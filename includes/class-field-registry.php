@@ -588,6 +588,33 @@ final class FieldRegistry {
 				'label'   => __( 'Định dạng', 'smart-login' ),
 				'help'    => __( 'Gửi dưới dạng HTML', 'smart-login' ),
 			),
+			'email.logo_url'               => array(
+				'type'    => 'url',
+				'default' => '',
+				'tab'     => 'delivery-email',
+				'section' => 'email',
+				'label'   => __( 'Logo trong email', 'smart-login' ),
+				'help'    => __( 'Chỉ dùng khi gửi dạng HTML. Để trống thì hiện tên website. Nhiều ứng dụng email chặn ảnh cho tới khi người nhận bấm hiển thị, nên đừng đặt thông tin quan trọng trong ảnh.', 'smart-login' ),
+			),
+			'email.accent_color'           => array(
+				'type'    => 'text',
+				'default' => '#2271b1',
+				'tab'     => 'delivery-email',
+				'section' => 'email',
+				'label'   => __( 'Màu nhấn', 'smart-login' ),
+				'help'    => __( 'Dạng <code>#2271b1</code>. Giá trị không hợp lệ sẽ dùng màu mặc định.', 'smart-login' ),
+			),
+			'email.footer_text'            => array(
+				'type'     => 'textarea',
+				'rows'     => 3,
+				'default'  => '',
+				'tab'      => 'delivery-email',
+				'section'  => 'email',
+				'label'    => __( 'Chân email', 'smart-login' ),
+				'sanitize' => 'rich_text',
+				'help'     => __( 'Ví dụ địa chỉ cửa hàng hoặc câu nhắc không trả lời email này. Để trống để bỏ hẳn phần chân.', 'smart-login' ),
+			),
+
 			'automation.url'               => array(
 				'type'     => 'url',
 				'default'  => '',
