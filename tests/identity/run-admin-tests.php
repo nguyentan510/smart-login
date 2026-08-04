@@ -874,4 +874,85 @@ sl_assert(
 );
 
 // ---------------------------------------------------------------------
+sl_section( 'The provider screen puts its controls where they belong (12.1)' );
+
+Settings::update(
+	array(
+		'providers.google.enabled' => 1,
+		'providers.zalo.enabled'   => 0,
+	)
+);
+
+$providers_html = sl_capture(
+	static function () use ( $screen ): void {
+		$screen->render( 'providers' );
+	}
+)['html'];
+
+/*
+ * Rule 1. The switch is already on the screen — level with Client ID, inside the
+ * table — so this asserts *position*, not presence. It is the control an
+ * administrator touches repeatedly and the one the badge now reports on, and the
+ * two belong beside each other.
+ */
+$header_at = strpos( $providers_html, 'sl-provider-card__header' );
+$switch_at = strpos( $providers_html, 'name="' . \SmartLogin\Admin\FieldRenderer::name( 'providers.google.enabled' ) . '"' );
+$panel_at  = strpos( $providers_html, 'data-provider-panel="setup"' );
+
+sl_assert(
+	'the master switch sits in the card header, not in the table',
+	false !== $header_at && false !== $switch_at && false !== $panel_at
+		&& $switch_at > $header_at && $switch_at < $panel_at,
+	'Kích hoạt is rendered as a form-table row beside Client ID. Turning a provider on and off is routine; filling in credentials happens once.'
+);
+
+/*
+ * Rule 2. auto_link_email decides, for every provider, whether a verified
+ * provider email may silently adopt an existing account — the most consequential
+ * setting on the screen, currently rendered as a section below the grid where it
+ * reads as a footnote to the second card.
+ */
+$policy_at = strpos( $providers_html, 'name="' . \SmartLogin\Admin\FieldRenderer::name( 'providers.auto_link_email' ) . '"' );
+$first_card = strpos( $providers_html, 'sl-provider-card' );
+
+sl_assert(
+	'a policy that governs both cards renders above both cards',
+	false !== $policy_at && false !== $first_card && $policy_at < $first_card,
+	'Rendered below the grid, it reads as belonging to the last card rather than to every one of them.'
+);
+
+// ---------------------------------------------------------------------
+sl_section( 'A connection test cannot sign anybody in (12.2)' );
+
+/*
+ * The whole safety argument of 12.2, and the rule that has to exist before the
+ * code does. callback() consumes the transaction and reaches
+ * SessionIssuer::issue() — a diagnostic reusing that path would sign the
+ * administrator in and, on an account that does not exist yet, create one.
+ * Nobody would notice, because signing in successfully is what success looks
+ * like.
+ *
+ * PENDING rather than a vacuous pass: 10.0 made that mistake with its rule 5 and
+ * 11.0 repeated it with its rule 3, and both had to be corrected.
+ */
+$store_source = sl_source( 'includes/Auth/class-o-auth-transaction-store.php' );
+
+if ( false === strpos( $store_source, "'mode'" ) ) {
+	sl_pending(
+		'a test transaction returns before the session issuer',
+		'the transaction mode — 12.2'
+	);
+	sl_pending(
+		'and before anything that creates a user or an identity',
+		'the transaction mode — 12.2'
+	);
+	sl_pending(
+		'a transaction with no mode still signs its user in',
+		'the transaction mode — 12.2'
+	);
+} else {
+	sl_note( 'Transaction modes exist — replace these pendings with the live assertions from the 12.2 brief.' );
+}
+
+// ---------------------------------------------------------------------
 sl_summary( 'Admin screens' );
