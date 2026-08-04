@@ -13,6 +13,7 @@
 
 namespace SmartLogin\Admin;
 
+use SmartLogin\Auth\ProviderAuthController;
 use SmartLogin\Auth\Providers\ProviderCredentials;
 use SmartLogin\Auth\Providers\ProviderRegistry;
 use SmartLogin\Settings;
@@ -137,6 +138,9 @@ final class ProviderCards {
 				<button type="button" class="button-link is-active" role="tab" aria-selected="true" data-provider-tab="setup">
 					<?php esc_html_e( 'Thiết lập', 'smart-login' ); ?>
 				</button>
+				<button type="button" class="button-link" role="tab" aria-selected="false" data-provider-tab="check">
+					<?php esc_html_e( 'Kiểm tra', 'smart-login' ); ?>
+				</button>
 				<button type="button" class="button-link" role="tab" aria-selected="false" data-provider-tab="docs">
 					<?php esc_html_e( 'Hướng dẫn', 'smart-login' ); ?>
 				</button>
@@ -197,6 +201,10 @@ final class ProviderCards {
 						</tr>
 					</tbody>
 				</table>
+			</div>
+
+			<div class="sl-provider-panel" data-provider-panel="check" hidden>
+				<?php $this->check_panel( $provider, $configured ); ?>
 			</div>
 
 			<div class="sl-provider-panel sl-provider-docs" data-provider-panel="docs" hidden>
@@ -292,6 +300,57 @@ final class ProviderCards {
 			'class' => 'is-missing',
 			'label' => __( 'Chưa cấu hình', 'smart-login' ),
 		);
+	}
+
+	/**
+	 * A real round trip, because a redirect URI cannot be checked any other way.
+	 *
+	 * SMS and email both have Gửi thử; this screen had nothing, and its commonest
+	 * failure — a redirect URI registered one character differently — is
+	 * invisible until a real visitor meets it. No provider will answer "is this
+	 * URI registered", so the only honest test is to perform the exchange and
+	 * repeat what came back.
+	 *
+	 * Offered whether or not the provider is switched on. Configured-but-off is
+	 * exactly the state a test exists to get out of, and requiring the switch
+	 * first would mean showing a possibly-broken button to real visitors while
+	 * the administrator checks.
+	 */
+	private function check_panel( string $provider, bool $configured ): void {
+		if ( ! $configured ) {
+			printf(
+				'<p class="description">%s</p>',
+				esc_html__( 'Điền Client ID và Secret rồi Lưu thay đổi trước khi kiểm tra.', 'smart-login' )
+			);
+
+			return;
+		}
+
+		$result = ProviderAuthController::take_test_result();
+
+		if ( is_array( $result ) && ( $result['provider'] ?? '' ) === $provider ) {
+			printf(
+				'<div class="notice notice-success inline"><p>%s</p></div>',
+				esc_html__( 'Vòng đăng nhập chạy được. Không có tài khoản nào được tạo và không ai được đăng nhập — đây chỉ là phép thử.', 'smart-login' )
+			);
+		}
+		?>
+		<p class="description">
+			<?php esc_html_e( 'Mở một vòng đăng nhập thật với nhà cung cấp rồi dừng lại ngay khi nhận được danh tính. Không tạo tài khoản, không đăng nhập, không liên kết gì.', 'smart-login' ); ?>
+		</p>
+		<p>
+			<a
+				class="button"
+				href="<?php echo esc_url( ProviderAuthController::test_url( $provider ) ); ?>"
+				target="_blank"
+				rel="noopener noreferrer"
+			><?php esc_html_e( 'Chạy kiểm tra', 'smart-login' ); ?></a>
+		</p>
+		<p class="description">
+			<?php esc_html_e( 'Nếu nhà cung cấp báo lỗi, thông báo của họ sẽ hiện ra — thường gặp nhất là redirect URI khai báo lệch so với URL dưới đây.', 'smart-login' ); ?>
+		</p>
+		<p><code><?php echo esc_html( ProviderCredentials::redirect_uri( $provider ) ); ?></code></p>
+		<?php
 	}
 
 	private function docs( string $provider ): void {

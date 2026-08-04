@@ -981,24 +981,68 @@ sl_section( 'A connection test cannot sign anybody in (12.2)' );
  * PENDING rather than a vacuous pass: 10.0 made that mistake with its rule 5 and
  * 11.0 repeated it with its rule 3, and both had to be corrected.
  */
-$store_source = sl_source( 'includes/Auth/class-o-auth-transaction-store.php' );
+/*
+ * Structural half. The branch has to sit after the identity read — everything
+ * above it is what the test exercises — and before AccountProvisioner, which is
+ * the first thing that writes. Asserted on ordering inside callback(), because
+ * "there is a branch" says nothing about which side of the writes it is on.
+ */
+$callback_body = sl_method_body(
+	sl_source( 'includes/Auth/class-provider-auth-controller.php' ),
+	'callback'
+);
 
-if ( false === strpos( $store_source, "'mode'" ) ) {
-	sl_pending(
-		'a test transaction returns before the session issuer',
-		'the transaction mode — 12.2'
-	);
-	sl_pending(
-		'and before anything that creates a user or an identity',
-		'the transaction mode — 12.2'
-	);
-	sl_pending(
-		'a transaction with no mode still signs its user in',
-		'the transaction mode — 12.2'
-	);
-} else {
-	sl_note( 'Transaction modes exist — replace these pendings with the live assertions from the 12.2 brief.' );
-}
+$test_branch_at  = strpos( $callback_body, 'report_test' );
+$provisioner_at  = strpos( $callback_body, 'AccountProvisioner' );
+$issuer_at       = strpos( $callback_body, 'SessionIssuer' );
+
+sl_assert(
+	'a test transaction returns before the session issuer',
+	false !== $test_branch_at && false !== $issuer_at && $test_branch_at < $issuer_at,
+	'callback() reaches SessionIssuer::issue(). A diagnostic that fell through would sign the administrator in.'
+);
+
+sl_assert(
+	'and before anything that creates a user or an identity',
+	false !== $test_branch_at && false !== $provisioner_at && $test_branch_at < $provisioner_at,
+	'AccountProvisioner resolves or provisions. A test that reached it would create an account, and nobody would notice — signing in successfully is what success looks like.'
+);
+
+/*
+ * Behavioural half. Transactions live in a transient with a ten-minute TTL, so
+ * one created before this deploy has no `mode` key at all. Defaulting the wrong
+ * way would turn every in-flight redirect across the deploy into a test that
+ * silently refused to sign its user in.
+ */
+sl_check(
+	'a transaction with no mode still signs its user in',
+	false,
+	\SmartLogin\Auth\OAuthTransactionStore::is_test( array( 'provider' => 'google' ) )
+);
+
+sl_check(
+	'a login transaction is not a test',
+	false,
+	\SmartLogin\Auth\OAuthTransactionStore::is_test( ( new \SmartLogin\Auth\OAuthTransactionStore() )->create( 'google' ) )
+);
+
+sl_check(
+	'a test transaction is',
+	true,
+	\SmartLogin\Auth\OAuthTransactionStore::is_test(
+		( new \SmartLogin\Auth\OAuthTransactionStore( \SmartLogin\Auth\OAuthTransactionStore::MODE_TEST ) )->create( 'google' )
+	)
+);
+
+// An unknown value must not become a test by accident — the constructor
+// normalises rather than trusting whatever it is handed.
+sl_check(
+	'only the exact test mode counts as one',
+	false,
+	\SmartLogin\Auth\OAuthTransactionStore::is_test(
+		( new \SmartLogin\Auth\OAuthTransactionStore( 'TEST' ) )->create( 'google' )
+	)
+);
 
 // ---------------------------------------------------------------------
 sl_summary( 'Admin screens' );

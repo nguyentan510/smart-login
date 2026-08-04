@@ -25,7 +25,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 9 — Abuse boundary**
 - [x] **Phase 10 — Delivery routing and the automation bus**
 - [x] **Phase 11 — Mail templates**
-- [ ] **Phase 12 — The provider surface**
+- [x] **Phase 12 — The provider surface**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -1019,7 +1019,7 @@ sub-phase. **Status lives here and only here.**
       **no count moves** except the two assertions it turns green. The hidden
       companion input travels with the checkbox, or a provider can never be
       switched *off*
-- [ ] **12.2** [Connection test](provider-surface/12.2-connection-test.md) — a
+- [x] **12.2** [Connection test](provider-surface/12.2-connection-test.md) — a
       third transaction mode that stops after the exchange. **The whole design is
       one sentence staying true**: a test round trip must never issue a session,
       create a user or link an identity. `callback()` reaches
