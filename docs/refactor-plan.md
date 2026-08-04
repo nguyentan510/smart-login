@@ -24,7 +24,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 8 — Account surface**
 - [x] **Phase 9 — Abuse boundary**
 - [x] **Phase 10 — Delivery routing and the automation bus**
-- [ ] **Phase 11 — Mail templates**
+- [x] **Phase 11 — Mail templates**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -899,9 +899,18 @@ layout at all — with `email.is_html` on, the body *is* the whole document.
       guarded and answerable for delivery, and the breaker is what sends one of
       them. Switching a mail off leaves the **audit record** written, asserted:
       the log is evidence, the mail is a notification. 18 → 28, rule 1 green
-- [ ] **11.4** [Mail screen](mail-templates/11.4-mail-screen.md) — a second-level
+- [x] **11.4** [Mail screen](mail-templates/11.4-mail-screen.md) — a second-level
       tab under Gửi mã, grouped the way an administrator thinks rather than the
-      way the registry stores. Last, for the reason 10.6 was
+      way the registry stores. **The empty box was the whole problem**: eight
+      blank overrides look like eight emails with no subject, and the first
+      administrator to tidy that pastes the default into all of them and kills
+      the inheritance 11.1 built. An empty box now shows what it will actually
+      send, resolved through the same call the transport makes. Token scoping is
+      asserted by *counting* — `{{ceiling}}` present for the budget alert and
+      absent beside the four OTP bodies. **The gate got weaker the same way as in
+      10.6**: it enumerated four screens and there are five, so it would have
+      gone on passing while ignoring the one screen whose fields are generated.
+      101 → 110 admin
 
 ---
 

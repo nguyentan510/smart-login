@@ -177,7 +177,7 @@ final class MailRegistry {
 					'type'    => 'checkbox',
 					'default' => 1,
 					'tab'     => 'delivery-mail',
-					'section' => 'templates',
+					'section' => self::section_for( $row ),
 					/* translators: %s: message name. */
 					'label'   => sprintf( __( '%s — gửi email', 'smart-login' ), $row['label'] ),
 					'help'    => __( 'Tắt nếu bạn đã nhận sự kiện này qua Automation. Nhật ký và sự kiện vẫn được ghi như cũ — đây chỉ là email.', 'smart-login' ),
@@ -188,10 +188,14 @@ final class MailRegistry {
 				'type'    => 'text',
 				'default' => '',
 				'tab'     => 'delivery-mail',
-				'section' => 'templates',
+				'section' => self::section_for( $row ),
 				/* translators: %s: message name. */
 				'label'   => sprintf( __( '%s — tiêu đề', 'smart-login' ), $row['label'] ),
 				'help'    => $row['when'],
+				// Read by FieldRenderer to show what this box inherits while it is
+				// empty, and which tokens the message actually understands.
+				'message' => $id,
+				'part'    => 'subject',
 			);
 
 			$fields[ self::PATH_PREFIX . $id . '.body' ] = array(
@@ -199,15 +203,28 @@ final class MailRegistry {
 				'rows'     => 8,
 				'default'  => '',
 				'tab'      => 'delivery-mail',
-				'section'  => 'templates',
+				'section'  => self::section_for( $row ),
 				/* translators: %s: message name. */
 				'label'    => sprintf( __( '%s — nội dung', 'smart-login' ), $row['label'] ),
 				'sanitize' => 'rich_text',
-				'help'     => __( 'Để trống để dùng mẫu mặc định.', 'smart-login' ),
+				'help'     => __( 'Để trống để dùng mẫu đang hiển thị mờ bên trong ô.', 'smart-login' ),
+				'message'  => $id,
+				'part'     => 'body',
 			);
 		}
 
 		return $fields;
+	}
+
+	/**
+	 * Which heading a message sits under.
+	 *
+	 * Grouped the way an administrator thinks — the codes their customers get,
+	 * then the alerts that come to them — rather than the way the registry
+	 * happens to store them.
+	 */
+	private static function section_for( array $row ): string {
+		return 'admin' === ( $row['group'] ?? '' ) ? 'mail_admin' : 'templates';
 	}
 
 	/**

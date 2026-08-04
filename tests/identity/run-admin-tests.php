@@ -707,6 +707,99 @@ Settings::flush_cache();
 sl_check( 'an existing choice of Tuỳ chỉnh survives the new default', \SmartLogin\GatewayPresets::CUSTOM, Settings::get( 'sms.preset' ) );
 
 // ---------------------------------------------------------------------
+sl_section( 'The mail screen' );
+
+delete_option( Settings::OPTION );
+Settings::flush_cache();
+
+$mail_html = sl_capture(
+	static function () use ( $screen ): void {
+		$screen->render( 'delivery-mail' );
+	}
+);
+
+sl_assert( 'the mail screen renders', null === $mail_html['error'], (string) $mail_html['error'] );
+
+$mail_markup = $mail_html['html'];
+
+// Grouped the way an administrator reads it, not the way the registry stores it.
+$section_order = array();
+
+foreach ( array( 'Mẫu mặc định', 'Mã xác thực', 'Cảnh báo quản trị', 'Giao diện email HTML' ) as $heading ) {
+	$section_order[ $heading ] = strpos( $mail_markup, $heading );
+}
+
+sl_check(
+	'every group has a heading',
+	array(),
+	array_keys( array_filter( $section_order, static fn( $at ): bool => false === $at ) )
+);
+
+$ordered = array_values( $section_order );
+sort( $ordered );
+
+sl_check(
+	'and they appear in reading order',
+	$ordered,
+	array_values( $section_order )
+);
+
+/*
+ * The property this screen exists for: an empty box must read as "inheriting
+ * this" rather than as "this email has no subject". Without it an administrator
+ * faced with eight blank fields pastes the default into all of them and loses
+ * the inheritance the registry was built to provide.
+ */
+sl_assert(
+	'an un-overridden template shows what it will actually send',
+	false !== strpos( $mail_markup, 'placeholder="Mã đặt lại mật khẩu {{code}} - {{site_name}}"' ),
+	'The recover subject box is empty and should be showing its inherited value as a placeholder.'
+);
+
+// Scoped tokens, beside the body they belong to.
+sl_assert(
+	'each body offers the tokens its own message declares',
+	substr_count( $mail_markup, 'sl-message-tokens' ) >= 6,
+	'Six messages have a body field; each should carry its own collapsed token list.'
+);
+
+sl_assert(
+	'and an operational token is not offered beside an OTP body',
+	substr_count( $mail_markup, '{{ceiling}}' ) === substr_count( $mail_markup, '{{halt_minutes}}' )
+		&& substr_count( $mail_markup, '{{ceiling}}' ) > 0
+		&& substr_count( $mail_markup, '{{ceiling}}' ) < 6,
+	'{{ceiling}} belongs to the budget alert alone. Appearing beside every body is the silent-empty-string defect waiting to happen.'
+);
+
+// Saving one screen of the delivery family must not disturb the others — the
+// same property 10.6 established, now with a fifth screen in the family.
+Settings::update(
+	array(
+		'sms.url'        => 'https://gateway.example.test/keep',
+		'automation.url' => 'https://hooks.example.test/keep',
+	)
+);
+
+update_option(
+	Settings::OPTION,
+	Settings::sanitize(
+		array(
+			Settings::TAB_FIELD => 'delivery-mail',
+			'email'             => array(
+				'templates' => array(
+					'recover' => array( 'subject' => 'Đặt lại: {{code}}' ),
+				),
+			),
+		)
+	)
+);
+Settings::flush_cache();
+
+sl_check( 'saving the mail screen leaves the SMS gateway alone', 'https://gateway.example.test/keep', Settings::get( 'sms.url' ) );
+sl_check( 'and the automation endpoint alone', 'https://hooks.example.test/keep', Settings::get( 'automation.url' ) );
+sl_check( 'and the override it was given is stored', 'Đặt lại: {{code}}', Settings::get( 'email.templates.recover.subject' ) );
+
+// ---------------------------------------------------------------------
 sl_section( 'The provider badge cannot disagree with the runtime' );
 
 /*

@@ -300,7 +300,7 @@ if ( ! class_exists( 'SmartLogin\\Admin\\Screens\\SettingsScreen' ) ) {
 		$missing = array();
 		$secret_leaked = false;
 
-		foreach ( array( 'delivery', 'delivery-sms', 'delivery-email', 'delivery-automation' ) as $slug ) {
+		foreach ( array( 'delivery', 'delivery-sms', 'delivery-email', 'delivery-mail', 'delivery-automation' ) as $slug ) {
 			ob_start();
 
 			try {
@@ -334,7 +334,7 @@ if ( ! class_exists( 'SmartLogin\\Admin\\Screens\\SettingsScreen' ) ) {
 		if ( $missing ) {
 			$fail( 'a delivery screen claims fields it does not draw: ' . implode( ', ', $missing ) );
 		} else {
-			$ok( 'all four delivery screens draw every field they claim' );
+			$ok( 'every delivery screen draws every field it claims' );
 		}
 
 		if ( $secret_leaked ) {
@@ -351,7 +351,7 @@ if ( ! class_exists( 'SmartLogin\\Admin\\Screens\\SettingsScreen' ) ) {
 
 		$unreachable = array();
 
-		foreach ( array( 'delivery', 'delivery-sms', 'delivery-email', 'delivery-automation' ) as $slug ) {
+		foreach ( array( 'delivery', 'delivery-sms', 'delivery-email', 'delivery-mail', 'delivery-automation' ) as $slug ) {
 			if ( false === strpos( $nav_html, 'tab=' . $slug . '"' ) ) {
 				$unreachable[] = $slug;
 			}
@@ -360,7 +360,7 @@ if ( ! class_exists( 'SmartLogin\\Admin\\Screens\\SettingsScreen' ) ) {
 		if ( $unreachable ) {
 			$fail( 'the delivery family is not navigable: ' . implode( ', ', $unreachable ) );
 		} else {
-			$ok( 'the four screens link to each other from the second-level nav' );
+			$ok( 'the screens link to each other from the second-level nav' );
 		}
 	}
 }
