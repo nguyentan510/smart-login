@@ -4,7 +4,7 @@ Tags: otp, login, phone, woocommerce, vietnam
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 1.0.3
+Stable tag: 1.0.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -59,6 +59,9 @@ Không. WooCommerce chỉ cần khi bạn muốn dùng phần địa chỉ và c
 
 == Changelog ==
 
+= 1.0.4 =
+* **Sửa lỗi nghiêm trọng: màn hình cài đặt không lưu được trên một site vừa cài.** WordPress áp bộ lọc làm sạch nhiều hơn một lần cho một lần lưu: `update_option()` làm sạch, rồi khi giá trị đang lưu trùng với giá trị mặc định đã đăng ký, nó đi qua `add_option()` — và hàm này làm sạch **lần thứ hai**. Lần thứ hai không còn biết tab nào đang được lưu, nên nó trả về đúng giá trị cũ và vứt bỏ kết quả của lần đầu — trong khi WordPress vẫn hiển thị "Đã lưu". Điều kiện kích hoạt là "giá trị đang lưu bằng mặc định", tức đúng trạng thái của site vừa kích hoạt plugin. Bản làm sạch nay idempotent.
+
 = 1.0.3 =
 * Hồ sơ OTP chỉ áp dụng khi bạn đổi nó, và tự chuyển sang "Tuỳ chỉnh" khi một giá trị khác đi. Trước đó mọi lần lưu tab Gửi mã đều áp lại hồ sơ lên sáu giá trị nó chi phối.
 * Một trường không có trong lần gửi form nay giữ nguyên giá trị đã lưu, thay vì bị ghi thành giá trị nhỏ nhất — `otp.ttl` 300 thành 60, `otp.length` 6 thành 4.
@@ -82,6 +85,9 @@ Không. WooCommerce chỉ cần khi bạn muốn dùng phần địa chỉ và c
 * Chính sách mật khẩu áp dụng cho cả đặt lại mật khẩu.
 
 == Upgrade Notice ==
+
+= 1.0.4 =
+Nên cập nhật ngay nếu bạn đang dùng 1.0.2 hoặc 1.0.3: trên một site vừa cài, màn hình cài đặt báo đã lưu nhưng không ghi gì.
 
 = 1.0.3 =
 Bản vá cho 1.0.2, cập nhật bình thường. Không cần làm gì thêm: hai lỗi được vá không tới được từ màn hình cài đặt, nên giá trị bạn đã lưu không bị ảnh hưởng.

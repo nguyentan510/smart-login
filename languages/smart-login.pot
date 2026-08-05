@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-05 10:08+0000\n"
+"POT-Creation-Date: 2026-08-05 15:49+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -702,7 +702,7 @@ msgstr ""
 msgid "Endpoint automation trả về HTTP %d."
 msgstr ""
 
-#: includes/class-settings.php:575
+#: includes/class-settings.php:620
 msgid "Endpoint phải dùng https://. Mã xác thực đi qua địa chỉ này nên không chấp nhận HTTP thường. Giá trị cũ được giữ nguyên."
 msgstr ""
 
@@ -1145,7 +1145,7 @@ msgstr ""
 msgid "Không thể lưu liên kết tài khoản nhà cung cấp."
 msgstr ""
 
-#: includes/class-settings.php:436
+#: includes/class-settings.php:481
 msgid "Không thể mã hóa secret của provider. Cấu hình cũ được giữ nguyên."
 msgstr ""
 

@@ -1138,4 +1138,84 @@ sl_check(
 );
 
 // ---------------------------------------------------------------------
+sl_section( 'Saving survives WordPress sanitising twice (15.6)' );
+
+/*
+ * Captured from the real screen: choose "Cả hai", press Lưu thay đổi, and the page
+ * comes back saying "Chỉ số điện thoại". The log of that request is the whole story.
+ *
+ *   sanitize IN  _sl_tab "auth"        -> OUT identity {"mode":"both"}
+ *   sanitize IN  _sl_tab "(MISSING)"   -> OUT identity {"mode":"phone_only"}
+ *
+ * WordPress applies a sanitize filter more than once. `update_option()` sanitises,
+ * then — when the stored value equals the value registered as the setting's default —
+ * routes the write through `add_option()`, which sanitises **again**
+ * (wp-includes/option.php:884 and :1111). The second pass receives the first pass's
+ * output, which carries no `_sl_tab`, so `posted_fields()` found nothing, `$clean`
+ * stayed at the stored values, and the correct answer was thrown away.
+ *
+ * The trigger is "stored == registered default", which is exactly the state a freshly
+ * activated site is in. So this defect was invisible on any site that had ever saved
+ * anything, and certain on one that had not.
+ */
+Settings::update( array( 'identity.mode' => 'phone_only' ) );
+
+$sl_posted = array(
+	Settings::TAB_FIELD => 'auth',
+	'identity'          => array(
+		'mode'                  => 'both',
+		'country_code'          => '84',
+		'allowed_country_codes' => '',
+		'synthetic_domain'      => 'phone.invalid',
+	),
+);
+
+$sl_first = Settings::sanitize( $sl_posted );
+
+sl_check(
+	'the first pass takes the posted value',
+	'both',
+	(string) ( $sl_first['identity']['mode'] ?? '' )
+);
+
+// The second pass is handed the first pass's output. It has no tab, because the
+// output is registry-shaped and _sl_tab is not a registry field.
+sl_assert(
+	'and its output carries no tab field, which is what breaks the second pass',
+	! isset( $sl_first[ Settings::TAB_FIELD ] )
+);
+
+$sl_second = Settings::sanitize( $sl_first );
+
+sl_check(
+	'the second pass keeps it',
+	'both',
+	(string) ( $sl_second['identity']['mode'] ?? '' )
+);
+
+// Idempotent, not merely non-destructive: a third application must agree with the
+// second, or the value depends on how many times WordPress happens to filter it.
+sl_check(
+	'and a third pass agrees with the second',
+	json_encode( $sl_second ),
+	json_encode( Settings::sanitize( $sl_second ) )
+);
+
+// The tab scope still has to work, or this fix would have traded one bug for a
+// bigger one: a save on one tab must not write another tab's fields.
+Settings::update( array( 'identity.mode' => 'phone_only', 'otp.ttl' => 300 ) );
+
+$sl_scoped = Settings::sanitize(
+	array(
+		Settings::TAB_FIELD => 'auth',
+		'identity'          => array( 'mode' => 'both' ),
+		// A delivery field posted on the auth tab must be ignored.
+		'otp'               => array( 'ttl' => 999 ),
+	)
+);
+
+sl_check( 'a tab-scoped save writes its own tab', 'both', (string) ( $sl_scoped['identity']['mode'] ?? '' ) );
+sl_check( 'and does not write another tab field', 300, (int) ( $sl_scoped['otp']['ttl'] ?? 0 ) );
+
+// ---------------------------------------------------------------------
 sl_summary( 'Admin screens' );

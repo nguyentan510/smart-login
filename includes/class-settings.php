@@ -180,6 +180,36 @@ class Settings {
 
 		$fields = self::posted_fields( $input );
 
+		/*
+		 * No tab named means this is not the first time WordPress has applied us.
+		 *
+		 * `update_option()` sanitises, and then — when the stored value equals the value
+		 * registered as the setting's default — routes the write through `add_option()`,
+		 * which sanitises **again** (wp-includes/option.php:884 and :1111). The second
+		 * pass receives the first pass's output, and that output is registry-shaped, so it
+		 * carries no `_sl_tab`.
+		 *
+		 * This used to fall through with an empty field list, leave `$clean` at the stored
+		 * values, and hand back exactly what was already in the database — discarding
+		 * everything the first pass had just done. Captured from a real save: pass one
+		 * turned `identity.mode` into `both`, pass two turned it back into `phone_only`,
+		 * and WordPress still said "Settings saved."
+		 *
+		 * The trigger is "stored == registered default", which is the state a freshly
+		 * activated site is in. So this was invisible on any site that had ever saved
+		 * anything, and certain on one that had not.
+		 *
+		 * Falling back to every declared field makes the filter idempotent: the second
+		 * pass re-sanitises the first pass's own values and arrives at the same answer.
+		 * A field absent from the input still keeps what is stored, which is the rule the
+		 * loop below already applies.
+		 */
+		$tab_named = (bool) $fields;
+
+		if ( ! $tab_named ) {
+			$fields = FieldRegistry::all();
+		}
+
 		foreach ( $fields as $path => $field ) {
 			/*
 			 * A field the post does not carry keeps what is stored.
@@ -194,23 +224,38 @@ class Settings {
 			 * A checkbox is the exception and the reason this cannot simply skip absent
 			 * fields: browsers post nothing for an unchecked box, so absence *is* the
 			 * value there.
+			 *
+			 * That exception holds only when a tab was named, because only then is every
+			 * field known to have been rendered. In the tabless fallback above nothing was
+			 * rendered, so an absent checkbox means "not carried" rather than "unchecked" —
+			 * and treating it as unchecked zeroed every checkbox on the site. Caught by the
+			 * regression suite's "disturbs nothing it does not carry", which is the
+			 * assertion that replaced the letter this defect was hiding behind.
 			 */
 			$raw = self::dig( $input, $path );
 
-			if ( null === $raw && 'checkbox' !== ( $field['type'] ?? '' ) ) {
+			if ( null === $raw && ( ! $tab_named || 'checkbox' !== ( $field['type'] ?? '' ) ) ) {
 				continue;
 			}
 
 			self::plant( $clean, $path, self::sanitize_field( $field, $raw, $path ) );
 		}
 
-		// Presets are applied after the plain fields, because they overwrite some
-		// of them. Only when the tab that owns the preset was the one saved.
-		if ( isset( $fields['sms.preset'] ) ) {
+		/*
+		 * Presets are applied after the plain fields, because they overwrite some of
+		 * them — and only when the tab that owns the preset was genuinely the one saved.
+		 *
+		 * `$tab_named` is load-bearing here. Without it the tabless fallback above put
+		 * every field in `$fields`, which made both presets look posted on WordPress's
+		 * second sanitise pass and rederived `sms.url`, `sms.body` and `otp.preset` from
+		 * values nobody had submitted. Caught by the regression suite's "disturbs nothing
+		 * it does not carry" — the second thing that assertion found in one sitting.
+		 */
+		if ( $tab_named && isset( $fields['sms.preset'] ) ) {
 			self::apply_gateway_preset( $clean );
 		}
 
-		if ( isset( $fields['otp.preset'] ) ) {
+		if ( $tab_named && isset( $fields['otp.preset'] ) ) {
 			self::apply_otp_preset( $clean, $stored_otp_preset );
 		}
 

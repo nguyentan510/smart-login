@@ -1562,12 +1562,43 @@ foreach ( array_keys( $registry_tabs ) as $registry_tab ) {
 	check( sprintf( 'an empty "%s" save cannot zero another tab', $registry_tab ), array(), $phantom );
 }
 
-// A save that cannot say which tab it came from writes nothing at all.
+/*
+ * A save that cannot say which tab it came from merges what it carries and disturbs
+ * nothing else.
+ *
+ * This used to assert "writes nothing at all", and that letter caused a real defect:
+ * WordPress applies a sanitize filter more than once. `update_option()` sanitises, then
+ * — when the stored value equals the value registered as the setting's default — routes
+ * the write through `add_option()`, which sanitises again (wp-includes/option.php:884
+ * and :1111). The second pass is handed the first pass's output, which is
+ * registry-shaped and therefore carries no `_sl_tab`. Writing nothing at that point
+ * meant handing back the stored values and discarding the save.
+ *
+ * Reported from the screen as "I choose Cả hai, press save, and it comes back as
+ * Chỉ số điện thoại". The rule's fear — a tabless save wiping other tabs — is still
+ * asserted, and is now the thing that gets asserted instead of the letter.
+ */
+$sl_tabless = Settings::sanitize( array( 'identity' => array( 'mode' => 'email_only' ) ) );
+
 check(
-	'a save with no tab is a no-op',
-	$settings_before,
-	Settings::sanitize( array( 'identity' => array( 'mode' => 'email_only' ) ) )
+	'a tabless save writes the field it carries',
+	'email_only',
+	sl_dig_setting( $sl_tabless, 'identity.mode' )
 );
+
+$sl_disturbed = array();
+
+foreach ( \SmartLogin\FieldRegistry::all() as $path => $field ) {
+	if ( 'identity.mode' === $path ) {
+		continue;
+	}
+
+	if ( sl_dig_setting( $sl_tabless, $path ) !== sl_dig_setting( $settings_before, $path ) ) {
+		$sl_disturbed[] = $path;
+	}
+}
+
+check( 'and disturbs nothing it does not carry', array(), $sl_disturbed );
 
 check( 'the dead require_verification switch is gone', false, false !== strpos( $settings_page, 'require_verification' ) );
 
