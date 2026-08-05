@@ -247,6 +247,38 @@ try {
 	$cleanup_ids[]  = (int) $resolved['user']->ID;
 	$cleanup_rows[] = array( 'provider' => 'google', 'subject' => $identity->subject, 'user_id' => (int) $resolved['user']->ID );
 
+	/*
+	 * Phase 14 — the two doors. These need a store that actually stores, which is
+	 * why they are here rather than in the contract suite: that $wpdb stub does not
+	 * parse SQL, deliberately, so it cannot answer "is this address resolvable
+	 * now". They fail until 14.4, and are the assertions that sub-phase turns green.
+	 *
+	 * The account provisioned above holds a Google-verified address in
+	 * wp_users.user_email and one federated identity row. Typing that address is
+	 * what the account holder does the next day.
+	 */
+	$door_claim = ( new \SmartLogin\Identity\ChannelRegistry() )->claim_any( (string) $identity->email );
+	if ( $door_claim->is_empty() ) {
+		$failed( 'the provider address does not even form an email claim' );
+	}
+	$door_resolution = ( new \SmartLogin\Identity\IdentityDirectory() )->resolve( $door_claim );
+
+	$door_login = \SmartLogin\Auth\AuthAction::for_resolution( \SmartLogin\Auth\AuthAction::LOGIN, $door_resolution );
+	if ( \SmartLogin\Auth\AuthAction::ISSUE_SESSION !== $door_login ) {
+		$failed(
+			'door 1: the identify screen does not recognise a provider account by its own'
+			. ' verified address — login resolves to ' . $door_login
+		);
+	}
+
+	$door_recover = \SmartLogin\Auth\AuthAction::for_resolution( \SmartLogin\Auth\AuthAction::RECOVER, $door_resolution );
+	if ( \SmartLogin\Auth\AuthAction::ISSUE_RESET_GRANT !== $door_recover ) {
+		$failed(
+			'door 2: recovery reports a provider account as never registered —'
+			. ' recover resolves to ' . $door_recover
+		);
+	}
+
 	// P0.3: verified-email auto-link to an existing non-synthetic account.
 	$existing_id = wp_insert_user(
 		array(

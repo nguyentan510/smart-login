@@ -256,4 +256,98 @@ sl_assert(
 );
 
 // ---------------------------------------------------------------------
+sl_section( 'The email identity (Phase 14)' );
+
+/*
+ * One fact — this account owns this address — is stored in wp_users and in the
+ * identities table, and a provider login writes only the first. These rules pin
+ * the consequences that are assertable without MySQL. The two doors that need a
+ * store which actually stores are in tests/integration/run-provider-gates.php:
+ * this $wpdb stub does not parse SQL, on purpose, and reversing that decision to
+ * suit one phase would be the wrong trade.
+ */
+
+// Rule 1 (14.1) — an address wp_users already holds must not buy an OTP.
+//
+// The email channel has to be enabled explicitly. Without it claim_any() cannot
+// build an email claim at all, and the refusal that comes back is
+// "Số điện thoại không hợp lệ" — a pass for the wrong reason, which is the
+// mistake 10.0 and 11.0 both recorded.
+\SmartLogin\Settings::update( array( 'channels.enabled' => array( 'email', 'google' ) ) );
+
+$GLOBALS['sl_users_by_email'] = array( 'taken@example.test' => 7 );
+$GLOBALS['sl_wpdb_row']       = null;
+$GLOBALS['sl_wpdb_var']       = 0;
+
+$sl_before  = count( $GLOBALS['wpdb']->writes );
+$sl_refusal = null;
+
+try {
+	$sl_refusal = ( new \SmartLogin\Auth\RegisterHandler() )->start_identity(
+		array( 'identity' => 'taken@example.test' )
+	);
+} catch ( \Throwable $e ) {
+	$sl_refusal = new WP_Error( 'smart_login_threw', get_class( $e ) . ': ' . $e->getMessage() );
+}
+
+// The code is asserted, not merely that something failed: this call can refuse
+// for at least three unrelated reasons, and two of them would report success at
+// guarding an address they never looked at.
+sl_check(
+	'a registration OTP is refused for an address wp_users already holds',
+	'smart_login_identity_taken',
+	is_wp_error( $sl_refusal ) ? $sl_refusal->get_error_code() : 'no refusal at all'
+);
+
+sl_check(
+	'and nothing is written while refusing',
+	0,
+	count( $GLOBALS['wpdb']->writes ) - $sl_before
+);
+
+$GLOBALS['sl_users_by_email'] = array();
+
+// Rule 2 (14.2) — one writer for a verified email.
+if ( method_exists( 'SmartLogin\Identity\UserManager', 'adopt_verified_email' ) ) {
+	$sl_offenders = array();
+
+	foreach ( sl_plugin_sources() as $sl_relative => $sl_code ) {
+		if ( 'includes/Identity/class-user-manager.php' === $sl_relative ) {
+			continue;
+		}
+
+		if ( preg_match( '/\bwp_update_user\s*\(/', $sl_code )
+			&& false !== strpos( $sl_code, 'META_EMAIL_VERIFIED' ) ) {
+			$sl_offenders[] = $sl_relative;
+		}
+	}
+
+	sl_check(
+		'no file outside UserManager pairs a user_email write with META_EMAIL_VERIFIED',
+		'',
+		implode( ', ', $sl_offenders )
+	);
+} else {
+	sl_pending( 'one writer owns a verified email', 'UserManager::adopt_verified_email() (14.2)' );
+}
+
+// Rule 3 — proof is required to reach the directory. Passes today, and must keep
+// passing: it is what stops 14.2 becoming a way to mint identities. A rule that
+// arrives beside the feature it guards cannot catch that feature breaking it.
+$sl_link = new \ReflectionMethod( 'SmartLogin\Identity\IdentityDirectory', 'link' );
+$sl_swap = new \ReflectionMethod( 'SmartLogin\Identity\IdentityDirectory', 'replace_in_channel' );
+
+sl_check(
+	'IdentityDirectory::link() only accepts a VerifiedClaim',
+	'SmartLogin\Identity\VerifiedClaim',
+	(string) ( $sl_link->getParameters()[1]->getType() ?? '' )
+);
+
+sl_check(
+	'IdentityDirectory::replace_in_channel() only accepts a VerifiedClaim',
+	'SmartLogin\Identity\VerifiedClaim',
+	(string) ( $sl_swap->getParameters()[1]->getType() ?? '' )
+);
+
+// ---------------------------------------------------------------------
 sl_summary( 'Identity contract' );

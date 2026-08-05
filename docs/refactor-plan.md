@@ -1127,11 +1127,18 @@ that phase.
 
 ### Sub-phases
 
-- [ ] **14.0** [Guard rails](email-identity/14.0-guard-rails.md) — the three doors
-      as failing assertions, split across the contract suite and the provider
-      integration gate because a stub cannot show core resolving `user_email` at
-      priority 20 while the plugin resolves the directory at 30. Rule 4 must report
-      PENDING, not pass, until 14.2 exists
+- [ ] **14.0** [Guard rails](email-identity/14.0-guard-rails.md) — landed red at
+      `41 passed, 2 failed, 1 pending`, no production file touched, every other
+      suite byte-identical against a stash of `HEAD`. **The brief was wrong about
+      where the rules belong**: it put all three doors in the integration gate, but
+      the expensive symptom is assertable against the stub and now runs on every
+      commit. The rule also went green for the wrong reason first — the stub leaves
+      the email channel disabled, so the refusal it caught was
+      *"Số điện thoại không hợp lệ"* — the third time this project has recorded a
+      rule passing for want of a subject, and the first time it was caught in the
+      same sitting. `actual: 5` is the keeper: five writes have already happened
+      before the flow reaches the wall. **Row stays unticked** — the two gate doors
+      are written and unrun, because there is no local WordPress
 - [ ] **14.1** [Owned-email OTP](email-identity/14.1-owned-email-otp.md) — refuse at
       step one instead of step three. Ships alone and first: it is the live harm, it
       is independent of every decision below it, and its acceptance includes rules 1
