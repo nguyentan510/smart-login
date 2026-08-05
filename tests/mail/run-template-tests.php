@@ -23,6 +23,9 @@ require __DIR__ . '/../stubs.php';
 // The HTML layout goes through TemplateLoader, which asks the theme first —
 // so this suite needs the same locate_template() the template suite uses.
 require __DIR__ . '/../template-stubs.php';
+// 13.0 renders the mail screen to assert the message list against the registry
+// that generates it. admin_url() and friends live here.
+require __DIR__ . '/../admin-stubs.php';
 require __DIR__ . '/../harness.php';
 
 use SmartLogin\Auth\AuthAction;
@@ -525,5 +528,121 @@ sl_check(
 );
 
 sl_check( 'and nothing was sent', 0, count( $GLOBALS['sl_mails'] ) );
+
+// =====================================================================
+sl_section( 'Rule 1 — every message is reachable from the list (13.1)' );
+
+delete_option( Settings::OPTION );
+Settings::flush_cache();
+
+$sl_screen = sl_capture(
+	static function (): void {
+		( new \SmartLogin\Admin\Screens\SettingsScreen() )->render( 'delivery-mail' );
+	}
+);
+
+sl_assert( 'the mail screen renders', null === $sl_screen['error'], (string) $sl_screen['error'] );
+
+$sl_mail_markup = $sl_screen['html'];
+$sl_unlisted    = array();
+
+foreach ( array_keys( call_user_func( array( SL_MAIL_REGISTRY, 'all' ) ) ) as $sl_id ) {
+	if ( false === strpos( $sl_mail_markup, 'data-mail-message="' . $sl_id . '"' ) ) {
+		$sl_unlisted[] = $sl_id;
+	}
+}
+
+sl_check(
+	'every registry row appears in the list',
+	array(),
+	$sl_unlisted
+);
+
+// =====================================================================
+sl_section( 'Rule 2 — hiding a panel does not hide it from the save (13.1)' );
+
+/*
+ * Passes today, and that is the point of landing it now: rendering only the
+ * open panel is the obvious optimisation once a list exists, and it would
+ * silently stop five messages being saved — sanitize() reads an absent field as
+ * "not on this tab" and leaves the stored value alone.
+ *
+ * A rule that arrives alongside the feature it guards cannot catch that feature
+ * breaking it. 11.0's rule 6 made the same argument.
+ */
+$sl_missing_inputs = array();
+
+foreach ( array_keys( call_user_func( array( SL_MAIL_REGISTRY, 'all' ) ) ) as $sl_id ) {
+	foreach ( array( 'subject', 'body' ) as $sl_part ) {
+		$sl_path = \SmartLogin\Mail\MailRegistry::PATH_PREFIX . $sl_id . '.' . $sl_part;
+
+		if ( false === strpos( $sl_mail_markup, 'name="' . \SmartLogin\Admin\FieldRenderer::name( $sl_path ) . '"' ) ) {
+			$sl_missing_inputs[] = $sl_path;
+		}
+	}
+}
+
+sl_check(
+	'every message posts its fields whether or not its panel is open',
+	array(),
+	$sl_missing_inputs
+);
+
+// =====================================================================
+sl_section( 'Rule 3 — copy-to-edit has a way back (13.2)' );
+
+/*
+ * A filled box has stopped inheriting. Pressed on all six messages — which is
+ * what a tidy-minded administrator does on first sight — copy-to-edit produces
+ * six copies of text that used to live in one place, and a later change to the
+ * shared pair reaches none of them.
+ *
+ * Counted rather than checked for presence: one revert button on the screen
+ * would satisfy "there is a way back" while five fields still had none.
+ */
+$sl_copies  = substr_count( $sl_mail_markup, 'data-mail-copy' );
+$sl_reverts = substr_count( $sl_mail_markup, 'data-mail-revert' );
+
+sl_assert(
+	'every copy affordance is matched by a revert affordance',
+	$sl_copies > 0 && $sl_copies === $sl_reverts,
+	sprintf( 'copy: %d, revert: %d. Copy without revert is 11.4 undone.', $sl_copies, $sl_reverts )
+);
+
+// =====================================================================
+sl_section( 'Rule 4 — the structure tokens are opt-in (13.3)' );
+
+/*
+ * Also passes today — nothing uses the tokens yet — and must keep passing. It is
+ * what makes 13.3 an addition rather than a migration, and it is the rule most
+ * likely to be broken by rewriting the shipped bodies to use the new tokens in
+ * the same commit that introduces them.
+ */
+Settings::update(
+	array(
+		'email.enabled' => 1,
+		'email.is_html' => 1,
+		'email.subject' => '',
+		'email.body'    => '',
+	)
+);
+
+$GLOBALS['sl_mails'] = array();
+( new MailTransport() )->send( 'nguoi.dung@example.com', '482913', array( 'intent' => 'login' ) );
+$sl_plain_render = $GLOBALS['sl_mails'][0]['message'] ?? '';
+
+sl_assert(
+	'a body using neither token renders without their markup',
+	'' !== $sl_plain_render
+		&& false === strpos( $sl_plain_render, 'sl-mail-code' )
+		&& false === strpos( $sl_plain_render, 'sl-mail-button' ),
+	'The shipped bodies must not start emitting the new structures on their own; opt-in is what keeps 13.3 from being a migration.'
+);
+
+sl_assert(
+	'and no token is left unexpanded in it',
+	false === strpos( $sl_plain_render, '{{' ),
+	'An unexpanded token is the silent-empty-string failure with the braces left in.'
+);
 
 sl_summary( 'Mail templates' );

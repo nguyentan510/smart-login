@@ -27,44 +27,6 @@ use SmartLogin\Admin\SettingsPage;
 use SmartLogin\FieldRegistry;
 use SmartLogin\Settings;
 
-/**
- * Run a renderer and report what happened, treating a PHP notice as a failure —
- * an undeclared variable on a settings screen is a bug whether or not the page
- * happens to come out looking right.
- *
- * @return array{html:string,error:?string,warnings:array}
- */
-function sl_capture( callable $render ): array {
-	$GLOBALS['sl_admin_warnings'] = array();
-
-	set_error_handler(
-		static function ( int $severity, string $message ) {
-			$GLOBALS['sl_admin_warnings'][] = $message;
-			return true;
-		}
-	);
-
-	ob_start();
-
-	try {
-		$render();
-		$html  = (string) ob_get_clean();
-		$error = null;
-	} catch ( Throwable $exception ) {
-		ob_end_clean();
-		$html  = '';
-		$error = get_class( $exception ) . ': ' . $exception->getMessage();
-	} finally {
-		restore_error_handler();
-	}
-
-	return array(
-		'html'     => $html,
-		'error'    => $error,
-		'warnings' => $GLOBALS['sl_admin_warnings'],
-	);
-}
-
 // ---------------------------------------------------------------------
 sl_section( 'Every settings tab renders' );
 

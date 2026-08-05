@@ -1059,7 +1059,7 @@ renders the six digits an OTP mail exists for as running text mid-paragraph.
 
 ### Sub-phases
 
-- [ ] **13.0** [Guard rails](mail-surface/13.0-guard-rails.md) — four rules.
+- [x] **13.0** [Guard rails](mail-surface/13.0-guard-rails.md) — landed red at 39 passed / 2 failed. The brief predicted three failures and got two: rule 2 passes today, because the flat form-table already renders every input, so it is a property to **preserve** rather than reach. `sl_capture()` moved into the harness, since two suites now render screens. Four rules.
       Rule 4 passes today and must keep passing, which is why it lands now
       rather than with 13.3: a rule arriving alongside the feature it guards
       cannot catch that feature breaking it
