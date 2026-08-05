@@ -134,8 +134,81 @@
 		} );
 	}
 
+	/**
+	 * The mail message list: one editor open at a time.
+	 *
+	 * Hiding is done here rather than in the markup deliberately. Every panel is
+	 * rendered and visible by default, so with scripts off this screen is the
+	 * long page it was before — not a page where five of six messages cannot be
+	 * reached. The script takes away; it never adds the only way in.
+	 */
+	function initMailMessages( surface ) {
+		var panels = surface.querySelectorAll( '[data-mail-panel]' );
+		var rows = surface.querySelectorAll( '[data-mail-message]' );
+		var buttons = surface.querySelectorAll( '[data-mail-open]' );
+
+		if ( ! panels.length ) {
+			return;
+		}
+
+		function open( id ) {
+			panels.forEach( function ( panel ) {
+				panel.hidden = panel.getAttribute( 'data-mail-panel' ) !== id;
+			} );
+
+			rows.forEach( function ( row ) {
+				row.classList.toggle( 'is-open', row.getAttribute( 'data-mail-message' ) === id );
+			} );
+
+			buttons.forEach( function ( button ) {
+				button.setAttribute( 'aria-expanded', button.getAttribute( 'data-mail-open' ) === id ? 'true' : 'false' );
+			} );
+		}
+
+		buttons.forEach( function ( button ) {
+			button.addEventListener( 'click', function () {
+				open( button.getAttribute( 'data-mail-open' ) );
+			} );
+		} );
+
+		open( panels[ 0 ].getAttribute( 'data-mail-panel' ) );
+	}
+
+	/**
+	 * Copy the inherited wording into a box, or empty it to inherit again.
+	 *
+	 * Revert clears and stops there. Undo inside a textarea is the browser's job,
+	 * and a plugin-level undo stack for a field with a Save button under it is a
+	 * promise that cannot survive a reload.
+	 */
+	function initMailActions( scope ) {
+		scope.querySelectorAll( '[data-mail-copy]' ).forEach( function ( button ) {
+			button.addEventListener( 'click', function () {
+				var field = document.getElementById( button.getAttribute( 'data-mail-copy' ) );
+
+				if ( field ) {
+					field.value = button.getAttribute( 'data-mail-default' ) || '';
+					field.focus();
+				}
+			} );
+		} );
+
+		scope.querySelectorAll( '[data-mail-revert]' ).forEach( function ( button ) {
+			button.addEventListener( 'click', function () {
+				var field = document.getElementById( button.getAttribute( 'data-mail-revert' ) );
+
+				if ( field ) {
+					field.value = '';
+					field.focus();
+				}
+			} );
+		} );
+	}
+
 	document.addEventListener( 'DOMContentLoaded', function () {
 		document.querySelectorAll( '.sl-tester' ).forEach( init );
 		document.querySelectorAll( '[data-provider-card]' ).forEach( initProviderCard );
+		document.querySelectorAll( '.sl-mail-surface' ).forEach( initMailMessages );
+		initMailActions( document );
 	} );
 } )();

@@ -23,6 +23,9 @@ require __DIR__ . '/../stubs.php';
 // The HTML layout goes through TemplateLoader, which asks the theme first —
 // so this suite needs the same locate_template() the template suite uses.
 require __DIR__ . '/../template-stubs.php';
+// 13.0 renders the mail screen to assert the message list against the registry
+// that generates it. admin_url() and friends live here.
+require __DIR__ . '/../admin-stubs.php';
 require __DIR__ . '/../harness.php';
 
 use SmartLogin\Auth\AuthAction;
@@ -172,7 +175,9 @@ if ( ! $sl_has_registry ) {
 	foreach ( call_user_func( array( SL_MAIL_REGISTRY, 'all' ) ) as $sl_id => $sl_row ) {
 		$sl_allowed = (array) ( $sl_row['tokens'] ?? array() );
 
-		foreach ( array( 'subject', 'body' ) as $sl_part ) {
+		// The preheader is rendered through the same expander, so a token it
+		// declares nothing about fails the same silent way.
+		foreach ( array( 'subject', 'body', 'preheader' ) as $sl_part ) {
 			if ( ! preg_match_all( '/\{\{([a-z_:]+)\}\}/', (string) ( $sl_row[ $sl_part ] ?? '' ), $sl_found ) ) {
 				continue;
 			}
@@ -525,5 +530,280 @@ sl_check(
 );
 
 sl_check( 'and nothing was sent', 0, count( $GLOBALS['sl_mails'] ) );
+
+// =====================================================================
+sl_section( 'Rule 1 — every message is reachable from the list (13.1)' );
+
+delete_option( Settings::OPTION );
+Settings::flush_cache();
+
+$sl_screen = sl_capture(
+	static function (): void {
+		( new \SmartLogin\Admin\Screens\SettingsScreen() )->render( 'delivery-mail' );
+	}
+);
+
+sl_assert( 'the mail screen renders', null === $sl_screen['error'], (string) $sl_screen['error'] );
+
+$sl_mail_markup = $sl_screen['html'];
+$sl_unlisted    = array();
+
+foreach ( array_keys( call_user_func( array( SL_MAIL_REGISTRY, 'all' ) ) ) as $sl_id ) {
+	if ( false === strpos( $sl_mail_markup, 'data-mail-message="' . $sl_id . '"' ) ) {
+		$sl_unlisted[] = $sl_id;
+	}
+}
+
+sl_check(
+	'every registry row appears in the list',
+	array(),
+	$sl_unlisted
+);
+
+// =====================================================================
+sl_section( 'Rule 2 — hiding a panel does not hide it from the save (13.1)' );
+
+/*
+ * Passes today, and that is the point of landing it now: rendering only the
+ * open panel is the obvious optimisation once a list exists, and it would
+ * silently stop five messages being saved — sanitize() reads an absent field as
+ * "not on this tab" and leaves the stored value alone.
+ *
+ * A rule that arrives alongside the feature it guards cannot catch that feature
+ * breaking it. 11.0's rule 6 made the same argument.
+ */
+$sl_missing_inputs = array();
+
+foreach ( array_keys( call_user_func( array( SL_MAIL_REGISTRY, 'all' ) ) ) as $sl_id ) {
+	foreach ( array( 'subject', 'body' ) as $sl_part ) {
+		$sl_path = \SmartLogin\Mail\MailRegistry::PATH_PREFIX . $sl_id . '.' . $sl_part;
+
+		if ( false === strpos( $sl_mail_markup, 'name="' . \SmartLogin\Admin\FieldRenderer::name( $sl_path ) . '"' ) ) {
+			$sl_missing_inputs[] = $sl_path;
+		}
+	}
+}
+
+sl_check(
+	'every message posts its fields whether or not its panel is open',
+	array(),
+	$sl_missing_inputs
+);
+
+/*
+ * The column that earns its width. Until the list existed, "which of these six
+ * am I actually customising" took reading twelve boxes to answer, and it is the
+ * question an administrator has on opening this screen.
+ *
+ * Asserted by flipping it: state that only ever reads one way is state that
+ * could be hard-coded and nobody would notice.
+ */
+sl_assert(
+	'a message with no override reads as inheriting',
+	false !== strpos( $sl_mail_markup, 'sl-mail-state is-inherited' )
+		&& false === strpos( $sl_mail_markup, 'sl-mail-state is-custom' ),
+	'Nothing is overridden at this point, so no message should claim to be customised.'
+);
+
+Settings::update( array( 'email.templates.recover.subject' => 'Đặt lại: {{code}}' ) );
+
+$sl_after_override = sl_capture(
+	static function (): void {
+		( new \SmartLogin\Admin\Screens\SettingsScreen() )->render( 'delivery-mail' );
+	}
+)['html'];
+
+sl_check(
+	'and exactly one reads as customised once one is',
+	1,
+	substr_count( $sl_after_override, 'sl-mail-state is-custom' )
+);
+
+sl_assert(
+	'the list agrees with the resolver, not with a guess',
+	\SmartLogin\Mail\MailRegistry::is_overridden( 'recover' )
+		&& ! \SmartLogin\Mail\MailRegistry::is_overridden( 'login' ),
+	'is_overridden() reads the same stored values resolve() does; a list that computed its own answer could disagree with what the transport sends.'
+);
+
+Settings::update( array( 'email.templates.recover.subject' => '' ) );
+
+// =====================================================================
+sl_section( 'Rule 3 — copy-to-edit has a way back (13.2)' );
+
+/*
+ * A filled box has stopped inheriting. Pressed on all six messages — which is
+ * what a tidy-minded administrator does on first sight — copy-to-edit produces
+ * six copies of text that used to live in one place, and a later change to the
+ * shared pair reaches none of them.
+ *
+ * Counted rather than checked for presence: one revert button on the screen
+ * would satisfy "there is a way back" while five fields still had none.
+ */
+$sl_copies  = substr_count( $sl_mail_markup, 'data-mail-copy' );
+$sl_reverts = substr_count( $sl_mail_markup, 'data-mail-revert' );
+
+sl_assert(
+	'every copy affordance is matched by a revert affordance',
+	$sl_copies > 0 && $sl_copies === $sl_reverts,
+	sprintf( 'copy: %d, revert: %d. Copy without revert is 11.4 undone.', $sl_copies, $sl_reverts )
+);
+
+/*
+ * What gets copied is the resolver's answer, not the row's own default. The two
+ * differ exactly when the shared pair has been edited — which is the case that
+ * matters, because copying the row default there would put text in the box that
+ * differs from what the message was sending a second earlier.
+ */
+Settings::update( array( 'email.subject' => 'Mã của {{site_name}}: {{code}}' ) );
+
+$sl_with_shared = sl_capture(
+	static function (): void {
+		( new \SmartLogin\Admin\Screens\SettingsScreen() )->render( 'delivery-mail' );
+	}
+)['html'];
+
+$sl_resolved_login = \SmartLogin\Mail\MailRegistry::resolve( 'login' )['subject'];
+
+sl_check( 'the shared pair is what an un-overridden message resolves to', 'Mã của {{site_name}}: {{code}}', $sl_resolved_login );
+
+sl_assert(
+	'and that is what the copy button carries',
+	false !== strpos( $sl_with_shared, 'data-mail-default="' . esc_attr( $sl_resolved_login ) . '"' ),
+	'Copying the row default here would hand the administrator text the message was not sending.'
+);
+
+sl_assert(
+	'the row default is not what is offered',
+	false === strpos(
+		$sl_with_shared,
+		'data-mail-default="' . esc_attr( (string) \SmartLogin\Mail\MailRegistry::get( 'login' )['subject'] ) . '"'
+	),
+	'With the shared pair edited, the row default is the wrong answer and must not appear.'
+);
+
+Settings::update( array( 'email.subject' => '' ) );
+
+// Revert stores empty, and empty resolves back to the shared pair. That is the
+// round trip 11.1 asserts, restated here because 13.2 is what makes an
+// administrator able to reach it by accident.
+Settings::update( array( 'email.templates.login.subject' => 'tuỳ chỉnh' ) );
+sl_check( 'an override is stored', true, \SmartLogin\Mail\MailRegistry::is_overridden( 'login' ) );
+
+Settings::update( array( 'email.templates.login.subject' => '' ) );
+sl_check( 'clearing it returns the message to inheriting', false, \SmartLogin\Mail\MailRegistry::is_overridden( 'login' ) );
+
+// =====================================================================
+sl_section( 'Rule 4 — the structure tokens are opt-in (13.3)' );
+
+/*
+ * Also passes today — nothing uses the tokens yet — and must keep passing. It is
+ * what makes 13.3 an addition rather than a migration, and it is the rule most
+ * likely to be broken by rewriting the shipped bodies to use the new tokens in
+ * the same commit that introduces them.
+ */
+Settings::update(
+	array(
+		'email.enabled' => 1,
+		'email.is_html' => 1,
+		'email.subject' => '',
+		'email.body'    => '',
+	)
+);
+
+$GLOBALS['sl_mails'] = array();
+( new MailTransport() )->send( 'nguoi.dung@example.com', '482913', array( 'intent' => 'login' ) );
+$sl_plain_render = $GLOBALS['sl_mails'][0]['message'] ?? '';
+
+sl_assert(
+	'a body using neither token renders without their markup',
+	'' !== $sl_plain_render
+		&& false === strpos( $sl_plain_render, 'sl-mail-code' )
+		&& false === strpos( $sl_plain_render, 'sl-mail-button' ),
+	'The shipped bodies must not start emitting the new structures on their own; opt-in is what keeps 13.3 from being a migration.'
+);
+
+sl_assert(
+	'and no token is left unexpanded in it',
+	false === strpos( $sl_plain_render, '{{' ),
+	'An unexpanded token is the silent-empty-string failure with the braces left in.'
+);
+
+// =====================================================================
+sl_section( 'Structure tokens (13.3)' );
+
+/**
+ * Send one message with a body written for this assertion, and return what
+ * wp_mail() was handed.
+ */
+function sl_render_body( string $body, bool $is_html ): string {
+	Settings::update(
+		array(
+			'email.enabled'                => 1,
+			'email.is_html'                => $is_html ? 1 : 0,
+			'email.templates.login.body'   => $body,
+			'email.templates.login.subject' => 'Mã {{code}}',
+		)
+	);
+
+	$GLOBALS['sl_mails'] = array();
+
+	( new MailTransport() )->send( 'nguoi.dung@example.com', '482913', array( 'intent' => 'login' ) );
+
+	return (string) ( $GLOBALS['sl_mails'][0]['message'] ?? '' );
+}
+
+$sl_code_html = sl_render_body( 'Mã của bạn:' . "\n\n" . '{{code_block}}', true );
+
+sl_assert(
+	'{{code_block}} renders the code in a block, not as running text',
+	false !== strpos( $sl_code_html, 'letter-spacing' ) && false !== strpos( $sl_code_html, '482913' ),
+	'An OTP email has one job. Rendering the digits mid-paragraph is that job done badly.'
+);
+
+sl_assert(
+	'and the digits are one selectable run',
+	false === strpos( $sl_code_html, '4</span>' ) && false === strpos( $sl_code_html, '4</td><td' ),
+	'A span or cell per digit is prettier markup that copies as "4 8 2 9 1 3" on a phone, which defeats the block entirely.'
+);
+
+$sl_code_text = sl_render_body( 'Mã của bạn: {{code_block}}', false );
+
+sl_check( 'in plain text it is the bare digits', true, false !== strpos( $sl_code_text, '482913' ) );
+sl_check( 'and carries no markup', $sl_code_text, wp_strip_all_tags( $sl_code_text ) );
+
+$sl_button_html = sl_render_body( '{{button:https://example.test/reset|Đặt lại mật khẩu}}', true );
+
+sl_assert(
+	'{{button:…}} renders a table, not a styled anchor',
+	false !== strpos( $sl_button_html, '<table' ) && false !== strpos( $sl_button_html, 'https://example.test/reset' ),
+	'Outlook ignores padding on inline elements, so a styled <a> arrives as underlined text.'
+);
+
+$sl_button_text = sl_render_body( '{{button:https://example.test/reset|Đặt lại mật khẩu}}', false );
+
+sl_assert(
+	'in plain text it is a label and a copyable URL',
+	false !== strpos( $sl_button_text, 'Đặt lại mật khẩu: https://example.test/reset' ),
+	'A link the reader cannot click has to be one they can copy: ' . $sl_button_text
+);
+
+// The preheader, which is the difference between an inbox preview reading
+// "Xin chào," and reading what the message is about.
+$sl_preheader = sl_render_body( 'Xin chào,' . "\n\n" . 'Mã: {{code}}', true );
+
+sl_assert(
+	'the preheader is present and rendered',
+	false !== strpos( $sl_preheader, 'Mã đăng nhập một lần' )
+		&& false === strpos( $sl_preheader, '{{ttl_minutes}}' ),
+	'An unrendered token in the preheader is the one place a reader sees braces before opening anything.'
+);
+
+Settings::update(
+	array(
+		'email.templates.login.body'    => '',
+		'email.templates.login.subject' => '',
+	)
+);
 
 sl_summary( 'Mail templates' );

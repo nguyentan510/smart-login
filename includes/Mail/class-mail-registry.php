@@ -50,6 +50,9 @@ final class MailRegistry {
 		'site_url',
 		'user_name',
 		'delivery_id',
+		// Structure rather than a value: expanded by MailStructure after the
+		// placeholders, into a block in HTML and the bare digits in text.
+		'code_block',
 	);
 
 	/**
@@ -88,58 +91,108 @@ final class MailRegistry {
 	public static function all(): array {
 		$messages = array(
 			'register'      => array(
-				'group'   => 'otp',
-				'intent'  => AuthAction::REGISTER,
-				'label'   => __( 'Mã đăng ký', 'smart-login' ),
-				'when'    => __( 'Khi người dùng bắt đầu tạo tài khoản mới.', 'smart-login' ),
-				'tokens'  => self::OTP_TOKENS,
-				'subject' => 'Mã xác thực đăng ký {{code}} - {{site_name}}',
-				'body'    => "Xin chào,\n\nMã xác thực để tạo tài khoản tại {{site_name}} là: {{code}}\nMã có hiệu lực trong {{ttl_minutes}} phút.\n\nNếu bạn không yêu cầu mã này, vui lòng bỏ qua email.\n\n{{site_name}}",
+				'group'     => 'otp',
+				'intent'    => AuthAction::REGISTER,
+				'label'     => __( 'Mã đăng ký', 'smart-login' ),
+				'when'      => __( 'Khi người dùng bắt đầu tạo tài khoản mới.', 'smart-login' ),
+				'preheader' => 'Mã xác thực để hoàn tất đăng ký, hiệu lực {{ttl_minutes}} phút.',
+				'tokens'    => self::OTP_TOKENS,
+				'subject'   => 'Mã xác thực đăng ký {{code}} - {{site_name}}',
+				'body'      => 'Xin chào,
+
+Dùng mã dưới đây để hoàn tất việc tạo tài khoản tại {{site_name}}.
+
+{{code_block}}
+
+Mã có hiệu lực trong {{ttl_minutes}} phút và chỉ dùng được một lần.
+
+Nếu bạn không yêu cầu tạo tài khoản, hãy bỏ qua email này — không có gì được tạo cho tới khi mã được nhập.',
 			),
 			'login'         => array(
-				'group'   => 'otp',
-				'intent'  => AuthAction::LOGIN,
-				'label'   => __( 'Mã đăng nhập', 'smart-login' ),
-				'when'    => __( 'Khi người dùng đăng nhập bằng mã thay cho mật khẩu, hoặc từ thiết bị lạ.', 'smart-login' ),
-				'tokens'  => self::OTP_TOKENS,
-				'subject' => 'Mã đăng nhập {{code}} - {{site_name}}',
-				'body'    => "Xin chào,\n\nMã đăng nhập của bạn tại {{site_name}} là: {{code}}\nMã có hiệu lực trong {{ttl_minutes}} phút.\n\nNếu không phải bạn đang đăng nhập, hãy đổi mật khẩu ngay.\n\n{{site_name}}",
+				'group'     => 'otp',
+				'intent'    => AuthAction::LOGIN,
+				'label'     => __( 'Mã đăng nhập', 'smart-login' ),
+				'when'      => __( 'Khi người dùng đăng nhập bằng mã thay cho mật khẩu, hoặc từ thiết bị lạ.', 'smart-login' ),
+				'preheader' => 'Mã đăng nhập một lần, hiệu lực {{ttl_minutes}} phút.',
+				'tokens'    => self::OTP_TOKENS,
+				'subject'   => 'Mã đăng nhập {{code}} - {{site_name}}',
+				'body'      => 'Xin chào,
+
+Đây là mã đăng nhập của bạn tại {{site_name}}.
+
+{{code_block}}
+
+Mã có hiệu lực trong {{ttl_minutes}} phút và chỉ dùng được một lần.
+
+Nếu không phải bạn đang đăng nhập, hãy đổi mật khẩu ngay — có người đang biết địa chỉ email này của bạn.',
 			),
 			'recover'       => array(
-				'group'   => 'otp',
-				'intent'  => AuthAction::RECOVER,
-				'label'   => __( 'Đặt lại mật khẩu', 'smart-login' ),
-				'when'    => __( 'Khi người dùng bấm Quên mật khẩu.', 'smart-login' ),
-				'tokens'  => self::OTP_TOKENS,
-				'subject' => 'Mã đặt lại mật khẩu {{code}} - {{site_name}}',
-				'body'    => "Xin chào,\n\nBạn vừa yêu cầu đặt lại mật khẩu tại {{site_name}}.\nMã xác nhận: {{code}}\nMã có hiệu lực trong {{ttl_minutes}} phút.\n\nNếu bạn không yêu cầu, hãy bỏ qua email này — mật khẩu hiện tại vẫn giữ nguyên.\n\n{{site_name}}",
+				'group'     => 'otp',
+				'intent'    => AuthAction::RECOVER,
+				'label'     => __( 'Đặt lại mật khẩu', 'smart-login' ),
+				'when'      => __( 'Khi người dùng bấm Quên mật khẩu.', 'smart-login' ),
+				'preheader' => 'Mã xác nhận để đặt lại mật khẩu, hiệu lực {{ttl_minutes}} phút.',
+				'tokens'    => self::OTP_TOKENS,
+				'subject'   => 'Mã đặt lại mật khẩu {{code}} - {{site_name}}',
+				'body'      => 'Xin chào,
+
+Bạn vừa yêu cầu đặt lại mật khẩu tại {{site_name}}. Nhập mã dưới đây để chọn mật khẩu mới.
+
+{{code_block}}
+
+Mã có hiệu lực trong {{ttl_minutes}} phút.
+
+Nếu bạn không yêu cầu, hãy bỏ qua email này. Mật khẩu hiện tại vẫn giữ nguyên và không ai có thể đổi nó nếu không có mã trên.',
 			),
 			'add_identity'  => array(
-				'group'   => 'otp',
-				'intent'  => AuthAction::ADD_IDENTITY,
-				'label'   => __( 'Xác minh liên hệ mới', 'smart-login' ),
-				'when'    => __( 'Khi người dùng thêm hoặc đổi số điện thoại, email trong tài khoản.', 'smart-login' ),
-				'tokens'  => self::OTP_TOKENS,
-				'subject' => 'Mã xác minh {{destination}} - {{site_name}}',
-				'body'    => "Xin chào,\n\nMã xác minh cho {{destination}} tại {{site_name}} là: {{code}}\nMã có hiệu lực trong {{ttl_minutes}} phút.\n\nNếu bạn không thực hiện thay đổi này, hãy kiểm tra lại tài khoản của mình.\n\n{{site_name}}",
+				'group'     => 'otp',
+				'intent'    => AuthAction::ADD_IDENTITY,
+				'label'     => __( 'Xác minh liên hệ mới', 'smart-login' ),
+				'when'      => __( 'Khi người dùng thêm hoặc đổi số điện thoại, email trong tài khoản.', 'smart-login' ),
+				'preheader' => 'Mã xác minh liên hệ mới, hiệu lực {{ttl_minutes}} phút.',
+				'tokens'    => self::OTP_TOKENS,
+				'subject'   => 'Mã xác minh {{destination}} - {{site_name}}',
+				'body'      => 'Xin chào,
+
+Dùng mã dưới đây để xác minh {{destination}} cho tài khoản của bạn tại {{site_name}}.
+
+{{code_block}}
+
+Mã có hiệu lực trong {{ttl_minutes}} phút.
+
+Nếu bạn không thêm liên hệ này, hãy kiểm tra lại tài khoản của mình — ai đó có thể đang cố gắn số điện thoại hoặc email của họ vào đó.',
 			),
 			'budget_halted' => array(
 				'group'      => 'admin',
 				'switchable' => true,
 				'label'      => __( 'Cảnh báo chạm trần gửi', 'smart-login' ),
 				'when'       => __( 'Gửi tới email quản trị một lần mỗi lần site chạm trần và tạm dừng gửi mã.', 'smart-login' ),
+				'preheader'  => 'Site đã chạm trần gửi mã và đang tạm dừng.',
 				'tokens'     => self::ADMIN_TOKENS,
 				'subject'    => '[{{site_name}}] Đã tạm dừng gửi mã xác thực',
-				'body'       => "Smart Login đã chạm trần {{ceiling}} mã xác thực trong một {{window}} và tạm dừng gửi trong {{halt_minutes}} phút.\n\nĐây thường là dấu hiệu bị lạm dụng để đốt tin nhắn. Hãy mở Smart Login → Nhật ký để xem lưu lượng gần đây trước khi nâng trần.",
+				'body'       => 'Smart Login đã chạm trần {{ceiling}} mã xác thực trong một {{window}} và tạm dừng gửi trong {{halt_minutes}} phút.
+
+Trong lúc này không ai đăng ký hoặc đăng nhập bằng mã được.
+
+Đây thường là dấu hiệu bị lạm dụng để đốt tin nhắn. Hãy xem lưu lượng gần đây trước khi nâng trần — nâng trần khi đang bị tấn công chỉ làm hoá đơn to hơn.
+
+Nhật ký: {{site_url}}wp-admin/admin.php?page=smart-login-audit',
 			),
 			'breaker_open'  => array(
 				'group'      => 'admin',
 				'switchable' => true,
 				'label'      => __( 'Cảnh báo ngắt mạch kênh gửi', 'smart-login' ),
 				'when'       => __( 'Gửi một lần khi một kênh gửi bị tạm ngắt sau nhiều lần thất bại liên tiếp.', 'smart-login' ),
+				'preheader'  => 'Một kênh gửi mã vừa bị tạm ngắt vì lỗi liên tiếp.',
 				'tokens'     => self::ADMIN_TOKENS,
 				'subject'    => '[{{site_name}}] Kênh gửi mã đang lỗi liên tục',
-				'body'       => "Smart Login đã tạm ngắt kênh \"{{transport}}\" sau nhiều lần gửi thất bại liên tiếp, và sẽ thử lại sau {{cooldown}} giây.\n\nTrong lúc này người dùng không nhận được mã. Hãy kiểm tra gateway, rồi dùng nút Gửi thử ở tab Gửi mã — nút đó không bị ngắt mạch chặn.",
+				'body'       => 'Smart Login đã tạm ngắt kênh "{{transport}}" sau nhiều lần gửi thất bại liên tiếp, và sẽ tự thử lại sau {{cooldown}} giây.
+
+Trong lúc này người dùng không nhận được mã qua kênh đó.
+
+Hãy kiểm tra nhà cung cấp, rồi dùng nút Gửi thử ở tab Gửi mã để xác nhận — nút đó không bị ngắt mạch chặn, nên nó là cách biết kênh đã sống lại chưa.
+
+Cấu hình: {{site_url}}wp-admin/admin.php?page=smart-login&tab=delivery',
 			),
 		);
 
@@ -274,6 +327,61 @@ final class MailRegistry {
 			'subject' => (string) Settings::get( self::FALLBACK_SUBJECT, '' ),
 			'body'    => (string) Settings::get( self::FALLBACK_BODY, '' ),
 		);
+	}
+
+	/**
+	 * Does this message have wording of its own?
+	 *
+	 * The question an administrator has on opening the mail screen, and until the
+	 * list existed it could only be answered by reading twelve boxes. Reads the
+	 * same stored values `resolve()` does, so the list cannot claim a message is
+	 * inheriting while the transport disagrees.
+	 */
+	public static function is_overridden( string $id ): bool {
+		foreach ( array( 'subject', 'body' ) as $part ) {
+			if ( '' !== trim( (string) Settings::get( self::PATH_PREFIX . $id . '.' . $part, '' ) ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Rows in the order the screen lists them, messages before alerts.
+	 *
+	 * @return array<string,array>
+	 */
+	public static function by_group(): array {
+		$ordered = array();
+
+		foreach ( array( 'otp', 'admin' ) as $group ) {
+			foreach ( self::all() as $id => $row ) {
+				if ( ( $row['group'] ?? '' ) === $group ) {
+					$ordered[ $id ] = $row;
+				}
+			}
+		}
+
+		// A row from the filter with an unrecognised group still has to appear,
+		// or it becomes a message nobody can edit.
+		return $ordered + self::all();
+	}
+
+	/**
+	 * The grey line an inbox shows after the subject.
+	 *
+	 * A registry row rather than a setting: one shared value would be wrong for
+	 * six different messages, and six new fields would rebuild the wall Phase 13
+	 * exists to remove. Reversible — it is one row key away from being editable.
+	 *
+	 * Without it, clients pull the first thing in the body, which is why every
+	 * message this plugin sends currently previews as "Xin chào,".
+	 */
+	public static function preheader_for_intent( string $intent ): string {
+		$id = self::id_for_intent( $intent );
+
+		return '' === $id ? '' : (string) ( self::get( $id )['preheader'] ?? '' );
 	}
 
 	public static function id_for_intent( string $intent ): string {

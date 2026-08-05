@@ -237,6 +237,22 @@ function wp_enqueue_style( $handle, $src = '', $deps = array(), $ver = false, $m
 
 function wp_enqueue_script( $handle, $src = '', $deps = array(), $ver = false, $args = array() ) {}
 
+/*
+ * Both lived in admin-stubs.php until the entry screen started rendering a
+ * *configured* provider. ProviderAuthController::start_url() builds the button's
+ * href out of admin_url() and wp_nonce_url(), so the front-end template suite
+ * needs them the moment a provider button actually draws — and admin-stubs.php
+ * is loaded after this file by two suites, so a second copy there would be a
+ * redeclare fatal rather than a fallback. One home, this one.
+ */
+function admin_url( $path = '', $scheme = 'admin' ) {
+	return 'https://example.test/wp-admin/' . ltrim( (string) $path, '/' );
+}
+
+function wp_nonce_url( $actionurl, $action = -1, $name = '_wpnonce' ) {
+	return add_query_arg( $name, wp_create_nonce( $action ), $actionurl );
+}
+
 function sanitize_html_class( $class_name, $fallback = '' ) {
 	$sanitized = preg_replace( '/[^A-Za-z0-9_-]/', '', (string) $class_name );
 

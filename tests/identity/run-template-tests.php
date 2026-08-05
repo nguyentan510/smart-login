@@ -30,6 +30,20 @@ require __DIR__ . '/../harness.php';
 
 use SmartLogin\Settings;
 
+/*
+ * Credentials as deployment constants rather than stored secrets: the entry
+ * screen only draws a provider button for a provider that is *configured*, and
+ * ProviderCredentials::is_configured() reads the constants before it reaches
+ * SecretBox. Going through SecretBox here would make this suite depend on
+ * openssl, which is exactly the dependency the mail work has already been bitten
+ * by. The values are never dialled — nothing in this suite completes an OAuth
+ * round trip.
+ */
+define( 'SMART_LOGIN_GOOGLE_CLIENT_ID', 'google-client-for-render' );
+define( 'SMART_LOGIN_GOOGLE_CLIENT_SECRET', 'google-secret-for-render' );
+define( 'SMART_LOGIN_ZALO_APP_ID', 'zalo-app-for-render' );
+define( 'SMART_LOGIN_ZALO_APP_SECRET', 'zalo-secret-for-render' );
+
 Settings::update(
 	array(
 		'identity.mode'              => 'both',
@@ -366,6 +380,169 @@ sl_assert(
 	'the explanation is absent once wards are available',
 	false === strpos( $sl_ready, 'Chọn Tỉnh/Thành phố trước' ),
 	'An instruction that no longer applies is worse than none.'
+);
+
+// ---------------------------------------------------------------------
+sl_section( 'The entry screen says less, and wears each brand as that brand ships it' );
+
+/*
+ * Two defects, one screen, both found by reading the rendered page rather than
+ * the source:
+ *
+ *   1. The lead paragraph ran to two sentences, and the second one described the
+ *      *server* ("Chúng tôi sẽ tự nhận ra bạn đã có tài khoản hay chưa") — a
+ *      sentence the visitor cannot act on, sitting between the heading and the
+ *      only input on the page. The heading already says "Đăng nhập hoặc đăng ký",
+ *      which is the same promise in four words.
+ *
+ *   2. The provider buttons drew a letter in a circle — "G", "Z" — instead of the
+ *      brands' own marks. For Google that is not a matter of taste: the Google
+ *      Identity branding guidelines require the four-colour G, unrecoloured. And
+ *      the two buttons were not even each other's equals, because only Zalo had
+ *      a colour, so a row meant to read as two peers read as one recommendation.
+ *
+ * These render the block rather than grepping the template because the mark has
+ * to survive being *composed* — it now comes from the provider object, and a
+ * grep over form-auth.php would no longer see it at all.
+ */
+$sl_render_auth = static function () use ( $fixtures, $root ): string {
+	ob_start();
+	( static function ( string $sl_file, array $sl_args ): void {
+		extract( $sl_args, EXTR_SKIP ); // phpcs:ignore WordPress.PHP.DontExtract
+		include $sl_file;
+	} )( $root . 'form-auth.php', $fixtures['form-auth'] );
+
+	return (string) ob_get_clean();
+};
+
+// Zalo is off in the suite-wide settings so that the common render exercises the
+// one-provider case. Both brands have to be on screen at once for the rules
+// below, which are about the pair.
+Settings::update( array( 'providers.zalo.enabled' => 1 ) );
+$sl_auth = $sl_render_auth();
+Settings::update( array( 'providers.zalo.enabled' => 0 ) );
+
+preg_match( '/<p class="sl-lead">(.*?)<\/p>/s', $sl_auth, $sl_lead_match );
+$sl_lead = trim( html_entity_decode( wp_strip_all_tags( $sl_lead_match[1] ?? '' ), ENT_QUOTES, 'UTF-8' ) );
+$sl_lead = trim( preg_replace( '/\s+/u', ' ', $sl_lead ) );
+
+sl_assert(
+	'the entry screen still introduces itself',
+	'' !== $sl_lead,
+	'Deleting the lead outright is not the fix being asked for; shortening it is.'
+);
+
+sl_assert(
+	'the lead is one sentence',
+	substr_count( $sl_lead, '.' ) <= 1,
+	'Second sentence still there: ' . $sl_lead
+);
+
+sl_assert(
+	'the lead is short enough to be read rather than skipped',
+	mb_strlen( $sl_lead, 'UTF-8' ) <= 60,
+	sprintf( '%d characters: %s', mb_strlen( $sl_lead, 'UTF-8' ), $sl_lead )
+);
+
+/*
+ * The divider and the buttons were both saying "tiếp tục với": "Hoặc tiếp tục
+ * nhanh với" / "Tiếp tục với Google". The button copy is the one that cannot
+ * move — "Continue with Google" is one of the strings Google's guidelines
+ * permit — so the divider is the one that gives way.
+ */
+preg_match( '/<div class="sl-divider"><span>(.*?)<\/span>/s', $sl_auth, $sl_divider_match );
+$sl_divider = trim( html_entity_decode( $sl_divider_match[1] ?? '', ENT_QUOTES, 'UTF-8' ) );
+
+sl_assert(
+	'the divider does not repeat what every button under it already says',
+	'' !== $sl_divider && false === mb_stripos( $sl_divider, 'tiếp tục' ),
+	'Divider reads: ' . $sl_divider
+);
+
+// One anchor per provider, sliced out so a rule about Google cannot be satisfied
+// by something Zalo happens to render.
+preg_match_all( '/<a\b[^>]*data-sl-provider="([a-z]+)"[^>]*>(.*?)<\/a>/s', $sl_auth, $sl_buttons, PREG_SET_ORDER );
+
+$sl_marks = array();
+
+foreach ( $sl_buttons as $sl_button ) {
+	$sl_marks[ $sl_button[1] ] = $sl_button[2];
+}
+
+sl_assert(
+	'both provider buttons render',
+	isset( $sl_marks['google'], $sl_marks['zalo'] ),
+	'Rendered: ' . implode( ', ', array_keys( $sl_marks ) ) . ' — the rules below describe the pair.'
+);
+
+$sl_google = $sl_marks['google'] ?? '';
+$sl_zalo   = $sl_marks['zalo'] ?? '';
+
+foreach ( array( 'google' => $sl_google, 'zalo' => $sl_zalo ) as $sl_id => $sl_markup ) {
+	sl_assert(
+		sprintf( 'the %s button carries a real mark, not a letter in a circle', $sl_id ),
+		false !== strpos( $sl_markup, '<svg' ),
+		'A monogram the plugin drew itself is not the brand, and for Google it is a guideline violation.'
+	);
+}
+
+sl_assert(
+	'the Google mark keeps all four of its colours',
+	4 === count(
+		array_filter(
+			array( '#4285F4', '#34A853', '#FBBC05', '#EA4335' ),
+			static fn( string $hex ): bool => false !== stripos( $sl_google, $hex )
+		)
+	),
+	'Google forbids recolouring the G, including flattening it to one colour.'
+);
+
+sl_assert(
+	'the Zalo mark uses the blue Zalo actually ships',
+	false !== stripos( $sl_zalo, '#0068FF' ),
+	'#0b74e5 was this plugin\'s approximation of it, not Zalo\'s value.'
+);
+
+foreach ( array( 'google' => $sl_google, 'zalo' => $sl_zalo ) as $sl_id => $sl_markup ) {
+	sl_assert(
+		sprintf( 'the %s mark is not repainted by the button it sits in', $sl_id ),
+		false === stripos( $sl_markup, 'currentColor' ),
+		'currentColor makes the mark inherit the button text colour, which is the recolouring both brands prohibit.'
+	);
+}
+
+/*
+ * Where the mark lives matters as much as what it looks like. The template used
+ * to hold `'google' === $sl_provider->id() ? 'G' : 'Z'`, which is a two-provider
+ * assumption written into markup: a third provider gets the Zalo letter and
+ * nobody finds out until it is on screen. The brand belongs to the provider
+ * object, beside label() and name().
+ */
+$sl_auth_source = sl_source( 'templates/form-auth.php' );
+
+sl_assert(
+	'the template does not decide which brand it is drawing',
+	false === strpos( $sl_auth_source, "'google' ===" ),
+	'A per-provider branch in a foreach is the two-provider assumption that name() and label() already avoid.'
+);
+
+$sl_css = sl_source( 'assets/css/smart-login.css' );
+
+// Scoped to the one rule block: other things on this stylesheet are round on
+// purpose, and a stylesheet-wide ban on 50% would forbid the step markers and the
+// success mark along with it.
+preg_match( '/\.sl-provider-icon\s*\{(.*?)\}/s', $sl_css, $sl_icon_rule );
+
+sl_assert(
+	'the stylesheet no longer draws a circle around the mark',
+	false === strpos( $sl_icon_rule[1] ?? '', 'border-radius: 50%' ),
+	'The circle existed to contain a letter. A brand mark inside it is a logo in a badge nobody designed.'
+);
+
+sl_assert(
+	'the stylesheet holds no invented Zalo blue',
+	false === stripos( $sl_css, '#0b74e5' ) && false === stripos( $sl_css, '#075eb8' ),
+	'Two shades, neither of them Zalo\'s.'
 );
 
 sl_assert(

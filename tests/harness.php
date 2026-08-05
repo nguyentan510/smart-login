@@ -392,3 +392,46 @@ function sl_method_body( string $source, string $method ): string {
 
 	return '';
 }
+
+/*
+ * Moved here from run-admin-tests.php in 13.0, when the mail suite needed to
+ * render a screen too. A helper two suites use belongs in the shared harness;
+ * a second copy would be a second place to forget that a PHP notice counts.
+ */
+/**
+ * Run a renderer and report what happened, treating a PHP notice as a failure —
+ * an undeclared variable on a settings screen is a bug whether or not the page
+ * happens to come out looking right.
+ *
+ * @return array{html:string,error:?string,warnings:array}
+ */
+function sl_capture( callable $render ): array {
+	$GLOBALS['sl_admin_warnings'] = array();
+
+	set_error_handler(
+		static function ( int $severity, string $message ) {
+			$GLOBALS['sl_admin_warnings'][] = $message;
+			return true;
+		}
+	);
+
+	ob_start();
+
+	try {
+		$render();
+		$html  = (string) ob_get_clean();
+		$error = null;
+	} catch ( Throwable $exception ) {
+		ob_end_clean();
+		$html  = '';
+		$error = get_class( $exception ) . ': ' . $exception->getMessage();
+	} finally {
+		restore_error_handler();
+	}
+
+	return array(
+		'html'     => $html,
+		'error'    => $error,
+		'warnings' => $GLOBALS['sl_admin_warnings'],
+	);
+}

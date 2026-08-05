@@ -11,6 +11,7 @@ namespace SmartLogin\OTP\Transports;
 use SmartLogin\Identity\UserManager;
 use SmartLogin\Mail\MailLayout;
 use SmartLogin\Mail\MailRegistry;
+use SmartLogin\Mail\MailStructure;
 use SmartLogin\OTP\Placeholders;
 use SmartLogin\Settings;
 use WP_Error;
@@ -58,6 +59,11 @@ class MailTransport implements TransportInterface {
 		$body    = Placeholders::render( $message['body'], $map );
 		$is_html = Settings::is_on( 'email.is_html' );
 
+		// After the placeholders, so a URL written with {{site_url}} inside a
+		// button token has already been substituted, and before the layout, so
+		// what gets wrapped is the finished body.
+		$body = MailStructure::expand( $body, $is_html, $map );
+
 		$headers = array();
 
 		$from_name    = trim( (string) Settings::get( 'email.from_name', '' ) );
@@ -72,7 +78,15 @@ class MailTransport implements TransportInterface {
 			$headers[] = 'Content-Type: text/html; charset=UTF-8';
 			// Wrapped after rendering, so the layout sees the finished text and
 			// the template author never has to think about `<html>`.
-			$body = MailLayout::wrap( $body, $subject );
+			// Through the same renderer as everything else: the preheader carries
+			// {{ttl_minutes}}, and an unrendered token in the inbox preview is
+			// the one place a reader sees the braces before opening anything.
+			$preheader = Placeholders::render(
+				MailRegistry::preheader_for_intent( (string) ( $ctx['intent'] ?? '' ) ),
+				$map
+			);
+
+			$body = MailLayout::wrap( $body, $subject, $preheader );
 		} else {
 			$body = wp_strip_all_tags( $body );
 		}

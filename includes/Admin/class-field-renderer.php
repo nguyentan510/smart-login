@@ -94,6 +94,7 @@ final class FieldRenderer {
 						self::input( $path, $field );
 				}
 
+				self::message_actions( $path, $field );
 				self::help( $field );
 				?>
 			</td>
@@ -292,6 +293,51 @@ final class FieldRenderer {
 		}
 
 		return (string) ( MailRegistry::resolve( $message )[ $part ] ?? '' );
+	}
+
+	/**
+	 * Start from the shipped wording, and get back to inheriting it.
+	 *
+	 * These ship as a pair and the second half is not optional. A filled box has
+	 * stopped inheriting — that is what 11.4's placeholder exists to make legible
+	 * — so a copy button on its own, pressed on all six messages by anyone
+	 * tidying the screen, turns one wording into six copies and a later edit of
+	 * the shared pair reaches none of them.
+	 *
+	 * Two buttons rather than one that toggles: a toggle has a state, the state
+	 * would have to be read from whether the box is empty, and a box the
+	 * administrator emptied by hand would then offer the wrong label.
+	 *
+	 * The text comes from `MailRegistry::resolve()` — the same call the transport
+	 * makes and the same one the placeholder already shows — so what lands in the
+	 * box is what the message was sending a second earlier. It travels in an
+	 * attribute because it is already on the page as the placeholder; fetching
+	 * what is already in the DOM is a round trip that can fail.
+	 */
+	private static function message_actions( string $path, array $field ): void {
+		$inherited = self::inherited( $field );
+
+		if ( '' === $inherited ) {
+			return;
+		}
+
+		$target = self::id( $path );
+		?>
+		<p class="sl-mail-actions">
+			<button
+				type="button"
+				class="button-link"
+				data-mail-copy="<?php echo esc_attr( $target ); ?>"
+				data-mail-default="<?php echo esc_attr( $inherited ); ?>"
+			><?php esc_html_e( 'Chép mẫu để sửa', 'smart-login' ); ?></button>
+			<span aria-hidden="true"> · </span>
+			<button
+				type="button"
+				class="button-link sl-mail-revert"
+				data-mail-revert="<?php echo esc_attr( $target ); ?>"
+			><?php esc_html_e( 'Xoá, dùng lại mẫu chung', 'smart-login' ); ?></button>
+		</p>
+		<?php
 	}
 
 	/**

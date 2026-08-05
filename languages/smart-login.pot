@@ -42,7 +42,7 @@ msgstr ""
 msgid "(bắt buộc)"
 msgstr ""
 
-#: templates/form-auth.php:85
+#: templates/form-auth.php:96
 msgid "0969 789 475"
 msgstr ""
 
@@ -769,12 +769,9 @@ msgstr ""
 msgid "Hoàn tất đăng ký"
 msgstr ""
 
+#: templates/form-auth.php:121
 #: templates/form-forgot.php:51
 msgid "Hoặc"
-msgstr ""
-
-#: templates/form-auth.php:101
-msgid "Hoặc tiếp tục nhanh với"
 msgstr ""
 
 #. translators: 1: SMS sent today, 2: estimated cost.
@@ -843,7 +840,7 @@ msgid "Khi nào hiện"
 msgstr ""
 
 #. translators: %s: linked terms and conditions label.
-#: templates/form-auth.php:124
+#: templates/form-auth.php:144
 msgid "Khi tiếp tục, bạn đồng ý với %s."
 msgstr ""
 
@@ -1258,8 +1255,8 @@ msgstr ""
 msgid "Nhà cung cấp không trả về định danh hợp lệ."
 msgstr ""
 
-#: templates/form-auth.php:50
-msgid "Nhập email của bạn để tiếp tục. Chúng tôi sẽ tự nhận ra bạn đã có tài khoản hay chưa."
+#: templates/form-auth.php:61
+msgid "Nhập email để tiếp tục."
 msgstr ""
 
 #: includes/Admin/class-field-renderer.php:271
@@ -1283,12 +1280,12 @@ msgstr ""
 msgid "Nhập secret"
 msgstr ""
 
-#: templates/form-auth.php:48
-msgid "Nhập số điện thoại của bạn để tiếp tục. Chúng tôi sẽ tự nhận ra bạn đã có tài khoản hay chưa."
+#: templates/form-auth.php:59
+msgid "Nhập số điện thoại để tiếp tục."
 msgstr ""
 
-#: templates/form-auth.php:52
-msgid "Nhập số điện thoại hoặc email của bạn để tiếp tục. Chúng tôi sẽ tự nhận ra bạn đã có tài khoản hay chưa."
+#: templates/form-auth.php:63
+msgid "Nhập số điện thoại hoặc email để tiếp tục."
 msgstr ""
 
 #: includes/Admin/class-settings-page.php:105
@@ -1825,7 +1822,7 @@ msgstr ""
 msgid "Tiến độ đăng ký"
 msgstr ""
 
-#: templates/form-auth.php:96
+#: templates/form-auth.php:107
 #: templates/form-otp.php:128
 #: templates/registered-success.php:36
 msgid "Tiếp tục"
@@ -2257,12 +2254,12 @@ msgid "[%s] Đã tạm dừng gửi mã xác thực"
 msgstr ""
 
 #: includes/Admin/Screens/class-settings-screen.php:254
-#: templates/form-auth.php:85
+#: templates/form-auth.php:96
 msgid "ban@example.com"
 msgstr ""
 
 #. translators: %s: linked terms and conditions label.
-#: templates/form-auth.php:125
+#: templates/form-auth.php:145
 #: templates/form-signup.php:113
 msgid "các điều khoản áp dụng"
 msgstr ""

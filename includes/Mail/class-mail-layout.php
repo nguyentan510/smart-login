@@ -39,7 +39,7 @@ final class MailLayout {
 	 * @param string $body    Already-rendered message body.
 	 * @param string $subject Used as the preheader and title.
 	 */
-	public static function wrap( string $body, string $subject = '' ): string {
+	public static function wrap( string $body, string $subject = '', string $preheader = '' ): string {
 		if ( false !== strpos( $body, self::MARKER ) ) {
 			return $body;
 		}
@@ -53,13 +53,14 @@ final class MailLayout {
 		$html = TemplateLoader::render(
 			'mail/layout',
 			array(
-				'body'    => self::paragraphs( $body ),
-				'subject' => $subject,
-				'accent'  => self::accent(),
-				'logo'    => trim( (string) Settings::get( 'email.logo_url', '' ) ),
-				'footer'  => trim( (string) Settings::get( 'email.footer_text', '' ) ),
-				'site'    => wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ),
-				'marker'  => self::MARKER,
+				'body'      => self::paragraphs( $body ),
+				'subject'   => $subject,
+				'preheader' => $preheader,
+				'accent'    => self::accent(),
+				'logo'      => trim( (string) Settings::get( 'email.logo_url', '' ) ),
+				'footer'    => trim( (string) Settings::get( 'email.footer_text', '' ) ),
+				'site'      => wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ),
+				'marker'    => self::MARKER,
 			)
 		);
 
@@ -92,10 +93,18 @@ final class MailLayout {
 	 * A body that already contains block markup is left alone.
 	 */
 	private static function paragraphs( string $body ): string {
-		if ( preg_match( '/<(p|div|table|ul|ol|h[1-6])\b/i', $body ) ) {
-			return $body;
-		}
-
+		/*
+		 * Decided per block, not for the whole body.
+		 *
+		 * This used to bail out entirely the moment the body contained any block
+		 * tag, which was right when the only way one got there was an
+		 * administrator pasting markup. 13.3 broke that assumption: a body using
+		 * `{{code_block}}` now contains a `<table>`, so every message with a code
+		 * block would have had all of its prose run together in one line.
+		 *
+		 * Caught by 11.2's own assertion, which counts paragraphs rather than
+		 * checking that wrapping happened.
+		 */
 		$blocks = preg_split( '/\n\s*\n/', trim( $body ) ) ?: array();
 		$out    = '';
 
@@ -103,6 +112,13 @@ final class MailLayout {
 			$block = trim( $block );
 
 			if ( '' === $block ) {
+				continue;
+			}
+
+			// A block that is already block-level is emitted as it is; only prose
+			// gets a paragraph around it.
+			if ( preg_match( '/^<(p|div|table|ul|ol|h[1-6])\b/i', $block ) ) {
+				$out .= $block . "\n";
 				continue;
 			}
 

@@ -26,6 +26,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 10 — Delivery routing and the automation bus**
 - [x] **Phase 11 — Mail templates**
 - [x] **Phase 12 — The provider surface**
+- [x] **Phase 13 — The mail surface**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -1038,6 +1039,70 @@ component with no defect driving it and no second consumer asking for it;
 `sl-provider-card` still has exactly one caller. A shared abstraction with one
 caller is a rename with extra steps. Reversible the day a second surface needs a
 card with a status to tell the truth about.
+
+---
+
+## Phase 13 — The mail surface
+
+Normative spec: [`mail-surface.md`](mail-surface.md) — why show/hide is correct here
+and was not in 10.6, why copy-to-edit needs a way back, and why the layout gains
+tokens rather than settings.
+
+Execution briefs: [`mail-surface/`](mail-surface/), one file per sub-phase.
+**Status lives here and only here.**
+
+Short version: Phase 11 gave every message a template and a layout to live in,
+and put all twenty resulting fields on one screen — six of them 8-row textareas.
+That is the wall Phase 10 removed from the delivery tab, rebuilt one phase later
+on a different screen. Meanwhile the layout has no preheader, no button, and
+renders the six digits an OTP mail exists for as running text mid-paragraph.
+
+### Sub-phases
+
+- [x] **13.0** [Guard rails](mail-surface/13.0-guard-rails.md) — landed red at 39 passed / 2 failed. The brief predicted three failures and got two: rule 2 passes today, because the flat form-table already renders every input, so it is a property to **preserve** rather than reach. `sl_capture()` moved into the harness, since two suites now render screens. Four rules.
+      Rule 4 passes today and must keep passing, which is why it lands now
+      rather than with 13.3: a rule arriving alongside the feature it guards
+      cannot catch that feature breaking it
+- [x] **13.1** [Message list](mail-surface/13.1-message-list.md) — twenty
+      fields in one column became a six-row table with one editor open. The
+      alerts lost their section heading and joined the list, so 11.4's heading
+      assertion was updated **and** a new one added: dropping a heading must
+      not drop the messages under it. The state column is asserted by flipping
+      it, because state that only ever reads one way could be hard-coded and no
+      test would notice. 121 → 123 admin, 39 → 43 mail. A generated
+      table with an inheritance column, one panel open at a time. **Every panel
+      still renders**; rendering only the open one is the obvious optimisation
+      and would silently stop five messages being saved
+- [x] **13.2** [Copy and revert](mail-surface/13.2-copy-and-revert.md) — the
+      cheap half of the rule is counting copy against revert; the half that
+      could go wrong silently is **which** text is copied. The button carries
+      `MailRegistry::resolve()`, not the row default — identical until the
+      shared pair has been edited, which is exactly the state an administrator
+      reaching for this button is already in. Asserted in both directions.
+      43 → 49 mail, no failures left. Originally: the
+      copy button undoes 11.4 on its own, so it ships as a pair and the second
+      half is not optional
+- [x] **13.3** [Layout and tokens](mail-surface/13.3-layout-and-tokens.md) —
+      expansion runs **after** the placeholders, so a URL written with
+      `{{site_url}}` inside a button token is already substituted and nothing
+      has to parse nested braces. The prettier markup would have been the
+      broken one: a span per digit copies as `4 8 2 9 1 3` on a phone, which
+      defeats the block's only purpose, so it is one run with `letter-spacing`
+      and an assertion that fails on the change that looks like an
+      improvement. 49 → 56 mail. Originally:
+      `{{code_block}}`, `{{button:url|label}}`, a preheader on the registry row,
+      type and dark mode. Both tokens opt-in, and the shipped bodies are
+      deliberately **not** rewritten to use them
+
+---
+
+**Ordering rationale.** 13.0 first. 13.1 before 13.2, because the buttons live
+in the panels the list opens. 13.3 is independent of both and may be dropped.
+
+**Scope decided with the user:** a better default layout plus two tokens, not
+eight more appearance settings and not a layout picker. Most combinations of
+eight appearance settings look worse than the default, and a picker is three
+templates to maintain for a choice made once.
 
 ## Risks
 

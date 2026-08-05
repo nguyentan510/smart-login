@@ -117,6 +117,13 @@ class FakeLoginProvider implements LoginProviderInterface {
 		return ucfirst( $this->provider_id );
 	}
 
+	// A stand-in, not a brand: no test in this suite renders it. The real rule
+	// about what a mark may contain runs against the rendered entry screen, in
+	// tests/identity/run-template-tests.php.
+	public function icon_svg(): string {
+		return '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"></svg>';
+	}
+
 	public function is_available(): bool {
 		return $this->available;
 	}

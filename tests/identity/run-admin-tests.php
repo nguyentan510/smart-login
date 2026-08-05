@@ -27,44 +27,6 @@ use SmartLogin\Admin\SettingsPage;
 use SmartLogin\FieldRegistry;
 use SmartLogin\Settings;
 
-/**
- * Run a renderer and report what happened, treating a PHP notice as a failure —
- * an undeclared variable on a settings screen is a bug whether or not the page
- * happens to come out looking right.
- *
- * @return array{html:string,error:?string,warnings:array}
- */
-function sl_capture( callable $render ): array {
-	$GLOBALS['sl_admin_warnings'] = array();
-
-	set_error_handler(
-		static function ( int $severity, string $message ) {
-			$GLOBALS['sl_admin_warnings'][] = $message;
-			return true;
-		}
-	);
-
-	ob_start();
-
-	try {
-		$render();
-		$html  = (string) ob_get_clean();
-		$error = null;
-	} catch ( Throwable $exception ) {
-		ob_end_clean();
-		$html  = '';
-		$error = get_class( $exception ) . ': ' . $exception->getMessage();
-	} finally {
-		restore_error_handler();
-	}
-
-	return array(
-		'html'     => $html,
-		'error'    => $error,
-		'warnings' => $GLOBALS['sl_admin_warnings'],
-	);
-}
-
 // ---------------------------------------------------------------------
 sl_section( 'Every settings tab renders' );
 
@@ -722,11 +684,28 @@ sl_assert( 'the mail screen renders', null === $mail_html['error'], (string) $ma
 
 $mail_markup = $mail_html['html'];
 
-// Grouped the way an administrator reads it, not the way the registry stores it.
+/*
+ * Grouped the way an administrator reads it, not the way the registry stores it.
+ *
+ * 13.1 removed the "Cảnh báo quản trị" heading on purpose: the alerts are rows
+ * in the message list now, beside the OTP messages, because a list that shows
+ * four of six messages is not a list. The heading it used to carry is gone
+ * rather than empty, and this assertion follows the screen instead of pinning
+ * the layout it had in 11.4.
+ */
 $section_order = array();
 
-foreach ( array( 'Mẫu mặc định', 'Mã xác thực', 'Cảnh báo quản trị', 'Giao diện email HTML' ) as $heading ) {
+foreach ( array( 'Mẫu mặc định', 'Mã xác thực', 'Giao diện email HTML' ) as $heading ) {
 	$section_order[ $heading ] = strpos( $mail_markup, $heading );
+}
+
+// The alerts did not vanish with their heading — they are in the list.
+foreach ( array( 'budget_halted', 'breaker_open' ) as $alert ) {
+	sl_assert(
+		sprintf( 'the "%s" alert is listed with the other messages', $alert ),
+		false !== strpos( $mail_markup, 'data-mail-message="' . $alert . '"' ),
+		'Dropping its section heading must not drop the message.'
+	);
 }
 
 sl_check(

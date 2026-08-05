@@ -8,20 +8,43 @@ param(
     [string]$DbPrefix = $(if ($env:SMART_LOGIN_DB_PREFIX) { $env:SMART_LOGIN_DB_PREFIX } else { 'wp_' })
 )
 
+# XAMPP has lived on C: and on D:. Look for both rather than hard-coding the one
+# that happened to exist when this was written — it moved once already, and the
+# failure when it moves is twenty passing assertions turning red for a reason
+# that has nothing to do with the code.
+$xamppPhp = @('C:\xampp\php\php.exe', 'D:\XAMPP\php\php.exe') |
+    Where-Object { Test-Path -LiteralPath $_ } |
+    Select-Object -First 1
+
 $integrationPhp = if ($env:SMART_LOGIN_PHP) {
     $env:SMART_LOGIN_PHP
 } elseif (Test-Path 'C:\Users\PC\AppData\Roaming\Local\lightning-services\php-8.2.29+0\bin\win64\php.exe') {
     'C:\Users\PC\AppData\Roaming\Local\lightning-services\php-8.2.29+0\bin\win64\php.exe'
-} elseif (Test-Path 'C:\xampp\php\php.exe') {
-    'C:\xampp\php\php.exe'
+} elseif ($xamppPhp) {
+    $xamppPhp
 } else {
     'php'
 }
 
-$purePhp = if (Test-Path 'C:\xampp\php\php.exe') {
-    'C:\xampp\php\php.exe'
+# The pure suites need openssl, because SecretBox does. A XAMPP build has it
+# compiled in; Local's ships no php.ini at all, so run-all.php's child processes
+# come up without it and roughly twenty assertions fail across four suites —
+# every one about encrypted secrets, and every one looking exactly like a real
+# regression in code nobody touched.
+#
+# Passing -d here would not help: run-all.php spawns each suite with
+# escapeshellarg( PHP_BINARY ) and the file, nothing else. So prefer a XAMPP
+# build when there is one, and tell the operator what to do when there is not.
+$purePhp = if ($xamppPhp) {
+    $xamppPhp
 } else {
     $integrationPhp
+}
+
+if (-not $xamppPhp -and -not $env:PHPRC) {
+    Write-Output 'SMART_LOGIN_AUTH_INTEGRATION_BLOCKED'
+    Write-Output 'reason=no XAMPP php found and PHPRC is unset, so the pure suites would run without openssl and fail ~20 secret assertions that are not real. Set PHPRC to a directory holding a php.ini that loads php_openssl.dll.'
+    exit 2
 }
 
 if (-not (Test-Path -LiteralPath $WpRoot)) {
@@ -61,7 +84,9 @@ if (-not $env:OPENSSL_CONF) {
         (Join-Path $extensionDirectory 'extras\ssl\openssl.cnf'),
         (Join-Path $extensionDirectory 'extras\openssl\openssl.cnf'),
         'C:\xampp\php\extras\ssl\openssl.cnf',
-        'C:\xampp\apache\conf\openssl.cnf'
+        'C:\xampp\apache\conf\openssl.cnf',
+        'D:\XAMPP\php\extras\ssl\openssl.cnf',
+        'D:\XAMPP\apache\conf\openssl.cnf'
     )) {
         if (Test-Path -LiteralPath $candidate) {
             $env:OPENSSL_CONF = $candidate
