@@ -4,7 +4,7 @@ Tags: otp, login, phone, woocommerce, vietnam
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -59,6 +59,10 @@ Không. WooCommerce chỉ cần khi bạn muốn dùng phần địa chỉ và c
 
 == Changelog ==
 
+= 1.0.3 =
+* Sửa lỗi nghiêm trọng: các ô trên tab **Gửi mã** không lưu được. Chọn "Hồ sơ OTP" và sáu giá trị nó chi phối nằm cùng một tab, nên mỗi lần lưu hồ sơ lại ghi đè lên những gì vừa gõ. Nay hồ sơ chỉ áp dụng khi bạn đổi nó, và tự chuyển sang "Tuỳ chỉnh" khi một giá trị khác đi.
+* Sửa lỗi ẩn: một trường không có trong lần gửi form bị ghi thành giá trị nhỏ nhất thay vì giữ nguyên — `otp.ttl` 300 thành 60, `otp.length` 6 thành 4.
+
 = 1.0.2 =
 * Email đã xác thực bởi Google trở thành một cách đăng nhập và khôi phục tài khoản, bật/tắt theo từng nhà cung cấp.
 * Sửa: nhập email của tài khoản Google vào màn hình đăng nhập không còn gửi mã đăng ký rồi báo "tài khoản đã tồn tại" ở bước cuối.
@@ -77,6 +81,9 @@ Không. WooCommerce chỉ cần khi bạn muốn dùng phần địa chỉ và c
 * Chính sách mật khẩu áp dụng cho cả đặt lại mật khẩu.
 
 == Upgrade Notice ==
+
+= 1.0.3 =
+Bản vá cho 1.0.2. Nếu bạn đã lưu tab Gửi mã trên 1.0.2, hãy mở lại và kiểm tra sáu giá trị OTP — chúng có thể đã bị đưa về giá trị của hồ sơ thay vì giá trị bạn đặt.
 
 = 1.0.2 =
 Bản này **không có đường nâng cấp** từ 1.0.1. Plugin chưa từng phát hành, nên mọi đoạn mã di trú đã được gỡ bỏ và phiên bản cơ sở dữ liệu đặt lại về 1. Nếu bạn đang chạy 1.0.1, hãy gỡ và cài lại thay vì cập nhật.

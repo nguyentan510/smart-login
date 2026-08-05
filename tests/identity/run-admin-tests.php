@@ -1024,4 +1024,118 @@ sl_check(
 );
 
 // ---------------------------------------------------------------------
+sl_section( 'A preset does not overwrite the fields it shares a tab with (15.5)' );
+
+/*
+ * Reported from a real screen: fill the inputs on Gửi mã, press Lưu thay đổi, and
+ * everything comes back as it was.
+ *
+ * `otp.preset` lives on the `delivery` tab, and so do the six fields the preset owns.
+ * sanitize() plants the posted values and then re-applies the preset over the top, so
+ * every save of that tab discards what the administrator typed. Reproduced against the
+ * real site before this rule was written: otp.ttl 300 -> 301 came back 300.
+ */
+Settings::update(
+	array(
+		'otp.preset' => 'balanced',
+		'otp.ttl'    => 300,
+	)
+);
+
+$sl_edit = Settings::sanitize(
+	array(
+		Settings::TAB_FIELD => 'delivery',
+		'otp'               => array(
+			'preset' => 'balanced',
+			'ttl'    => 301,
+		),
+	)
+);
+
+sl_check(
+	'a hand-edited OTP value survives the save',
+	301,
+	(int) ( $sl_edit['otp']['ttl'] ?? 0 )
+);
+
+// And the screen must not go on claiming a profile the stored values no longer match.
+sl_check(
+	'and the profile says custom once a value diverges from it',
+	\SmartLogin\OtpPresets::CUSTOM,
+	(string) ( $sl_edit['otp']['preset'] ?? '' )
+);
+
+/*
+ * The second defect, which the first was hiding.
+ *
+ * A field the post does not carry used to be sanitised anyway, and null sanitises to
+ * zero — which a number field clamps up to its minimum. Re-applying the profile
+ * happened to overwrite the six fields where that would have been visible, so removing
+ * the overwrite is what exposed it: otp.ttl 300 → 60 and otp.length 6 → 4, silently.
+ *
+ * A browser posts every input it draws, so this needs a partial post to show — which is
+ * exactly what a programmatic caller, a REST client or a future partial form is.
+ */
+Settings::update( array( 'otp.preset' => 'balanced', 'otp.ttl' => 300, 'otp.length' => 6 ) );
+
+$sl_partial = Settings::sanitize(
+	array(
+		Settings::TAB_FIELD => 'delivery',
+		'otp'               => array( 'preset' => 'balanced' ),
+	)
+);
+
+sl_check(
+	'a field the post omits keeps its stored value, not its minimum',
+	300,
+	(int) ( $sl_partial['otp']['ttl'] ?? 0 )
+);
+
+sl_check(
+	'and so does another on the same tab',
+	6,
+	(int) ( $sl_partial['otp']['length'] ?? 0 )
+);
+
+// The exception that stops this becoming "ignore absent fields": a browser posts
+// nothing for an unchecked box, so absence is the value.
+Settings::update( array( 'sms.enabled' => 1 ) );
+
+$sl_unchecked = Settings::sanitize(
+	array(
+		Settings::TAB_FIELD => 'delivery-sms',
+		'sms'               => array( 'preset' => 'custom' ),
+	)
+);
+
+sl_check(
+	'an unchecked checkbox still turns off',
+	0,
+	(int) ( $sl_unchecked['sms']['enabled'] ?? -1 )
+);
+
+// The other direction still has to work, or choosing a profile stops meaning anything.
+$sl_pick = Settings::sanitize(
+	array(
+		Settings::TAB_FIELD => 'delivery',
+		'otp'               => array(
+			'preset' => 'strict',
+			'ttl'    => 301,
+		),
+	)
+);
+
+sl_check(
+	'choosing a different profile applies it',
+	120,
+	(int) ( $sl_pick['otp']['ttl'] ?? 0 )
+);
+
+sl_check(
+	'and the chosen profile is what gets stored',
+	'strict',
+	(string) ( $sl_pick['otp']['preset'] ?? '' )
+);
+
+// ---------------------------------------------------------------------
 sl_summary( 'Admin screens' );

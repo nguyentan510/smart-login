@@ -170,13 +170,38 @@ class Settings {
 		$input = is_array( $input ) ? $input : array();
 		$clean = self::all();
 
+		// Read before the posted values are planted over it: apply_otp_preset() needs
+		// to know whether the administrator changed the profile in this save or was
+		// editing the values underneath it.
+		$stored_otp_preset = (string) self::dig( $clean, 'otp.preset' );
+
 		self::absorb_provider_secrets( $input );
 		self::absorb_secret_fields( $input );
 
 		$fields = self::posted_fields( $input );
 
 		foreach ( $fields as $path => $field ) {
-			self::plant( $clean, $path, self::sanitize_field( $field, self::dig( $input, $path ), $path ) );
+			/*
+			 * A field the post does not carry keeps what is stored.
+			 *
+			 * It used to be sanitised anyway, and `null` sanitises to zero — which a
+			 * number field then clamps up to its minimum. A save that omitted one input
+			 * wrote `otp.ttl` 300 → 60 and `otp.length` 6 → 4 without a word. It hid
+			 * because a browser posts every input it draws, and because re-applying the
+			 * OTP profile happened to overwrite the six fields where it would have shown.
+			 * Removing that overwrite is what exposed it.
+			 *
+			 * A checkbox is the exception and the reason this cannot simply skip absent
+			 * fields: browsers post nothing for an unchecked box, so absence *is* the
+			 * value there.
+			 */
+			$raw = self::dig( $input, $path );
+
+			if ( null === $raw && 'checkbox' !== ( $field['type'] ?? '' ) ) {
+				continue;
+			}
+
+			self::plant( $clean, $path, self::sanitize_field( $field, $raw, $path ) );
 		}
 
 		// Presets are applied after the plain fields, because they overwrite some
@@ -186,9 +211,7 @@ class Settings {
 		}
 
 		if ( isset( $fields['otp.preset'] ) ) {
-			foreach ( OtpPresets::resolve( (string) self::dig( $clean, 'otp.preset' ) ) as $path => $value ) {
-				self::plant( $clean, $path, $value );
-			}
+			self::apply_otp_preset( $clean, $stored_otp_preset );
 		}
 
 		self::$cache = null;
@@ -289,6 +312,49 @@ class Settings {
 	 *
 	 * @param array $clean Settings array being assembled, by reference.
 	 */
+	/**
+	 * Apply the OTP profile, or step aside when the administrator is editing values.
+	 *
+	 * `otp.preset` shares the `delivery` tab with the six fields it owns, and both are
+	 * editable there. Re-applying the profile on every save of that tab meant every
+	 * value typed into those inputs was discarded between the click and the reload —
+	 * reported from a real screen as "fill it in, press save, everything comes back".
+	 * `otp.ttl` 300 → 301 came back 300.
+	 *
+	 * So the profile is applied when it **changed** in this save, which is the moment
+	 * choosing one is meant to mean something. Otherwise the posted values stand, and
+	 * the profile becomes `custom` if any of them no longer matches what it prescribes
+	 * — because a screen still reading "Cân bằng" over values that are not balanced is
+	 * the same lie in a smaller font.
+	 *
+	 * `sms.preset` does not have this problem and is left alone: its profile owns the
+	 * credential inputs, and those are redrawn per profile rather than edited beneath
+	 * it.
+	 *
+	 * @param string $stored The profile before this save.
+	 */
+	private static function apply_otp_preset( array &$clean, string $stored ): void {
+		$chosen = (string) self::dig( $clean, 'otp.preset' );
+
+		if ( $chosen !== $stored ) {
+			foreach ( OtpPresets::resolve( $chosen ) as $path => $value ) {
+				self::plant( $clean, $path, $value );
+			}
+
+			return;
+		}
+
+		foreach ( OtpPresets::resolve( $chosen ) as $path => $value ) {
+			// Loose comparison on purpose: the form posts strings and the profile
+			// declares integers, so 300 and '300' are the same answer here.
+			if ( self::dig( $clean, $path ) != $value ) { // phpcs:ignore WordPress.PHP.StrictComparisons
+				self::plant( $clean, 'otp.preset', OtpPresets::CUSTOM );
+
+				return;
+			}
+		}
+	}
+
 	private static function apply_gateway_preset( array &$clean ): void {
 		$slug        = (string) self::dig( $clean, 'sms.preset' );
 		$credentials = (array) self::dig( $clean, 'sms.credentials' );
