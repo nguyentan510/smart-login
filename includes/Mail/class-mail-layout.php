@@ -93,10 +93,18 @@ final class MailLayout {
 	 * A body that already contains block markup is left alone.
 	 */
 	private static function paragraphs( string $body ): string {
-		if ( preg_match( '/<(p|div|table|ul|ol|h[1-6])\b/i', $body ) ) {
-			return $body;
-		}
-
+		/*
+		 * Decided per block, not for the whole body.
+		 *
+		 * This used to bail out entirely the moment the body contained any block
+		 * tag, which was right when the only way one got there was an
+		 * administrator pasting markup. 13.3 broke that assumption: a body using
+		 * `{{code_block}}` now contains a `<table>`, so every message with a code
+		 * block would have had all of its prose run together in one line.
+		 *
+		 * Caught by 11.2's own assertion, which counts paragraphs rather than
+		 * checking that wrapping happened.
+		 */
 		$blocks = preg_split( '/\n\s*\n/', trim( $body ) ) ?: array();
 		$out    = '';
 
@@ -104,6 +112,13 @@ final class MailLayout {
 			$block = trim( $block );
 
 			if ( '' === $block ) {
+				continue;
+			}
+
+			// A block that is already block-level is emitted as it is; only prose
+			// gets a paragraph around it.
+			if ( preg_match( '/^<(p|div|table|ul|ol|h[1-6])\b/i', $block ) ) {
+				$out .= $block . "\n";
 				continue;
 			}
 
