@@ -1127,7 +1127,7 @@ that phase.
 
 ### Sub-phases
 
-- [ ] **14.0** [Guard rails](email-identity/14.0-guard-rails.md) — landed red at
+- [x] **14.0** [Guard rails](email-identity/14.0-guard-rails.md) — landed red at
       `41 passed, 2 failed, 1 pending`, no production file touched, every other
       suite byte-identical against a stash of `HEAD`. **The brief was wrong about
       where the rules belong**: it put all three doors in the integration gate, but
@@ -1137,8 +1137,9 @@ that phase.
       *"Số điện thoại không hợp lệ"* — the third time this project has recorded a
       rule passing for want of a subject, and the first time it was caught in the
       same sitting. `actual: 5` is the keeper: five writes have already happened
-      before the flow reaches the wall. **Row stays unticked** — the two gate doors
-      are written and unrun, because there is no local WordPress
+      before the flow reaches the wall. Ticked only once the two gate doors had actually
+      run — they were written unrun for want of a WordPress, and when one arrived they
+      turned out to be **vacuous**, which 14.4's row records
 - [x] **14.1** [Owned-email OTP](email-identity/14.1-owned-email-otp.md) — refuse at
       step one instead of step three, and the gate doors stay red on purpose so the
       guard cannot be mistaken for the cure. 42 → 44, both halves green.
@@ -1211,7 +1212,20 @@ that phase.
       gate red then green on WordPress 7.0.2. Multisite `remove_user_from_blog` is
       excluded in writing
 
-- [ ] **14.5** [Backfill](email-identity/14.5-backfill.md) — DB_VERSION 5 → 6 with
+- [x] **14.5** [Backfill](email-identity/14.5-backfill.md) — green on WordPress 7.0.2
+      with all six markers and `db_version=6`. **The gate found two defects before it
+      would pass.** The cursor outlived the migration and nothing would have resumed it:
+      batching was built for repeated passes while `maybe_upgrade()` runs one and then
+      bumps the version, so any site larger than a batch would have reported success
+      having done a fraction of the work — fixed by clearing the cursor on a short batch
+      and by letting a surviving cursor drive another pass. Found by the assertion that
+      the *upgrade path* reaches the migration, not just that the migration works: the
+      same gap as 14.7, one sub-phase later. And the bump turned `run-abuse-gate.php`
+      red on a pinned literal `5`; it compares against the constant now, and **the sweep
+      for the old value should have preceded the bump** — a sixth instance of the failure
+      CLAUDE.md records five of. On the real site it adopted two genuine Gmail accounts,
+      recorded in the brief as what happened rather than what was expected. Originally:
+      DB_VERSION 5 → 6 with
       **no schema change**, because `maybe_upgrade()` is the only trigger available.
       Calls the same writer rather than bespoke SQL, batched, idempotent, and it
       widens how a set of existing accounts can be reached — which is stated in the

@@ -138,10 +138,21 @@ if ( $pending ) {
 	$ok( 'dbDelta is idempotent with the new index present' );
 }
 
-if ( '5' !== (string) get_option( \SmartLogin\Installer::DB_VERSION_OPTION ) ) {
-	$fail( 'db_version is ' . get_option( \SmartLogin\Installer::DB_VERSION_OPTION ) . ', expected 5' );
+/*
+ * Against the constant, not the literal 5.
+ *
+ * 9.1 owned the DB version at the time and pinned its number here. 14.5 bumped it to
+ * 6 and this went red — on a phase that changes nothing 9.1 cares about. What this
+ * assertion is for is that the option was actually written after the upgrade ran;
+ * whether the schema is current is `pending_schema_changes()` above, and that stayed
+ * green throughout. A literal made it a tripwire for every future bump instead.
+ */
+$stored_version = (string) get_option( \SmartLogin\Installer::DB_VERSION_OPTION );
+
+if ( (string) SMART_LOGIN_DB_VERSION !== $stored_version ) {
+	$fail( 'db_version is ' . $stored_version . ', expected ' . SMART_LOGIN_DB_VERSION );
 } else {
-	$ok( 'db_version is 5' );
+	$ok( 'db_version is ' . $stored_version );
 }
 
 // ---------------------------------------------------------------------

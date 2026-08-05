@@ -14,6 +14,12 @@ class Installer {
 	const DB_VERSION_OPTION = 'smart_login_db_version';
 	const CLEANUP_HOOK      = 'smart_login_cleanup';
 
+	/** Where the backfill left off, so a large user table does not need one request. */
+	const BACKFILL_CURSOR_OPTION = 'smart_login_email_backfill_cursor';
+
+	/** Users examined per pass. Small enough for a slow host, large enough to finish. */
+	const BACKFILL_BATCH = 200;
+
 	public static function activate(): void {
 		self::install_tables();
 
@@ -41,12 +47,174 @@ class Installer {
 	 */
 	public static function maybe_upgrade(): void {
 		if ( get_option( self::DB_VERSION_OPTION ) === SMART_LOGIN_DB_VERSION ) {
+			/*
+			 * The version is current, but a batched backfill may not have finished.
+			 *
+			 * This branch is the whole reason the cursor is durable. The upgrade below
+			 * runs once and bumps the version, so on a site with more users than one
+			 * batch the remaining accounts would never be visited again — the migration
+			 * would report success having done a fraction of the work. Found by an
+			 * assertion, not by reading: the gate noticed the cursor outliving the
+			 * migration and this branch is what that meant.
+			 */
+			if ( null !== get_option( self::BACKFILL_CURSOR_OPTION, null ) ) {
+				self::backfill_provider_emails();
+			}
+
 			return;
 		}
 
 		self::install_tables();
 		self::migrate_settings_shape();
+		self::backfill_provider_emails();
 		update_option( self::DB_VERSION_OPTION, SMART_LOGIN_DB_VERSION );
+	}
+
+	/**
+	 * Give existing provider accounts the email identity 14.4 gives new ones.
+	 *
+	 * Without this the phase ships two classes of account: anybody who signed in with
+	 * Google before the upgrade still meets three doors that disagree about whether
+	 * their address is registered, which is the whole defect.
+	 *
+	 * **No schema change.** The rows go into `smartlogin_identities` as it stands; the
+	 * DB version moved only because `maybe_upgrade()` is the sole trigger available,
+	 * the same reason `migrate_settings_shape()` rides it.
+	 *
+	 * Calls `UserManager::adopt_verified_email()` rather than writing SQL, so the five
+	 * things that say "this account owns this address" are written by the one function
+	 * allowed to write them — including on a migration, which is exactly where a
+	 * bespoke UPDATE would drift from the runtime.
+	 *
+	 * A candidate must satisfy **all** of:
+	 *
+	 *  - holds at least one federated identity and **no** email identity
+	 *  - `user_email` is not a synthetic placeholder
+	 *  - exactly one `wp_users` row holds that address, compared case-insensitively —
+	 *    the same question `auto_link_email` asks, and it fails closed for the same
+	 *    reason: two accounts sharing an address cannot be disambiguated here
+	 *  - the provider whose row it holds has `email_identity` on
+	 *
+	 * Anything else is skipped, not repaired. A migration that fixes things it was not
+	 * asked to fix is a migration nobody can review.
+	 *
+	 * Idempotent: a candidate that already has an email row is not a candidate, so a
+	 * second pass adopts nothing and writes no history. Asserted in the gate, because
+	 * `replace_in_channel()` retires before it claims and a re-run that looked
+	 * harmless would quietly rewrite the trail.
+	 *
+	 * @return int Accounts adopted in this pass.
+	 */
+	public static function backfill_provider_emails(): int {
+		global $wpdb;
+
+		$identities = self::identities_table();
+		$cursor     = (int) get_option( self::BACKFILL_CURSOR_OPTION, 0 );
+
+		// Candidates come from the identities table, not from wp_users: only accounts
+		// with a federated row can qualify, and that is far the smaller set on any
+		// site with real customers.
+		$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- migration; no core API spans this table.
+			$wpdb->prepare(
+				"SELECT DISTINCT f.user_id, f.channel
+				 FROM {$identities} f
+				 WHERE f.user_id > %d
+				   AND f.channel NOT IN ( 'email', 'phone' )
+				   AND NOT EXISTS (
+				       SELECT 1 FROM {$identities} e
+				       WHERE e.user_id = f.user_id AND e.channel = 'email'
+				   )
+				 ORDER BY f.user_id ASC
+				 LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL
+				$cursor,
+				self::BACKFILL_BATCH
+			),
+			ARRAY_A
+		);
+
+		if ( ! $rows ) {
+			delete_option( self::BACKFILL_CURSOR_OPTION );
+
+			return 0;
+		}
+
+		$channels  = new \SmartLogin\Identity\ChannelRegistry();
+		$directory = new \SmartLogin\Identity\IdentityDirectory();
+		$adopted   = 0;
+		$highest   = $cursor;
+
+		foreach ( $rows as $row ) {
+			$user_id = (int) $row['user_id'];
+			$highest = max( $highest, $user_id );
+
+			$flag = \SmartLogin\Auth\AccountProvisioner::EMAIL_IDENTITY_FLAG[ $row['channel'] ] ?? '';
+
+			if ( '' === $flag || ! Settings::is_on( $flag ) ) {
+				continue;
+			}
+
+			$user = get_userdata( $user_id );
+
+			if ( ! $user || \SmartLogin\Identity\UserManager::is_synthetic_email( (string) $user->user_email ) ) {
+				continue;
+			}
+
+			$owners = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- no core API matches an address across users case-insensitively.
+				$wpdb->prepare(
+					"SELECT ID FROM {$wpdb->users} WHERE LOWER(user_email) = %s", // phpcs:ignore WordPress.DB.PreparedSQL
+					strtolower( (string) $user->user_email )
+				)
+			);
+
+			if ( 1 !== count( $owners ) ) {
+				continue;
+			}
+
+			$claim = $channels->claim( \SmartLogin\Identity\Channels\MailChannel::ID, (string) $user->user_email );
+
+			if ( $claim->is_empty() ) {
+				continue;
+			}
+
+			$result = \SmartLogin\Identity\UserManager::adopt_verified_email(
+				$user_id,
+				\SmartLogin\Identity\VerifiedClaim::from( $claim, \SmartLogin\Identity\VerifiedClaim::PROOF_OAUTH ),
+				\SmartLogin\Identity\IdentityRecord::BY_AUTO_EMAIL,
+				$directory
+			);
+
+			if ( ! is_wp_error( $result ) ) {
+				++$adopted;
+			}
+		}
+
+		/*
+		 * A short batch means the end of the table, so the cursor goes rather than
+		 * waiting for an extra empty pass that nothing would schedule. The cursor's
+		 * presence is what tells maybe_upgrade() there is more to do, so leaving it
+		 * behind on a finished job would mean re-querying for ever.
+		 */
+		if ( count( $rows ) < self::BACKFILL_BATCH ) {
+			delete_option( self::BACKFILL_CURSOR_OPTION );
+		} else {
+			update_option( self::BACKFILL_CURSOR_OPTION, $highest, false );
+		}
+
+		if ( $adopted > 0 ) {
+			// This grants a login route to a set of existing accounts. How many, and
+			// when, is evidence somebody will want.
+			\SmartLogin\Security\AuditLog::record(
+				\SmartLogin\Security\AuditLog::PROVIDER_LINKED,
+				'',
+				array(
+					'linked_by' => \SmartLogin\Identity\IdentityRecord::BY_AUTO_EMAIL,
+					'reason'    => 'email_identity_backfill',
+					'adopted'   => $adopted,
+				)
+			);
+		}
+
+		return $adopted;
 	}
 
 	/**

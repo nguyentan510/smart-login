@@ -385,6 +385,156 @@ try {
 	}
 	$history_log->forget_user( (int) $release_id );
 
+	/*
+	 * 14.5 — the backfill, on accounts built to look exactly like pre-14.4 ones.
+	 *
+	 * A provider-first account before 14.4: a federated row, a real address in
+	 * wp_users.user_email, and no email identity. That is the population the migration
+	 * exists for, and it is constructed here rather than found, because a gate that
+	 * depends on the site already containing such an account tests nothing on a clean
+	 * install — the mistake 14.4's doors made.
+	 */
+	$legacy_addr  = 'legacy.' . strtolower( wp_generate_password( 8, false, false ) ) . '@example.test';
+	$legacy_login = 'sl_legacy_' . strtolower( wp_generate_password( 8, false, false ) );
+	$legacy_id    = wp_insert_user(
+		array(
+			'user_login' => $legacy_login,
+			'user_pass'  => wp_generate_password( 32, true, true ),
+			'user_email' => $legacy_addr,
+			'role'       => 'subscriber',
+		)
+	);
+	if ( is_wp_error( $legacy_id ) ) {
+		$failed( 'could not create the backfill fixture user' );
+	}
+
+	// A synthetic-email account, which must be left alone whatever else happens.
+	$synth_login = 'sl_synth_' . strtolower( wp_generate_password( 8, false, false ) );
+	$synth_id    = wp_insert_user(
+		array(
+			'user_login' => $synth_login,
+			'user_pass'  => wp_generate_password( 32, true, true ),
+			'user_email' => \SmartLogin\Identity\UserManager::synthetic_email( $synth_login ),
+			'role'       => 'subscriber',
+		)
+	);
+	if ( is_wp_error( $synth_id ) ) {
+		wp_delete_user( (int) $legacy_id );
+		$failed( 'could not create the synthetic-email fixture user' );
+	}
+
+	$legacy_subject = 'legacy-google-' . wp_generate_uuid4();
+	$synth_subject  = 'legacy-zalo-' . wp_generate_uuid4();
+
+	foreach ( array(
+		array( (int) $legacy_id, 'google', $legacy_subject ),
+		array( (int) $synth_id, 'google', $synth_subject ),
+	) as $seed ) {
+		if ( ! $repository->claim(
+			\SmartLogin\Identity\IdentityRecord::create(
+				$seed[0],
+				\SmartLogin\Identity\VerifiedClaim::from(
+					\SmartLogin\Identity\Claim::canonical( $seed[1], $seed[2] ),
+					\SmartLogin\Identity\VerifiedClaim::PROOF_OAUTH
+				),
+				\SmartLogin\Identity\IdentityRecord::BY_REGISTRATION,
+				true
+			)
+		) ) {
+			wp_delete_user( (int) $legacy_id );
+			wp_delete_user( (int) $synth_id );
+			$failed( 'could not seed a legacy provider identity' );
+		}
+	}
+
+	$legacy_email_claim = ( new \SmartLogin\Identity\ChannelRegistry() )->claim( 'email', $legacy_addr );
+
+	$backfill_cleanup = static function () use ( $repository, $history_log, $legacy_id, $synth_id ): void {
+		$repository->retire_all_for_user( (int) $legacy_id, 'gate_cleanup' );
+		$repository->retire_all_for_user( (int) $synth_id, 'gate_cleanup' );
+		$history_log->forget_user( (int) $legacy_id );
+		$history_log->forget_user( (int) $synth_id );
+		if ( function_exists( 'wp_delete_user' ) ) {
+			wp_delete_user( (int) $legacy_id );
+			wp_delete_user( (int) $synth_id );
+		}
+	};
+
+	if ( $repository->find( $legacy_email_claim ) ) {
+		$backfill_cleanup();
+		$failed( 'the backfill fixture already has an email identity, so it proves nothing' );
+	}
+
+	$adopted_count = \SmartLogin\Installer::backfill_provider_emails();
+
+	if ( ! $repository->find( $legacy_email_claim ) ) {
+		$backfill_cleanup();
+		$failed( 'the backfill did not give a pre-14.4 provider account its email identity' );
+	}
+
+	$legacy_owner = ( new \SmartLogin\Identity\IdentityDirectory() )->resolve( $legacy_email_claim )->user_id();
+	if ( (int) $legacy_id !== $legacy_owner ) {
+		$backfill_cleanup();
+		$failed( 'the backfilled row belongs to user ' . $legacy_owner . ', expected ' . (int) $legacy_id );
+	}
+
+	// A synthetic address is unreachable by definition; adopting it would make a
+	// placeholder into a login identifier.
+	$synth_user = get_userdata( (int) $synth_id );
+	if ( $repository->find( ( new \SmartLogin\Identity\ChannelRegistry() )->claim( 'email', (string) $synth_user->user_email ) ) ) {
+		$backfill_cleanup();
+		$failed( 'the backfill adopted a synthetic placeholder address' );
+	}
+
+	// Idempotent: a second pass must change nothing, or a re-run rewrites history.
+	$rows_before    = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . \SmartLogin\Installer::identities_table() );
+	$history_before = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . \SmartLogin\Installer::identity_history_table() );
+	$second_pass    = \SmartLogin\Installer::backfill_provider_emails();
+	$rows_after     = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . \SmartLogin\Installer::identities_table() );
+	$history_after  = (int) $wpdb->get_var( 'SELECT COUNT(*) FROM ' . \SmartLogin\Installer::identity_history_table() );
+
+	if ( 0 !== $second_pass || $rows_before !== $rows_after || $history_before !== $history_after ) {
+		$backfill_cleanup();
+		$failed(
+			'the backfill is not idempotent: second pass adopted ' . $second_pass
+			. ', rows ' . $rows_before . '→' . $rows_after
+			. ', history ' . $history_before . '→' . $history_after
+		);
+	}
+
+	if ( $adopted_count < 1 ) {
+		$backfill_cleanup();
+		$failed( 'the backfill reported ' . $adopted_count . ' adoptions while having done one' );
+	}
+
+	/*
+	 * And maybe_upgrade() is what actually reaches it on a real install.
+	 *
+	 * The assertions above call backfill_provider_emails() directly, which proves the
+	 * migration works and proves nothing about whether anything runs it — the same
+	 * shape of gap as 14.7, where the capability existed and no hook called it. So the
+	 * version option is wound back and the upgrade path is driven for real.
+	 */
+	// Derived, not the literal 5: pinning a number here is exactly what made the abuse
+	// gate go red on this sub-phase, and this line would rot the same way.
+	$version_before = get_option( \SmartLogin\Installer::DB_VERSION_OPTION );
+	update_option( \SmartLogin\Installer::DB_VERSION_OPTION, (string) max( 0, (int) SMART_LOGIN_DB_VERSION - 1 ) );
+	\SmartLogin\Installer::maybe_upgrade();
+	$version_after = get_option( \SmartLogin\Installer::DB_VERSION_OPTION );
+
+	if ( (string) SMART_LOGIN_DB_VERSION !== (string) $version_after ) {
+		update_option( \SmartLogin\Installer::DB_VERSION_OPTION, $version_before );
+		$backfill_cleanup();
+		$failed( 'maybe_upgrade() left the db version at ' . $version_after . ', expected ' . SMART_LOGIN_DB_VERSION );
+	}
+
+	if ( get_option( \SmartLogin\Installer::BACKFILL_CURSOR_OPTION, null ) !== null ) {
+		$backfill_cleanup();
+		$failed( 'the backfill cursor outlived the migration, so a later pass would skip users' );
+	}
+
+	$backfill_cleanup();
+
 	$repository->retire_all_for_user( (int) $guard_id, 'integration_gate' );
 	$repository->retire_all_for_user( (int) $rival_id, 'integration_gate' );
 	$history_log->forget_user( (int) $guard_id );
@@ -397,7 +547,10 @@ try {
 	wp_delete_user( (int) $user_id );
 } catch ( Throwable $exception ) {
 	if ( function_exists( 'wp_delete_user' ) ) {
-		foreach ( array( $user_id ?? 0, $rival_id ?? 0, $guard_id ?? 0 ) as $orphan ) {
+		// The 14.5 and 14.7 fixtures belong here too. They did not, and the first red
+		// run of the backfill rule left two users and two identity rows behind — which
+		// is how 14.4's doors became vacuous in the first place.
+		foreach ( array( $user_id ?? 0, $rival_id ?? 0, $guard_id ?? 0, $release_id ?? 0, $legacy_id ?? 0, $synth_id ?? 0 ) as $orphan ) {
 			if ( $orphan > 0 && ! is_wp_error( $orphan ) ) {
 				@wp_delete_user( (int) $orphan );
 			}

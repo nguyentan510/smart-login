@@ -18,7 +18,7 @@
 defined( 'ABSPATH' ) || exit;
 
 define( 'SMART_LOGIN_VERSION', '1.0.1' );
-define( 'SMART_LOGIN_DB_VERSION', '5' );
+define( 'SMART_LOGIN_DB_VERSION', '6' );
 define( 'SMART_LOGIN_FILE', __FILE__ );
 define( 'SMART_LOGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SMART_LOGIN_URL', plugin_dir_url( __FILE__ ) );
