@@ -128,7 +128,17 @@ $sl_email     = Settings::email_enabled();
 					data-sl-provider-mode="login"
 				>
 					<span class="sl-provider-icon" aria-hidden="true">
-						<?php echo esc_html( 'google' === $sl_provider->id() ? 'G' : 'Z' ); ?>
+						<?php
+						/*
+						 * The provider owns its mark; this only places it. The filter is
+						 * the supported way to drop in an official brand asset — Zalo's
+						 * wordmark in particular ships as a file this plugin cannot
+						 * redistribute. Not escaped because it is markup by definition,
+						 * and it comes from plugin code or from site code, never from a
+						 * request.
+						 */
+						echo apply_filters( 'smart_login_provider_icon_svg', $sl_provider->icon_svg(), $sl_provider->id() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+						?>
 					</span>
 					<span><?php echo esc_html( $sl_provider->label() ); ?></span>
 				</a>

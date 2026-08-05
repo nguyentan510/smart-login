@@ -444,45 +444,69 @@
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+/*
+ * Both provider buttons are white and outlined, never filled. The primary call
+ * to action directly above them is a solid red block; two more solid blocks
+ * under it would give the screen three competing focal points and no hierarchy.
+ * Outlined keeps each brand's own colour without any of them out-shouting the
+ * button that most visitors will actually press.
+ *
+ * The base values are Google's, because Google's are the only ones prescribed:
+ * #FFFFFF surface, #1F1F1F label, #747775 border, weight 500, 40px minimum
+ * height. Zalo overrides what is Zalo's below.
+ */
 .sl-btn--provider {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	gap: 10px;
+	min-height: 44px;
 	margin-bottom: 0;
-	border-color: var(--sl-border);
+	padding: 11px 16px;
+	border-color: #747775;
 	background: #fff;
-	color: var(--sl-text);
+	color: #1f1f1f;
+	font-size: 14px;
+	font-weight: 500;
 }
 
 .sl-btn--provider:hover {
-	border-color: #aeb4bf;
-	background: #f8f9fa;
-	color: var(--sl-text);
+	background: #f7f8f8;
+	color: #1f1f1f;
 }
 
+/* #0068ff is Zalo's blue. The two shades that used to be here — one for the
+   border, a darker one for the label — were the plugin's approximation of it,
+   and are not repeated in this comment: the rule that keeps them out greps the
+   stylesheet, and a rule that reads prose is a rule that fails on a sentence
+   explaining why it exists. */
 .sl-btn--zalo {
-	border-color: #0b74e5;
-	color: #075eb8;
+	border-color: #0068ff;
+	color: #0068ff;
 }
 
 .sl-btn--zalo:hover {
-	border-color: #075eb8;
-	background: #f1f7fe;
-	color: #075eb8;
+	background: #f0f6ff;
+	color: #0068ff;
 }
 
+/* A box the mark sits in, not a badge drawn around it. The circle and the
+   1px currentColor border that used to be here existed to contain a letter —
+   around a real logo they read as a frame nobody designed, and currentColor
+   would have repainted the logo to match the label. */
 .sl-provider-icon {
 	display: inline-flex;
+	flex: 0 0 auto;
 	align-items: center;
 	justify-content: center;
-	width: 24px;
-	height: 24px;
-	border: 1px solid currentColor;
-	border-radius: 50%;
-	font-size: 12px;
-	font-weight: 700;
-	line-height: 1;
+	width: 18px;
+	height: 18px;
+}
+
+.sl-provider-icon svg {
+	display: block;
+	width: 18px;
+	height: 18px;
 }
 
 /* .sl-contact-grid and the grey bordered box that .sl-contact-verification used

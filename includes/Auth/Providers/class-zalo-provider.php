@@ -30,6 +30,29 @@ final class ZaloProvider implements LoginProviderInterface {
 	public function name(): string {
 		return 'Zalo'; }
 
+	/**
+	 * Zalo's blue speech bubble.
+	 *
+	 * #0068FF is Zalo's blue. The two shades this replaced — #0b74e5 border and
+	 * #075eb8 text — were neither of them Zalo's; they were the plugin's guess at
+	 * it, which is the same category of mistake as drawing "Z" in a circle and
+	 * calling it a logo.
+	 *
+	 * **The silhouette is an approximation and the wordmark is not here.** Zalo's
+	 * mark sets "Zalo" in its own lettering inside the bubble, and that vector is
+	 * not something to reconstruct from memory — a logo drawn from recollection
+	 * is a wrong logo, only a more convincing one. Drop the official asset from
+	 * Zalo's brand kit in through `smart_login_provider_icon_svg` and this is
+	 * replaced without patching the plugin. Written down here rather than in a
+	 * ticket because here is where somebody with the real file will look.
+	 */
+	public function icon_svg(): string {
+		return '<svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" focusable="false" aria-hidden="true">'
+			. '<path fill="#0068FF" d="M24 3C11.85 3 2 11.73 2 22.5c0 6.2 3.27 11.72 8.37 15.29-.34 3.02-1.68 5.6-3.6 7.4-.5.47-.2 1.31.48 1.26 4.9-.36 8.7-2.06 11.1-3.6 1.8.36 3.7.55 5.65.55 12.15 0 22-8.73 22-19.5S36.15 3 24 3z"/>'
+			. '<path fill="#FFFFFF" d="M16 14h16v3.6L21.6 28.6H32V33H16v-3.6L26.4 18.4H16V14z"/>'
+			. '</svg>';
+	}
+
 	public function is_available(): bool {
 		return Settings::is_on( 'providers.zalo.enabled' )
 			&& ProviderCredentials::is_configured( $this->id() );
