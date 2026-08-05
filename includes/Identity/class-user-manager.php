@@ -153,9 +153,13 @@ class UserManager {
 
 		$now = current_time( 'mysql', true );
 
-		// Everything below is a DERIVED MIRROR of the identity row, kept because
-		// README documents these meta keys as a public contract for other plugins.
-		// Nothing reads them to answer "who owns this subject" — see Invariant 1.
+		// Everything below is a DERIVED MIRROR of the identity row. Nothing reads it to
+		// answer "who owns this subject" — see Invariant 1.
+		//
+		// This used to say the keys were documented in README as a public contract for
+		// other plugins. They are not: README names smartlogin_ward_code and nothing
+		// else of this family. Found in 14.2, corrected in 15.4 — a comment claiming a
+		// contract that does not exist is the same defect as a README doing it.
 		if ( PhoneChannel::ID === $channel ) {
 			update_user_meta( $user_id, self::META_PHONE, $subject );
 			update_user_meta( $user_id, self::META_PHONE_VERIFIED, $now );
@@ -191,6 +195,60 @@ class UserManager {
 		}
 
 		return (int) $user_id;
+	}
+
+	/**
+	 * The only writer of "this account owns this address".
+	 *
+	 * Five things say that, and before this method existed three call sites each
+	 * wrote a different subset of them: the contact-verification flow wrote all
+	 * five, `AccountProvisioner` wrote two and skipped the identity row — which is
+	 * the whole of Phase 14's defect — and `WooIntegration` wrote two as
+	 * housekeeping. One function decides now, so writing three fifths of the fact
+	 * is not something a caller can do by accident.
+	 *
+	 * The order is load-bearing and asserted. The directory write is the one that
+	 * can lose a race, so it happens first: a subject claimed by somebody else in
+	 * between must fail before `user_email` has moved. Doing it the other way round
+	 * leaves an account whose address disagrees with its identity, which is the
+	 * state this phase exists to remove.
+	 *
+	 * A `VerifiedClaim` rather than a string plus a proof constant: the type is the
+	 * gate. Only the PROVE layer can produce one, so there is no signature here that
+	 * an unproven address fits through.
+	 *
+	 * @return true|WP_Error
+	 */
+	public static function adopt_verified_email( int $user_id, VerifiedClaim $claim, string $linked_by = IdentityRecord::BY_OTP, ?IdentityDirectory $directory = null ) {
+		if ( MailChannel::ID !== $claim->channel() ) {
+			return new WP_Error( 'smart_login_not_an_email', __( 'Kênh không phải email.', 'smart-login' ) );
+		}
+
+		$address   = $claim->subject();
+		$directory = $directory ?? new IdentityDirectory();
+
+		if ( ! $directory->replace_in_channel( $user_id, $claim, $linked_by ) ) {
+			return new WP_Error( 'smart_login_contact_exists', __( 'Không thể cập nhật thông tin liên hệ.', 'smart-login' ) );
+		}
+
+		$updated = wp_update_user(
+			array(
+				'ID'         => $user_id,
+				'user_email' => $address,
+			)
+		);
+
+		if ( is_wp_error( $updated ) ) {
+			return $updated;
+		}
+
+		// Derived mirrors below; see create_verified_user() for why they exist at
+		// all. Nothing resolves ownership from them.
+		update_user_meta( $user_id, self::META_EMAIL_VERIFIED, current_time( 'mysql', true ) );
+		delete_user_meta( $user_id, self::META_SYNTHETIC );
+		ProfileSeeder::seed_if_empty( $user_id, 'billing_email', $address );
+
+		return true;
 	}
 
 	/**

@@ -3,7 +3,7 @@
  * Plugin Name:       Smart Login
  * Plugin URI:        https://example.com/smart-login
  * Description:       Đăng nhập / đăng ký / xác thực OTP bằng số điện thoại hoặc email cho WordPress & WooCommerce. Hỗ trợ đẩy OTP ra gateway ngoài qua webhook.
- * Version:           1.0.1
+ * Version:           1.0.2
  * Requires at least: 6.0
  * Requires PHP:      8.0
  * Author:            Smart Login
@@ -17,8 +17,8 @@
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'SMART_LOGIN_VERSION', '1.0.1' );
-define( 'SMART_LOGIN_DB_VERSION', '5' );
+define( 'SMART_LOGIN_VERSION', '1.0.2' );
+define( 'SMART_LOGIN_DB_VERSION', '1' );
 define( 'SMART_LOGIN_FILE', __FILE__ );
 define( 'SMART_LOGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SMART_LOGIN_URL', plugin_dir_url( __FILE__ ) );

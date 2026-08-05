@@ -124,6 +124,16 @@ $sl_forced_settings = array(
 	'providers.zalo.enabled'   => 1,
 	'providers.auto_link_email' => 1,
 	'profile.email_optional'   => 0,
+	/*
+	 * Added in 15.3. Phase 15 wiped the database, and a fresh install defaults to
+	 * `phone_only` — so `claim_any()` could not build an email claim at all and the
+	 * 14.4 door assertions read
+	 * `SMART_LOGIN_PROVIDER_GATES_FAILED: the provider address does not even form an
+	 * email claim`. They had been passing on configuration somebody set by hand months
+	 * earlier. Same failure as 14.4's vacuous doors, in the settings table rather than
+	 * the identities one.
+	 */
+	'identity.mode'            => 'both',
 );
 
 add_filter(
@@ -137,7 +147,9 @@ add_filter(
 
 // A key nobody reads is a key that has been renamed out from under this file.
 foreach ( $sl_forced_settings as $sl_key => $sl_expected ) {
-	if ( (int) \SmartLogin\Settings::get( $sl_key ) !== (int) $sl_expected ) {
+	// Compared as strings: `identity.mode` is 'both', and an int cast would make every
+	// string setting look like 0 and agree with itself for the wrong reason.
+	if ( (string) \SmartLogin\Settings::get( $sl_key ) !== (string) $sl_expected ) {
 		echo "SMART_LOGIN_PROVIDER_GATES_BLOCKED\n";
 		echo 'reason=forced setting did not take effect: ' . $sl_key . " — has it been renamed?\n";
 		exit( 2 );
@@ -247,6 +259,120 @@ try {
 	$cleanup_ids[]  = (int) $resolved['user']->ID;
 	$cleanup_rows[] = array( 'provider' => 'google', 'subject' => $identity->subject, 'user_id' => (int) $resolved['user']->ID );
 
+	/*
+	 * Phase 14 — the two doors. These need a store that actually stores, which is
+	 * why they are here rather than in the contract suite: that $wpdb stub does not
+	 * parse SQL, deliberately, so it cannot answer "is this address resolvable
+	 * now". They fail until 14.4, and are the assertions that sub-phase turns green.
+	 *
+	 * The account provisioned above holds a Google-verified address in
+	 * wp_users.user_email and one federated identity row. Typing that address is
+	 * what the account holder does the next day.
+	 */
+	$door_claim = ( new \SmartLogin\Identity\ChannelRegistry() )->claim_any( (string) $identity->email );
+	if ( $door_claim->is_empty() ) {
+		$failed( 'the provider address does not even form an email claim' );
+	}
+	$cleanup_rows[]  = array( 'provider' => 'email', 'subject' => $door_claim->subject(), 'user_id' => (int) $resolved['user']->ID );
+	$door_resolution = ( new \SmartLogin\Identity\IdentityDirectory() )->resolve( $door_claim );
+
+	/*
+	 * The owner must be the account THIS run provisioned, not merely somebody.
+	 *
+	 * Asserting only ISSUE_SESSION made both doors vacuous: an email row left behind
+	 * by an earlier run pointed at a since-deleted user, resolved KNOWN, and satisfied
+	 * the decision whether or not the code under test did anything. Verified by
+	 * reverting the provisioner to its pre-14.4 state and watching the gate pass
+	 * anyway. Pinning the id is what makes the assertion about this run.
+	 */
+	if ( $door_resolution->user_id() !== (int) $resolved['user']->ID ) {
+		$failed(
+			'door 1: the verified address does not resolve to the account just provisioned'
+			. ' — resolved to user ' . $door_resolution->user_id()
+			. ', expected ' . (int) $resolved['user']->ID
+		);
+	}
+
+	$door_login = \SmartLogin\Auth\AuthAction::for_resolution( \SmartLogin\Auth\AuthAction::LOGIN, $door_resolution );
+	if ( \SmartLogin\Auth\AuthAction::ISSUE_SESSION !== $door_login ) {
+		$failed(
+			'door 1: the identify screen does not recognise a provider account by its own'
+			. ' verified address — login resolves to ' . $door_login
+		);
+	}
+
+	$door_recover = \SmartLogin\Auth\AuthAction::for_resolution( \SmartLogin\Auth\AuthAction::RECOVER, $door_resolution );
+	if ( \SmartLogin\Auth\AuthAction::ISSUE_RESET_GRANT !== $door_recover ) {
+		$failed(
+			'door 2: recovery reports a provider account as never registered —'
+			. ' recover resolves to ' . $door_recover
+		);
+	}
+
+	/*
+	 * 14.4 — the flag is the whole gate, and off must mean untouched.
+	 *
+	 * Provision a second account with providers.google.email_identity off and assert
+	 * no email row exists for its address. Byte-identical to pre-14.4 behaviour is the
+	 * property; a site that does not want its addresses becoming login identifiers has
+	 * to be able to say so and be obeyed.
+	 */
+	$off_was = \SmartLogin\Settings::get( 'providers.google.email_identity' );
+	\SmartLogin\Settings::update( array( 'providers.google.email_identity' => 0 ) );
+
+	$off_identity = new \SmartLogin\Auth\Providers\ProviderIdentity(
+		array(
+			'provider'       => 'google',
+			'subject'        => 'flag-off-' . wp_generate_uuid4(),
+			'email'          => 'flag.off.' . strtolower( wp_generate_password( 6, false, false ) ) . '@example.test',
+			'email_verified' => true,
+			'display_name'   => 'Flag Off User',
+		)
+	);
+	$off_resolved = ( new \SmartLogin\Auth\AccountProvisioner() )->resolve( $off_identity, array() );
+	if ( is_wp_error( $off_resolved ) ) {
+		\SmartLogin\Settings::update( array( 'providers.google.email_identity' => $off_was ) );
+		$failed( 'provisioning with the email-identity flag off failed: ' . $off_resolved->get_error_code() );
+	}
+	$off_user_id    = (int) $off_resolved['user']->ID;
+	$cleanup_ids[]  = $off_user_id;
+	$cleanup_rows[] = array( 'provider' => 'google', 'subject' => $off_identity->subject, 'user_id' => $off_user_id );
+
+	$off_row = ( new \SmartLogin\Identity\IdentityRepository() )->find(
+		( new \SmartLogin\Identity\ChannelRegistry() )->claim( 'email', $off_identity->email )
+	);
+
+	\SmartLogin\Settings::update( array( 'providers.google.email_identity' => $off_was ) );
+
+	if ( $off_row ) {
+		$failed( 'the email-identity flag was off and an email identity was claimed anyway' );
+	}
+
+	// An address the provider did not mark verified must never earn a row, flag or no
+	// flag: the flag says whose assertion is trusted, not that one can be skipped.
+	$unverified = new \SmartLogin\Auth\Providers\ProviderIdentity(
+		array(
+			'provider'       => 'google',
+			'subject'        => 'unverified-' . wp_generate_uuid4(),
+			'email'          => 'unverified.' . strtolower( wp_generate_password( 6, false, false ) ) . '@example.test',
+			'email_verified' => false,
+			'display_name'   => 'Unverified Email User',
+		)
+	);
+	$unverified_resolved = ( new \SmartLogin\Auth\AccountProvisioner() )->resolve( $unverified, array() );
+	if ( is_wp_error( $unverified_resolved ) ) {
+		$failed( 'provisioning an unverified-email identity failed: ' . $unverified_resolved->get_error_code() );
+	}
+	$unverified_id  = (int) $unverified_resolved['user']->ID;
+	$cleanup_ids[]  = $unverified_id;
+	$cleanup_rows[] = array( 'provider' => 'google', 'subject' => $unverified->subject, 'user_id' => $unverified_id );
+
+	if ( ( new \SmartLogin\Identity\IdentityRepository() )->find(
+		( new \SmartLogin\Identity\ChannelRegistry() )->claim( 'email', $unverified->email )
+	) ) {
+		$failed( 'an address the provider did not verify earned an email identity' );
+	}
+
 	// P0.3: verified-email auto-link to an existing non-synthetic account.
 	$existing_id = wp_insert_user(
 		array(
@@ -275,6 +401,8 @@ try {
 		$failed( 'verified-email auto-link did not resolve to the existing user' );
 	}
 	$cleanup_rows[] = array( 'provider' => 'google', 'subject' => $auto_identity->subject, 'user_id' => (int) $existing_id );
+	// 14.4 adopts on this branch too, so the email row is this run's to clean up.
+	$cleanup_rows[] = array( 'provider' => 'email', 'subject' => strtolower( (string) $auto_identity->email ), 'user_id' => (int) $existing_id );
 	$linked = ( new \SmartLogin\Identity\IdentityRepository() )->find(
 		\SmartLogin\Identity\Claim::canonical( 'google', $auto_identity->subject )
 	);

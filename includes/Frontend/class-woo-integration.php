@@ -261,8 +261,19 @@ class WooIntegration {
 
 		$user = get_userdata( $user_id );
 
-		// A real address has replaced the placeholder — drop the flag and mirror
-		// it into billing so checkout is pre-filled.
+		/*
+		 * A real address has replaced the placeholder — drop the flag and mirror it
+		 * into billing so checkout is pre-filled.
+		 *
+		 * Deliberately NOT a caller of UserManager::adopt_verified_email(), though it
+		 * writes two of the same five things. This method has no VerifiedClaim and
+		 * must not manufacture one: the address it is looking at was already adopted
+		 * by the OTP flow, because block_unverified_email_change() below rejects every
+		 * other route to changing it. Routing this through the adopter would mean
+		 * giving it a signature an unproven address fits through, which is the one
+		 * thing 14.2 exists to prevent. Housekeeping, running after somebody else's
+		 * write.
+		 */
 		if ( $user && ! UserManager::is_synthetic_email( $user->user_email ) ) {
 			delete_user_meta( $user_id, UserManager::META_SYNTHETIC );
 

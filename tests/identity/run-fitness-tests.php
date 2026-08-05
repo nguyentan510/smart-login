@@ -76,10 +76,21 @@ $bootstrap = sl_source( 'smart-login.php' );
 preg_match( "/SMART_LOGIN_DB_VERSION',\s*'(\d+)'/", $bootstrap, $db_version );
 $version = isset( $db_version[1] ) ? (int) $db_version[1] : 0;
 
+/*
+ * A version exists and is a positive integer. It used to demand `>= 3`, because
+ * Phase 2 needed a bump for maybe_upgrade() to run and wrote its own floor into the
+ * rule. Phase 15 reset the version to 1 — there is nothing to upgrade from — and this
+ * went red on a change it has no opinion about.
+ *
+ * Second time in two phases a pinned version number has done that; the abuse gate's
+ * literal 5 was the first. What the rule is for is that the constant is present and
+ * parses, because maybe_upgrade() compares against it and a missing constant would
+ * make every load think an upgrade is due.
+ */
 sl_assert(
-	'SMART_LOGIN_DB_VERSION is at least 3',
-	$version >= 3,
-	sprintf( 'found %d — the two identity tables require a version bump so Installer::maybe_upgrade() runs.', $version )
+	'SMART_LOGIN_DB_VERSION is a positive integer',
+	$version >= 1,
+	sprintf( 'found %d — maybe_upgrade() compares against this constant on every load.', $version )
 );
 
 $installer = sl_source( 'includes/class-installer.php' );
@@ -98,14 +109,14 @@ sl_assert(
 	'Add Installer::identity_history_table().'
 );
 
-// Two allowlisted references remain, both of which exist only to remove the
-// table: Installer::drop_legacy_tables() and the uninstall routine. They are the
-// migration itself, not a dependency on it. Both should be deleted once no
-// installation can still be carrying the table.
+// The allowlist is gone with the code it excused. Phase 2 kept two references —
+// Installer::drop_legacy_tables() and the uninstall routine — and said both should go
+// once no installation could still carry the table. Phase 15 is that moment, so the
+// rule is absolute now rather than absolute-except-here.
 sl_forbid_pattern(
-	'the external_identities table is only ever dropped, never used',
+	'the external_identities table is not named anywhere',
 	'/external_identities/',
-	array( 'includes/class-installer.php', 'uninstall.php' ),
+	array(),
 	'Federated providers stop being a special case; one table serves every channel.'
 );
 
@@ -188,6 +199,196 @@ sl_forbid_pattern(
 		'includes/Auth/class-identity-link-service.php',
 	),
 	'IdentityLinkService::unlink() is the only user-facing path, and it refuses to remove the last identity.'
+);
+
+/*
+ * A capability nobody calls is a capability nobody has (14.7).
+ *
+ * `IdentityRepository::retire_all_for_user()` has existed since Phase 2 with a
+ * default reason of literally `'user_deleted'`, and until 14.7 the only callers were
+ * two lines in the integration gate. So deleting a WordPress user left its identity
+ * rows live: the subject stayed claimed by an account that no longer existed, and
+ * `create_verified_user()` refused that number or address as "already registered"
+ * for ever.
+ *
+ * This rule is narrow on purpose. "Every public repository method has a caller" would
+ * be the general form and would go red on things that are legitimately API surface
+ * for other plugins. This one names the method whose absence of a caller was a defect.
+ */
+$sl_release_callers = array();
+
+foreach ( sl_plugin_sources() as $sl_relative => $sl_code ) {
+	if ( 'includes/Identity/class-identity-repository.php' === $sl_relative ) {
+		continue;
+	}
+
+	if ( false !== strpos( $sl_code, 'retire_all_for_user' ) ) {
+		$sl_release_callers[] = $sl_relative;
+	}
+}
+
+sl_assert(
+	'releasing a deleted user\'s identities has a production caller',
+	array() !== $sl_release_callers,
+	'Nothing calls retire_all_for_user(), so wp_delete_user() strands every row it owned and those subjects can never be registered again.'
+);
+
+sl_assert(
+	'and something is hooked to deleted_user to be that caller',
+	false !== strpos( sl_source( 'includes/class-plugin.php' ), 'deleted_user' ),
+	'The capability is only reachable if WordPress calls it; the hook is the wiring.'
+);
+
+// ---------------------------------------------------------------------
+sl_section( 'This plugin upgrades from nothing (Phase 15)' );
+
+/*
+ * refactor-plan.md has said since Phase 0 that the project has never run in
+ * production and carries no migration burden. Eleven phases wrote migration code
+ * anyway, each for the development installs that existed at the time. These rules
+ * name every one of those surfaces.
+ *
+ * They are worth keeping after the deletions, not only during them. The habit being
+ * retired is writing an upgrade path by reflex alongside the change, and a rule is
+ * what makes the next reflex visible in review. When there is genuinely something to
+ * migrate, the rule is edited in the same commit as the migration — deliberately, in
+ * writing, which is the whole difference.
+ */
+$sl_legacy_surfaces = array(
+	'migrate_settings_shape'    => 'settings arrays flatter than 1.0.1',
+	'legacy_key_map'            => 'the flat-to-nested key map',
+	'recreate_renamed_tables'   => 'installs at db_version < 4',
+	'drop_legacy_tables'        => 'a table deleted in Phase 2',
+	'LEGACY_SECRETS'            => 'secrets stored before 10.2 moved them',
+	'backfill_provider_emails'  => 'accounts created before 14.4',
+	'smart_login_external_identities' => 'the superseded identity table',
+);
+
+foreach ( $sl_legacy_surfaces as $sl_needle => $sl_serves ) {
+	$sl_found = array();
+
+	foreach ( sl_plugin_sources() as $sl_relative => $sl_code ) {
+		if ( false !== strpos( $sl_code, $sl_needle ) ) {
+			$sl_found[] = $sl_relative;
+		}
+	}
+
+	// uninstall.php is not in sl_plugin_sources() — it runs without the plugin loaded
+	// — so it is checked by name, because that is where two of these live.
+	if ( false !== strpos( sl_source( 'uninstall.php' ), $sl_needle ) ) {
+		$sl_found[] = 'uninstall.php';
+	}
+
+	sl_check(
+		sprintf( 'nothing carries %s (%s)', $sl_needle, $sl_serves ),
+		'',
+		implode( ', ', $sl_found )
+	);
+}
+
+$sl_shims = array( 'templates/form-login.php', 'templates/form-register.php' );
+
+foreach ( $sl_shims as $sl_shim ) {
+	sl_assert(
+		sprintf( '%s is gone', $sl_shim ),
+		! is_file( dirname( __DIR__, 2 ) . '/' . $sl_shim ),
+		'A shim README documents as unused is a file somebody will override and wonder why nothing happens.'
+	);
+}
+
+sl_assert(
+	'the webhook tester accepts only the current field name',
+	false === strpos( sl_source( 'includes/Admin/class-webhook-tester.php' ), "'channel'" ),
+	'10.2 kept the old name because the admin JS posted it. The JS posts transport now.'
+);
+
+// ---------------------------------------------------------------------
+sl_section( 'Documentation is not allowed to describe things that do not exist' );
+
+/*
+ * This project has now found a README asserting a control that is not there three
+ * times, and the third was created by 15.3 deleting two templates the README still
+ * described. Reading more carefully is not a fix; these are.
+ */
+$sl_readme = sl_source( 'README.md' );
+$sl_root   = dirname( __DIR__, 2 );
+$sl_ghosts = array();
+
+/*
+ * Every `<name>.php` the README names must exist somewhere the plugin ships. Anchored
+ * on the extension rather than a path, because the README names them bare.
+ *
+ * Two limits, stated rather than glossed:
+ *   - WordPress core filenames are skipped; the README legitimately names wp-login.php.
+ *   - A name that exists in ANY of the searched directories passes, so it cannot catch
+ *     a README claiming a file lives in templates/ when it actually only lives in
+ *     templates/woocommerce/. `form-login.php` is exactly that case today, and it is
+ *     why the sentence at README.md:242 had to be corrected by hand rather than by
+ *     this rule. What the rule does catch is a name that exists nowhere — which is
+ *     what form-register.php became.
+ */
+$sl_core_files = array( 'wp-login.php', 'wp-config.php', 'wp-settings.php', 'wp-load.php' );
+if ( preg_match_all( '/`([a-z0-9-]+\.php)`/', $sl_readme, $sl_named ) ) {
+	foreach ( array_unique( $sl_named[1] ) as $sl_file ) {
+		if ( 'smart-login.php' === $sl_file || 'uninstall.php' === $sl_file
+			|| in_array( $sl_file, $sl_core_files, true ) ) {
+			continue;
+		}
+
+		if ( ! is_file( $sl_root . '/templates/' . $sl_file )
+			&& ! is_file( $sl_root . '/templates/partials/' . $sl_file )
+			&& ! is_file( $sl_root . '/templates/woocommerce/' . $sl_file )
+			&& ! is_file( $sl_root . '/bin/' . $sl_file ) ) {
+			$sl_ghosts[] = $sl_file;
+		}
+	}
+}
+
+sl_check(
+	'README names no template that has been deleted',
+	'',
+	implode( ', ', $sl_ghosts )
+);
+
+// readme.txt is what WordPress.org reads. A Stable tag behind the constant ships a
+// version nobody can install; ahead of it ships one that does not exist.
+preg_match( "/SMART_LOGIN_VERSION',\s*'([^']+)'/", sl_source( 'smart-login.php' ), $sl_ver );
+preg_match( '/^Stable tag:\s*(.+)$/m', sl_source( 'readme.txt' ), $sl_stable );
+
+sl_check(
+	'readme.txt Stable tag matches SMART_LOGIN_VERSION',
+	trim( $sl_ver[1] ?? 'no constant' ),
+	trim( $sl_stable[1] ?? 'no stable tag' )
+);
+
+/*
+ * The string catalogue matches the tree.
+ *
+ * It went stale by 76 strings across five phases — the security tab, the delivery
+ * screens, the mail templates, the mail surface — and surfaced only because 14.3
+ * regenerated it for an unrelated reason. Nothing was watching. This is the watch.
+ *
+ * Shelled out rather than reimplemented: a second extractor would drift from the one
+ * that writes the file, and then the rule would be checking itself.
+ */
+$sl_pot_check = 1;
+$sl_pot_out   = array();
+exec(
+	escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( dirname( __DIR__, 2 ) . '/bin/build-pot.php' ) . ' --check 2>&1',
+	$sl_pot_out,
+	$sl_pot_check
+);
+
+sl_assert(
+	'languages/smart-login.pot is current',
+	0 === $sl_pot_check,
+	implode( ' | ', $sl_pot_out ) . ' — run: php bin/build-pot.php'
+);
+
+sl_assert(
+	'the shipped version has a changelog entry',
+	false !== strpos( sl_source( 'readme.txt' ), '= ' . trim( $sl_ver[1] ?? 'x' ) . ' =' ),
+	'A version with no entry tells the reader the release changed nothing.'
 );
 
 sl_require_companion(

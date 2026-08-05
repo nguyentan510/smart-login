@@ -25,6 +25,9 @@ use SmartLogin\Auth\ContactVerificationService;
 use SmartLogin\Auth\IdentityLinkService;
 use SmartLogin\Auth\ProfileCompletionService;
 use SmartLogin\Auth\Providers\ProviderRegistry;
+use SmartLogin\Identity\Channels\MailChannel;
+use SmartLogin\Identity\Channels\PhoneChannel;
+use SmartLogin\Identity\IdentityDirectory;
 use SmartLogin\Identity\UserManager;
 use SmartLogin\Settings;
 use WP_User;
@@ -203,9 +206,38 @@ final class AccountForm {
 					'sl_required' => Settings::is_on( 'address.required_in_profile' ),
 				);
 
+			case 'password':
+				return $common + array(
+					'sl_has_contact' => $this->has_contact_identity(),
+				);
+
 			default:
 				return $common;
 		}
+	}
+
+	/**
+	 * Can this account be reached by anything its owner could type?
+	 *
+	 * Asked of the directory, and **not** of `user_email`. An account created by a
+	 * Google login holds the verified Google address in `wp_users.user_email`, so
+	 * `UserManager::is_synthetic_email()` answers *false* for exactly the population
+	 * this question exists to identify — and the security section would then offer a
+	 * "current password" box holding a 64-character random string its owner has never
+	 * seen. Before 14.4 there was no email identity in that case; after it there is,
+	 * when the provider flag is on. Either way the directory is the only thing that
+	 * knows, which is what Invariant 1 says.
+	 *
+	 * Phone counts as well as email: either is an identifier the login screen accepts.
+	 */
+	private function has_contact_identity(): bool {
+		foreach ( ( new IdentityDirectory() )->for_user( $this->user_id ) as $record ) {
+			if ( in_array( $record->claim()->channel(), array( MailChannel::ID, PhoneChannel::ID ), true ) ) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 
 	/**

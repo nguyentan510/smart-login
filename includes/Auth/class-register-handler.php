@@ -7,6 +7,7 @@
 
 namespace SmartLogin\Auth;
 
+use SmartLogin\Identity\Channels\MailChannel;
 use SmartLogin\Identity\Claim;
 use SmartLogin\Identity\IdentityDirectory;
 use SmartLogin\Identity\IdentityHistory;
@@ -425,7 +426,7 @@ class RegisterHandler {
 		switch ( AuthAction::for_resolution( AuthAction::REGISTER, $this->directory->resolve( $claim ) ) ) {
 			case AuthAction::CREATE_USER:
 			case AuthAction::CREATE_NEW_USER:
-				return $claim;
+				return $this->refuse_if_address_is_taken( $claim );
 
 			case AuthAction::ALREADY_REGISTERED:
 				return new WP_Error(
@@ -436,6 +437,58 @@ class RegisterHandler {
 			default:
 				return new WP_Error( 'smart_login_bad_identity', __( 'Không thể đăng ký với thông tin này.', 'smart-login' ) );
 		}
+	}
+
+	/**
+	 * Refuse an address `wp_users` already holds, before a code is spent on it.
+	 *
+	 * The directory is the only owner of "who owns this subject", and it is right
+	 * about that. What it cannot see is an address sitting in `wp_users` with no row
+	 * of its own — which is exactly what a provider login leaves behind, since it
+	 * writes the verified address to `user_email` and links only the federated
+	 * claim. So an account holder who signed in with Google and then typed their
+	 * address here read as unregistered, was sent a real registration code, and met
+	 * "Tài khoản đã tồn tại." two steps later at
+	 * `UserManager::create_verified_user()`.
+	 *
+	 * This refuses **exactly the set that last step already refuses** — the same
+	 * `email_exists()` question, asked before the OTP rather than after it. No
+	 * registration that could have succeeded is lost; a wasted code and a wasted
+	 * budget are.
+	 *
+	 * Phase 14.4 removes the cause. This stays afterwards as the only thing watching
+	 * for the two stores drifting apart again.
+	 *
+	 * @return Claim|WP_Error
+	 */
+	private function refuse_if_address_is_taken( Claim $claim ) {
+		if ( MailChannel::ID !== $claim->channel() ) {
+			return $claim;
+		}
+
+		$owner = email_exists( $claim->subject() );
+
+		if ( ! $owner ) {
+			return $claim;
+		}
+
+		// Deliberately sampleable, unlike the events in AuditLog::NEVER_SAMPLED: a
+		// visitor retrying a known address is the common case, and one aggregated
+		// row an hour says everything a flood of identical rows would.
+		AuditLog::record(
+			AuditLog::REGISTER_REFUSED,
+			RateLimiter::mask_identity( $claim->subject() ),
+			array(
+				'channel' => $claim->channel(),
+				'reason'  => 'address_held_without_identity',
+			),
+			(int) $owner
+		);
+
+		return new WP_Error(
+			'smart_login_identity_taken',
+			__( 'Thông tin này đã được đăng ký. Vui lòng đăng nhập.', 'smart-login' )
+		);
 	}
 
 	/**

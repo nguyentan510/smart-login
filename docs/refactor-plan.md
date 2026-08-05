@@ -27,6 +27,8 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 11 — Mail templates**
 - [x] **Phase 12 — The provider surface**
 - [x] **Phase 13 — The mail surface**
+- [x] **Phase 14 — The email identity**
+- [x] **Phase 15 — The unreleased install**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -1104,6 +1106,291 @@ eight more appearance settings and not a layout picker. Most combinations of
 eight appearance settings look worse than the default, and a picker is three
 templates to maintain for a choice made once.
 
+## Phase 14 — The email identity
+
+Normative spec: [`email-identity.md`](email-identity.md) — the two stores holding
+one fact, the per-provider decision, the one-writer argument and the predicate that
+must not be re-derived from `user_email` all live there.
+
+Execution briefs: [`email-identity/`](email-identity/), one file per sub-phase.
+**Status lives here and only here.**
+
+Short version: a provider login writes its verified address into
+`wp_users.user_email` and links only the federated row, so *"this account owns this
+address"* is stored in two places that disagree — and the disagreement is
+observable. Typing that address the next day gets three different answers: the
+identify screen spends a registration OTP and then refuses with *"Tài khoản đã tồn
+tại"*, forgot-password says the address was never registered, and `wp-login.php`
+correctly finds the account and asks for a password that is a 64-character string
+its holder has never seen. `link()` already documents the gap and defers it to
+"Phase 3" (`class-account-provisioner.php:194-198`); Phase 3 did not, and this is
+that phase.
+
+### Sub-phases
+
+- [x] **14.0** [Guard rails](email-identity/14.0-guard-rails.md) — landed red at
+      `41 passed, 2 failed, 1 pending`, no production file touched, every other
+      suite byte-identical against a stash of `HEAD`. **The brief was wrong about
+      where the rules belong**: it put all three doors in the integration gate, but
+      the expensive symptom is assertable against the stub and now runs on every
+      commit. The rule also went green for the wrong reason first — the stub leaves
+      the email channel disabled, so the refusal it caught was
+      *"Số điện thoại không hợp lệ"* — the third time this project has recorded a
+      rule passing for want of a subject, and the first time it was caught in the
+      same sitting. `actual: 5` is the keeper: five writes have already happened
+      before the flow reaches the wall. Ticked only once the two gate doors had actually
+      run — they were written unrun for want of a WordPress, and when one arrived they
+      turned out to be **vacuous**, which 14.4's row records
+- [x] **14.1** [Owned-email OTP](email-identity/14.1-owned-email-otp.md) — refuse at
+      step one instead of step three, and the gate doors stay red on purpose so the
+      guard cannot be mistaken for the cure. 42 → 44, both halves green.
+      **14.0's second rule was measuring the wrong thing**: it forbade *any* write and
+      the guard legitimately writes an audit row, so it now counts inserts into the
+      OTP table — the harm is a code being spent, not a record being kept. Refined in
+      both directions rather than assumed, by stashing `includes/`. The guard refuses
+      exactly the set `create_verified_user()` already refused at `:116`, which is
+      what makes it safe on every signup's happy path, and it **outlives its cause**:
+      after 14.4 the state it detects stops being producible and it becomes the only
+      thing watching for the two stores drifting apart again. `REGISTER_REFUSED` is
+      deliberately sampleable, and 10.4's bus fans it out
+- [x] **14.2** [One writer](email-identity/14.2-one-writer.md) — three sites wrote
+      three different subsets of one fact; `UserManager::adopt_verified_email()` is
+      the only one able to now. Invisible: every other suite at its previous count,
+      44 → 48 in the contract suite. Takes a `VerifiedClaim`, so the type is the
+      gate. **The docblock claimed the write order was asserted, so it had to be** —
+      the directory write can lose a race and `user_email` must not have moved when
+      it does; proven able to fail by reversing the two blocks before committing the
+      correct one. Returns `true|WP_Error` rather than the brief's `bool`, to keep
+      `wp_update_user()`'s own error from flattening. Rule 2 deliberately does
+      **not** catch `AccountProvisioner:171`, whose partial write is the phase's
+      defect — left to the gate doors and to 14.4, recorded so the gap is a decision.
+      Sweep found one stale claim: `create_verified_user()` says README documents
+      these meta keys as a public contract, and it does not
+- [x] **14.3** [Password step](email-identity/14.3-password-step.md) — a way forward
+      for somebody with no password to type. Offered unconditionally: this is where a
+      "has set a password" marker would have been spent, and it is not worth a second
+      source of truth. 91 → 96 templates, proven able to fail by stashing the
+      template. **No controller code was needed**: `handle_forgot()` already reads
+      `$post['identity']`, so the screen posts the existing `forgot` action with the
+      identifier it holds — no new intent, no new grant, and nothing new to meter,
+      because nothing new sends. **The brief's label promised a login the flow does
+      not deliver** — reset ends by asking the visitor to sign in with the new
+      password, so the shipped wording says that. The old *Quên mật khẩu?* link was
+      replaced rather than joined; it asked for an identifier that had just been
+      typed. Found on the way past: the `.pot` is stale by 76 strings since Phase 8.6,
+      regenerated in its own commit rather than buried in this one
+- [x] **14.4** [Provider email row](email-identity/14.4-provider-email-row.md) —
+      the sub-phase that makes the three doors agree, verified on WordPress 7.0.2 with
+      all six gate markers green. Contract 48 → 50, abuse 28 → 30. **Both doors were
+      vacuous and the gate passing is what exposed it**: an email row left by an earlier
+      run pointed at a deleted user, resolved KNOWN, and satisfied the decision whether
+      or not the code did anything — proven by reverting the provisioner and watching
+      the gate pass anyway. The doors now pin the owner id to the account that run
+      provisioned, the email rows join the gate's cleanup, and the sequence that counts
+      is red-without / green-with on a clean table. An integration assertion against a
+      shared database is green-by-default unless it names the thing it just made. **Rule 8 caught the first version**, a concatenated settings path,
+      for the fourth time it has caught a sub-phase; fixed with a literal map, and
+      rule **8b** added because the map opens a hole in the rule that just caught me.
+      The Zalo hypothesis resolved from code rather than a live response and is
+      stronger than a guess: `ZaloProvider` reads `email_verified` from a field the
+      Graph profile is not documented to send, so the condition cannot be met there
+      whatever the flag says. Adoption is non-fatal by design, and the
+      `auto_link_email` branch adopts too. One lint failure on a generated data file
+      did not reproduce across four runs or under `php -l` — environmental, chased
+      rather than dismissed
+- [x] **14.7** [Release on delete](email-identity/14.7-release-on-delete.md) —
+      **numbered last, sequenced before 14.5**, the way 10.7 ran second. `wp_delete_user()`
+      left identity rows live: the subject stayed claimed by an account that no longer
+      existed, so `create_verified_user()` refused that number or address as already
+      registered **for ever**, while login failed closed — a denial, not a takeover,
+      which is why it survived eleven phases of green suites.
+      `IdentityRepository::retire_all_for_user()` has existed since Phase 2 with a
+      default reason of literally `'user_deleted'`; it was written for this and never
+      wired up, its only callers two teardown lines in a gate. **The defect was a
+      missing caller, not a wrong one**, so the rules ask whether anything calls it —
+      a fourth variant of Phase 7's "the old thing is gone is half a rule". Found by
+      running the thing: 14.4's leftover rows are what exposed it. Fitness 28 → 30,
+      gate red then green on WordPress 7.0.2. Multisite `remove_user_from_blog` is
+      excluded in writing
+
+- [x] **14.5** [Backfill](email-identity/14.5-backfill.md) — green on WordPress 7.0.2
+      with all six markers and `db_version=6`. **The gate found two defects before it
+      would pass.** The cursor outlived the migration and nothing would have resumed it:
+      batching was built for repeated passes while `maybe_upgrade()` runs one and then
+      bumps the version, so any site larger than a batch would have reported success
+      having done a fraction of the work — fixed by clearing the cursor on a short batch
+      and by letting a surviving cursor drive another pass. Found by the assertion that
+      the *upgrade path* reaches the migration, not just that the migration works: the
+      same gap as 14.7, one sub-phase later. And the bump turned `run-abuse-gate.php`
+      red on a pinned literal `5`; it compares against the constant now, and **the sweep
+      for the old value should have preceded the bump** — a sixth instance of the failure
+      CLAUDE.md records five of. On the real site it adopted two genuine Gmail accounts,
+      recorded in the brief as what happened rather than what was expected. Originally:
+      DB_VERSION 5 → 6 with
+      **no schema change**, because `maybe_upgrade()` is the only trigger available.
+      Calls the same writer rather than bespoke SQL, batched, idempotent, and it
+      widens how a set of existing accounts can be reached — which is stated in the
+      brief as a trade rather than implied away
+- [x] **14.6** [Security section](email-identity/14.6-security-section.md) — 96 → 101
+      templates, red before green, all six gate markers green. The predicate asks the
+      directory and **the fixture is the case a synthetic-email predicate gets wrong**:
+      the stub user's address is real, which is the Google-first shape, so the assertion
+      is what stops a later change quietly taking the wrong turn the spec recorded before
+      implementation began. **One reduction from the brief, deferred in writing rather
+      than omitted**: the contact branch gains a sentence and not a link, because the
+      plugin has no addressable URL for its own recovery screen from another page —
+      `Flow::url()` appends a step to the current page, `wp_lostpassword_url()` is the
+      wp-admin leak this suite already forbids, and there is no login-page setting to
+      read. Making it a link is a configuration decision, not markup. One branch feeds
+      both surfaces, so Phase 8.2's guarantee still holds. Originally: stop
+      rendering a box that cannot be filled. `save_password()` is **unchanged**: on
+      an account with a verified email, planting a password without re-auth creates a
+      login route that did not exist, so a borrowed session would gain something
+      rather than nothing
+
+---
+
+**Ordering rationale.** 14.0 first, for the reason the Postscript gives. 14.1 next
+and alone, because it is the only sub-phase that helps before any model change and
+it is independent of all of them.
+
+**14.3 must precede 14.4.** Granting the identity row routes provider-first
+accounts to the password step; reaching it before that step can offer an OTP trades
+a false message for a true one that helps just as little. Same hard sequencing as
+9.5 before 9.6, and for the same kind of reason — shipping in the other order
+converts a fix into a different dead end.
+
+**14.7 must precede 14.5**, and its number says nothing about that — 10.7 established
+that these numbers are allocation order. The backfill hands email rows to a whole
+population of existing accounts, and running it while `wp_delete_user()` still stranded
+rows would have knowingly multiplied a defect found two hours earlier.
+
+**14.5 must not precede 14.4**, since it migrates existing accounts into a state
+14.4 defines. **14.6 is last** and is the visible one: it was the original report,
+and its branch depends on what 14.4 and 14.5 make true. The trap 10.6 and 11.4 both
+named applies here too — every earlier attempt to design that section was really an
+attempt to decide whether an email is an identity.
+
+**14.5 owns the only `SMART_LOGIN_DB_VERSION` bump.** Anything else wanting one
+folds into it.
+
+**Rejected, and recorded so it is not re-proposed:** a `smartlogin_password_set`
+marker meta. It answers a question the directory should answer, it cannot be
+reconstructed for existing accounts — a provider-first account that later verified
+an email is indistinguishable by channel from one that registered with a password —
+and after 14.3 nothing needs the answer. The narrow alternative to 14.4, having the
+identify and recovery screens explain that an address belongs to a provider account,
+is rejected in the spec: it reveals the login *method* to an anonymous visitor, a
+stronger oracle than the one 9.4 metered, and not retractable once shipped.
+
+---
+
+## Phase 15 — The unreleased install
+
+Normative spec: [`unreleased-install.md`](unreleased-install.md) — the decision that
+this plugin upgrades from nothing, the table of what goes and what each surface
+serves, and the rule the phase establishes.
+
+Execution briefs: [`unreleased-install/`](unreleased-install/), one file per
+sub-phase. **Status lives here and only here.**
+
+Short version: this file has said since Phase 0 that the project has never run in
+production and carries no migration burden — and then eleven phases wrote migration
+code anyway, each for the handful of development installs that existed at the time.
+Roughly 400 lines exist to carry a past no site outside this machine has had. They go,
+the database is wiped, and `SMART_LOGIN_DB_VERSION` resets to `1`. From here a 1.0.x
+install is **reinstallable, not upgradable**, by decision rather than by accident.
+
+The architecture and all ten suites stay. The four defects found finishing Phase 14
+were missing wiring, not wrong structure, and every one was caught by the model and
+the suites around it.
+
+### Sub-phases
+
+- [x] **15.0** [Guard rails](unreleased-install/15.0-guard-rails.md) — landed red:
+      fitness 30 → 10 failed, one rule per surface, and the install gate stopping at
+      `options survived uninstall: smart_login_account_page`. **Not the leak the brief
+      named** — it predicted 14.5's backfill cursor and found instead a page cache
+      `AccountForm` has written since Phase 8 and `uninstall.php` never deleted, which
+      is the argument for a query over a list made by the rule on its first run. It also
+      found that **a fresh install prints a WordPress database error**:
+      `recreate_renamed_tables()` runs `SHOW COLUMNS` on a table that does not exist,
+      on every install this plugin will ever have. Two of my own assertions were wrong
+      in the same direction and were fixed towards the truth: `channels.enabled` is
+      declared null on purpose, and `Settings::get()` cannot tell that from an unknown
+      path; and deleting the fixture user after uninstall fired 14.7's hook at dropped
+      tables. Originally: an install gate
+      that runs `activate()` → use → `uninstall.php` in one pass and then asserts that
+      **no option, table or user meta carrying this plugin's prefixes survives** — a
+      query, not a list, because a list needs keeping in step with the code. Plus one
+      deletion rule per surface, red until 15.2–15.3
+- [x] **15.1** [Fresh database](unreleased-install/15.1-fresh-database.md) — smaller
+      than planned: 15.0's gate uninstalls to reach clean ground, so running it had
+      already done the wipe. What was left was what the gate does not own — twelve
+      `sl_gate_*` fixture users from runs whose cleanup predates 14.4's. Each was
+      re-read and confirmed before deletion, and the three real accounts plus six manual
+      test accounts were deliberately left alone. The installed copy pulled, so the site
+      and the working tree stopped disagreeing about the version. Originally: wipe what
+      the plugin owns on the Local site, read the counts before removing them, and let
+      the gate run against empty ground. 14.4's vacuous doors are the argument
+- [x] **15.2** [Delete the migrations](unreleased-install/15.2-delete-migrations.md) —
+      `class-installer.php` 411 → 254 lines, fitness 30 → 36, install gate green at
+      `db_version=1`. **A fresh install stopped printing a database error**:
+      `recreate_renamed_tables()` ran `SHOW COLUMNS` on a table that did not exist, on
+      every install this plugin would ever have had, and it was fixed by deleting the
+      code rather than guarding it — the better fix, available exactly once. A **second**
+      pinned version number went red two phases running, this time Phase 2's
+      `>= 3` floor; it asserts a positive integer now. Phase 2's `external_identities`
+      allowlist said in writing it should go once nothing carried the table, so it did.
+      14.5's gate assertions went with their code and left a note pointing at the defect
+      they recorded. Originally:
+      five functions and the version reset. `maybe_upgrade()` **stays**, emptied: the
+      mechanism is how the next schema change arrives, only its contents were about the
+      past
+- [x] **15.3** [Delete the legacy reads](unreleased-install/15.3-delete-legacy-reads.md)
+      — fitness 36 → 40, all seven gate markers green. **The brief's one claim of
+      verification was false**: it said the admin JS posts `transport` "verified by grep,
+      not assumed", and the JS posted `channel` — deleting the server's acceptance would
+      have quietly broken the Gửi thử button into testing the wrong transport. The
+      attribute, the JS and the read were renamed together and `SMART_LOGIN_VERSION`
+      bumped to 1.0.2 so a cached `admin.js` cannot post a field nothing reads. 10.2's
+      pre-move secret fixture was replaced, not deleted, keeping the half still true of
+      every install. **One unreproduced gate failure is recorded rather than explained
+      away** — a hypothesis was tested and rejected, and what is left is a correlation
+      with no mechanism. Originally: the secret fallbacks, the webhook tester's old field name, and the two shim
+      templates the README already documents as unused
+
+- [x] **15.4** [Truth pass](unreleased-install/15.4-truth-pass.md) — three false
+      statements the plugin was shipping, corrected and turned into rules: a README
+      naming two templates 15.3 had deleted, a `readme.txt` Stable tag behind the
+      constant, and a comment claiming README documents meta keys as a public contract.
+      CLAUDE.md opens on this failure having happened twice; this was the third, and the
+      first the project's own change created. Fitness 40 → 44. **The catalogue rule was
+      wrong twice in the same direction** — comparing whole files compared the creation
+      date, comparing below the header compared source line references and announced
+      itself as `689 committed, 689 produced` and still stale; it compares the sorted
+      msgid set now. **The README rule pushed the docs shorter rather than being gamed**:
+      a true historical sentence still named deleted files, so the sentence went to the
+      changelog where it belongs. `Mail templates` promoted to `required` — green since
+      13.3 and left `spec` for four phases, against the agreement's own rule. Coding
+      standards is now the only `spec` suite
+
+---
+
+**Ordering rationale.** 15.0 first, and for once the reason is not only the Postscript:
+its install gate is new coverage of a path nothing has ever exercised, and it has to
+exist before the code it covers is edited. **15.1 must precede 15.2** — deleting the
+migrations while the database still holds state only they can explain would leave a
+site nothing can repair. 15.3 is independent of 15.2 and may be dropped.
+
+**The rule this phase establishes:** migration code is written when there is something
+to migrate, and not before. The eleven-phase habit was to write the upgrade path
+alongside the change, which felt careful and was not — every one of those paths ran on
+this machine and nowhere else, and 14.5's cursor defect is what untested migration code
+is worth.
+
+---
+
 ## Risks
 
 | Risk | Mitigation |
@@ -1126,4 +1413,11 @@ templates to maintain for a choice made once.
 | 10.1 changes routing for every OTP the plugin has ever sent | Defaults reproduce today's behaviour exactly; acceptance is *unchanged suite counts*, not green suites, so an invisible change that is not invisible fails |
 | A bus endpoint going down takes sign-in with it | Two breakers, not one, and rule 6 asserts a failing bus leaves `issue()` returning an array. This is the decision most likely to be "simplified" later, so it has a rule rather than a comment |
 | 10.6 splits one tab into four and a field lands on none of them | Acceptance walks `FieldRegistry::all()` and renders every tab — the exactly-one-tab property the registry exists to guarantee |
+| Deleting a WordPress user strands its identity rows, so the subject can never be registered again — and 14.4 widens this to every provider account's email | **Found in 14.4, fixed in 14.7** before the backfill could multiply it. `deleted_user` now releases them, with two structural rules asking whether anything calls the capability and one behavioural rule in the gate. Rows already stranded on existing installs are out of scope and stated as such |
 | The `generic` preset default makes an existing site's SMS stop working | Only new installs; a site that has saved the tab has `custom` stored, and `Settings::sanitize()` writes stored values. Asserted directly |
+| 14.1's guard sits on the happy path of every registration and a wrong predicate closes signup for everyone | Acceptance asserts an unused address still registers, not only that an owned one is refused |
+| 14.2 is a rename across `META_EMAIL_VERIFIED`, `META_SYNTHETIC` and `billing_email` — the failure mode CLAUDE.md records five times | The grep across `includes/`, `templates/`, `tests/` and `docs/` is a completion condition of the sub-phase, not a follow-up; and the acceptance is unchanged counts, so a behaviour change cannot hide behind a green run |
+| 14.4 widens what an address can do, and the flag defaults on for Google | Gated per provider and per `email_verified`; flag off asserted byte-identical to today; what the setting grants is stated in its help text rather than implied |
+| 14.5 grants existing accounts a login route their holders did not ask for | Deliberate and argued in the brief: core's own form already reaches them at that address. Skips synthetic addresses and any address held by two users, both asserted; count written to the audit log; opting out is turning the 14.4 flag off before upgrading |
+| 14.3 adds a caller to an OTP send, which is the shape of 9.4's original defect | The new route spends `check_identify()` and `check_otp_send()` unchanged, asserted by exhausting the budget rather than by reading the call site |
+| 14.6's branch is re-derived from `user_email` by a later change and silently breaks for Google accounts | The acceptance asserts the non-synthetic-plus-no-email-row case specifically — the one a synthetic-email predicate gets wrong — so the predicate is pinned by a test rather than by a comment |

@@ -36,21 +36,6 @@ class Settings {
 	 */
 	const SECRET_OPTION = 'smart_login_field_secrets';
 
-	/**
-	 * Secrets that were sealed somewhere else before 10.2 keyed them by path.
-	 *
-	 * A lookup rather than a branch, and a shrinking one: an entry earns its keep
-	 * only until every install has re-saved that field. Without it the change of
-	 * key would strand the stored value in place — readable by nothing, deletable
-	 * by nothing, and silently replaced by an empty string.
-	 */
-	const LEGACY_SECRETS = array(
-		'security.captcha_secret' => array(
-			'option' => \SmartLogin\Security\Captcha::SECRET_OPTION,
-			'key'    => 'captcha',
-		),
-	);
-
 	/** @var array|null Runtime cache, always in registry shape. */
 	private static $cache = null;
 
@@ -260,33 +245,19 @@ class Settings {
 			SecretBox::put( self::SECRET_OPTION, $path, $secret );
 		}
 
-		// Either way the pre-10.2 copy goes. Leaving it behind on a clear would
-		// resurrect the secret the administrator just deleted, because the read
-		// below falls back to exactly that location.
-		self::forget_legacy_secret( $path );
 	}
 
 	/**
-	 * Read a sealed secret by registry path, wherever it currently lives.
+	 * Read a sealed secret by registry path.
+	 *
+	 * One location. Until 15.3 this fell back to where the captcha secret lived
+	 * before 10.2 moved it, and clearing had to reach that copy too or the secret
+	 * came back on the next read — a defect 10.2's own Outcome records. A wiped
+	 * database has no earlier location to fall back to, so the fallback and the
+	 * clear-the-old-copy dance go together.
 	 */
 	public static function read_secret( string $path ): string {
-		$secret = SecretBox::get( self::SECRET_OPTION, $path );
-
-		if ( '' !== $secret ) {
-			return $secret;
-		}
-
-		$legacy = self::LEGACY_SECRETS[ $path ] ?? null;
-
-		return $legacy ? SecretBox::get( $legacy['option'], $legacy['key'] ) : '';
-	}
-
-	private static function forget_legacy_secret( string $path ): void {
-		$legacy = self::LEGACY_SECRETS[ $path ] ?? null;
-
-		if ( $legacy ) {
-			SecretBox::forget( $legacy['option'], $legacy['key'] );
-		}
+		return SecretBox::get( self::SECRET_OPTION, $path );
 	}
 
 	/**

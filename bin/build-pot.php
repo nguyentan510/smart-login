@@ -160,6 +160,34 @@ foreach ( $entries as $entry ) {
 	}
 }
 
+/*
+ * `--check` writes nothing and reports whether the committed catalogue matches what
+ * the tree would produce now.
+ *
+ * The catalogue went stale by 76 strings across five phases, and nobody noticed until
+ * 14.3 regenerated it for an unrelated reason. Nothing was watching; the fitness suite
+ * watches now, and it needs a way to ask without writing to the working tree.
+ */
+if ( in_array( '--check', $argv, true ) ) {
+	$current = is_readable( $out ) ? (string) file_get_contents( $out ) : '';
+
+	if ( sl_pot_strings( $current ) === sl_pot_strings( $pot ) ) {
+		printf( "POT is current\n  %d strings from %d files\n", count( $entries ), count( $files ) );
+		exit( 0 );
+	}
+
+	$missing = array_diff( sl_pot_strings( $pot ), sl_pot_strings( $current ) );
+	$extra   = array_diff( sl_pot_strings( $current ), sl_pot_strings( $pot ) );
+
+	printf(
+		"POT is STALE\n  %d string(s) in the tree are missing from the catalogue, %d in the catalogue are gone from the tree\n  first missing: %s\n  run: php bin/build-pot.php\n",
+		count( $missing ),
+		count( $extra ),
+		(string) ( reset( $missing ) ?: '—' )
+	);
+	exit( 1 );
+}
+
 if ( ! is_dir( dirname( $out ) ) ) {
 	mkdir( dirname( $out ), 0755, true );
 }
@@ -167,6 +195,41 @@ if ( ! is_dir( dirname( $out ) ) ) {
 file_put_contents( $out, $pot );
 
 printf( "Wrote %s\n  %d strings from %d files\n", str_replace( $root . '/', '', $out ), count( $entries ), count( $files ) );
+
+/**
+ * The set of translatable strings a catalogue declares, sorted.
+ *
+ * Not the file, and not even the file below its header. Two earlier versions of this
+ * were wrong in ways worth recording, because each would have produced a rule nobody
+ * could live with:
+ *
+ *   - Comparing whole files compared `POT-Creation-Date`, so a catalogue was stale one
+ *     second after it was written.
+ *   - Comparing everything below the header compared the `#:` source references, so
+ *     any edit that shifted a line above a `__()` call demanded a regeneration. Caught
+ *     by --check reporting 689 committed against 689 produced — identical counts, and
+ *     still "stale".
+ *
+ * What a translator can actually be missing is a string. That is what this compares.
+ *
+ * @return string[] Sorted msgid/msgid_plural literals, header entry excluded.
+ */
+function sl_pot_strings( string $pot ): array {
+	preg_match_all( '/^msgid(?:_plural)? (".*")$/m', $pot, $matches );
+
+	$strings = array_values(
+		array_filter(
+			$matches[1] ?? array(),
+			static function ( string $literal ): bool {
+				return '""' !== $literal;
+			}
+		)
+	);
+
+	sort( $strings );
+
+	return $strings;
+}
 
 /**
  * Read the literal string arguments of a call, or null when any are dynamic.

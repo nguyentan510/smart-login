@@ -329,6 +329,72 @@ try {
 		$failed( 'repeated unlink attempts eventually orphaned the account' );
 	}
 
+	/*
+	 * 14.7 — deleting a user must release the subjects it held.
+	 *
+	 * Before 14.7 nothing hooked `deleted_user`, so the rows stayed live and pointed
+	 * at an account that no longer existed. resolve() answered KNOWN, and
+	 * create_verified_user() then refused that number or address as already
+	 * registered — for ever. Login failed closed, so it was a denial rather than a
+	 * takeover, which is why it survived every gate.
+	 *
+	 * Deliberately its own fixture rather than reusing the accounts above: those are
+	 * torn down by the gate itself, and a rule about deletion must own the deletion.
+	 */
+	$release_login = 'sl_release_' . strtolower( wp_generate_password( 8, false, false ) );
+	$release_phone = '849' . str_pad( (string) random_int( 10000000, 99999999 ), 8, '0' );
+	$release_id    = wp_insert_user(
+		array(
+			'user_login' => $release_login,
+			'user_pass'  => wp_generate_password( 32, true, true ),
+			'user_email' => $release_login . '@example.test',
+			'role'       => 'subscriber',
+		)
+	);
+	if ( is_wp_error( $release_id ) ) {
+		$failed( 'could not create the identity-release fixture user' );
+	}
+
+	$release_claim = \SmartLogin\Identity\Claim::canonical( 'phone', $release_phone );
+	if ( ! $repository->claim(
+		\SmartLogin\Identity\IdentityRecord::create(
+			(int) $release_id,
+			\SmartLogin\Identity\VerifiedClaim::from( $release_claim, \SmartLogin\Identity\VerifiedClaim::PROOF_OTP ),
+			\SmartLogin\Identity\IdentityRecord::BY_REGISTRATION,
+			true
+		)
+	) ) {
+		wp_delete_user( (int) $release_id );
+		$failed( 'could not claim the identity-release fixture subject' );
+	}
+
+	require_once ABSPATH . 'wp-admin/includes/user.php';
+	wp_delete_user( (int) $release_id );
+
+	if ( $repository->find( $release_claim ) ) {
+		$repository->retire_all_for_user( (int) $release_id, 'gate_cleanup' );
+		$history_log->forget_user( (int) $release_id );
+		$failed( 'deleting a user left its identity row live, so that subject can never be registered again' );
+	}
+
+	// And the subject is genuinely available again, not merely absent from the table.
+	$release_state = ( new \SmartLogin\Identity\IdentityDirectory() )->resolve( $release_claim )->state();
+	if ( \SmartLogin\Identity\Resolution::STATE_KNOWN === $release_state ) {
+		$history_log->forget_user( (int) $release_id );
+		$failed( 'the released subject still resolves as owned: ' . $release_state );
+	}
+	$history_log->forget_user( (int) $release_id );
+
+	/*
+	 * 14.5's backfill assertions lived here and went with the code in 15.2.
+	 *
+	 * Kept as a note rather than deleted silently, because their Outcome recorded a real
+	 * defect: the migration cursor outlived the migration and nothing would have resumed
+	 * it, so any site larger than one batch would have reported success having done a
+	 * fraction of the work. The finding survives in docs/email-identity/14.5-backfill.md
+	 * and in the tracker; only the code it asserted is gone.
+	 */
+
 	$repository->retire_all_for_user( (int) $guard_id, 'integration_gate' );
 	$repository->retire_all_for_user( (int) $rival_id, 'integration_gate' );
 	$history_log->forget_user( (int) $guard_id );
@@ -341,7 +407,10 @@ try {
 	wp_delete_user( (int) $user_id );
 } catch ( Throwable $exception ) {
 	if ( function_exists( 'wp_delete_user' ) ) {
-		foreach ( array( $user_id ?? 0, $rival_id ?? 0, $guard_id ?? 0 ) as $orphan ) {
+		// The 14.5 and 14.7 fixtures belong here too. They did not, and the first red
+		// run of the backfill rule left two users and two identity rows behind — which
+		// is how 14.4's doors became vacuous in the first place.
+		foreach ( array( $user_id ?? 0, $rival_id ?? 0, $guard_id ?? 0, $release_id ?? 0, $legacy_id ?? 0, $synth_id ?? 0 ) as $orphan ) {
 			if ( $orphan > 0 && ! is_wp_error( $orphan ) ) {
 				@wp_delete_user( (int) $orphan );
 			}

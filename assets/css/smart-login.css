@@ -241,10 +241,29 @@
 
 .sl-input-wrap {
 	position: relative;
+	min-width: 0;
 }
 
 .sl-field--password .sl-input {
 	padding-right: 46px;
+}
+
+/* Padding counted inside the box, declared on the input instead of inherited.
+   `.smart-login *` above sets `box-sizing: inherit`, but that is one class of
+   specificity — a single theme rule on `input[type="password"]` outranks it,
+   and then `width: 100%` plus the 46px the toggle button reserves pushes the
+   field out through the card's own padding. Stating it here, and capping the
+   width, makes the blow-out unrepresentable whatever the theme resets. The
+   password fields show it worst because their right padding is the largest;
+   every `.sl-input` has the same exposure.
+
+   The class is repeated on purpose: `.smart-login .sl-input` alone loses to a
+   theme rule like `.woocommerce-account input[type="password"]`, and load order
+   between the theme and this stylesheet is not ours to guarantee. Repeating it
+   buys the specificity without an `!important` and without new markup. */
+.smart-login .sl-input.sl-input {
+	box-sizing: border-box;
+	max-width: 100%;
 }
 
 .sl-toggle-password {
@@ -380,6 +399,14 @@
 .sl-btn--block {
 	display: block;
 	width: 100%;
+}
+
+/* The recovery route on the password screen. Same door as Quên mật khẩu was, one
+   click closer, so it sits quietly under the primary action instead of competing
+   with it — which is why it reuses --ghost rather than earning a variant. */
+.sl-form--recover {
+	margin-top: 14px;
+	text-align: center;
 }
 
 .sl-form.is-submitting .sl-btn--primary {

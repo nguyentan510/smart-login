@@ -29,15 +29,6 @@ defined( 'ABSPATH' ) || exit;
 
 final class Captcha {
 
-	/**
-	 * Where the encrypted provider secret lived before 10.2.
-	 *
-	 * Kept because Settings::LEGACY_SECRETS points at it: an install that sealed
-	 * a secret here must still be able to read it. New writes go to the generic
-	 * store keyed by SECRET_PATH.
-	 */
-	const SECRET_OPTION = 'smart_login_captcha_secret';
-
 	/** The registry path this secret is declared under. */
 	const SECRET_PATH = 'security.captcha_secret';
 

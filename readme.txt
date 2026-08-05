@@ -4,7 +4,7 @@ Tags: otp, login, phone, woocommerce, vietnam
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -59,6 +59,14 @@ Không. WooCommerce chỉ cần khi bạn muốn dùng phần địa chỉ và c
 
 == Changelog ==
 
+= 1.0.2 =
+* Email đã xác thực bởi Google trở thành một cách đăng nhập và khôi phục tài khoản, bật/tắt theo từng nhà cung cấp.
+* Sửa: nhập email của tài khoản Google vào màn hình đăng nhập không còn gửi mã đăng ký rồi báo "tài khoản đã tồn tại" ở bước cuối.
+* Sửa: xoá một người dùng nay trả lại số điện thoại và email họ giữ; trước đó những thông tin đó không ai đăng ký lại được.
+* Màn hình đặt mật khẩu có lối nhận mã xác thực cho người chưa từng đặt mật khẩu.
+* Mục Bảo mật không còn hiện ô "mật khẩu hiện tại" cho tài khoản không thể điền được ô đó.
+* Bản này không nâng cấp từ bản cũ: xem Upgrade Notice.
+
 = 1.0.1 =
 * Mô hình định danh mới: mỗi kênh một identity, một bảng duy nhất quyết định quyền sở hữu.
 * Sửa lỗi số điện thoại đã thu hồi vẫn lấy lại được mật khẩu của chủ cũ.
@@ -69,6 +77,9 @@ Không. WooCommerce chỉ cần khi bạn muốn dùng phần địa chỉ và c
 * Chính sách mật khẩu áp dụng cho cả đặt lại mật khẩu.
 
 == Upgrade Notice ==
+
+= 1.0.2 =
+Bản này **không có đường nâng cấp** từ 1.0.1. Plugin chưa từng phát hành, nên mọi đoạn mã di trú đã được gỡ bỏ và phiên bản cơ sở dữ liệu đặt lại về 1. Nếu bạn đang chạy 1.0.1, hãy gỡ và cài lại thay vì cập nhật.
 
 = 1.0.1 =
 Bản này thay đổi cấu trúc cơ sở dữ liệu định danh. Hãy sao lưu trước khi cập nhật.

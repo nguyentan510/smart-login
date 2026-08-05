@@ -180,6 +180,33 @@ function delete_user_meta( $user_id, $key ) {
 	return true;
 }
 
+/**
+ * Addresses `wp_users` already holds, as email => user id.
+ *
+ * Deliberately not a WP_User factory: `email_exists()` answers with the owner's
+ * id, which is everything the identity code needs from this direction, and a
+ * WP_User class here would collide with the richer one in template-stubs.php.
+ */
+$GLOBALS['sl_users_by_email'] = array();
+
+function email_exists( $email ) {
+	return $GLOBALS['sl_users_by_email'][ strtolower( (string) $email ) ] ?? false;
+}
+
+/**
+ * Every wp_update_user() call this run received.
+ *
+ * Recorded rather than executed: the assertions that need it are about whether a
+ * write happened and in what order, not about what WordPress would store.
+ */
+$GLOBALS['sl_user_updates'] = array();
+
+function wp_update_user( $data ) {
+	$GLOBALS['sl_user_updates'][] = (array) $data;
+
+	return (int) ( ( (array) $data )['ID'] ?? 0 );
+}
+
 function do_action( $hook ) {}
 
 function __( $text, $domain = null ) {
