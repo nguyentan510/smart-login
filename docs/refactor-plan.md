@@ -27,6 +27,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 11 — Mail templates**
 - [x] **Phase 12 — The provider surface**
 - [x] **Phase 13 — The mail surface**
+- [ ] **Phase 14 — The email identity**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -1104,6 +1105,94 @@ eight more appearance settings and not a layout picker. Most combinations of
 eight appearance settings look worse than the default, and a picker is three
 templates to maintain for a choice made once.
 
+## Phase 14 — The email identity
+
+Normative spec: [`email-identity.md`](email-identity.md) — the two stores holding
+one fact, the per-provider decision, the one-writer argument and the predicate that
+must not be re-derived from `user_email` all live there.
+
+Execution briefs: [`email-identity/`](email-identity/), one file per sub-phase.
+**Status lives here and only here.**
+
+Short version: a provider login writes its verified address into
+`wp_users.user_email` and links only the federated row, so *"this account owns this
+address"* is stored in two places that disagree — and the disagreement is
+observable. Typing that address the next day gets three different answers: the
+identify screen spends a registration OTP and then refuses with *"Tài khoản đã tồn
+tại"*, forgot-password says the address was never registered, and `wp-login.php`
+correctly finds the account and asks for a password that is a 64-character string
+its holder has never seen. `link()` already documents the gap and defers it to
+"Phase 3" (`class-account-provisioner.php:194-198`); Phase 3 did not, and this is
+that phase.
+
+### Sub-phases
+
+- [ ] **14.0** [Guard rails](email-identity/14.0-guard-rails.md) — the three doors
+      as failing assertions, split across the contract suite and the provider
+      integration gate because a stub cannot show core resolving `user_email` at
+      priority 20 while the plugin resolves the directory at 30. Rule 4 must report
+      PENDING, not pass, until 14.2 exists
+- [ ] **14.1** [Owned-email OTP](email-identity/14.1-owned-email-otp.md) — refuse at
+      step one instead of step three. Ships alone and first: it is the live harm, it
+      is independent of every decision below it, and its acceptance includes rules 1
+      and 2 staying **red**, so the guard cannot be mistaken for the cure
+- [ ] **14.2** [One writer](email-identity/14.2-one-writer.md) — three sites write
+      three different subsets of one fact; `UserManager::adopt_verified_email()`
+      becomes the only one able to. Invisible by design, so the acceptance is
+      **unchanged suite counts**, not green suites — the shape 10.1 established.
+      Takes a `VerifiedClaim`, not a string plus a flag, so the type is the gate
+- [ ] **14.3** [Password step](email-identity/14.3-password-step.md) — a way forward
+      for somebody with no password to type, pointed at the reset flow that already
+      sets one without knowing the old one. Offered unconditionally: this is the
+      sub-phase where a "has set a password" marker would have been spent, and the
+      marker is not worth a second source of truth
+- [ ] **14.4** [Provider email row](email-identity/14.4-provider-email-row.md) — the
+      sub-phase that makes the three doors agree. Per provider, Google on and Zalo
+      off, with the Zalo half labelled a hypothesis until a live response confirms
+      it. Flag off must produce byte-identical state to today
+- [ ] **14.5** [Backfill](email-identity/14.5-backfill.md) — DB_VERSION 5 → 6 with
+      **no schema change**, because `maybe_upgrade()` is the only trigger available.
+      Calls the same writer rather than bespoke SQL, batched, idempotent, and it
+      widens how a set of existing accounts can be reached — which is stated in the
+      brief as a trade rather than implied away
+- [ ] **14.6** [Security section](email-identity/14.6-security-section.md) — stop
+      rendering a box that cannot be filled. `save_password()` is **unchanged**: on
+      an account with a verified email, planting a password without re-auth creates a
+      login route that did not exist, so a borrowed session would gain something
+      rather than nothing
+
+---
+
+**Ordering rationale.** 14.0 first, for the reason the Postscript gives. 14.1 next
+and alone, because it is the only sub-phase that helps before any model change and
+it is independent of all of them.
+
+**14.3 must precede 14.4.** Granting the identity row routes provider-first
+accounts to the password step; reaching it before that step can offer an OTP trades
+a false message for a true one that helps just as little. Same hard sequencing as
+9.5 before 9.6, and for the same kind of reason — shipping in the other order
+converts a fix into a different dead end.
+
+**14.5 must not precede 14.4**, since it migrates existing accounts into a state
+14.4 defines. **14.6 is last** and is the visible one: it was the original report,
+and its branch depends on what 14.4 and 14.5 make true. The trap 10.6 and 11.4 both
+named applies here too — every earlier attempt to design that section was really an
+attempt to decide whether an email is an identity.
+
+**14.5 owns the only `SMART_LOGIN_DB_VERSION` bump.** Anything else wanting one
+folds into it.
+
+**Rejected, and recorded so it is not re-proposed:** a `smartlogin_password_set`
+marker meta. It answers a question the directory should answer, it cannot be
+reconstructed for existing accounts — a provider-first account that later verified
+an email is indistinguishable by channel from one that registered with a password —
+and after 14.3 nothing needs the answer. The narrow alternative to 14.4, having the
+identify and recovery screens explain that an address belongs to a provider account,
+is rejected in the spec: it reveals the login *method* to an anonymous visitor, a
+stronger oracle than the one 9.4 metered, and not retractable once shipped.
+
+---
+
 ## Risks
 
 | Risk | Mitigation |
@@ -1127,3 +1216,9 @@ templates to maintain for a choice made once.
 | A bus endpoint going down takes sign-in with it | Two breakers, not one, and rule 6 asserts a failing bus leaves `issue()` returning an array. This is the decision most likely to be "simplified" later, so it has a rule rather than a comment |
 | 10.6 splits one tab into four and a field lands on none of them | Acceptance walks `FieldRegistry::all()` and renders every tab — the exactly-one-tab property the registry exists to guarantee |
 | The `generic` preset default makes an existing site's SMS stop working | Only new installs; a site that has saved the tab has `custom` stored, and `Settings::sanitize()` writes stored values. Asserted directly |
+| 14.1's guard sits on the happy path of every registration and a wrong predicate closes signup for everyone | Acceptance asserts an unused address still registers, not only that an owned one is refused |
+| 14.2 is a rename across `META_EMAIL_VERIFIED`, `META_SYNTHETIC` and `billing_email` — the failure mode CLAUDE.md records five times | The grep across `includes/`, `templates/`, `tests/` and `docs/` is a completion condition of the sub-phase, not a follow-up; and the acceptance is unchanged counts, so a behaviour change cannot hide behind a green run |
+| 14.4 widens what an address can do, and the flag defaults on for Google | Gated per provider and per `email_verified`; flag off asserted byte-identical to today; what the setting grants is stated in its help text rather than implied |
+| 14.5 grants existing accounts a login route their holders did not ask for | Deliberate and argued in the brief: core's own form already reaches them at that address. Skips synthetic addresses and any address held by two users, both asserted; count written to the audit log; opting out is turning the 14.4 flag off before upgrading |
+| 14.3 adds a caller to an OTP send, which is the shape of 9.4's original defect | The new route spends `check_identify()` and `check_otp_send()` unchanged, asserted by exhausting the budget rather than by reading the call site |
+| 14.6's branch is re-derived from `user_email` by a later change and silently breaks for Google accounts | The acceptance asserts the non-synthetic-plus-no-email-row case specifically — the one a synthetic-email predicate gets wrong — so the predicate is pinned by a test rather than by a comment |
