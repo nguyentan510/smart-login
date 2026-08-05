@@ -168,6 +168,20 @@
 	color: var(--sl-text);
 }
 
+/*
+ * Scoped to the entry screen on purpose. .sl-lead is shared by eight templates,
+ * and in several of them it carries something consequential — "Phiên đăng ký đã
+ * hết hạn" is a lead, not a caption. Greying the class outright would quiet
+ * those along with this one. Here the lead is a single instruction sitting above
+ * the field that carries it out, so it should read as support for the input
+ * rather than compete with it.
+ */
+.smart-login--identify .sl-lead {
+	margin-bottom: 20px;
+	color: var(--sl-muted);
+	font-size: 14px;
+}
+
 .sl-dest {
 	color: var(--sl-accent);
 	white-space: nowrap;

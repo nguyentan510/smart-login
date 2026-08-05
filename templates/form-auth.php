@@ -42,14 +42,25 @@ $sl_email     = Settings::email_enabled();
 		?>
 	</h2>
 
+	<?php
+	/*
+	 * One sentence, and it is an instruction. The second sentence this used to
+	 * carry — "Chúng tôi sẽ tự nhận ra bạn đã có tài khoản hay chưa" — described
+	 * what the server does with the answer, which is not something the visitor
+	 * can act on, and it sat between the heading and the only input on the page.
+	 * The reassurance is not lost: "Đăng nhập hoặc đăng ký" above says the same
+	 * thing in four words, which is the whole reason there is no login/register
+	 * choice on this screen.
+	 */
+	?>
 	<p class="sl-lead">
 		<?php
 		if ( $sl_phone && ! $sl_email ) {
-			esc_html_e( 'Nhập số điện thoại của bạn để tiếp tục. Chúng tôi sẽ tự nhận ra bạn đã có tài khoản hay chưa.', 'smart-login' );
+			esc_html_e( 'Nhập số điện thoại để tiếp tục.', 'smart-login' );
 		} elseif ( $sl_email && ! $sl_phone ) {
-			esc_html_e( 'Nhập email của bạn để tiếp tục. Chúng tôi sẽ tự nhận ra bạn đã có tài khoản hay chưa.', 'smart-login' );
+			esc_html_e( 'Nhập email để tiếp tục.', 'smart-login' );
 		} else {
-			esc_html_e( 'Nhập số điện thoại hoặc email của bạn để tiếp tục. Chúng tôi sẽ tự nhận ra bạn đã có tài khoản hay chưa.', 'smart-login' );
+			esc_html_e( 'Nhập số điện thoại hoặc email để tiếp tục.', 'smart-login' );
 		}
 		?>
 	</p>
@@ -98,7 +109,16 @@ $sl_email     = Settings::email_enabled();
 	</form>
 
 	<?php if ( ! empty( $sl_providers ) ) : ?>
-		<div class="sl-divider"><span><?php esc_html_e( 'Hoặc tiếp tục nhanh với', 'smart-login' ); ?></span></div>
+		<?php
+		/*
+		 * Just "Hoặc". The divider used to read "Hoặc tiếp tục nhanh với" directly
+		 * above two buttons that each say "Tiếp tục với …", so the same three words
+		 * appeared three times in forty pixels. The button copy is the half that
+		 * cannot move — "Continue with Google" is one of the strings Google's
+		 * branding guidelines permit, and inventing a shorter one is not an option.
+		 */
+		?>
+		<div class="sl-divider"><span><?php esc_html_e( 'Hoặc', 'smart-login' ); ?></span></div>
 		<div class="sl-provider-buttons">
 			<?php foreach ( $sl_providers as $sl_provider ) : ?>
 				<a
