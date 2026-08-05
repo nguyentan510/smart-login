@@ -127,4 +127,21 @@ if ($LASTEXITCODE -ne 0) {
 # what WP_Http would really send, and the delivery tab rendering the automation
 # section are all unproven until they run here.
 & $integrationPhp @phpArgs 'tests/integration/run-delivery-gate.php'
+if ($LASTEXITCODE -ne 0) {
+    exit $LASTEXITCODE
+}
+
+# Phase 15. activate() -> tables -> defaults -> first use -> uninstall.php had never
+# run end to end; every other gate here starts from a site somebody installed by hand.
+#
+# It is DESTRUCTIVE and runs LAST for that reason: it uninstalls twice, once to reach
+# clean ground and once as the subject, then reactivates so the gates above still have
+# a site to run against next time. Opt in with SMART_LOGIN_DESTRUCTIVE_OK=1; without
+# it the gate reports BLOCKED and this script treats that as a skip rather than a
+# failure, so the default run stays non-destructive.
+& $integrationPhp @phpArgs 'tests/integration/run-install-gate.php'
+if ($LASTEXITCODE -eq 2) {
+    Write-Output 'SMART_LOGIN_INSTALL_GATE_SKIPPED (set SMART_LOGIN_DESTRUCTIVE_OK=1 to run it)'
+    exit 0
+}
 exit $LASTEXITCODE

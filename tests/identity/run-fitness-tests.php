@@ -228,6 +228,69 @@ sl_assert(
 	'The capability is only reachable if WordPress calls it; the hook is the wiring.'
 );
 
+// ---------------------------------------------------------------------
+sl_section( 'This plugin upgrades from nothing (Phase 15)' );
+
+/*
+ * refactor-plan.md has said since Phase 0 that the project has never run in
+ * production and carries no migration burden. Eleven phases wrote migration code
+ * anyway, each for the development installs that existed at the time. These rules
+ * name every one of those surfaces.
+ *
+ * They are worth keeping after the deletions, not only during them. The habit being
+ * retired is writing an upgrade path by reflex alongside the change, and a rule is
+ * what makes the next reflex visible in review. When there is genuinely something to
+ * migrate, the rule is edited in the same commit as the migration — deliberately, in
+ * writing, which is the whole difference.
+ */
+$sl_legacy_surfaces = array(
+	'migrate_settings_shape'    => 'settings arrays flatter than 1.0.1',
+	'legacy_key_map'            => 'the flat-to-nested key map',
+	'recreate_renamed_tables'   => 'installs at db_version < 4',
+	'drop_legacy_tables'        => 'a table deleted in Phase 2',
+	'LEGACY_SECRETS'            => 'secrets stored before 10.2 moved them',
+	'backfill_provider_emails'  => 'accounts created before 14.4',
+	'smart_login_external_identities' => 'the superseded identity table',
+);
+
+foreach ( $sl_legacy_surfaces as $sl_needle => $sl_serves ) {
+	$sl_found = array();
+
+	foreach ( sl_plugin_sources() as $sl_relative => $sl_code ) {
+		if ( false !== strpos( $sl_code, $sl_needle ) ) {
+			$sl_found[] = $sl_relative;
+		}
+	}
+
+	// uninstall.php is not in sl_plugin_sources() — it runs without the plugin loaded
+	// — so it is checked by name, because that is where two of these live.
+	if ( false !== strpos( sl_source( 'uninstall.php' ), $sl_needle ) ) {
+		$sl_found[] = 'uninstall.php';
+	}
+
+	sl_check(
+		sprintf( 'nothing carries %s (%s)', $sl_needle, $sl_serves ),
+		'',
+		implode( ', ', $sl_found )
+	);
+}
+
+$sl_shims = array( 'templates/form-login.php', 'templates/form-register.php' );
+
+foreach ( $sl_shims as $sl_shim ) {
+	sl_assert(
+		sprintf( '%s is gone', $sl_shim ),
+		! is_file( dirname( __DIR__, 2 ) . '/' . $sl_shim ),
+		'A shim README documents as unused is a file somebody will override and wonder why nothing happens.'
+	);
+}
+
+sl_assert(
+	'the webhook tester accepts only the current field name',
+	false === strpos( sl_source( 'includes/Admin/class-webhook-tester.php' ), "'channel'" ),
+	'10.2 kept the old name because the admin JS posted it. The JS posts transport now.'
+);
+
 sl_require_companion(
 	'unlink checks the orphan guard and re-authenticates',
 	'/function unlink\(/',

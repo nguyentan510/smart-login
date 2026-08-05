@@ -1307,7 +1307,19 @@ the suites around it.
 
 ### Sub-phases
 
-- [ ] **15.0** [Guard rails](unreleased-install/15.0-guard-rails.md) — an install gate
+- [x] **15.0** [Guard rails](unreleased-install/15.0-guard-rails.md) — landed red:
+      fitness 30 → 10 failed, one rule per surface, and the install gate stopping at
+      `options survived uninstall: smart_login_account_page`. **Not the leak the brief
+      named** — it predicted 14.5's backfill cursor and found instead a page cache
+      `AccountForm` has written since Phase 8 and `uninstall.php` never deleted, which
+      is the argument for a query over a list made by the rule on its first run. It also
+      found that **a fresh install prints a WordPress database error**:
+      `recreate_renamed_tables()` runs `SHOW COLUMNS` on a table that does not exist,
+      on every install this plugin will ever have. Two of my own assertions were wrong
+      in the same direction and were fixed towards the truth: `channels.enabled` is
+      declared null on purpose, and `Settings::get()` cannot tell that from an unknown
+      path; and deleting the fixture user after uninstall fired 14.7's hook at dropped
+      tables. Originally: an install gate
       that runs `activate()` → use → `uninstall.php` in one pass and then asserts that
       **no option, table or user meta carrying this plugin's prefixes survives** — a
       query, not a list, because a list needs keeping in step with the code. Plus one
