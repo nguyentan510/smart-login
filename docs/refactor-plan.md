@@ -26,7 +26,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 10 — Delivery routing and the automation bus**
 - [x] **Phase 11 — Mail templates**
 - [x] **Phase 12 — The provider surface**
-- [ ] **Phase 13 — The mail surface**
+- [x] **Phase 13 — The mail surface**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
