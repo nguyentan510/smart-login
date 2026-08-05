@@ -51,6 +51,8 @@ $php = if ($env:SMART_LOGIN_PHP) {
     'C:\Users\PC\AppData\Roaming\Local\lightning-services\php-8.2.29+0\bin\win64\php.exe'
 } else {
     'C:\xampp\php\php.exe'
+} elseif (Test-Path 'D:\XAMPP\php\php.exe') {
+    'D:\XAMPP\php\php.exe'
 }
 $extensionDirectory = Split-Path -Parent $php
 $phpArgs = @()
