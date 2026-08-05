@@ -669,6 +669,96 @@ sl_assert(
 );
 
 // ---------------------------------------------------------------------
+sl_section( 'The security section asks the directory, not user_email (14.6)' );
+
+/*
+ * An account with no email or phone identity cannot sign in by anything it could
+ * type, so a password is not the missing piece and the three boxes cannot be filled:
+ * password_current is a 64-character random string its owner has never seen.
+ *
+ * The fixture user's address is `user@example.test` — real, not synthetic. That is
+ * deliberately the Google-first shape, and it is the case a predicate built on
+ * `is_synthetic_email()` gets wrong: it would answer "has a contact" and render the
+ * unfillable form. The two renders below differ only in what the directory returns.
+ */
+$sl_render_password = static function ( array $rows ): array {
+	$GLOBALS['sl_wpdb_results'] = $rows;
+	$GLOBALS['sl_wpdb_row']     = null;
+	$GLOBALS['sl_wpdb_var']     = 0;
+
+	$sl_out = sl_capture(
+		static function (): void {
+			( static function ( string $sl_file, array $sl_args ): void {
+				extract( $sl_args, EXTR_SKIP ); // phpcs:ignore WordPress.PHP.DontExtract
+				include $sl_file;
+			} )(
+				dirname( __DIR__, 2 ) . '/templates/partials/account/password.php',
+				( new \SmartLogin\Frontend\AccountForm( 7, \SmartLogin\Frontend\AccountForm::CONTEXT_STANDALONE ) )->args_for( 'password' )
+			);
+		}
+	);
+
+	$GLOBALS['sl_wpdb_results'] = array();
+
+	return $sl_out;
+};
+
+$sl_no_contact = $sl_render_password( array() );
+
+sl_assert(
+	'the security section renders with no contact identity',
+	null === $sl_no_contact['error'],
+	(string) $sl_no_contact['error']
+);
+
+sl_assert(
+	'a provider-only account is offered no current-password box',
+	false === strpos( $sl_no_contact['html'], 'name="password_current"' ),
+	'wp_users.user_email is real here and there is still no email identity — the Google-first shape. The box cannot be filled, and save_password() refuses without it.'
+);
+
+sl_assert(
+	'and it is pointed at the contact section instead',
+	false !== strpos( $sl_no_contact['html'], 'sl-section-contact' ),
+	'An identifier is the missing piece, not a password. Offering step two first is what the current screen does wrong.'
+);
+
+$sl_with_contact = $sl_render_password(
+	array(
+		array(
+			'id'          => 5,
+			'user_id'     => 7,
+			'channel'     => 'email',
+			'subject'     => 'user@example.test',
+			'is_primary'  => 1,
+			'verified_at' => '2026-01-01 00:00:00',
+			'linked_by'   => 'otp',
+			'meta_json'   => '',
+			'created_at'  => '2026-01-01 00:00:00',
+		),
+	)
+);
+
+sl_assert(
+	'an account with an email identity still gets all three boxes',
+	false !== strpos( $sl_with_contact['html'], 'name="password_current"' )
+		&& false !== strpos( $sl_with_contact['html'], 'name="password_1"' )
+		&& false !== strpos( $sl_with_contact['html'], 'name="password_2"' ),
+	'The branch must not take away password changing from accounts that can use it.'
+);
+
+// The refusal that stays: this sub-phase stops offering a form it cannot serve, and
+// deliberately does not weaken re-authentication for the case it now hides.
+sl_assert(
+	'save_password() still requires the current password',
+	false !== strpos(
+		sl_source( 'includes/Frontend/class-form-controller.php' ),
+		'wp_check_password( (string) ( $post[\'password_current\'] ?? \'\' )'
+	),
+	'On an account with a verified email, planting a password without re-auth creates a login route that did not exist.'
+);
+
+// ---------------------------------------------------------------------
 sl_section( 'The shims that are documented as unused really are unused' );
 
 // README tells theme authors to override form-auth.php. form-login.php and

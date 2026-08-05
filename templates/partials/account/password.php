@@ -9,7 +9,17 @@
  * Optional is load-bearing: leaving the fields blank must save the rest of the
  * form untouched, which is why none of them carry `required`.
  *
+ * An account with no email or phone identity gets no boxes at all. Its password is
+ * the 64-character random string the provider flow generated, so "Mật khẩu hiện tại"
+ * is unsatisfiable and `FormController::save_password()` refuses without it — the
+ * error reading as a typo to somebody who never had one. And a password would not
+ * help yet: with no identifier the login screen accepts, there is nothing to type it
+ * against. `$sl_has_contact` comes from the directory, never from `user_email`; see
+ * AccountForm::has_contact_identity() for why that distinction is the whole fix.
+ *
  * Override at yourtheme/smart-login/partials/account/password.php
+ *
+ * @var bool $sl_has_contact
  *
  * @package SmartLogin
  */
@@ -19,7 +29,8 @@ use SmartLogin\Frontend\TemplateLoader;
 
 defined( 'ABSPATH' ) || exit;
 
-$sl_headings = AccountForm::headings();
+$sl_headings    = AccountForm::headings();
+$sl_has_contact = ! empty( $sl_has_contact );
 ?>
 <section class="sl-card" id="sl-section-password">
 	<h3 class="sl-card__title">
@@ -27,6 +38,17 @@ $sl_headings = AccountForm::headings();
 		<?php echo esc_html( $sl_headings['password'] ); ?>
 	</h3>
 
+	<?php if ( ! $sl_has_contact ) : ?>
+		<p class="sl-hint">
+			<?php esc_html_e( 'Tài khoản của bạn đang đăng nhập bằng Google hoặc Zalo và chưa có email hoặc số điện thoại nào được xác thực.', 'smart-login' ); ?>
+		</p>
+		<p class="sl-hint">
+			<?php esc_html_e( 'Hãy xác thực email hoặc số điện thoại trước — đó là thông tin bạn sẽ dùng để đăng nhập. Sau đó bạn có thể đặt mật khẩu.', 'smart-login' ); ?>
+		</p>
+		<a class="sl-btn sl-btn--outline" href="#sl-section-contact">
+			<?php esc_html_e( 'Tới mục Liên hệ', 'smart-login' ); ?>
+		</a>
+	<?php else : ?>
 	<details class="sl-disclosure">
 		<summary class="sl-disclosure__summary">
 			<span><?php esc_html_e( 'Đổi mật khẩu', 'smart-login' ); ?></span>
@@ -72,6 +94,33 @@ $sl_headings = AccountForm::headings();
 				)
 			);
 			?>
+
+			<?php
+			/*
+			 * The route for somebody who cannot fill the first box.
+			 *
+			 * An account may hold a contact identity and still have a password nobody
+			 * knows — a provider signup that later verified an email is the ordinary
+			 * case. Named rather than detected: knowing which accounts have a chosen
+			 * password would need a second source of truth that cannot be reconstructed
+			 * for existing accounts, and somebody who does know their password loses
+			 * nothing by reading one extra line.
+			 *
+			 * DEFERRED, and this is where it is configured: this is a sentence and not a
+			 * link, because the plugin has no addressable URL for its own recovery
+			 * screen from another page. Flow::url() appends a step to the *current* URL,
+			 * which on this page renders [smart_account] and not [smart_login]; and
+			 * wp_lostpassword_url() lands on wp-login.php, which is exactly the leak
+			 * tests/identity/run-account-surface-tests.php already forbids elsewhere.
+			 * Fixing it properly means a "login page" setting, which is a decision about
+			 * configuration surface rather than a line of markup. 14.3 put the same door
+			 * on the login screen itself, where the flow is already in scope.
+			 */
+			?>
+			<p class="sl-hint">
+				<?php esc_html_e( 'Chưa có mật khẩu, hoặc không nhớ? Ở màn hình đăng nhập, chọn "Chưa có mật khẩu, hoặc không nhớ?" để nhận mã xác thực và đặt mật khẩu mới.', 'smart-login' ); ?>
+			</p>
 		</div>
 	</details>
+	<?php endif; ?>
 </section>

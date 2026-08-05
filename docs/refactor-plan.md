@@ -27,7 +27,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 11 — Mail templates**
 - [x] **Phase 12 — The provider surface**
 - [x] **Phase 13 — The mail surface**
-- [ ] **Phase 14 — The email identity**
+- [x] **Phase 14 — The email identity**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -1230,7 +1230,18 @@ that phase.
       Calls the same writer rather than bespoke SQL, batched, idempotent, and it
       widens how a set of existing accounts can be reached — which is stated in the
       brief as a trade rather than implied away
-- [ ] **14.6** [Security section](email-identity/14.6-security-section.md) — stop
+- [x] **14.6** [Security section](email-identity/14.6-security-section.md) — 96 → 101
+      templates, red before green, all six gate markers green. The predicate asks the
+      directory and **the fixture is the case a synthetic-email predicate gets wrong**:
+      the stub user's address is real, which is the Google-first shape, so the assertion
+      is what stops a later change quietly taking the wrong turn the spec recorded before
+      implementation began. **One reduction from the brief, deferred in writing rather
+      than omitted**: the contact branch gains a sentence and not a link, because the
+      plugin has no addressable URL for its own recovery screen from another page —
+      `Flow::url()` appends a step to the current page, `wp_lostpassword_url()` is the
+      wp-admin leak this suite already forbids, and there is no login-page setting to
+      read. Making it a link is a configuration decision, not markup. One branch feeds
+      both surfaces, so Phase 8.2's guarantee still holds. Originally: stop
       rendering a box that cannot be filled. `save_password()` is **unchanged**: on
       an account with a verified email, planting a password without re-auth creates a
       login route that did not exist, so a borrowed session would gain something
