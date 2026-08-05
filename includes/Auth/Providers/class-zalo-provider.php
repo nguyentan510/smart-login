@@ -31,22 +31,6 @@ final class ZaloProvider implements LoginProviderInterface {
 		return 'Zalo'; }
 
 	/**
-	 * Zalo's blue speech bubble.
-	 *
-	 * #0068FF is Zalo's blue. The two shades this replaced — #0b74e5 border and
-	 * #075eb8 text — were neither of them Zalo's; they were the plugin's guess at
-	 * it, which is the same category of mistake as drawing "Z" in a circle and
-	 * calling it a logo.
-	 *
-	 * **The silhouette is an approximation and the wordmark is not here.** Zalo's
-	 * mark sets "Zalo" in its own lettering inside the bubble, and that vector is
-	 * not something to reconstruct from memory — a logo drawn from recollection
-	 * is a wrong logo, only a more convincing one. Drop the official asset from
-	 * Zalo's brand kit in through `smart_login_provider_icon_svg` and this is
-	 * replaced without patching the plugin. Written down here rather than in a
-	 * ticket because here is where somebody with the real file will look.
-	 */
-	/**
 	 * Zalo's own artwork: the rounded speech bubble with the wordmark inside it.
 	 *
 	 * The geometry is Zalo's, not this plugin's. What was here before was a
