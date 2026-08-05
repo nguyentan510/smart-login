@@ -28,6 +28,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 12 — The provider surface**
 - [x] **Phase 13 — The mail surface**
 - [x] **Phase 14 — The email identity**
+- [ ] **Phase 15 — The unreleased install**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -1281,6 +1282,60 @@ and after 14.3 nothing needs the answer. The narrow alternative to 14.4, having 
 identify and recovery screens explain that an address belongs to a provider account,
 is rejected in the spec: it reveals the login *method* to an anonymous visitor, a
 stronger oracle than the one 9.4 metered, and not retractable once shipped.
+
+---
+
+## Phase 15 — The unreleased install
+
+Normative spec: [`unreleased-install.md`](unreleased-install.md) — the decision that
+this plugin upgrades from nothing, the table of what goes and what each surface
+serves, and the rule the phase establishes.
+
+Execution briefs: [`unreleased-install/`](unreleased-install/), one file per
+sub-phase. **Status lives here and only here.**
+
+Short version: this file has said since Phase 0 that the project has never run in
+production and carries no migration burden — and then eleven phases wrote migration
+code anyway, each for the handful of development installs that existed at the time.
+Roughly 400 lines exist to carry a past no site outside this machine has had. They go,
+the database is wiped, and `SMART_LOGIN_DB_VERSION` resets to `1`. From here a 1.0.x
+install is **reinstallable, not upgradable**, by decision rather than by accident.
+
+The architecture and all ten suites stay. The four defects found finishing Phase 14
+were missing wiring, not wrong structure, and every one was caught by the model and
+the suites around it.
+
+### Sub-phases
+
+- [ ] **15.0** [Guard rails](unreleased-install/15.0-guard-rails.md) — an install gate
+      that runs `activate()` → use → `uninstall.php` in one pass and then asserts that
+      **no option, table or user meta carrying this plugin's prefixes survives** — a
+      query, not a list, because a list needs keeping in step with the code. Plus one
+      deletion rule per surface, red until 15.2–15.3
+- [ ] **15.1** [Fresh database](unreleased-install/15.1-fresh-database.md) — wipe what
+      the plugin owns on the Local site, read the counts before removing them, and let
+      the gate run against empty ground. 14.4's vacuous doors are the argument
+- [ ] **15.2** [Delete the migrations](unreleased-install/15.2-delete-migrations.md) —
+      five functions and the version reset. `maybe_upgrade()` **stays**, emptied: the
+      mechanism is how the next schema change arrives, only its contents were about the
+      past
+- [ ] **15.3** [Delete the legacy reads](unreleased-install/15.3-delete-legacy-reads.md)
+      — the secret fallbacks, the webhook tester's old field name, and the two shim
+      templates the README already documents as unused
+
+---
+
+**Ordering rationale.** 15.0 first, and for once the reason is not only the Postscript:
+its install gate is new coverage of a path nothing has ever exercised, and it has to
+exist before the code it covers is edited. **15.1 must precede 15.2** — deleting the
+migrations while the database still holds state only they can explain would leave a
+site nothing can repair. 15.3 is independent of 15.2 and may be dropped.
+
+**The rule this phase establishes:** migration code is written when there is something
+to migrate, and not before. The eleven-phase habit was to write the upgrade path
+alongside the change, which felt careful and was not — every one of those paths ran on
+this machine and nowhere else, and 14.5's cursor defect is what untested migration code
+is worth.
 
 ---
 
