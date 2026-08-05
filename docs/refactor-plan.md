@@ -1151,11 +1151,19 @@ that phase.
       after 14.4 the state it detects stops being producible and it becomes the only
       thing watching for the two stores drifting apart again. `REGISTER_REFUSED` is
       deliberately sampleable, and 10.4's bus fans it out
-- [ ] **14.2** [One writer](email-identity/14.2-one-writer.md) — three sites write
-      three different subsets of one fact; `UserManager::adopt_verified_email()`
-      becomes the only one able to. Invisible by design, so the acceptance is
-      **unchanged suite counts**, not green suites — the shape 10.1 established.
-      Takes a `VerifiedClaim`, not a string plus a flag, so the type is the gate
+- [x] **14.2** [One writer](email-identity/14.2-one-writer.md) — three sites wrote
+      three different subsets of one fact; `UserManager::adopt_verified_email()` is
+      the only one able to now. Invisible: every other suite at its previous count,
+      44 → 48 in the contract suite. Takes a `VerifiedClaim`, so the type is the
+      gate. **The docblock claimed the write order was asserted, so it had to be** —
+      the directory write can lose a race and `user_email` must not have moved when
+      it does; proven able to fail by reversing the two blocks before committing the
+      correct one. Returns `true|WP_Error` rather than the brief's `bool`, to keep
+      `wp_update_user()`'s own error from flattening. Rule 2 deliberately does
+      **not** catch `AccountProvisioner:171`, whose partial write is the phase's
+      defect — left to the gate doors and to 14.4, recorded so the gap is a decision.
+      Sweep found one stale claim: `create_verified_user()` says README documents
+      these meta keys as a public contract, and it does not
 - [ ] **14.3** [Password step](email-identity/14.3-password-step.md) — a way forward
       for somebody with no password to type, pointed at the reset flow that already
       sets one without knowing the old one. Offered unconditionally: this is the

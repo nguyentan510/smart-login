@@ -196,17 +196,28 @@ final class ContactVerificationService {
 			);
 		}
 
-		// This is the write that keeps the model honest. Retiring the previous
-		// subject is what makes it resolve as RETIRED afterwards, and RETIRED is
-		// what stops the old number reaching this account ever again. Overwriting
-		// a meta value — which is all the pre-refactor code did — left the old
-		// identifier live.
-		if ( ! $this->directory->replace_in_channel( $user_id, VerifiedClaim::from( $claim, VerifiedClaim::PROOF_OTP ), IdentityRecord::BY_OTP ) ) {
-			return new WP_Error( 'smart_login_contact_exists', __( 'Không thể cập nhật thông tin liên hệ.', 'smart-login' ) );
-		}
+		$verified = VerifiedClaim::from( $claim, VerifiedClaim::PROOF_OTP );
 
-		// Derived mirrors below; see UserManager::create_verified_user().
-		if ( 'phone' === $type ) {
+		// Retiring the previous subject is what keeps the model honest: it is what
+		// makes the old identifier resolve as RETIRED afterwards, and RETIRED is what
+		// stops it reaching this account ever again. Overwriting a meta value — which
+		// is all the pre-refactor code did — left the old identifier live.
+		//
+		// The email half of that write, plus its four derived mirrors, moved to
+		// UserManager::adopt_verified_email() in 14.2. This method is where the
+		// correct version of it lived, so that is the body which was extracted.
+		if ( 'email' === $type ) {
+			$adopted = UserManager::adopt_verified_email( $user_id, $verified, IdentityRecord::BY_OTP, $this->directory );
+
+			if ( is_wp_error( $adopted ) ) {
+				return $adopted;
+			}
+		} else {
+			if ( ! $this->directory->replace_in_channel( $user_id, $verified, IdentityRecord::BY_OTP ) ) {
+				return new WP_Error( 'smart_login_contact_exists', __( 'Không thể cập nhật thông tin liên hệ.', 'smart-login' ) );
+			}
+
+			// Derived mirrors; see UserManager::create_verified_user().
 			update_user_meta( $user_id, UserManager::META_PHONE, $destination );
 			update_user_meta( $user_id, UserManager::META_PHONE_VERIFIED, $now );
 			if ( Settings::is_on( 'woo.sync_billing_phone' ) ) {
@@ -214,19 +225,6 @@ final class ContactVerificationService {
 				// change where the customer's orders get delivered.
 				ProfileSeeder::seed_if_empty( $user_id, 'billing_phone', Phone::to_local( $destination ) );
 			}
-		} else {
-			$updated = wp_update_user(
-				array(
-					'ID'         => $user_id,
-					'user_email' => $destination,
-				)
-			);
-			if ( is_wp_error( $updated ) ) {
-				return $updated;
-			}
-			update_user_meta( $user_id, UserManager::META_EMAIL_VERIFIED, $now );
-			ProfileSeeder::seed_if_empty( $user_id, 'billing_email', $destination );
-			delete_user_meta( $user_id, UserManager::META_SYNTHETIC );
 		}
 
 		delete_user_meta( $user_id, self::META_PENDING );

@@ -193,6 +193,20 @@ function email_exists( $email ) {
 	return $GLOBALS['sl_users_by_email'][ strtolower( (string) $email ) ] ?? false;
 }
 
+/**
+ * Every wp_update_user() call this run received.
+ *
+ * Recorded rather than executed: the assertions that need it are about whether a
+ * write happened and in what order, not about what WordPress would store.
+ */
+$GLOBALS['sl_user_updates'] = array();
+
+function wp_update_user( $data ) {
+	$GLOBALS['sl_user_updates'][] = (array) $data;
+
+	return (int) ( ( (array) $data )['ID'] ?? 0 );
+}
+
 function do_action( $hook ) {}
 
 function __( $text, $domain = null ) {

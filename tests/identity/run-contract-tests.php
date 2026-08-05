@@ -366,6 +366,54 @@ if ( method_exists( 'SmartLogin\Identity\UserManager', 'adopt_verified_email' ) 
 		'',
 		implode( ', ', $sl_offenders )
 	);
+	/*
+	 * The order inside the writer, which its docblock calls load-bearing. The
+	 * directory write can lose a race; user_email must not have moved when it does,
+	 * or the account is left with an address disagreeing with its identity — the
+	 * state this phase exists to remove. Asserted by forcing the claim to fail,
+	 * because "documentation is not evidence" and this project has twice found a
+	 * docblock describing a control that was not there.
+	 */
+	$GLOBALS['sl_user_updates']        = array();
+	$GLOBALS['sl_wpdb_results']        = array();
+	$GLOBALS['sl_wpdb_insert_result']  = false;
+
+	$sl_adopted = \SmartLogin\Identity\UserManager::adopt_verified_email(
+		42,
+		\SmartLogin\Identity\VerifiedClaim::from(
+			( new \SmartLogin\Identity\ChannelRegistry() )->claim( 'email', 'race@example.test' ),
+			\SmartLogin\Identity\VerifiedClaim::PROOF_OTP
+		)
+	);
+
+	sl_assert(
+		'a lost race on the identity row is reported, not swallowed',
+		is_wp_error( $sl_adopted )
+	);
+
+	sl_check(
+		'and user_email has not moved when it is',
+		0,
+		count( $GLOBALS['sl_user_updates'] )
+	);
+
+	$GLOBALS['sl_wpdb_insert_result'] = 1;
+
+	// A non-email claim must not reach this writer at all: the channel is the
+	// subject of the method, not a parameter it tolerates.
+	$sl_wrong_channel = \SmartLogin\Identity\UserManager::adopt_verified_email(
+		42,
+		\SmartLogin\Identity\VerifiedClaim::from(
+			( new \SmartLogin\Identity\ChannelRegistry() )->claim( 'phone', '0961234567' ),
+			\SmartLogin\Identity\VerifiedClaim::PROOF_OTP
+		)
+	);
+
+	sl_check(
+		'a phone claim is refused by the email writer',
+		'smart_login_not_an_email',
+		is_wp_error( $sl_wrong_channel ) ? $sl_wrong_channel->get_error_code() : 'accepted'
+	);
 } else {
 	sl_pending( 'one writer owns a verified email', 'UserManager::adopt_verified_email() (14.2)' );
 }
