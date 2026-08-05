@@ -134,8 +134,49 @@
 		} );
 	}
 
+	/**
+	 * The mail message list: one editor open at a time.
+	 *
+	 * Hiding is done here rather than in the markup deliberately. Every panel is
+	 * rendered and visible by default, so with scripts off this screen is the
+	 * long page it was before — not a page where five of six messages cannot be
+	 * reached. The script takes away; it never adds the only way in.
+	 */
+	function initMailMessages( surface ) {
+		var panels = surface.querySelectorAll( '[data-mail-panel]' );
+		var rows = surface.querySelectorAll( '[data-mail-message]' );
+		var buttons = surface.querySelectorAll( '[data-mail-open]' );
+
+		if ( ! panels.length ) {
+			return;
+		}
+
+		function open( id ) {
+			panels.forEach( function ( panel ) {
+				panel.hidden = panel.getAttribute( 'data-mail-panel' ) !== id;
+			} );
+
+			rows.forEach( function ( row ) {
+				row.classList.toggle( 'is-open', row.getAttribute( 'data-mail-message' ) === id );
+			} );
+
+			buttons.forEach( function ( button ) {
+				button.setAttribute( 'aria-expanded', button.getAttribute( 'data-mail-open' ) === id ? 'true' : 'false' );
+			} );
+		}
+
+		buttons.forEach( function ( button ) {
+			button.addEventListener( 'click', function () {
+				open( button.getAttribute( 'data-mail-open' ) );
+			} );
+		} );
+
+		open( panels[ 0 ].getAttribute( 'data-mail-panel' ) );
+	}
+
 	document.addEventListener( 'DOMContentLoaded', function () {
 		document.querySelectorAll( '.sl-tester' ).forEach( init );
 		document.querySelectorAll( '[data-provider-card]' ).forEach( initProviderCard );
+		document.querySelectorAll( '.sl-mail-surface' ).forEach( initMailMessages );
 	} );
 } )();

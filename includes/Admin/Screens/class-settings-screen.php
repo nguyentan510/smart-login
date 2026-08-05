@@ -20,6 +20,7 @@ namespace SmartLogin\Admin\Screens;
 
 use SmartLogin\Address\AddressRepository;
 use SmartLogin\Admin\FieldRenderer;
+use SmartLogin\Admin\MailMessages;
 use SmartLogin\Admin\ProviderCards;
 use SmartLogin\Admin\SettingsPage;
 use SmartLogin\FieldRegistry;
@@ -90,6 +91,12 @@ final class SettingsScreen {
 			return;
 		}
 
+		// The message list holds every message, both groups, so the alerts are
+		// drawn with the rest rather than under a second heading of their own.
+		if ( 'mail_admin' === $section && 'delivery-mail' === $tab ) {
+			return;
+		}
+
 		printf( '<h2>%s</h2>', esc_html( $labels[ $section ] ?? $section ) );
 
 		$this->before_section( $section );
@@ -98,6 +105,14 @@ final class SettingsScreen {
 		// so they replace the table rather than sitting beside it.
 		if ( 'provider' === $section ) {
 			( new ProviderCards() )->render( FieldRegistry::for_tab( $tab ) );
+			$this->after_section( $section );
+			return;
+		}
+
+		// Same shape: a list with one editor open replaces the table, and it
+		// needs the whole tab because it draws the alerts from mail_admin too.
+		if ( 'templates' === $section ) {
+			( new MailMessages() )->render( FieldRegistry::for_tab( $tab ) );
 			$this->after_section( $section );
 			return;
 		}

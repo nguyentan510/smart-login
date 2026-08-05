@@ -588,6 +588,44 @@ sl_check(
 	$sl_missing_inputs
 );
 
+/*
+ * The column that earns its width. Until the list existed, "which of these six
+ * am I actually customising" took reading twelve boxes to answer, and it is the
+ * question an administrator has on opening this screen.
+ *
+ * Asserted by flipping it: state that only ever reads one way is state that
+ * could be hard-coded and nobody would notice.
+ */
+sl_assert(
+	'a message with no override reads as inheriting',
+	false !== strpos( $sl_mail_markup, 'sl-mail-state is-inherited' )
+		&& false === strpos( $sl_mail_markup, 'sl-mail-state is-custom' ),
+	'Nothing is overridden at this point, so no message should claim to be customised.'
+);
+
+Settings::update( array( 'email.templates.recover.subject' => 'Đặt lại: {{code}}' ) );
+
+$sl_after_override = sl_capture(
+	static function (): void {
+		( new \SmartLogin\Admin\Screens\SettingsScreen() )->render( 'delivery-mail' );
+	}
+)['html'];
+
+sl_check(
+	'and exactly one reads as customised once one is',
+	1,
+	substr_count( $sl_after_override, 'sl-mail-state is-custom' )
+);
+
+sl_assert(
+	'the list agrees with the resolver, not with a guess',
+	\SmartLogin\Mail\MailRegistry::is_overridden( 'recover' )
+		&& ! \SmartLogin\Mail\MailRegistry::is_overridden( 'login' ),
+	'is_overridden() reads the same stored values resolve() does; a list that computed its own answer could disagree with what the transport sends.'
+);
+
+Settings::update( array( 'email.templates.recover.subject' => '' ) );
+
 // =====================================================================
 sl_section( 'Rule 3 — copy-to-edit has a way back (13.2)' );
 

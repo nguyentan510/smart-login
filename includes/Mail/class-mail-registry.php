@@ -276,6 +276,45 @@ final class MailRegistry {
 		);
 	}
 
+	/**
+	 * Does this message have wording of its own?
+	 *
+	 * The question an administrator has on opening the mail screen, and until the
+	 * list existed it could only be answered by reading twelve boxes. Reads the
+	 * same stored values `resolve()` does, so the list cannot claim a message is
+	 * inheriting while the transport disagrees.
+	 */
+	public static function is_overridden( string $id ): bool {
+		foreach ( array( 'subject', 'body' ) as $part ) {
+			if ( '' !== trim( (string) Settings::get( self::PATH_PREFIX . $id . '.' . $part, '' ) ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Rows in the order the screen lists them, messages before alerts.
+	 *
+	 * @return array<string,array>
+	 */
+	public static function by_group(): array {
+		$ordered = array();
+
+		foreach ( array( 'otp', 'admin' ) as $group ) {
+			foreach ( self::all() as $id => $row ) {
+				if ( ( $row['group'] ?? '' ) === $group ) {
+					$ordered[ $id ] = $row;
+				}
+			}
+		}
+
+		// A row from the filter with an unrecognised group still has to appear,
+		// or it becomes a message nobody can edit.
+		return $ordered + self::all();
+	}
+
 	public static function id_for_intent( string $intent ): string {
 		foreach ( self::all() as $id => $row ) {
 			if ( ( $row['intent'] ?? '' ) === $intent ) {

@@ -1063,7 +1063,13 @@ renders the six digits an OTP mail exists for as running text mid-paragraph.
       Rule 4 passes today and must keep passing, which is why it lands now
       rather than with 13.3: a rule arriving alongside the feature it guards
       cannot catch that feature breaking it
-- [ ] **13.1** [Message list](mail-surface/13.1-message-list.md) — a generated
+- [x] **13.1** [Message list](mail-surface/13.1-message-list.md) — twenty
+      fields in one column became a six-row table with one editor open. The
+      alerts lost their section heading and joined the list, so 11.4's heading
+      assertion was updated **and** a new one added: dropping a heading must
+      not drop the messages under it. The state column is asserted by flipping
+      it, because state that only ever reads one way could be hard-coded and no
+      test would notice. 121 → 123 admin, 39 → 43 mail. A generated
       table with an inheritance column, one panel open at a time. **Every panel
       still renders**; rendering only the open one is the obvious optimisation
       and would silently stop five messages being saved

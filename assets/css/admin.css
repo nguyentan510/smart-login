@@ -236,6 +236,75 @@
 	margin-bottom: 8px;
 }
 
+/* ---------- Mail message list ---------- */
+
+.smart-login-admin .sl-mail-surface {
+	max-width: 1120px;
+}
+
+.smart-login-admin .sl-mail-list {
+	margin-bottom: 18px;
+}
+
+.smart-login-admin .sl-mail-list td {
+	vertical-align: middle;
+}
+
+.smart-login-admin .sl-mail-list tr.is-open {
+	box-shadow: inset 3px 0 0 #2271b1;
+}
+
+.smart-login-admin .sl-mail-open {
+	text-decoration: none;
+}
+
+.smart-login-admin .sl-mail-switch {
+	margin-right: 8px;
+}
+
+.smart-login-admin .sl-mail-when {
+	color: #646970;
+}
+
+.smart-login-admin .sl-mail-state {
+	display: inline-block;
+	padding: 3px 9px;
+	border-radius: 999px;
+	font-size: 12px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.smart-login-admin .sl-mail-state.is-custom {
+	color: #8a5700;
+	background: #fcf5e6;
+}
+
+.smart-login-admin .sl-mail-state.is-inherited {
+	color: #50575e;
+	background: #f0f0f1;
+}
+
+.smart-login-admin .sl-mail-panel {
+	padding: 4px 20px 12px;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	background: #fff;
+	margin-bottom: 14px;
+}
+
+.smart-login-admin .sl-mail-panel[hidden] {
+	display: none;
+}
+
+.smart-login-admin .sl-mail-panel h3 {
+	margin-bottom: 0;
+}
+
+.smart-login-admin .sl-mail-panel .form-table th {
+	width: 200px;
+}
+
 /* ---------- Readiness overview ---------- */
 
 .smart-login-admin .sl-readiness-banner {
