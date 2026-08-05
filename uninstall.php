@@ -35,13 +35,11 @@ if ( empty( $smart_login_settings['advanced']['delete_data_on_uninstall'] ) ) {
 
 global $wpdb;
 
-// Tables. The last entry is from a superseded design and is dropped for the
-// benefit of installations that predate the identity model.
+// Tables.
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}smartlogin_otp" ); // phpcs:ignore WordPress.DB
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}smartlogin_audit" ); // phpcs:ignore WordPress.DB
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}smartlogin_identities" ); // phpcs:ignore WordPress.DB
 $wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}smartlogin_identity_history" ); // phpcs:ignore WordPress.DB
-$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}smart_login_external_identities" ); // phpcs:ignore WordPress.DB
 
 // Options. The two secret stores are listed separately from the settings option
 // because that is where they live: a sealed secret never round-trips through
@@ -52,6 +50,10 @@ delete_option( 'smart_login_provider_secrets' );
 delete_option( 'smart_login_field_secrets' );
 delete_option( 'smart_login_captcha_secret' );
 delete_option( 'smart_login_db_version' );
+// The page cache AccountForm::shortcode_page_url() writes. Missing here since Phase 8,
+// and found by the install gate's after-uninstall survey rather than by reading: the
+// rule asks the database what survived instead of asking the code what it wrote.
+delete_option( 'smart_login_account_page' );
 
 // User meta created by the plugin.
 $smart_login_meta_keys = array(

@@ -14,12 +14,6 @@ class Installer {
 	const DB_VERSION_OPTION = 'smart_login_db_version';
 	const CLEANUP_HOOK      = 'smart_login_cleanup';
 
-	/** Where the backfill left off, so a large user table does not need one request. */
-	const BACKFILL_CURSOR_OPTION = 'smart_login_email_backfill_cursor';
-
-	/** Users examined per pass. Small enough for a slow host, large enough to finish. */
-	const BACKFILL_BATCH = 200;
-
 	public static function activate(): void {
 		self::install_tables();
 
@@ -44,278 +38,25 @@ class Installer {
 
 	/**
 	 * Runs on every load; cheap option read, only does work after an upgrade.
+	 *
+	 * Deliberately empty of migrations. Phase 15 deleted every one of them: each was
+	 * written for the development installs that existed when its change landed, ran on
+	 * one machine, and was never exercised by a fresh install — which is what 14.5's
+	 * cursor defect was worth. This plugin upgrades from nothing.
+	 *
+	 * The hook stays because it is how the next schema change arrives. When there is
+	 * genuinely something to migrate it goes here, in the same commit as the change that
+	 * needs it, and the fitness rule naming these surfaces is edited alongside it —
+	 * deliberately and in writing, which is the whole difference from the habit this
+	 * phase retired.
 	 */
 	public static function maybe_upgrade(): void {
 		if ( get_option( self::DB_VERSION_OPTION ) === SMART_LOGIN_DB_VERSION ) {
-			/*
-			 * The version is current, but a batched backfill may not have finished.
-			 *
-			 * This branch is the whole reason the cursor is durable. The upgrade below
-			 * runs once and bumps the version, so on a site with more users than one
-			 * batch the remaining accounts would never be visited again — the migration
-			 * would report success having done a fraction of the work. Found by an
-			 * assertion, not by reading: the gate noticed the cursor outliving the
-			 * migration and this branch is what that meant.
-			 */
-			if ( null !== get_option( self::BACKFILL_CURSOR_OPTION, null ) ) {
-				self::backfill_provider_emails();
-			}
-
 			return;
 		}
 
 		self::install_tables();
-		self::migrate_settings_shape();
-		self::backfill_provider_emails();
 		update_option( self::DB_VERSION_OPTION, SMART_LOGIN_DB_VERSION );
-	}
-
-	/**
-	 * Give existing provider accounts the email identity 14.4 gives new ones.
-	 *
-	 * Without this the phase ships two classes of account: anybody who signed in with
-	 * Google before the upgrade still meets three doors that disagree about whether
-	 * their address is registered, which is the whole defect.
-	 *
-	 * **No schema change.** The rows go into `smartlogin_identities` as it stands; the
-	 * DB version moved only because `maybe_upgrade()` is the sole trigger available,
-	 * the same reason `migrate_settings_shape()` rides it.
-	 *
-	 * Calls `UserManager::adopt_verified_email()` rather than writing SQL, so the five
-	 * things that say "this account owns this address" are written by the one function
-	 * allowed to write them — including on a migration, which is exactly where a
-	 * bespoke UPDATE would drift from the runtime.
-	 *
-	 * A candidate must satisfy **all** of:
-	 *
-	 *  - holds at least one federated identity and **no** email identity
-	 *  - `user_email` is not a synthetic placeholder
-	 *  - exactly one `wp_users` row holds that address, compared case-insensitively —
-	 *    the same question `auto_link_email` asks, and it fails closed for the same
-	 *    reason: two accounts sharing an address cannot be disambiguated here
-	 *  - the provider whose row it holds has `email_identity` on
-	 *
-	 * Anything else is skipped, not repaired. A migration that fixes things it was not
-	 * asked to fix is a migration nobody can review.
-	 *
-	 * Idempotent: a candidate that already has an email row is not a candidate, so a
-	 * second pass adopts nothing and writes no history. Asserted in the gate, because
-	 * `replace_in_channel()` retires before it claims and a re-run that looked
-	 * harmless would quietly rewrite the trail.
-	 *
-	 * @return int Accounts adopted in this pass.
-	 */
-	public static function backfill_provider_emails(): int {
-		global $wpdb;
-
-		$identities = self::identities_table();
-		$cursor     = (int) get_option( self::BACKFILL_CURSOR_OPTION, 0 );
-
-		// Candidates come from the identities table, not from wp_users: only accounts
-		// with a federated row can qualify, and that is far the smaller set on any
-		// site with real customers.
-		$rows = $wpdb->get_results( // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- migration; no core API spans this table.
-			$wpdb->prepare(
-				"SELECT DISTINCT f.user_id, f.channel
-				 FROM {$identities} f
-				 WHERE f.user_id > %d
-				   AND f.channel NOT IN ( 'email', 'phone' )
-				   AND NOT EXISTS (
-				       SELECT 1 FROM {$identities} e
-				       WHERE e.user_id = f.user_id AND e.channel = 'email'
-				   )
-				 ORDER BY f.user_id ASC
-				 LIMIT %d", // phpcs:ignore WordPress.DB.PreparedSQL
-				$cursor,
-				self::BACKFILL_BATCH
-			),
-			ARRAY_A
-		);
-
-		if ( ! $rows ) {
-			delete_option( self::BACKFILL_CURSOR_OPTION );
-
-			return 0;
-		}
-
-		$channels  = new \SmartLogin\Identity\ChannelRegistry();
-		$directory = new \SmartLogin\Identity\IdentityDirectory();
-		$adopted   = 0;
-		$highest   = $cursor;
-
-		foreach ( $rows as $row ) {
-			$user_id = (int) $row['user_id'];
-			$highest = max( $highest, $user_id );
-
-			$flag = \SmartLogin\Auth\AccountProvisioner::EMAIL_IDENTITY_FLAG[ $row['channel'] ] ?? '';
-
-			if ( '' === $flag || ! Settings::is_on( $flag ) ) {
-				continue;
-			}
-
-			$user = get_userdata( $user_id );
-
-			if ( ! $user || \SmartLogin\Identity\UserManager::is_synthetic_email( (string) $user->user_email ) ) {
-				continue;
-			}
-
-			$owners = $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery -- no core API matches an address across users case-insensitively.
-				$wpdb->prepare(
-					"SELECT ID FROM {$wpdb->users} WHERE LOWER(user_email) = %s", // phpcs:ignore WordPress.DB.PreparedSQL
-					strtolower( (string) $user->user_email )
-				)
-			);
-
-			if ( 1 !== count( $owners ) ) {
-				continue;
-			}
-
-			$claim = $channels->claim( \SmartLogin\Identity\Channels\MailChannel::ID, (string) $user->user_email );
-
-			if ( $claim->is_empty() ) {
-				continue;
-			}
-
-			$result = \SmartLogin\Identity\UserManager::adopt_verified_email(
-				$user_id,
-				\SmartLogin\Identity\VerifiedClaim::from( $claim, \SmartLogin\Identity\VerifiedClaim::PROOF_OAUTH ),
-				\SmartLogin\Identity\IdentityRecord::BY_AUTO_EMAIL,
-				$directory
-			);
-
-			if ( ! is_wp_error( $result ) ) {
-				++$adopted;
-			}
-		}
-
-		/*
-		 * A short batch means the end of the table, so the cursor goes rather than
-		 * waiting for an extra empty pass that nothing would schedule. The cursor's
-		 * presence is what tells maybe_upgrade() there is more to do, so leaving it
-		 * behind on a finished job would mean re-querying for ever.
-		 */
-		if ( count( $rows ) < self::BACKFILL_BATCH ) {
-			delete_option( self::BACKFILL_CURSOR_OPTION );
-		} else {
-			update_option( self::BACKFILL_CURSOR_OPTION, $highest, false );
-		}
-
-		if ( $adopted > 0 ) {
-			// This grants a login route to a set of existing accounts. How many, and
-			// when, is evidence somebody will want.
-			\SmartLogin\Security\AuditLog::record(
-				\SmartLogin\Security\AuditLog::PROVIDER_LINKED,
-				'',
-				array(
-					'linked_by' => \SmartLogin\Identity\IdentityRecord::BY_AUTO_EMAIL,
-					'reason'    => 'email_identity_backfill',
-					'adopted'   => $adopted,
-				)
-			);
-		}
-
-		return $adopted;
-	}
-
-	/**
-	 * Move a flat pre-1.0.1 settings array onto the nested dot-path schema.
-	 *
-	 * The plugin is unreleased, so this is not for anybody's production site —
-	 * it is here so the development installs that already have a working gateway
-	 * and OAuth credentials configured do not silently reset to defaults on the
-	 * first load after the schema change. Reconfiguring a webhook by hand to
-	 * prove a refactor is a bad use of anyone's afternoon.
-	 *
-	 * Runs once, keyed off the DB version, and is a no-op on a fresh install
-	 * because there is no flat key to find.
-	 */
-	private static function migrate_settings_shape(): void {
-		$stored = get_option( Settings::OPTION, null );
-
-		if ( ! is_array( $stored ) || ! $stored ) {
-			return;
-		}
-
-		$moved = array();
-
-		foreach ( self::legacy_key_map() as $old => $path ) {
-			if ( array_key_exists( $old, $stored ) ) {
-				$moved[ $path ] = $stored[ $old ];
-			}
-		}
-
-		if ( ! $moved ) {
-			return;
-		}
-
-		// update() plants each dot path onto the hydrated current value, so
-		// anything the map does not mention keeps its registry default.
-		Settings::update( $moved );
-	}
-
-	/**
-	 * Old flat key => new dot path.
-	 *
-	 * `require_verification` is deliberately absent: nothing ever read it.
-	 *
-	 * @return array<string,string>
-	 */
-	private static function legacy_key_map(): array {
-		return array(
-			'id_mode'                      => 'identity.mode',
-			'default_country_code'         => 'identity.country_code',
-			'synthetic_email_domain'       => 'identity.synthetic_domain',
-			'min_password_length'          => 'signup.min_password_length',
-			'terms_url'                    => 'signup.terms_url',
-			'redirect_after_register'      => 'signup.redirect_register',
-			'redirect_after_login'         => 'signup.redirect_login',
-			'login_max_attempts'           => 'login.max_attempts',
-			'login_lockout_minutes'        => 'login.lockout_minutes',
-			'login_otp_new_device'         => 'login.otp_new_device',
-			'google_enabled'               => 'providers.google.enabled',
-			'google_client_id'             => 'providers.google.client_id',
-			'zalo_enabled'                 => 'providers.zalo.enabled',
-			'zalo_app_id'                  => 'providers.zalo.app_id',
-			'provider_auto_link_email'     => 'providers.auto_link_email',
-			'otp_length'                   => 'otp.length',
-			'otp_ttl'                      => 'otp.ttl',
-			'otp_max_attempts'             => 'otp.max_attempts',
-			'otp_resend_cooldown'          => 'otp.resend_cooldown',
-			'otp_max_per_destination_hour' => 'otp.max_per_destination_hour',
-			'otp_max_per_ip_hour'          => 'otp.max_per_ip_hour',
-			'webhook_enabled'              => 'sms.enabled',
-			'webhook_url'                  => 'sms.url',
-			'webhook_method'               => 'sms.method',
-			'webhook_content_type'         => 'sms.content_type',
-			'webhook_headers'              => 'sms.headers',
-			'webhook_body'                 => 'sms.body',
-			'webhook_timeout'              => 'sms.timeout',
-			'webhook_success_path'         => 'sms.success_path',
-			'webhook_success_value'        => 'sms.success_value',
-			'webhook_retry'                => 'sms.retry',
-			'webhook_idempotency_header'   => 'sms.idempotency_header',
-			'email_enabled'                => 'email.enabled',
-			'email_from_name'              => 'email.from_name',
-			'email_from_address'           => 'email.from_address',
-			'email_subject'                => 'email.subject',
-			'email_body'                   => 'email.body',
-			'email_is_html'                => 'email.is_html',
-			'field_email_optional'         => 'profile.email_optional',
-			'field_dob'                    => 'profile.dob',
-			'field_gender'                 => 'profile.gender',
-			'address_enabled'              => 'address.enabled',
-			'address_required_in_profile'  => 'address.required_in_profile',
-			'address_hide_postcode'        => 'address.hide_postcode',
-			'woo_replace_login_form'       => 'woo.replace_login_form',
-			'woo_sync_billing_phone'       => 'woo.sync_billing_phone',
-			'woo_relax_billing_email'      => 'woo.relax_billing_email',
-			'woo_block_synthetic_emails'   => 'woo.block_synthetic_emails',
-			'audit_enabled'                => 'advanced.audit_enabled',
-			'audit_retention_days'         => 'advanced.audit_retention_days',
-			'otp_retention_days'           => 'advanced.otp_retention_days',
-			'dev_mode'                     => 'advanced.dev_mode',
-			'delete_data_on_uninstall'     => 'advanced.delete_data_on_uninstall',
-		);
 	}
 
 	public static function otp_table(): string {
@@ -450,39 +191,8 @@ class Installer {
 	private static function install_tables(): void {
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
-		self::recreate_renamed_tables();
-
 		foreach ( self::schema() as $sql ) {
 			dbDelta( $sql );
-		}
-
-		self::drop_legacy_tables();
-	}
-
-	/**
-	 * Drop tables whose columns were renamed, so dbDelta can rebuild them.
-	 *
-	 * dbDelta only ever adds columns. It cannot rename `purpose` to `intent` or
-	 * `channel` to `transport`, so without this the old NOT NULL columns would
-	 * survive with no default and every insert would fail.
-	 *
-	 * The OTP table is safe to drop: it holds nothing but unexpired one-time
-	 * codes, which live for minutes. The worst outcome is a visitor mid-flow
-	 * during an upgrade having to request a new code.
-	 */
-	private static function recreate_renamed_tables(): void {
-		global $wpdb;
-
-		// Version 4 renamed the OTP columns; anything at or above it is fine.
-		if ( (int) get_option( self::DB_VERSION_OPTION, 0 ) >= 4 ) {
-			return;
-		}
-
-		$otp     = self::otp_table();
-		$columns = $wpdb->get_col( "SHOW COLUMNS FROM {$otp}", 0 ); // phpcs:ignore WordPress.DB
-
-		if ( is_array( $columns ) && in_array( 'purpose', $columns, true ) ) {
-			$wpdb->query( "DROP TABLE IF EXISTS {$otp}" ); // phpcs:ignore WordPress.DB
 		}
 	}
 
@@ -506,25 +216,6 @@ class Installer {
 		}
 
 		return $pending;
-	}
-
-	/**
-	 * Remove tables from superseded designs.
-	 *
-	 * `smart_login_external_identities` held federated identities before they
-	 * stopped being a special case. DROP IF EXISTS makes this safe to run on
-	 * every activation, and safe on installs that never had the table.
-	 *
-	 * This method is the one legitimate reference to that name anywhere in the
-	 * plugin, which is why tests/identity/run-fitness-tests.php allowlists this
-	 * file. Delete both once no installation can still be carrying the table.
-	 */
-	private static function drop_legacy_tables(): void {
-		global $wpdb;
-
-		$legacy = $wpdb->prefix . 'smart_login_external_identities';
-
-		$wpdb->query( "DROP TABLE IF EXISTS {$legacy}" ); // phpcs:ignore WordPress.DB
 	}
 
 	/**

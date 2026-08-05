@@ -1324,10 +1324,26 @@ the suites around it.
       **no option, table or user meta carrying this plugin's prefixes survives** — a
       query, not a list, because a list needs keeping in step with the code. Plus one
       deletion rule per surface, red until 15.2–15.3
-- [ ] **15.1** [Fresh database](unreleased-install/15.1-fresh-database.md) — wipe what
+- [x] **15.1** [Fresh database](unreleased-install/15.1-fresh-database.md) — smaller
+      than planned: 15.0's gate uninstalls to reach clean ground, so running it had
+      already done the wipe. What was left was what the gate does not own — twelve
+      `sl_gate_*` fixture users from runs whose cleanup predates 14.4's. Each was
+      re-read and confirmed before deletion, and the three real accounts plus six manual
+      test accounts were deliberately left alone. The installed copy pulled, so the site
+      and the working tree stopped disagreeing about the version. Originally: wipe what
       the plugin owns on the Local site, read the counts before removing them, and let
       the gate run against empty ground. 14.4's vacuous doors are the argument
-- [ ] **15.2** [Delete the migrations](unreleased-install/15.2-delete-migrations.md) —
+- [x] **15.2** [Delete the migrations](unreleased-install/15.2-delete-migrations.md) —
+      `class-installer.php` 411 → 254 lines, fitness 30 → 36, install gate green at
+      `db_version=1`. **A fresh install stopped printing a database error**:
+      `recreate_renamed_tables()` ran `SHOW COLUMNS` on a table that did not exist, on
+      every install this plugin would ever have had, and it was fixed by deleting the
+      code rather than guarding it — the better fix, available exactly once. A **second**
+      pinned version number went red two phases running, this time Phase 2's
+      `>= 3` floor; it asserts a positive integer now. Phase 2's `external_identities`
+      allowlist said in writing it should go once nothing carried the table, so it did.
+      14.5's gate assertions went with their code and left a note pointing at the defect
+      they recorded. Originally:
       five functions and the version reset. `maybe_upgrade()` **stays**, emptied: the
       mechanism is how the next schema change arrives, only its contents were about the
       past

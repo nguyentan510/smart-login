@@ -76,10 +76,21 @@ $bootstrap = sl_source( 'smart-login.php' );
 preg_match( "/SMART_LOGIN_DB_VERSION',\s*'(\d+)'/", $bootstrap, $db_version );
 $version = isset( $db_version[1] ) ? (int) $db_version[1] : 0;
 
+/*
+ * A version exists and is a positive integer. It used to demand `>= 3`, because
+ * Phase 2 needed a bump for maybe_upgrade() to run and wrote its own floor into the
+ * rule. Phase 15 reset the version to 1 — there is nothing to upgrade from — and this
+ * went red on a change it has no opinion about.
+ *
+ * Second time in two phases a pinned version number has done that; the abuse gate's
+ * literal 5 was the first. What the rule is for is that the constant is present and
+ * parses, because maybe_upgrade() compares against it and a missing constant would
+ * make every load think an upgrade is due.
+ */
 sl_assert(
-	'SMART_LOGIN_DB_VERSION is at least 3',
-	$version >= 3,
-	sprintf( 'found %d — the two identity tables require a version bump so Installer::maybe_upgrade() runs.', $version )
+	'SMART_LOGIN_DB_VERSION is a positive integer',
+	$version >= 1,
+	sprintf( 'found %d — maybe_upgrade() compares against this constant on every load.', $version )
 );
 
 $installer = sl_source( 'includes/class-installer.php' );
@@ -98,14 +109,14 @@ sl_assert(
 	'Add Installer::identity_history_table().'
 );
 
-// Two allowlisted references remain, both of which exist only to remove the
-// table: Installer::drop_legacy_tables() and the uninstall routine. They are the
-// migration itself, not a dependency on it. Both should be deleted once no
-// installation can still be carrying the table.
+// The allowlist is gone with the code it excused. Phase 2 kept two references —
+// Installer::drop_legacy_tables() and the uninstall routine — and said both should go
+// once no installation could still carry the table. Phase 15 is that moment, so the
+// rule is absolute now rather than absolute-except-here.
 sl_forbid_pattern(
-	'the external_identities table is only ever dropped, never used',
+	'the external_identities table is not named anywhere',
 	'/external_identities/',
-	array( 'includes/class-installer.php', 'uninstall.php' ),
+	array(),
 	'Federated providers stop being a special case; one table serves every channel.'
 );
 
