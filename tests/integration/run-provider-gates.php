@@ -261,7 +261,25 @@ try {
 	if ( $door_claim->is_empty() ) {
 		$failed( 'the provider address does not even form an email claim' );
 	}
+	$cleanup_rows[]  = array( 'provider' => 'email', 'subject' => $door_claim->subject(), 'user_id' => (int) $resolved['user']->ID );
 	$door_resolution = ( new \SmartLogin\Identity\IdentityDirectory() )->resolve( $door_claim );
+
+	/*
+	 * The owner must be the account THIS run provisioned, not merely somebody.
+	 *
+	 * Asserting only ISSUE_SESSION made both doors vacuous: an email row left behind
+	 * by an earlier run pointed at a since-deleted user, resolved KNOWN, and satisfied
+	 * the decision whether or not the code under test did anything. Verified by
+	 * reverting the provisioner to its pre-14.4 state and watching the gate pass
+	 * anyway. Pinning the id is what makes the assertion about this run.
+	 */
+	if ( $door_resolution->user_id() !== (int) $resolved['user']->ID ) {
+		$failed(
+			'door 1: the verified address does not resolve to the account just provisioned'
+			. ' — resolved to user ' . $door_resolution->user_id()
+			. ', expected ' . (int) $resolved['user']->ID
+		);
+	}
 
 	$door_login = \SmartLogin\Auth\AuthAction::for_resolution( \SmartLogin\Auth\AuthAction::LOGIN, $door_resolution );
 	if ( \SmartLogin\Auth\AuthAction::ISSUE_SESSION !== $door_login ) {
@@ -371,6 +389,8 @@ try {
 		$failed( 'verified-email auto-link did not resolve to the existing user' );
 	}
 	$cleanup_rows[] = array( 'provider' => 'google', 'subject' => $auto_identity->subject, 'user_id' => (int) $existing_id );
+	// 14.4 adopts on this branch too, so the email row is this run's to clean up.
+	$cleanup_rows[] = array( 'provider' => 'email', 'subject' => strtolower( (string) $auto_identity->email ), 'user_id' => (int) $existing_id );
 	$linked = ( new \SmartLogin\Identity\IdentityRepository() )->find(
 		\SmartLogin\Identity\Claim::canonical( 'google', $auto_identity->subject )
 	);

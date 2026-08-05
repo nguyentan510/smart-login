@@ -1177,12 +1177,16 @@ that phase.
       replaced rather than joined; it asked for an identifier that had just been
       typed. Found on the way past: the `.pot` is stale by 76 strings since Phase 8.6,
       regenerated in its own commit rather than buried in this one
-- [ ] **14.4** [Provider email row](email-identity/14.4-provider-email-row.md) —
-      written, locally green, and **deliberately unticked**: this is the sub-phase that
-      changes behaviour, and all four assertions that would prove it live in the
-      provider gate, which needs a real WordPress this machine does not have. Do not
-      tick on the strength of the unit suites — they cannot see it. Contract 48 → 50,
-      abuse 28 → 30. **Rule 8 caught the first version**, a concatenated settings path,
+- [x] **14.4** [Provider email row](email-identity/14.4-provider-email-row.md) —
+      the sub-phase that makes the three doors agree, verified on WordPress 7.0.2 with
+      all six gate markers green. Contract 48 → 50, abuse 28 → 30. **Both doors were
+      vacuous and the gate passing is what exposed it**: an email row left by an earlier
+      run pointed at a deleted user, resolved KNOWN, and satisfied the decision whether
+      or not the code did anything — proven by reverting the provisioner and watching
+      the gate pass anyway. The doors now pin the owner id to the account that run
+      provisioned, the email rows join the gate's cleanup, and the sequence that counts
+      is red-without / green-with on a clean table. An integration assertion against a
+      shared database is green-by-default unless it names the thing it just made. **Rule 8 caught the first version**, a concatenated settings path,
       for the fourth time it has caught a sub-phase; fixed with a literal map, and
       rule **8b** added because the map opens a hole in the rule that just caught me.
       The Zalo hypothesis resolved from code rather than a live response and is
@@ -1257,6 +1261,7 @@ stronger oracle than the one 9.4 metered, and not retractable once shipped.
 | 10.1 changes routing for every OTP the plugin has ever sent | Defaults reproduce today's behaviour exactly; acceptance is *unchanged suite counts*, not green suites, so an invisible change that is not invisible fails |
 | A bus endpoint going down takes sign-in with it | Two breakers, not one, and rule 6 asserts a failing bus leaves `issue()` returning an array. This is the decision most likely to be "simplified" later, so it has a rule rather than a comment |
 | 10.6 splits one tab into four and a field lands on none of them | Acceptance walks `FieldRegistry::all()` and renders every tab — the exactly-one-tab property the registry exists to guarantee |
+| Deleting a WordPress user strands its identity rows, so the subject can never be registered again — and 14.4 widens this to every provider account's email | **Found in 14.4, not fixed there.** Nothing hooks `deleted_user`, grepped rather than assumed. Login fails closed (`owner()` returns false), so it is a denial and not a takeover. Needs its own guard rail and its own commit, the same way 10.2's `uninstall.php` find was handled |
 | The `generic` preset default makes an existing site's SMS stop working | Only new installs; a site that has saved the tab has `custom` stored, and `Settings::sanitize()` writes stored values. Asserted directly |
 | 14.1's guard sits on the happy path of every registration and a wrong predicate closes signup for everyone | Acceptance asserts an unused address still registers, not only that an owned one is refused |
 | 14.2 is a rename across `META_EMAIL_VERIFIED`, `META_SYNTHETIC` and `billing_email` — the failure mode CLAUDE.md records five times | The grep across `includes/`, `templates/`, `tests/` and `docs/` is a completion condition of the sub-phase, not a follow-up; and the acceptance is unchanged counts, so a behaviour change cannot hide behind a green run |
