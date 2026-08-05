@@ -124,6 +124,16 @@ $sl_forced_settings = array(
 	'providers.zalo.enabled'   => 1,
 	'providers.auto_link_email' => 1,
 	'profile.email_optional'   => 0,
+	/*
+	 * Added in 15.3. Phase 15 wiped the database, and a fresh install defaults to
+	 * `phone_only` — so `claim_any()` could not build an email claim at all and the
+	 * 14.4 door assertions read
+	 * `SMART_LOGIN_PROVIDER_GATES_FAILED: the provider address does not even form an
+	 * email claim`. They had been passing on configuration somebody set by hand months
+	 * earlier. Same failure as 14.4's vacuous doors, in the settings table rather than
+	 * the identities one.
+	 */
+	'identity.mode'            => 'both',
 );
 
 add_filter(
@@ -137,7 +147,9 @@ add_filter(
 
 // A key nobody reads is a key that has been renamed out from under this file.
 foreach ( $sl_forced_settings as $sl_key => $sl_expected ) {
-	if ( (int) \SmartLogin\Settings::get( $sl_key ) !== (int) $sl_expected ) {
+	// Compared as strings: `identity.mode` is 'both', and an int cast would make every
+	// string setting look like 0 and agree with itself for the wrong reason.
+	if ( (string) \SmartLogin\Settings::get( $sl_key ) !== (string) $sl_expected ) {
 		echo "SMART_LOGIN_PROVIDER_GATES_BLOCKED\n";
 		echo 'reason=forced setting did not take effect: ' . $sl_key . " — has it been renamed?\n";
 		exit( 2 );

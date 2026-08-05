@@ -28,7 +28,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 12 — The provider surface**
 - [x] **Phase 13 — The mail surface**
 - [x] **Phase 14 — The email identity**
-- [ ] **Phase 15 — The unreleased install**
+- [x] **Phase 15 — The unreleased install**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -1347,8 +1347,17 @@ the suites around it.
       five functions and the version reset. `maybe_upgrade()` **stays**, emptied: the
       mechanism is how the next schema change arrives, only its contents were about the
       past
-- [ ] **15.3** [Delete the legacy reads](unreleased-install/15.3-delete-legacy-reads.md)
-      — the secret fallbacks, the webhook tester's old field name, and the two shim
+- [x] **15.3** [Delete the legacy reads](unreleased-install/15.3-delete-legacy-reads.md)
+      — fitness 36 → 40, all seven gate markers green. **The brief's one claim of
+      verification was false**: it said the admin JS posts `transport` "verified by grep,
+      not assumed", and the JS posted `channel` — deleting the server's acceptance would
+      have quietly broken the Gửi thử button into testing the wrong transport. The
+      attribute, the JS and the read were renamed together and `SMART_LOGIN_VERSION`
+      bumped to 1.0.2 so a cached `admin.js` cannot post a field nothing reads. 10.2's
+      pre-move secret fixture was replaced, not deleted, keeping the half still true of
+      every install. **One unreproduced gate failure is recorded rather than explained
+      away** — a hypothesis was tested and rejected, and what is left is a correlation
+      with no mechanism. Originally: the secret fallbacks, the webhook tester's old field name, and the two shim
       templates the README already documents as unused
 
 ---

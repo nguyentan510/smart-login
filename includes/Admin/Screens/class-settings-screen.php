@@ -320,7 +320,7 @@ final class SettingsScreen {
 	private function tester( string $transport ): void {
 		?>
 		<h3><?php esc_html_e( 'Gửi thử', 'smart-login' ); ?></h3>
-		<div class="sl-tester" data-channel="<?php echo esc_attr( $transport ); ?>">
+		<div class="sl-tester" data-transport="<?php echo esc_attr( $transport ); ?>">
 			<p class="description">
 				<?php
 				switch ( $transport ) {

@@ -565,8 +565,6 @@ sl_section( 'Every template on disk is either rendered here or excluded in writi
 $sl_uncovered_ok = array(
 	// Documented shims. README points theme authors at form-auth.php; these two
 	// are never loaded, which the assertions below this section keep true.
-	'form-login'                 => 'shim, never loaded — asserted below',
-	'form-register'              => 'shim, never loaded — asserted below',
 
 	// form-edit-account was here until 8.2 and now has a fixture instead.
 	'woocommerce/form-login'     => 'needs a WooCommerce runtime',
@@ -759,21 +757,24 @@ sl_assert(
 );
 
 // ---------------------------------------------------------------------
-sl_section( 'The shims that are documented as unused really are unused' );
+sl_section( 'The entry point is the only entry point' );
 
-// README tells theme authors to override form-auth.php. form-login.php and
-// form-register.php are never loaded, so a reader who overrides them gets no
-// effect and no explanation. Assert the claim so the README stays true.
+// The two shims form-login.php and form-register.php were deleted in 15.3. They were
+// never loaded, and README told theme authors to override form-auth.php instead — so
+// anybody who overrode a shim got no effect and no explanation. What is left to assert
+// is the half that still matters: the flow renders form-auth and nothing else.
 $shortcodes = sl_source( 'includes/Frontend/class-shortcodes.php' );
 
 sl_assert(
 	'the login/register flow renders form-auth',
 	false !== strpos( $shortcodes, "'form-auth'" )
 );
+
 sl_assert(
-	'nothing loads form-login',
-	false === strpos( $shortcodes, "'form-login'" ),
-	'If this starts loading, the README note about the shims must change.'
+	'no deleted shim is referenced anywhere',
+	false === strpos( $shortcodes, "'form-login'" )
+		&& false === strpos( $shortcodes, "'form-register'" ),
+	'Deleting a template that something still names is a fatal on the page that names it.'
 );
 
 // ---------------------------------------------------------------------

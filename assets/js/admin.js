@@ -63,7 +63,7 @@
 		var button = tester.querySelector( '.sl-test-button' );
 		var input = tester.querySelector( '.sl-test-destination' );
 		var box = tester.querySelector( '.sl-test-result' );
-		var channel = tester.getAttribute( 'data-channel' ) || 'sms';
+		var transport = tester.getAttribute( 'data-transport' ) || 'sms';
 
 		if ( ! button || ! input || ! box ) {
 			return;
@@ -87,7 +87,7 @@
 			var body = new URLSearchParams();
 			body.append( 'action', 'smart_login_test_channel' );
 			body.append( 'nonce', config.nonce || '' );
-			body.append( 'channel', channel );
+			body.append( 'transport', transport );
 			body.append( 'destination', destination );
 
 			window

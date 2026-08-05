@@ -36,10 +36,10 @@ class WebhookTester {
 
 		check_ajax_referer( self::NONCE, 'nonce' );
 
-		// Accepts the legacy `channel` field name too: the admin JS posts it, and
-		// the two are renamed independently.
-		$transport   = isset( $_POST['transport'] ) ? sanitize_key( wp_unslash( $_POST['transport'] ) ) : '';
-		$transport   = '' !== $transport ? $transport : ( isset( $_POST['channel'] ) ? sanitize_key( wp_unslash( $_POST['channel'] ) ) : 'sms' );
+		// One field name. 10.2 accepted `channel` as well because the admin JS posted
+		// it; 15.3 renamed the attribute, the JS and this read together, and bumped the
+		// asset version so a cached admin.js cannot post a name nothing reads.
+		$transport   = isset( $_POST['transport'] ) ? sanitize_key( wp_unslash( $_POST['transport'] ) ) : 'sms';
 		$destination = isset( $_POST['destination'] ) ? sanitize_text_field( wp_unslash( $_POST['destination'] ) ) : '';
 
 		if ( '' === trim( $destination ) ) {

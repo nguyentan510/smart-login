@@ -315,31 +315,28 @@ if ( ! $sl_has_reader ) {
 }
 
 /*
- * The half a save-then-load test cannot see.
+ * 10.2's pre-move fixture went with the fallback it tested, in 15.3.
  *
- * Moving to a path-keyed store changes where an existing secret lives. A test
- * that only writes through the new path and reads it back passes just as
- * happily on a store that stranded every value already out there — including
- * the author's own local site, so "never run in production" excuses nothing.
- * This writes the fixture the way the pre-10.2 code did.
+ * It wrote a secret the way the pre-10.2 code did and asserted the reader still found
+ * it, then asserted that clearing reached that copy too — because erasing only the new
+ * location resurrected the secret on the next read. Both were real, and both describe a
+ * database that no longer exists: 15.1 wiped it and there is no earlier location left
+ * to fall back to.
+ *
+ * What survives is the half that is still true of every install: a secret written
+ * through the path-keyed store reads back, and clearing it empties it.
  */
-// Empty the new location first, or the round-trip above would be what is read
-// back and the fallback would never be exercised — a passing assertion proving
-// nothing, which is the failure this whole block exists to rule out.
-Settings::store_secret( Captcha::SECRET_PATH, '' );
-SecretBox::put( Captcha::SECRET_OPTION, 'captcha', 'sealed-before-10-2' );
+Settings::store_secret( Captcha::SECRET_PATH, 'sealed-after-15-3' );
 
 sl_check(
-	'a secret sealed by the old code is still readable',
-	'sealed-before-10-2',
+	'a secret written through the path-keyed store reads back',
+	'sealed-after-15-3',
 	Captcha::secret()
 );
 
-// And clearing must reach it. Erasing only the new location would resurrect the
-// secret on the next read, because the read falls back to the old one.
 Captcha::clear_secret();
 
-sl_check( 'clearing reaches the pre-10.2 copy too', '', Captcha::secret() );
+sl_check( 'and clearing empties it', '', Captcha::secret() );
 
 // The other half of the same property: the plaintext must not survive in the
 // option array. This one can be checked today, and does pass — absorb_secret_fields()
