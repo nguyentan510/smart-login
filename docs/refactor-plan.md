@@ -1196,6 +1196,21 @@ that phase.
       `auto_link_email` branch adopts too. One lint failure on a generated data file
       did not reproduce across four runs or under `php -l` — environmental, chased
       rather than dismissed
+- [x] **14.7** [Release on delete](email-identity/14.7-release-on-delete.md) —
+      **numbered last, sequenced before 14.5**, the way 10.7 ran second. `wp_delete_user()`
+      left identity rows live: the subject stayed claimed by an account that no longer
+      existed, so `create_verified_user()` refused that number or address as already
+      registered **for ever**, while login failed closed — a denial, not a takeover,
+      which is why it survived eleven phases of green suites.
+      `IdentityRepository::retire_all_for_user()` has existed since Phase 2 with a
+      default reason of literally `'user_deleted'`; it was written for this and never
+      wired up, its only callers two teardown lines in a gate. **The defect was a
+      missing caller, not a wrong one**, so the rules ask whether anything calls it —
+      a fourth variant of Phase 7's "the old thing is gone is half a rule". Found by
+      running the thing: 14.4's leftover rows are what exposed it. Fitness 28 → 30,
+      gate red then green on WordPress 7.0.2. Multisite `remove_user_from_blog` is
+      excluded in writing
+
 - [ ] **14.5** [Backfill](email-identity/14.5-backfill.md) — DB_VERSION 5 → 6 with
       **no schema change**, because `maybe_upgrade()` is the only trigger available.
       Calls the same writer rather than bespoke SQL, batched, idempotent, and it
@@ -1218,6 +1233,11 @@ accounts to the password step; reaching it before that step can offer an OTP tra
 a false message for a true one that helps just as little. Same hard sequencing as
 9.5 before 9.6, and for the same kind of reason — shipping in the other order
 converts a fix into a different dead end.
+
+**14.7 must precede 14.5**, and its number says nothing about that — 10.7 established
+that these numbers are allocation order. The backfill hands email rows to a whole
+population of existing accounts, and running it while `wp_delete_user()` still stranded
+rows would have knowingly multiplied a defect found two hours earlier.
 
 **14.5 must not precede 14.4**, since it migrates existing accounts into a state
 14.4 defines. **14.6 is last** and is the visible one: it was the original report,
@@ -1261,7 +1281,7 @@ stronger oracle than the one 9.4 metered, and not retractable once shipped.
 | 10.1 changes routing for every OTP the plugin has ever sent | Defaults reproduce today's behaviour exactly; acceptance is *unchanged suite counts*, not green suites, so an invisible change that is not invisible fails |
 | A bus endpoint going down takes sign-in with it | Two breakers, not one, and rule 6 asserts a failing bus leaves `issue()` returning an array. This is the decision most likely to be "simplified" later, so it has a rule rather than a comment |
 | 10.6 splits one tab into four and a field lands on none of them | Acceptance walks `FieldRegistry::all()` and renders every tab — the exactly-one-tab property the registry exists to guarantee |
-| Deleting a WordPress user strands its identity rows, so the subject can never be registered again — and 14.4 widens this to every provider account's email | **Found in 14.4, not fixed there.** Nothing hooks `deleted_user`, grepped rather than assumed. Login fails closed (`owner()` returns false), so it is a denial and not a takeover. Needs its own guard rail and its own commit, the same way 10.2's `uninstall.php` find was handled |
+| Deleting a WordPress user strands its identity rows, so the subject can never be registered again — and 14.4 widens this to every provider account's email | **Found in 14.4, fixed in 14.7** before the backfill could multiply it. `deleted_user` now releases them, with two structural rules asking whether anything calls the capability and one behavioural rule in the gate. Rows already stranded on existing installs are out of scope and stated as such |
 | The `generic` preset default makes an existing site's SMS stop working | Only new installs; a site that has saved the tab has `custom` stored, and `Settings::sanitize()` writes stored values. Asserted directly |
 | 14.1's guard sits on the happy path of every registration and a wrong predicate closes signup for everyone | Acceptance asserts an unused address still registers, not only that an owned one is refused |
 | 14.2 is a rename across `META_EMAIL_VERIFIED`, `META_SYNTHETIC` and `billing_email` — the failure mode CLAUDE.md records five times | The grep across `includes/`, `templates/`, `tests/` and `docs/` is a completion condition of the sub-phase, not a follow-up; and the acceptance is unchanged counts, so a behaviour change cannot hide behind a green run |

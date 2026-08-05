@@ -190,6 +190,44 @@ sl_forbid_pattern(
 	'IdentityLinkService::unlink() is the only user-facing path, and it refuses to remove the last identity.'
 );
 
+/*
+ * A capability nobody calls is a capability nobody has (14.7).
+ *
+ * `IdentityRepository::retire_all_for_user()` has existed since Phase 2 with a
+ * default reason of literally `'user_deleted'`, and until 14.7 the only callers were
+ * two lines in the integration gate. So deleting a WordPress user left its identity
+ * rows live: the subject stayed claimed by an account that no longer existed, and
+ * `create_verified_user()` refused that number or address as "already registered"
+ * for ever.
+ *
+ * This rule is narrow on purpose. "Every public repository method has a caller" would
+ * be the general form and would go red on things that are legitimately API surface
+ * for other plugins. This one names the method whose absence of a caller was a defect.
+ */
+$sl_release_callers = array();
+
+foreach ( sl_plugin_sources() as $sl_relative => $sl_code ) {
+	if ( 'includes/Identity/class-identity-repository.php' === $sl_relative ) {
+		continue;
+	}
+
+	if ( false !== strpos( $sl_code, 'retire_all_for_user' ) ) {
+		$sl_release_callers[] = $sl_relative;
+	}
+}
+
+sl_assert(
+	'releasing a deleted user\'s identities has a production caller',
+	array() !== $sl_release_callers,
+	'Nothing calls retire_all_for_user(), so wp_delete_user() strands every row it owned and those subjects can never be registered again.'
+);
+
+sl_assert(
+	'and something is hooked to deleted_user to be that caller',
+	false !== strpos( sl_source( 'includes/class-plugin.php' ), 'deleted_user' ),
+	'The capability is only reachable if WordPress calls it; the hook is the wiring.'
+);
+
 sl_require_companion(
 	'unlink checks the orphan guard and re-authenticates',
 	'/function unlink\(/',

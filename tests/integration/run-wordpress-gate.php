@@ -329,6 +329,62 @@ try {
 		$failed( 'repeated unlink attempts eventually orphaned the account' );
 	}
 
+	/*
+	 * 14.7 — deleting a user must release the subjects it held.
+	 *
+	 * Before 14.7 nothing hooked `deleted_user`, so the rows stayed live and pointed
+	 * at an account that no longer existed. resolve() answered KNOWN, and
+	 * create_verified_user() then refused that number or address as already
+	 * registered — for ever. Login failed closed, so it was a denial rather than a
+	 * takeover, which is why it survived every gate.
+	 *
+	 * Deliberately its own fixture rather than reusing the accounts above: those are
+	 * torn down by the gate itself, and a rule about deletion must own the deletion.
+	 */
+	$release_login = 'sl_release_' . strtolower( wp_generate_password( 8, false, false ) );
+	$release_phone = '849' . str_pad( (string) random_int( 10000000, 99999999 ), 8, '0' );
+	$release_id    = wp_insert_user(
+		array(
+			'user_login' => $release_login,
+			'user_pass'  => wp_generate_password( 32, true, true ),
+			'user_email' => $release_login . '@example.test',
+			'role'       => 'subscriber',
+		)
+	);
+	if ( is_wp_error( $release_id ) ) {
+		$failed( 'could not create the identity-release fixture user' );
+	}
+
+	$release_claim = \SmartLogin\Identity\Claim::canonical( 'phone', $release_phone );
+	if ( ! $repository->claim(
+		\SmartLogin\Identity\IdentityRecord::create(
+			(int) $release_id,
+			\SmartLogin\Identity\VerifiedClaim::from( $release_claim, \SmartLogin\Identity\VerifiedClaim::PROOF_OTP ),
+			\SmartLogin\Identity\IdentityRecord::BY_REGISTRATION,
+			true
+		)
+	) ) {
+		wp_delete_user( (int) $release_id );
+		$failed( 'could not claim the identity-release fixture subject' );
+	}
+
+	require_once ABSPATH . 'wp-admin/includes/user.php';
+	wp_delete_user( (int) $release_id );
+
+	if ( $repository->find( $release_claim ) ) {
+		$repository->retire_all_for_user( (int) $release_id, 'gate_cleanup' );
+		$history_log->forget_user( (int) $release_id );
+		$failed( 'deleting a user left its identity row live, so that subject can never be registered again' );
+	}
+
+	// And the subject is genuinely available again, not merely absent from the table.
+	$release_state = ( new \SmartLogin\Identity\IdentityDirectory() )->resolve( $release_claim )->state();
+	if ( \SmartLogin\Identity\Resolution::STATE_KNOWN === $release_state ) {
+		$history_log->forget_user( (int) $release_id );
+		$failed( 'the released subject still resolves as owned: ' . $release_state );
+	}
+	$history_log->forget_user( (int) $release_id );
+
 	$repository->retire_all_for_user( (int) $guard_id, 'integration_gate' );
 	$repository->retire_all_for_user( (int) $rival_id, 'integration_gate' );
 	$history_log->forget_user( (int) $guard_id );
