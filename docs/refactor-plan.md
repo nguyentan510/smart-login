@@ -1073,7 +1073,13 @@ renders the six digits an OTP mail exists for as running text mid-paragraph.
       table with an inheritance column, one panel open at a time. **Every panel
       still renders**; rendering only the open one is the obvious optimisation
       and would silently stop five messages being saved
-- [ ] **13.2** [Copy and revert](mail-surface/13.2-copy-and-revert.md) — the
+- [x] **13.2** [Copy and revert](mail-surface/13.2-copy-and-revert.md) — the
+      cheap half of the rule is counting copy against revert; the half that
+      could go wrong silently is **which** text is copied. The button carries
+      `MailRegistry::resolve()`, not the row default — identical until the
+      shared pair has been edited, which is exactly the state an administrator
+      reaching for this button is already in. Asserted in both directions.
+      43 → 49 mail, no failures left. Originally: the
       copy button undoes 11.4 on its own, so it ships as a pair and the second
       half is not optional
 - [ ] **13.3** [Layout and tokens](mail-surface/13.3-layout-and-tokens.md) —

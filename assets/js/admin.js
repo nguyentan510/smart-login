@@ -174,9 +174,41 @@
 		open( panels[ 0 ].getAttribute( 'data-mail-panel' ) );
 	}
 
+	/**
+	 * Copy the inherited wording into a box, or empty it to inherit again.
+	 *
+	 * Revert clears and stops there. Undo inside a textarea is the browser's job,
+	 * and a plugin-level undo stack for a field with a Save button under it is a
+	 * promise that cannot survive a reload.
+	 */
+	function initMailActions( scope ) {
+		scope.querySelectorAll( '[data-mail-copy]' ).forEach( function ( button ) {
+			button.addEventListener( 'click', function () {
+				var field = document.getElementById( button.getAttribute( 'data-mail-copy' ) );
+
+				if ( field ) {
+					field.value = button.getAttribute( 'data-mail-default' ) || '';
+					field.focus();
+				}
+			} );
+		} );
+
+		scope.querySelectorAll( '[data-mail-revert]' ).forEach( function ( button ) {
+			button.addEventListener( 'click', function () {
+				var field = document.getElementById( button.getAttribute( 'data-mail-revert' ) );
+
+				if ( field ) {
+					field.value = '';
+					field.focus();
+				}
+			} );
+		} );
+	}
+
 	document.addEventListener( 'DOMContentLoaded', function () {
 		document.querySelectorAll( '.sl-tester' ).forEach( init );
 		document.querySelectorAll( '[data-provider-card]' ).forEach( initProviderCard );
 		document.querySelectorAll( '.sl-mail-surface' ).forEach( initMailMessages );
+		initMailActions( document );
 	} );
 } )();

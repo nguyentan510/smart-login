@@ -305,6 +305,19 @@
 	width: 200px;
 }
 
+.smart-login-admin .sl-mail-actions {
+	margin: 6px 0 0;
+	font-size: 12px;
+}
+
+.smart-login-admin .sl-mail-actions .button-link {
+	text-decoration: none;
+}
+
+.smart-login-admin .sl-mail-actions .sl-mail-revert {
+	color: #8a2424;
+}
+
 /* ---------- Readiness overview ---------- */
 
 .smart-login-admin .sl-readiness-banner {

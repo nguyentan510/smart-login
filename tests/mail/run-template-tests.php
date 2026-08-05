@@ -647,6 +647,50 @@ sl_assert(
 	sprintf( 'copy: %d, revert: %d. Copy without revert is 11.4 undone.', $sl_copies, $sl_reverts )
 );
 
+/*
+ * What gets copied is the resolver's answer, not the row's own default. The two
+ * differ exactly when the shared pair has been edited — which is the case that
+ * matters, because copying the row default there would put text in the box that
+ * differs from what the message was sending a second earlier.
+ */
+Settings::update( array( 'email.subject' => 'Mã của {{site_name}}: {{code}}' ) );
+
+$sl_with_shared = sl_capture(
+	static function (): void {
+		( new \SmartLogin\Admin\Screens\SettingsScreen() )->render( 'delivery-mail' );
+	}
+)['html'];
+
+$sl_resolved_login = \SmartLogin\Mail\MailRegistry::resolve( 'login' )['subject'];
+
+sl_check( 'the shared pair is what an un-overridden message resolves to', 'Mã của {{site_name}}: {{code}}', $sl_resolved_login );
+
+sl_assert(
+	'and that is what the copy button carries',
+	false !== strpos( $sl_with_shared, 'data-mail-default="' . esc_attr( $sl_resolved_login ) . '"' ),
+	'Copying the row default here would hand the administrator text the message was not sending.'
+);
+
+sl_assert(
+	'the row default is not what is offered',
+	false === strpos(
+		$sl_with_shared,
+		'data-mail-default="' . esc_attr( (string) \SmartLogin\Mail\MailRegistry::get( 'login' )['subject'] ) . '"'
+	),
+	'With the shared pair edited, the row default is the wrong answer and must not appear.'
+);
+
+Settings::update( array( 'email.subject' => '' ) );
+
+// Revert stores empty, and empty resolves back to the shared pair. That is the
+// round trip 11.1 asserts, restated here because 13.2 is what makes an
+// administrator able to reach it by accident.
+Settings::update( array( 'email.templates.login.subject' => 'tuỳ chỉnh' ) );
+sl_check( 'an override is stored', true, \SmartLogin\Mail\MailRegistry::is_overridden( 'login' ) );
+
+Settings::update( array( 'email.templates.login.subject' => '' ) );
+sl_check( 'clearing it returns the message to inheriting', false, \SmartLogin\Mail\MailRegistry::is_overridden( 'login' ) );
+
 // =====================================================================
 sl_section( 'Rule 4 — the structure tokens are opt-in (13.3)' );
 
