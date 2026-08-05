@@ -302,6 +302,95 @@ sl_assert(
 	'10.2 kept the old name because the admin JS posted it. The JS posts transport now.'
 );
 
+// ---------------------------------------------------------------------
+sl_section( 'Documentation is not allowed to describe things that do not exist' );
+
+/*
+ * This project has now found a README asserting a control that is not there three
+ * times, and the third was created by 15.3 deleting two templates the README still
+ * described. Reading more carefully is not a fix; these are.
+ */
+$sl_readme = sl_source( 'README.md' );
+$sl_root   = dirname( __DIR__, 2 );
+$sl_ghosts = array();
+
+/*
+ * Every `<name>.php` the README names must exist somewhere the plugin ships. Anchored
+ * on the extension rather than a path, because the README names them bare.
+ *
+ * Two limits, stated rather than glossed:
+ *   - WordPress core filenames are skipped; the README legitimately names wp-login.php.
+ *   - A name that exists in ANY of the searched directories passes, so it cannot catch
+ *     a README claiming a file lives in templates/ when it actually only lives in
+ *     templates/woocommerce/. `form-login.php` is exactly that case today, and it is
+ *     why the sentence at README.md:242 had to be corrected by hand rather than by
+ *     this rule. What the rule does catch is a name that exists nowhere — which is
+ *     what form-register.php became.
+ */
+$sl_core_files = array( 'wp-login.php', 'wp-config.php', 'wp-settings.php', 'wp-load.php' );
+if ( preg_match_all( '/`([a-z0-9-]+\.php)`/', $sl_readme, $sl_named ) ) {
+	foreach ( array_unique( $sl_named[1] ) as $sl_file ) {
+		if ( 'smart-login.php' === $sl_file || 'uninstall.php' === $sl_file
+			|| in_array( $sl_file, $sl_core_files, true ) ) {
+			continue;
+		}
+
+		if ( ! is_file( $sl_root . '/templates/' . $sl_file )
+			&& ! is_file( $sl_root . '/templates/partials/' . $sl_file )
+			&& ! is_file( $sl_root . '/templates/woocommerce/' . $sl_file )
+			&& ! is_file( $sl_root . '/bin/' . $sl_file ) ) {
+			$sl_ghosts[] = $sl_file;
+		}
+	}
+}
+
+sl_check(
+	'README names no template that has been deleted',
+	'',
+	implode( ', ', $sl_ghosts )
+);
+
+// readme.txt is what WordPress.org reads. A Stable tag behind the constant ships a
+// version nobody can install; ahead of it ships one that does not exist.
+preg_match( "/SMART_LOGIN_VERSION',\s*'([^']+)'/", sl_source( 'smart-login.php' ), $sl_ver );
+preg_match( '/^Stable tag:\s*(.+)$/m', sl_source( 'readme.txt' ), $sl_stable );
+
+sl_check(
+	'readme.txt Stable tag matches SMART_LOGIN_VERSION',
+	trim( $sl_ver[1] ?? 'no constant' ),
+	trim( $sl_stable[1] ?? 'no stable tag' )
+);
+
+/*
+ * The string catalogue matches the tree.
+ *
+ * It went stale by 76 strings across five phases — the security tab, the delivery
+ * screens, the mail templates, the mail surface — and surfaced only because 14.3
+ * regenerated it for an unrelated reason. Nothing was watching. This is the watch.
+ *
+ * Shelled out rather than reimplemented: a second extractor would drift from the one
+ * that writes the file, and then the rule would be checking itself.
+ */
+$sl_pot_check = 1;
+$sl_pot_out   = array();
+exec(
+	escapeshellarg( PHP_BINARY ) . ' ' . escapeshellarg( dirname( __DIR__, 2 ) . '/bin/build-pot.php' ) . ' --check 2>&1',
+	$sl_pot_out,
+	$sl_pot_check
+);
+
+sl_assert(
+	'languages/smart-login.pot is current',
+	0 === $sl_pot_check,
+	implode( ' | ', $sl_pot_out ) . ' — run: php bin/build-pot.php'
+);
+
+sl_assert(
+	'the shipped version has a changelog entry',
+	false !== strpos( sl_source( 'readme.txt' ), '= ' . trim( $sl_ver[1] ?? 'x' ) . ' =' ),
+	'A version with no entry tells the reader the release changed nothing.'
+);
+
 sl_require_companion(
 	'unlink checks the orphan guard and re-authenticates',
 	'/function unlink\(/',

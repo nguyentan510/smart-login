@@ -239,8 +239,6 @@ Copy file từ `templates/` sang `yourtheme/smart-login/` và sửa. Màn hình 
 wp-content/themes/your-theme/smart-login/form-auth.php
 ```
 
-`form-login.php` và `form-register.php` vẫn còn trong `templates/` nhưng **không được nạp** — override chúng sẽ không có tác dụng gì.
-
 Với hai template WooCommerce, đường dẫn theo chuẩn của Woo:
 
 ```

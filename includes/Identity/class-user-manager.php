@@ -153,9 +153,13 @@ class UserManager {
 
 		$now = current_time( 'mysql', true );
 
-		// Everything below is a DERIVED MIRROR of the identity row, kept because
-		// README documents these meta keys as a public contract for other plugins.
-		// Nothing reads them to answer "who owns this subject" — see Invariant 1.
+		// Everything below is a DERIVED MIRROR of the identity row. Nothing reads it to
+		// answer "who owns this subject" — see Invariant 1.
+		//
+		// This used to say the keys were documented in README as a public contract for
+		// other plugins. They are not: README names smartlogin_ward_code and nothing
+		// else of this family. Found in 14.2, corrected in 15.4 — a comment claiming a
+		// contract that does not exist is the same defect as a README doing it.
 		if ( PhoneChannel::ID === $channel ) {
 			update_user_meta( $user_id, self::META_PHONE, $subject );
 			update_user_meta( $user_id, self::META_PHONE_VERIFIED, $now );

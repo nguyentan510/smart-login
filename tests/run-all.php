@@ -112,12 +112,14 @@ $suites = array(
 	),
 	array(
 		// Phase 11, landed red at 11.0 before any production file moved. Two
-		// rules fail on defects in the tree; three report PENDING rather than
-		// passing for want of a subject; one pins behaviour that already holds,
-		// so 11.2 cannot quietly break it. Promoted when it goes green.
+		// Promoted in 15.4. It landed `spec` in 11.0 with rules that were red, and
+		// the working agreement says a spec suite becomes required the moment it
+		// goes green — it has been 56 passed / 0 failed / 0 pending since 13.3, so
+		// the project was running four phases against its own rule. A green suite
+		// that cannot block can only hide the next regression.
 		'name' => 'Mail templates',
 		'file' => 'mail/run-template-tests.php',
-		'kind' => 'spec',
+		'kind' => 'required',
 	),
 );
 

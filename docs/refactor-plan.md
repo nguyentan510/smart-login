@@ -1360,6 +1360,21 @@ the suites around it.
       with no mechanism. Originally: the secret fallbacks, the webhook tester's old field name, and the two shim
       templates the README already documents as unused
 
+- [x] **15.4** [Truth pass](unreleased-install/15.4-truth-pass.md) — three false
+      statements the plugin was shipping, corrected and turned into rules: a README
+      naming two templates 15.3 had deleted, a `readme.txt` Stable tag behind the
+      constant, and a comment claiming README documents meta keys as a public contract.
+      CLAUDE.md opens on this failure having happened twice; this was the third, and the
+      first the project's own change created. Fitness 40 → 44. **The catalogue rule was
+      wrong twice in the same direction** — comparing whole files compared the creation
+      date, comparing below the header compared source line references and announced
+      itself as `689 committed, 689 produced` and still stale; it compares the sorted
+      msgid set now. **The README rule pushed the docs shorter rather than being gamed**:
+      a true historical sentence still named deleted files, so the sentence went to the
+      changelog where it belongs. `Mail templates` promoted to `required` — green since
+      13.3 and left `spec` for four phases, against the agreement's own rule. Coding
+      standards is now the only `spec` suite
+
 ---
 
 **Ordering rationale.** 15.0 first, and for once the reason is not only the Postscript:
