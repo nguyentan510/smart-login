@@ -8,7 +8,10 @@
 namespace SmartLogin\Auth;
 
 use SmartLogin\Auth\Providers\ProviderIdentity;
+use SmartLogin\Identity\Channels\MailChannel;
+use SmartLogin\Identity\ChannelRegistry;
 use SmartLogin\Identity\Claim;
+use SmartLogin\Identity\IdentityDirectory;
 use SmartLogin\Identity\IdentityRecord;
 use SmartLogin\Identity\IdentityRepository;
 use SmartLogin\Identity\OpaqueLogin;
@@ -17,6 +20,7 @@ use SmartLogin\Identity\ProfileSeeder;
 use SmartLogin\Identity\UserManager;
 use SmartLogin\Identity\VerifiedClaim;
 use SmartLogin\Security\AuditLog;
+use SmartLogin\Security\RateLimiter;
 use SmartLogin\Settings;
 use WP_Error;
 
@@ -24,10 +28,35 @@ defined( 'ABSPATH' ) || exit;
 
 final class AccountProvisioner {
 
+	/**
+	 * Which setting decides whether a provider's verified email earns a row.
+	 *
+	 * A map of literal paths rather than `'providers.' . $slug . '.email_identity'`.
+	 * Phase 9's rule 8 went red on the concatenated form — correctly: a built dot
+	 * path that misses resolves to the fallback in silence, which is how the
+	 * configured retention was ignored for months. The literals stay greppable, and
+	 * the abuse suite asserts each one is declared by `FieldRegistry`.
+	 *
+	 * A provider absent from this map gets no row. Fail closed: adding a provider
+	 * should not silently widen how its accounts can be reached.
+	 */
+	const EMAIL_IDENTITY_FLAG = array(
+		'google' => 'providers.google.email_identity',
+		'zalo'   => 'providers.zalo.email_identity',
+	);
+
 	private IdentityRepository $identities;
 
 	public function __construct( ?IdentityRepository $identities = null ) {
 		$this->identities = $identities ?? new IdentityRepository();
+	}
+
+	/**
+	 * Built from the injected repository, not from a fresh one: a caller that
+	 * supplied its own storage must not find half this class writing somewhere else.
+	 */
+	private function directory(): IdentityDirectory {
+		return new IdentityDirectory( $this->identities );
 	}
 
 	/**
@@ -102,6 +131,10 @@ final class AccountProvisioner {
 				if ( ! $this->link( $identity, (int) $user->ID, IdentityRecord::BY_AUTO_EMAIL ) ) {
 					return new WP_Error( 'smart_login_provider_link', __( 'Không thể tự động liên kết tài khoản hiện có.', 'smart-login' ) );
 				}
+				// This branch has already decided the address identifies this account —
+				// that is the whole of what auto-linking means. Leaving it without a row
+				// would rebuild the same split inside the one place that has judged it.
+				$this->adopt_provider_email( $identity, (int) $user->ID );
 				return array(
 					'user'    => $user,
 					'context' => $this->context( $identity, (int) $user->ID, false, false ),
@@ -131,10 +164,72 @@ final class AccountProvisioner {
 			return new WP_Error( 'smart_login_provider_link', __( 'Không thể lưu liên kết tài khoản nhà cung cấp.', 'smart-login' ) );
 		}
 
+		$this->adopt_provider_email( $identity, (int) $user->ID );
+
 		return array(
 			'user'    => $user,
 			'context' => $this->context( $identity, (int) $user->ID, true, false ),
 		);
+	}
+
+	/**
+	 * Let a provider-verified address become an identity of its own.
+	 *
+	 * The defect this repairs: `create_provider_user()` writes the verified address
+	 * into `wp_users.user_email`, which core resolves at `authenticate` priority 20,
+	 * but linked only the federated claim. One fact — this account owns this address
+	 * — lived in two stores, and they disagreed. Typing that address the next day
+	 * bought a registration OTP and a refusal two steps later; recovery said the
+	 * address was never registered; `wp-login.php` alone found the account, and asked
+	 * for a password the holder has never seen.
+	 *
+	 * Per provider, because the guarantees differ. Google asserts `email_verified`.
+	 * Zalo is off by default and belt-and-braces besides — `ZaloProvider` reads
+	 * `email_verified` from a field its profile response is not documented to send,
+	 * so the condition below cannot be met there today.
+	 *
+	 * Deliberately **after** the federated row is claimed, and deliberately not
+	 * fatal. The email row is an addition; a provider login that cannot have one must
+	 * still work exactly as it did. A failure here leaves the account in the state
+	 * every provider account was in before this sub-phase, which is the state the
+	 * rest of the phase is built to tolerate.
+	 */
+	private function adopt_provider_email( ProviderIdentity $identity, int $user_id ): void {
+		if ( ! $identity->email_verified || '' === $identity->email ) {
+			return;
+		}
+
+		$flag = self::EMAIL_IDENTITY_FLAG[ $identity->provider ] ?? '';
+
+		if ( '' === $flag || ! Settings::is_on( $flag ) ) {
+			return;
+		}
+
+		$claim = ( new ChannelRegistry() )->claim( MailChannel::ID, $identity->email );
+
+		if ( $claim->is_empty() ) {
+			return;
+		}
+
+		$adopted = UserManager::adopt_verified_email(
+			$user_id,
+			VerifiedClaim::from( $claim, VerifiedClaim::PROOF_OAUTH ),
+			IdentityRecord::BY_OAUTH,
+			$this->directory()
+		);
+
+		if ( is_wp_error( $adopted ) ) {
+			AuditLog::record(
+				AuditLog::PROVIDER_FAILED,
+				RateLimiter::mask_identity( $identity->email ),
+				array(
+					'provider' => $identity->provider,
+					'stage'    => 'email_identity',
+					'code'     => $adopted->get_error_code(),
+				),
+				$user_id
+			);
+		}
 	}
 
 	private function create_provider_user( ProviderIdentity $identity ) {

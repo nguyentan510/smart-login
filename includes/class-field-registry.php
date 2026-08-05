@@ -309,6 +309,18 @@ final class FieldRegistry {
 				'section' => 'provider',
 				'label'   => __( 'Google Client ID', 'smart-login' ),
 			),
+			// On by default. Google asserts email_verified and that assertion is
+			// already trusted enough to become the account's user_email, which core
+			// resolves as a login identifier at authenticate priority 20. Withholding
+			// the identity row does not withhold that trust, it splits it.
+			'providers.google.email_identity' => array(
+				'type'    => 'checkbox',
+				'default' => 1,
+				'tab'     => 'providers',
+				'section' => 'provider',
+				'label'   => __( 'Email Google là một cách đăng nhập', 'smart-login' ),
+				'help'    => __( 'Khi Google xác nhận email đã verified, địa chỉ đó trở thành một cách đăng nhập và khôi phục tài khoản. Tắt trước khi cập nhật nếu không muốn áp dụng cho tài khoản đã có.', 'smart-login' ),
+			),
 			'providers.zalo.enabled'     => array(
 				'type'    => 'checkbox',
 				'default' => 0,
@@ -322,6 +334,18 @@ final class FieldRegistry {
 				'tab'     => 'providers',
 				'section' => 'provider',
 				'label'   => __( 'Zalo App ID', 'smart-login' ),
+			),
+			// Off by default, and belt-and-braces either way: ZaloProvider maps
+			// email_verified from a field the Graph profile response is not documented
+			// to send, so `! empty()` reads false and the condition this flag guards
+			// cannot be met. The flag states the intent rather than carrying it.
+			'providers.zalo.email_identity'   => array(
+				'type'    => 'checkbox',
+				'default' => 0,
+				'tab'     => 'providers',
+				'section' => 'provider',
+				'label'   => __( 'Email Zalo là một cách đăng nhập', 'smart-login' ),
+				'help'    => __( 'Chỉ áp dụng nếu Zalo trả về email kèm xác nhận đã verified. Mặc định tắt vì Zalo thường không trả về email.', 'smart-login' ),
 			),
 			'providers.auto_link_email'  => array(
 				'type'    => 'checkbox',

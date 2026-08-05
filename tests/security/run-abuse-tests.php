@@ -67,6 +67,31 @@ foreach ( $sl_undeclared as $sl_offender ) {
 	sl_note( '→ ' . $sl_offender );
 }
 
+/*
+ * The same rule for keys a map holds rather than a call site.
+ *
+ * 14.4 needed a per-provider setting, and the natural spelling —
+ * `Settings::is_on( 'providers.' . $slug . '.email_identity' )` — went red above,
+ * correctly. The fix was a constant map of literal paths, which the regex cannot
+ * see: the first argument is a variable, and rule 8 skips those on purpose so the
+ * field renderer does not make it cry wolf. That is a hole this map would otherwise
+ * open in the rule that exists to catch exactly this mistake, so the map is asserted
+ * directly.
+ */
+$sl_mapped = array_values( \SmartLogin\Auth\AccountProvisioner::EMAIL_IDENTITY_FLAG );
+
+sl_check(
+	'8b — every settings path held in a provider flag map is declared too',
+	'',
+	implode( ', ', array_diff( $sl_mapped, $sl_declared ) )
+);
+
+sl_assert(
+	'8b — and the map is not empty, so the rule has a subject',
+	array() !== $sl_mapped,
+	'A rule that passes because there is nothing to check states the opposite of the truth.'
+);
+
 // =====================================================================
 sl_section( 'Rule 3 — a slow gateway must not hold a PHP worker (9.3)' );
 

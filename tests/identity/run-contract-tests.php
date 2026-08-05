@@ -418,6 +418,25 @@ if ( method_exists( 'SmartLogin\Identity\UserManager', 'adopt_verified_email' ) 
 	sl_pending( 'one writer owns a verified email', 'UserManager::adopt_verified_email() (14.2)' );
 }
 
+// Rule 4 (14.4) — the two per-provider defaults, pinned because they are the
+// security-relevant half of the decision and a default is the value almost every
+// site will run. Google on: it asserts email_verified, and that assertion already
+// decides the account's user_email. Zalo off: its profile response is not documented
+// to carry a verification flag.
+$sl_fields = \SmartLogin\FieldRegistry::all();
+
+sl_check(
+	'Google verified email is an identity by default',
+	1,
+	(int) ( $sl_fields['providers.google.email_identity']['default'] ?? -1 )
+);
+
+sl_check(
+	'Zalo verified email is not, by default',
+	0,
+	(int) ( $sl_fields['providers.zalo.email_identity']['default'] ?? -1 )
+);
+
 // Rule 3 — proof is required to reach the directory. Passes today, and must keep
 // passing: it is what stops 14.2 becoming a way to mint identities. A rule that
 // arrives beside the feature it guards cannot catch that feature breaking it.

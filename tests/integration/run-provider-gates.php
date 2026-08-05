@@ -279,6 +279,70 @@ try {
 		);
 	}
 
+	/*
+	 * 14.4 — the flag is the whole gate, and off must mean untouched.
+	 *
+	 * Provision a second account with providers.google.email_identity off and assert
+	 * no email row exists for its address. Byte-identical to pre-14.4 behaviour is the
+	 * property; a site that does not want its addresses becoming login identifiers has
+	 * to be able to say so and be obeyed.
+	 */
+	$off_was = \SmartLogin\Settings::get( 'providers.google.email_identity' );
+	\SmartLogin\Settings::update( array( 'providers.google.email_identity' => 0 ) );
+
+	$off_identity = new \SmartLogin\Auth\Providers\ProviderIdentity(
+		array(
+			'provider'       => 'google',
+			'subject'        => 'flag-off-' . wp_generate_uuid4(),
+			'email'          => 'flag.off.' . strtolower( wp_generate_password( 6, false, false ) ) . '@example.test',
+			'email_verified' => true,
+			'display_name'   => 'Flag Off User',
+		)
+	);
+	$off_resolved = ( new \SmartLogin\Auth\AccountProvisioner() )->resolve( $off_identity, array() );
+	if ( is_wp_error( $off_resolved ) ) {
+		\SmartLogin\Settings::update( array( 'providers.google.email_identity' => $off_was ) );
+		$failed( 'provisioning with the email-identity flag off failed: ' . $off_resolved->get_error_code() );
+	}
+	$off_user_id    = (int) $off_resolved['user']->ID;
+	$cleanup_ids[]  = $off_user_id;
+	$cleanup_rows[] = array( 'provider' => 'google', 'subject' => $off_identity->subject, 'user_id' => $off_user_id );
+
+	$off_row = ( new \SmartLogin\Identity\IdentityRepository() )->find(
+		( new \SmartLogin\Identity\ChannelRegistry() )->claim( 'email', $off_identity->email )
+	);
+
+	\SmartLogin\Settings::update( array( 'providers.google.email_identity' => $off_was ) );
+
+	if ( $off_row ) {
+		$failed( 'the email-identity flag was off and an email identity was claimed anyway' );
+	}
+
+	// An address the provider did not mark verified must never earn a row, flag or no
+	// flag: the flag says whose assertion is trusted, not that one can be skipped.
+	$unverified = new \SmartLogin\Auth\Providers\ProviderIdentity(
+		array(
+			'provider'       => 'google',
+			'subject'        => 'unverified-' . wp_generate_uuid4(),
+			'email'          => 'unverified.' . strtolower( wp_generate_password( 6, false, false ) ) . '@example.test',
+			'email_verified' => false,
+			'display_name'   => 'Unverified Email User',
+		)
+	);
+	$unverified_resolved = ( new \SmartLogin\Auth\AccountProvisioner() )->resolve( $unverified, array() );
+	if ( is_wp_error( $unverified_resolved ) ) {
+		$failed( 'provisioning an unverified-email identity failed: ' . $unverified_resolved->get_error_code() );
+	}
+	$unverified_id  = (int) $unverified_resolved['user']->ID;
+	$cleanup_ids[]  = $unverified_id;
+	$cleanup_rows[] = array( 'provider' => 'google', 'subject' => $unverified->subject, 'user_id' => $unverified_id );
+
+	if ( ( new \SmartLogin\Identity\IdentityRepository() )->find(
+		( new \SmartLogin\Identity\ChannelRegistry() )->claim( 'email', $unverified->email )
+	) ) {
+		$failed( 'an address the provider did not verify earned an email identity' );
+	}
+
 	// P0.3: verified-email auto-link to an existing non-synthetic account.
 	$existing_id = wp_insert_user(
 		array(

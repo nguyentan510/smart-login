@@ -1177,10 +1177,21 @@ that phase.
       replaced rather than joined; it asked for an identifier that had just been
       typed. Found on the way past: the `.pot` is stale by 76 strings since Phase 8.6,
       regenerated in its own commit rather than buried in this one
-- [ ] **14.4** [Provider email row](email-identity/14.4-provider-email-row.md) — the
-      sub-phase that makes the three doors agree. Per provider, Google on and Zalo
-      off, with the Zalo half labelled a hypothesis until a live response confirms
-      it. Flag off must produce byte-identical state to today
+- [ ] **14.4** [Provider email row](email-identity/14.4-provider-email-row.md) —
+      written, locally green, and **deliberately unticked**: this is the sub-phase that
+      changes behaviour, and all four assertions that would prove it live in the
+      provider gate, which needs a real WordPress this machine does not have. Do not
+      tick on the strength of the unit suites — they cannot see it. Contract 48 → 50,
+      abuse 28 → 30. **Rule 8 caught the first version**, a concatenated settings path,
+      for the fourth time it has caught a sub-phase; fixed with a literal map, and
+      rule **8b** added because the map opens a hole in the rule that just caught me.
+      The Zalo hypothesis resolved from code rather than a live response and is
+      stronger than a guess: `ZaloProvider` reads `email_verified` from a field the
+      Graph profile is not documented to send, so the condition cannot be met there
+      whatever the flag says. Adoption is non-fatal by design, and the
+      `auto_link_email` branch adopts too. One lint failure on a generated data file
+      did not reproduce across four runs or under `php -l` — environmental, chased
+      rather than dismissed
 - [ ] **14.5** [Backfill](email-identity/14.5-backfill.md) — DB_VERSION 5 → 6 with
       **no schema change**, because `maybe_upgrade()` is the only trigger available.
       Calls the same writer rather than bespoke SQL, batched, idempotent, and it
