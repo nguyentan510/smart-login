@@ -401,6 +401,14 @@
 	width: 100%;
 }
 
+/* The recovery route on the password screen. Same door as Quên mật khẩu was, one
+   click closer, so it sits quietly under the primary action instead of competing
+   with it — which is why it reuses --ghost rather than earning a variant. */
+.sl-form--recover {
+	margin-top: 14px;
+	text-align: center;
+}
+
 .sl-form.is-submitting .sl-btn--primary {
 	opacity: 0.72;
 	cursor: progress;

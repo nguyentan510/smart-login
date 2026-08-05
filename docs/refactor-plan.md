@@ -1164,11 +1164,19 @@ that phase.
       defect — left to the gate doors and to 14.4, recorded so the gap is a decision.
       Sweep found one stale claim: `create_verified_user()` says README documents
       these meta keys as a public contract, and it does not
-- [ ] **14.3** [Password step](email-identity/14.3-password-step.md) — a way forward
-      for somebody with no password to type, pointed at the reset flow that already
-      sets one without knowing the old one. Offered unconditionally: this is the
-      sub-phase where a "has set a password" marker would have been spent, and the
-      marker is not worth a second source of truth
+- [x] **14.3** [Password step](email-identity/14.3-password-step.md) — a way forward
+      for somebody with no password to type. Offered unconditionally: this is where a
+      "has set a password" marker would have been spent, and it is not worth a second
+      source of truth. 91 → 96 templates, proven able to fail by stashing the
+      template. **No controller code was needed**: `handle_forgot()` already reads
+      `$post['identity']`, so the screen posts the existing `forgot` action with the
+      identifier it holds — no new intent, no new grant, and nothing new to meter,
+      because nothing new sends. **The brief's label promised a login the flow does
+      not deliver** — reset ends by asking the visitor to sign in with the new
+      password, so the shipped wording says that. The old *Quên mật khẩu?* link was
+      replaced rather than joined; it asked for an identifier that had just been
+      typed. Found on the way past: the `.pot` is stale by 76 strings since Phase 8.6,
+      regenerated in its own commit rather than buried in this one
 - [ ] **14.4** [Provider email row](email-identity/14.4-provider-email-row.md) — the
       sub-phase that makes the three doors agree. Per provider, Google on and Zalo
       off, with the Zalo half labelled a hypothesis until a live response confirms

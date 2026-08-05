@@ -610,6 +610,65 @@ sl_assert(
 );
 
 // ---------------------------------------------------------------------
+sl_section( 'The password step has a way forward without a password (14.3)' );
+
+/*
+ * An account provisioned by a provider holds a random password nobody has seen, so
+ * the box on this screen cannot be filled. The route out must not ask the visitor to
+ * retype the identifier they just typed, and it must not be a second entry point to
+ * an OTP send — it posts the existing `forgot` action, which 9.4 metered.
+ */
+$sl_pw = sl_capture(
+	static function (): void {
+		( static function ( string $sl_file, array $sl_args ): void {
+			extract( $sl_args, EXTR_SKIP ); // phpcs:ignore WordPress.PHP.DontExtract
+			include $sl_file;
+		} )(
+			dirname( __DIR__, 2 ) . '/templates/form-password.php',
+			array( 'notices' => array(), 'identity' => '0969789475' )
+		);
+	}
+);
+
+sl_assert( 'the password step still renders', null === $sl_pw['error'], (string) $sl_pw['error'] );
+
+preg_match_all( '/<form\b[^>]*>(.*?)<\/form>/s', $sl_pw['html'], $sl_forms );
+
+$sl_recover = '';
+
+foreach ( $sl_forms[1] ?? array() as $sl_form_body ) {
+	if ( false !== strpos( $sl_form_body, 'value="forgot"' ) ) {
+		$sl_recover = $sl_form_body;
+	}
+}
+
+sl_assert(
+	'a second form posts the recovery action',
+	'' !== $sl_recover,
+	'Without it the only route out of an unfillable password box is retyping the identifier.'
+);
+
+sl_assert(
+	'and it carries the identifier already held, so nothing is retyped',
+	false !== strpos( $sl_recover, 'name="identity" value="0969789475"' ),
+	'An empty identity here would post a blank recovery and refuse.'
+);
+
+// A form without its own guard fields is refused by RequestGuard::verify(), so the
+// button would look like a route and be a dead end.
+sl_assert(
+	'and it carries its own guard fields',
+	false !== strpos( $sl_recover, 'name="_wpnonce"' ) || false !== strpos( $sl_recover, 'nonce' ),
+	'RequestGuard::verify( \'forgot\' ) rejects a post without them.'
+);
+
+sl_assert(
+	'the primary form still posts the login action',
+	false !== strpos( $sl_pw['html'], 'value="login"' ),
+	'The recovery route must be an addition, not a replacement of signing in.'
+);
+
+// ---------------------------------------------------------------------
 sl_section( 'The shims that are documented as unused really are unused' );
 
 // README tells theme authors to override form-auth.php. form-login.php and
