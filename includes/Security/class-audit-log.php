@@ -17,6 +17,7 @@ defined( 'ABSPATH' ) || exit;
 class AuditLog {
 
 	const REGISTER_STARTED       = 'register_started';
+	const REGISTER_REFUSED       = 'register_refused';
 	const OTP_SENT               = 'otp_sent';
 	const OTP_SEND_FAILED        = 'otp_send_failed';
 	const OTP_VERIFIED           = 'otp_verified';

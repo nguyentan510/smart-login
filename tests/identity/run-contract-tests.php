@@ -279,6 +279,25 @@ $GLOBALS['sl_users_by_email'] = array( 'taken@example.test' => 7 );
 $GLOBALS['sl_wpdb_row']       = null;
 $GLOBALS['sl_wpdb_var']       = 0;
 
+/**
+ * OTP rows written since a mark. Counted by table rather than in total: the
+ * refusal legitimately writes one audit row, and a rule that forbids *any* write
+ * would be measuring the wrong thing — the harm is a code being spent, not a
+ * record being kept.
+ */
+function sl_otp_writes_since( int $mark ): int {
+	$otp   = \SmartLogin\Installer::otp_table();
+	$found = 0;
+
+	foreach ( array_slice( $GLOBALS['wpdb']->writes, $mark ) as $write ) {
+		if ( 'insert' === $write['op'] && $otp === ( $write['table'] ?? '' ) ) {
+			++$found;
+		}
+	}
+
+	return $found;
+}
+
 $sl_before  = count( $GLOBALS['wpdb']->writes );
 $sl_refusal = null;
 
@@ -300,12 +319,32 @@ sl_check(
 );
 
 sl_check(
-	'and nothing is written while refusing',
+	'and no code is spent while refusing',
 	0,
-	count( $GLOBALS['wpdb']->writes ) - $sl_before
+	sl_otp_writes_since( $sl_before )
 );
 
+// The other half of the same rule, and the one that matters more: this guard sits
+// on the happy path of every registration on the site, so a wrong predicate here
+// closes signup for everybody. Asserted by its absence of refusal, not by reading
+// the branch.
 $GLOBALS['sl_users_by_email'] = array();
+$sl_unused                    = null;
+
+try {
+	$sl_unused = ( new \SmartLogin\Auth\RegisterHandler() )->start_identity(
+		array( 'identity' => 'brand.new@example.test' )
+	);
+} catch ( \Throwable $e ) {
+	$sl_unused = new WP_Error( 'smart_login_threw', get_class( $e ) );
+}
+
+sl_assert(
+	'an address nobody holds still starts a registration',
+	! is_wp_error( $sl_unused )
+		|| 'smart_login_identity_taken' !== $sl_unused->get_error_code(),
+	'The guard must refuse only what create_verified_user() would refuse anyway.'
+);
 
 // Rule 2 (14.2) — one writer for a verified email.
 if ( method_exists( 'SmartLogin\Identity\UserManager', 'adopt_verified_email' ) ) {

@@ -1139,10 +1139,18 @@ that phase.
       same sitting. `actual: 5` is the keeper: five writes have already happened
       before the flow reaches the wall. **Row stays unticked** — the two gate doors
       are written and unrun, because there is no local WordPress
-- [ ] **14.1** [Owned-email OTP](email-identity/14.1-owned-email-otp.md) — refuse at
-      step one instead of step three. Ships alone and first: it is the live harm, it
-      is independent of every decision below it, and its acceptance includes rules 1
-      and 2 staying **red**, so the guard cannot be mistaken for the cure
+- [x] **14.1** [Owned-email OTP](email-identity/14.1-owned-email-otp.md) — refuse at
+      step one instead of step three, and the gate doors stay red on purpose so the
+      guard cannot be mistaken for the cure. 42 → 44, both halves green.
+      **14.0's second rule was measuring the wrong thing**: it forbade *any* write and
+      the guard legitimately writes an audit row, so it now counts inserts into the
+      OTP table — the harm is a code being spent, not a record being kept. Refined in
+      both directions rather than assumed, by stashing `includes/`. The guard refuses
+      exactly the set `create_verified_user()` already refused at `:116`, which is
+      what makes it safe on every signup's happy path, and it **outlives its cause**:
+      after 14.4 the state it detects stops being producible and it becomes the only
+      thing watching for the two stores drifting apart again. `REGISTER_REFUSED` is
+      deliberately sampleable, and 10.4's bus fans it out
 - [ ] **14.2** [One writer](email-identity/14.2-one-writer.md) — three sites write
       three different subsets of one fact; `UserManager::adopt_verified_email()`
       becomes the only one able to. Invisible by design, so the acceptance is
