@@ -60,8 +60,9 @@ Không. WooCommerce chỉ cần khi bạn muốn dùng phần địa chỉ và c
 == Changelog ==
 
 = 1.0.3 =
-* Sửa lỗi nghiêm trọng: các ô trên tab **Gửi mã** không lưu được. Chọn "Hồ sơ OTP" và sáu giá trị nó chi phối nằm cùng một tab, nên mỗi lần lưu hồ sơ lại ghi đè lên những gì vừa gõ. Nay hồ sơ chỉ áp dụng khi bạn đổi nó, và tự chuyển sang "Tuỳ chỉnh" khi một giá trị khác đi.
-* Sửa lỗi ẩn: một trường không có trong lần gửi form bị ghi thành giá trị nhỏ nhất thay vì giữ nguyên — `otp.ttl` 300 thành 60, `otp.length` 6 thành 4.
+* Hồ sơ OTP chỉ áp dụng khi bạn đổi nó, và tự chuyển sang "Tuỳ chỉnh" khi một giá trị khác đi. Trước đó mọi lần lưu tab Gửi mã đều áp lại hồ sơ lên sáu giá trị nó chi phối.
+* Một trường không có trong lần gửi form nay giữ nguyên giá trị đã lưu, thay vì bị ghi thành giá trị nhỏ nhất — `otp.ttl` 300 thành 60, `otp.length` 6 thành 4.
+* **Đính chính:** hai mục trên **không** phải nguyên nhân của báo cáo "lưu không được" trên tab Gửi mã. Màn hình không vể sáu trường đó thành ô nhập khi đang chọn một hồ sơ, nên từ trình duyệt không ai gõ vào được. Cả hai chỉ tới được qua REST hoặc lời gọi lập trình. Nguyên nhân thực của báo cáo đó là một gate kiểm thứ chạy trên site đang dùng và xoá toàn bộ cấu hình — không phải mã được phát hành, và gate đó nay tự từ chối một site đã có cấu hình.
 
 = 1.0.2 =
 * Email đã xác thực bởi Google trở thành một cách đăng nhập và khôi phục tài khoản, bật/tắt theo từng nhà cung cấp.
@@ -83,7 +84,7 @@ Không. WooCommerce chỉ cần khi bạn muốn dùng phần địa chỉ và c
 == Upgrade Notice ==
 
 = 1.0.3 =
-Bản vá cho 1.0.2. Nếu bạn đã lưu tab Gửi mã trên 1.0.2, hãy mở lại và kiểm tra sáu giá trị OTP — chúng có thể đã bị đưa về giá trị của hồ sơ thay vì giá trị bạn đặt.
+Bản vá cho 1.0.2, cập nhật bình thường. Không cần làm gì thêm: hai lỗi được vá không tới được từ màn hình cài đặt, nên giá trị bạn đã lưu không bị ảnh hưởng.
 
 = 1.0.2 =
 Bản này **không có đường nâng cấp** từ 1.0.1. Plugin chưa từng phát hành, nên mọi đoạn mã di trú đã được gỡ bỏ và phiên bản cơ sở dữ liệu đặt lại về 1. Nếu bạn đang chạy 1.0.1, hãy gỡ và cài lại thay vì cập nhật.

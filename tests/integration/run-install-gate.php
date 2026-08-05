@@ -14,8 +14,17 @@
  * `smart_login_email_backfill_cursor` and never added it to `uninstall.php`.
  *
  * DESTRUCTIVE. It uninstalls the plugin twice: once to reach clean ground and once as
- * the subject. It refuses to run without SMART_LOGIN_DESTRUCTIVE_OK=1, because a gate
- * that drops tables must never be something anybody runs by reflex.
+ * the subject.
+ *
+ * TWO locks, and the second exists because the first was not enough. The env flag only
+ * ever asks the operator whether they meant it — and on the day this gate was written
+ * its operator ran it five times against a site somebody was configuring in a browser,
+ * wiping the settings option each time. The person filling in the form watched their
+ * work vanish and reported a save bug. It was not a save bug; it was this.
+ *
+ * So the gate also refuses a site whose settings differ from the registry defaults. A
+ * configured site is somebody's work, and a test must not be able to destroy it because
+ * a flag was left set.
  *
  * Mirrors run-wordpress-gate.php's contract: BLOCKED for an environment problem,
  * FAILED for a defect, OK plus facts on success.
@@ -56,6 +65,8 @@ $ok = static function ( string $label ): void {
 if ( ! $destructive ) {
 	$blocked( 'this gate drops the plugin\'s tables and options; set SMART_LOGIN_DESTRUCTIVE_OK=1 to allow it' );
 }
+
+$force = '1' === (string) getenv( 'SMART_LOGIN_DISCARD_SETTINGS' );
 if ( '' === $wp_root || ! is_file( $wp_root . DIRECTORY_SEPARATOR . 'wp-settings.php' ) ) {
 	$blocked( 'SMART_LOGIN_WP_ROOT must point to a WordPress public root' );
 }
@@ -98,6 +109,40 @@ global $wpdb;
 
 if ( ! isset( $wpdb ) || ! $wpdb instanceof wpdb ) {
 	$blocked( 'WordPress did not initialise wpdb' );
+}
+
+/*
+ * The second lock: a site somebody has configured is not a test fixture.
+ *
+ * Compared against the registry defaults rather than a marker option, because a marker
+ * is one more thing to remember and this has to hold for a site nobody remembered
+ * anything about.
+ */
+$configured = array();
+
+foreach ( \SmartLogin\FieldRegistry::all() as $sl_path => $sl_field ) {
+	if ( in_array( $sl_field['type'] ?? '', array( 'secret', 'passthrough' ), true ) ) {
+		continue;
+	}
+
+	if ( null === $sl_field['default'] ) {
+		continue;
+	}
+
+	// Loose: the form posts strings and the registry declares scalars.
+	if ( \SmartLogin\Settings::get( $sl_path ) != $sl_field['default'] ) { // phpcs:ignore WordPress.PHP.StrictComparisons
+		$configured[] = $sl_path;
+	}
+}
+
+if ( $configured && ! $force ) {
+	echo "SMART_LOGIN_INSTALL_GATE_BLOCKED\n";
+	echo 'reason=this site has settings that differ from the defaults and this gate would destroy them: '
+		. implode( ', ', array_slice( $configured, 0, 5 ) )
+		. ( count( $configured ) > 5 ? ' (+' . ( count( $configured ) - 5 ) . ' more)' : '' )
+		. '. Point the gate at a scratch site, or set SMART_LOGIN_DISCARD_SETTINGS=1 if losing them is intended.'
+		. "\n";
+	exit( 2 );
 }
 
 echo 'Phase 15 — the install lifecycle, against WordPress ' . get_bloginfo( 'version' ) . "\n\n";
