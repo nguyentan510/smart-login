@@ -503,10 +503,13 @@
 	height: 18px;
 }
 
+/* The svg carries its own width/height so a mark that needs a little more room
+   can ask for it — Zalo's is a bubble with a wordmark inside, and at 18px the
+   wordmark closes up. Bounded here so no mark can grow past the button. */
 .sl-provider-icon svg {
 	display: block;
-	width: 18px;
-	height: 18px;
+	max-width: 20px;
+	max-height: 20px;
 }
 
 /* .sl-contact-grid and the grey bordered box that .sl-contact-verification used
