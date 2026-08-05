@@ -30,6 +30,20 @@ require __DIR__ . '/../harness.php';
 
 use SmartLogin\Settings;
 
+/*
+ * Credentials as deployment constants rather than stored secrets: the entry
+ * screen only draws a provider button for a provider that is *configured*, and
+ * ProviderCredentials::is_configured() reads the constants before it reaches
+ * SecretBox. Going through SecretBox here would make this suite depend on
+ * openssl, which is exactly the dependency the mail work has already been bitten
+ * by. The values are never dialled — nothing in this suite completes an OAuth
+ * round trip.
+ */
+define( 'SMART_LOGIN_GOOGLE_CLIENT_ID', 'google-client-for-render' );
+define( 'SMART_LOGIN_GOOGLE_CLIENT_SECRET', 'google-secret-for-render' );
+define( 'SMART_LOGIN_ZALO_APP_ID', 'zalo-app-for-render' );
+define( 'SMART_LOGIN_ZALO_APP_SECRET', 'zalo-secret-for-render' );
+
 Settings::update(
 	array(
 		'identity.mode'              => 'both',

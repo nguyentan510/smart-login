@@ -39,7 +39,7 @@ final class MailLayout {
 	 * @param string $body    Already-rendered message body.
 	 * @param string $subject Used as the preheader and title.
 	 */
-	public static function wrap( string $body, string $subject = '' ): string {
+	public static function wrap( string $body, string $subject = '', string $preheader = '' ): string {
 		if ( false !== strpos( $body, self::MARKER ) ) {
 			return $body;
 		}
@@ -53,13 +53,14 @@ final class MailLayout {
 		$html = TemplateLoader::render(
 			'mail/layout',
 			array(
-				'body'    => self::paragraphs( $body ),
-				'subject' => $subject,
-				'accent'  => self::accent(),
-				'logo'    => trim( (string) Settings::get( 'email.logo_url', '' ) ),
-				'footer'  => trim( (string) Settings::get( 'email.footer_text', '' ) ),
-				'site'    => wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ),
-				'marker'  => self::MARKER,
+				'body'      => self::paragraphs( $body ),
+				'subject'   => $subject,
+				'preheader' => $preheader,
+				'accent'    => self::accent(),
+				'logo'      => trim( (string) Settings::get( 'email.logo_url', '' ) ),
+				'footer'    => trim( (string) Settings::get( 'email.footer_text', '' ) ),
+				'site'      => wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES ),
+				'marker'    => self::MARKER,
 			)
 		);
 

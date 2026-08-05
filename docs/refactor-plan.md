@@ -1082,7 +1082,14 @@ renders the six digits an OTP mail exists for as running text mid-paragraph.
       43 → 49 mail, no failures left. Originally: the
       copy button undoes 11.4 on its own, so it ships as a pair and the second
       half is not optional
-- [ ] **13.3** [Layout and tokens](mail-surface/13.3-layout-and-tokens.md) —
+- [x] **13.3** [Layout and tokens](mail-surface/13.3-layout-and-tokens.md) —
+      expansion runs **after** the placeholders, so a URL written with
+      `{{site_url}}` inside a button token is already substituted and nothing
+      has to parse nested braces. The prettier markup would have been the
+      broken one: a span per digit copies as `4 8 2 9 1 3` on a phone, which
+      defeats the block's only purpose, so it is one run with `letter-spacing`
+      and an assertion that fails on the change that looks like an
+      improvement. 49 → 56 mail. Originally:
       `{{code_block}}`, `{{button:url|label}}`, a preheader on the registry row,
       type and dark mode. Both tokens opt-in, and the shipped bodies are
       deliberately **not** rewritten to use them

@@ -175,7 +175,9 @@ if ( ! $sl_has_registry ) {
 	foreach ( call_user_func( array( SL_MAIL_REGISTRY, 'all' ) ) as $sl_id => $sl_row ) {
 		$sl_allowed = (array) ( $sl_row['tokens'] ?? array() );
 
-		foreach ( array( 'subject', 'body' ) as $sl_part ) {
+		// The preheader is rendered through the same expander, so a token it
+		// declares nothing about fails the same silent way.
+		foreach ( array( 'subject', 'body', 'preheader' ) as $sl_part ) {
 			if ( ! preg_match_all( '/\{\{([a-z_:]+)\}\}/', (string) ( $sl_row[ $sl_part ] ?? '' ), $sl_found ) ) {
 				continue;
 			}
@@ -725,6 +727,83 @@ sl_assert(
 	'and no token is left unexpanded in it',
 	false === strpos( $sl_plain_render, '{{' ),
 	'An unexpanded token is the silent-empty-string failure with the braces left in.'
+);
+
+// =====================================================================
+sl_section( 'Structure tokens (13.3)' );
+
+/**
+ * Send one message with a body written for this assertion, and return what
+ * wp_mail() was handed.
+ */
+function sl_render_body( string $body, bool $is_html ): string {
+	Settings::update(
+		array(
+			'email.enabled'                => 1,
+			'email.is_html'                => $is_html ? 1 : 0,
+			'email.templates.login.body'   => $body,
+			'email.templates.login.subject' => 'Mã {{code}}',
+		)
+	);
+
+	$GLOBALS['sl_mails'] = array();
+
+	( new MailTransport() )->send( 'nguoi.dung@example.com', '482913', array( 'intent' => 'login' ) );
+
+	return (string) ( $GLOBALS['sl_mails'][0]['message'] ?? '' );
+}
+
+$sl_code_html = sl_render_body( 'Mã của bạn:' . "\n\n" . '{{code_block}}', true );
+
+sl_assert(
+	'{{code_block}} renders the code in a block, not as running text',
+	false !== strpos( $sl_code_html, 'letter-spacing' ) && false !== strpos( $sl_code_html, '482913' ),
+	'An OTP email has one job. Rendering the digits mid-paragraph is that job done badly.'
+);
+
+sl_assert(
+	'and the digits are one selectable run',
+	false === strpos( $sl_code_html, '4</span>' ) && false === strpos( $sl_code_html, '4</td><td' ),
+	'A span or cell per digit is prettier markup that copies as "4 8 2 9 1 3" on a phone, which defeats the block entirely.'
+);
+
+$sl_code_text = sl_render_body( 'Mã của bạn: {{code_block}}', false );
+
+sl_check( 'in plain text it is the bare digits', true, false !== strpos( $sl_code_text, '482913' ) );
+sl_check( 'and carries no markup', $sl_code_text, wp_strip_all_tags( $sl_code_text ) );
+
+$sl_button_html = sl_render_body( '{{button:https://example.test/reset|Đặt lại mật khẩu}}', true );
+
+sl_assert(
+	'{{button:…}} renders a table, not a styled anchor',
+	false !== strpos( $sl_button_html, '<table' ) && false !== strpos( $sl_button_html, 'https://example.test/reset' ),
+	'Outlook ignores padding on inline elements, so a styled <a> arrives as underlined text.'
+);
+
+$sl_button_text = sl_render_body( '{{button:https://example.test/reset|Đặt lại mật khẩu}}', false );
+
+sl_assert(
+	'in plain text it is a label and a copyable URL',
+	false !== strpos( $sl_button_text, 'Đặt lại mật khẩu: https://example.test/reset' ),
+	'A link the reader cannot click has to be one they can copy: ' . $sl_button_text
+);
+
+// The preheader, which is the difference between an inbox preview reading
+// "Xin chào," and reading what the message is about.
+$sl_preheader = sl_render_body( 'Xin chào,' . "\n\n" . 'Mã: {{code}}', true );
+
+sl_assert(
+	'the preheader is present and rendered',
+	false !== strpos( $sl_preheader, 'Mã đăng nhập một lần' )
+		&& false === strpos( $sl_preheader, '{{ttl_minutes}}' ),
+	'An unrendered token in the preheader is the one place a reader sees braces before opening anything.'
+);
+
+Settings::update(
+	array(
+		'email.templates.login.body'    => '',
+		'email.templates.login.subject' => '',
+	)
 );
 
 sl_summary( 'Mail templates' );
