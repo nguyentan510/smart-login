@@ -93,7 +93,7 @@ final class AccountForm {
 		return array(
 			'profile'  => __( 'Thông tin cá nhân', 'smart-login' ),
 			'contact'  => __( 'Đăng nhập & liên hệ', 'smart-login' ),
-			'address'  => __( 'Địa chỉ giao hàng', 'smart-login' ),
+			'address'  => __( 'Địa chỉ nhận hàng', 'smart-login' ),
 			'password' => __( 'Bảo mật', 'smart-login' ),
 		);
 	}

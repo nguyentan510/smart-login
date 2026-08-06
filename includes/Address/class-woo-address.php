@@ -155,7 +155,7 @@ class WooAddress {
 		}
 
 		$meta = 'shipping' === $load_address
-			? 'smartlogin_shipping_ward_code'
+			? AddressFields::META_SHIPPING_WARD_CODE
 			: AddressFields::META_WARD_CODE;
 
 		return (string) get_user_meta( $user_id, $meta, true );
@@ -407,7 +407,7 @@ class WooAddress {
 		if ( 'billing' === $load_address ) {
 			update_user_meta( $user_id, AddressFields::META_WARD_CODE, $code );
 		} else {
-			update_user_meta( $user_id, 'smartlogin_shipping_ward_code', $code );
+			update_user_meta( $user_id, AddressFields::META_SHIPPING_WARD_CODE, $code );
 		}
 	}
 }

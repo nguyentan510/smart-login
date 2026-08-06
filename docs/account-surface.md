@@ -189,10 +189,15 @@ add one through `smart_login_registration_payload`; the README shows how.
 ## Address boundary
 
 One picker component, two hosts, one set of keys. The profile section edits the
-default delivery address — the `billing_*` fields that prefill checkout — and
-Woo's Addresses tab keeps existing for the ship-elsewhere case, with its billing
-form rendering the same `partials/address-fields.php`.
+default delivery address, and Woo's Addresses tab keeps existing for the
+recipient name, `address_2` and the postcode, with its billing form rendering
+the same `partials/address-fields.php`.
 
-Taking the tab over outright would cost the separate shipping address, the
-recipient name, `address_2` and the postcode. That is a regression for a real
-shop, and no amount of design ownership justifies it.
+Taking the tab over outright would cost those three fields. That is a regression
+for a real shop, and no amount of design ownership justifies it.
+
+**What the profile section writes changed in 17.4.** It wrote `billing_*` only,
+which made the "ship elsewhere" case survivable and the card's own heading
+false. Phase 17 mirrors the values into `shipping_*` as well and renames the
+card to match — the cost, and the argument for paying it, are in
+[`account-card.md`](account-card.md), decision 4.

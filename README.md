@@ -214,6 +214,14 @@ Khi nhà nước thay đổi đơn vị hành chính: tải JSON mới **từ c�
 | Mã phường/xã | `smartlogin_ward_code` (user), `_smartlogin_ward_code` (đơn hàng) |
 | Số nhà, tên đường | `billing_address_1` |
 
+Thẻ **"Địa chỉ nhận hàng"** ghi cả bốn giá trị này sang bộ `shipping_*` tương
+ứng (`shipping_state`, `shipping_city`, `shipping_address_1`,
+`smartlogin_shipping_ward_code`), để cái tên trên thẻ đúng với thứ nó thực sự
+ghi. Chỉ phía `billing_*` được **đọc** lại — bên `shipping_*` là bản sao, không
+phải nguồn thứ hai. Đổi lại: khách nào đang cố tình để địa chỉ giao khác địa chỉ
+thanh toán sẽ bị ghi đè ở lần lưu tiếp theo trên thẻ này; đó là cái giá của "một
+địa chỉ", được ghi ra chứ không giấu đi.
+
 Server **luôn tra tên từ mã**, không bao giờ tin tên do trình duyệt gửi lên. Ghép một phường/xã vào tỉnh không phải của nó sẽ bị từ chối ở cả trang hồ sơ lẫn checkout.
 
 ### Ô tìm nhanh

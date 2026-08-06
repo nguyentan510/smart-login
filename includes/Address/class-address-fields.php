@@ -28,6 +28,15 @@ class AddressFields {
 	const META_WARD_CODE = 'smartlogin_ward_code';
 
 	/**
+	 * The same, for the shipping side.
+	 *
+	 * The key is not new — WooAddress has read and written it since Phase 5 for
+	 * checkout's shipping fields. Naming it here in 17.4 gives the two halves one
+	 * owner, rather than a constant on one side and a string literal on the other.
+	 */
+	const META_SHIPPING_WARD_CODE = 'smartlogin_shipping_ward_code';
+
+	/**
 	 * Current address of a user, in the shape the template expects.
 	 *
 	 * @return array{province_code:string,province_name:string,ward_code:string,ward_name:string,street:string}
@@ -155,6 +164,21 @@ class AddressFields {
 	/**
 	 * Persist a validated address onto a user.
 	 *
+	 * **Both of WooCommerce's address books, since 17.4.** The card that collects
+	 * this is headed "Địa chỉ nhận hàng" and until then it wrote `billing_*` and
+	 * nothing else — so for any customer who had ever saved a separate shipping
+	 * address, the heading named an address the form did not touch.
+	 *
+	 * The decision is one address, mirrored, and it has a cost that is written
+	 * down in docs/account-card.md rather than discovered later: a customer who
+	 * deliberately keeps a different delivery address loses it the next time they
+	 * save this form. `set_from_user_input()` is already the right semantic for
+	 * that — they just typed it.
+	 *
+	 * Billing stays the only side that is *read*. `get_for_user()` and
+	 * `is_complete()` are unchanged, so the mirror cannot become a second source
+	 * of truth that disagrees with the first.
+	 *
 	 * @param array $clean Output of validate().
 	 */
 	public static function save_for_user( int $user_id, array $clean ): void {
@@ -169,21 +193,31 @@ class AddressFields {
 		// these on their own address form, so their choice overwrites whatever was
 		// there. That is the other half of Invariant 2 — profile data belongs to
 		// the customer, and identity never gets a veto over it.
-		ProfileSeeder::set_many_from_user_input(
-			$user_id,
-			array(
-				'billing_state'   => $clean['province_code'],
-				'billing_city'    => $clean['ward_name'],
-				'billing_country' => 'VN',
-			)
+		$fields = array(
+			'state'   => $clean['province_code'],
+			'city'    => $clean['ward_name'],
+			'country' => 'VN',
 		);
 
-		// The ward code is identity-adjacent bookkeeping, not a Woo profile field.
-		update_user_meta( $user_id, self::META_WARD_CODE, $clean['ward_code'] );
+		$pairs = array();
 
-		if ( '' !== $clean['street'] ) {
-			ProfileSeeder::set_from_user_input( $user_id, 'billing_address_1', $clean['street'] );
+		foreach ( array( 'billing', 'shipping' ) as $prefix ) {
+			foreach ( $fields as $field => $value ) {
+				$pairs[ $prefix . '_' . $field ] = $value;
+			}
+
+			if ( '' !== $clean['street'] ) {
+				$pairs[ $prefix . '_address_1' ] = $clean['street'];
+			}
 		}
+
+		ProfileSeeder::set_many_from_user_input( $user_id, $pairs );
+
+		// The ward code is identity-adjacent bookkeeping, not a Woo profile field,
+		// so it does not go through the seeder. Two keys because WooAddress reads
+		// a different one per prefix — see stored_ward_code().
+		update_user_meta( $user_id, self::META_WARD_CODE, $clean['ward_code'] );
+		update_user_meta( $user_id, self::META_SHIPPING_WARD_CODE, $clean['ward_code'] );
 
 		/**
 		 * @param int   $user_id

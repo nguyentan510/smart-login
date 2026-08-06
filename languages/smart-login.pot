@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-06 13:01+0000\n"
+"POT-Creation-Date: 2026-08-06 13:08+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -754,7 +754,7 @@ msgstr ""
 msgid "Giá trị triển khai đang được ưu tiên; các ô trên là cấu hình dự phòng."
 msgstr ""
 
-#: includes/Auth/class-profile-completion-service.php:85
+#: includes/Auth/class-profile-completion-service.php:94
 #: includes/class-field-registry.php:746
 #: templates/partials/account/profile.php:66
 msgid "Giới tính"
@@ -1508,7 +1508,7 @@ msgstr ""
 msgid "Nguồn: %s"
 msgstr ""
 
-#: includes/Auth/class-profile-completion-service.php:81
+#: includes/Auth/class-profile-completion-service.php:90
 #: includes/class-field-registry.php:738
 #: templates/partials/account/profile.php:50
 msgid "Ngày sinh"
@@ -1723,7 +1723,7 @@ msgstr ""
 msgid "Phường/Xã"
 msgstr ""
 
-#: includes/Address/class-address-fields.php:142
+#: includes/Address/class-address-fields.php:151
 #: includes/Address/class-woo-address.php:348
 msgid "Phường/Xã không thuộc Tỉnh/Thành phố đã chọn. Vui lòng chọn lại."
 msgstr ""
@@ -2252,7 +2252,7 @@ msgstr ""
 msgid "Tỉnh/Thành phố"
 msgstr ""
 
-#: includes/Address/class-address-fields.php:130
+#: includes/Address/class-address-fields.php:139
 msgid "Tỉnh/Thành phố không hợp lệ."
 msgstr ""
 
@@ -2289,15 +2289,15 @@ msgstr ""
 msgid "Việt Nam (+84)"
 msgstr ""
 
-#: includes/Address/class-address-fields.php:134
+#: includes/Address/class-address-fields.php:143
 msgid "Vui lòng chọn Phường/Xã."
 msgstr ""
 
-#: includes/Address/class-address-fields.php:124
+#: includes/Address/class-address-fields.php:133
 msgid "Vui lòng chọn Tỉnh/Thành phố."
 msgstr ""
 
-#: includes/Address/class-address-fields.php:111
+#: includes/Address/class-address-fields.php:120
 msgid "Vui lòng chọn địa chỉ."
 msgstr ""
 
@@ -2708,10 +2708,6 @@ msgstr ""
 msgid "Đây là cách đăng nhập duy nhất của bạn. Hãy thêm số điện thoại, email hoặc một liên kết khác trước khi bỏ liên kết này."
 msgstr ""
 
-#: templates/partials/account/address.php:35
-msgid "Đây là địa chỉ giao hàng mặc định, dùng chung với tab Địa chỉ — sửa ở đây là sửa cả hai."
-msgstr ""
-
 #: includes/Admin/class-provider-cards.php:295
 msgid "Đã bật · thiếu credentials"
 msgstr ""
@@ -2921,11 +2917,6 @@ msgstr ""
 msgid "Để đơn hàng được giao đúng nơi, không phải nhập lại mỗi lần"
 msgstr ""
 
-#: includes/Auth/class-profile-completion-service.php:74
-#: includes/Auth/class-profile-completion-service.php:77
-msgid "Địa chỉ"
-msgstr ""
-
 #: includes/class-field-registry.php:115
 msgid "Địa chỉ 2 cấp"
 msgstr ""
@@ -2935,8 +2926,13 @@ msgstr ""
 msgid "Địa chỉ email không hợp lệ."
 msgstr ""
 
+#: includes/Auth/class-profile-completion-service.php:78
 #: includes/Frontend/class-account-form.php:96
-msgid "Địa chỉ giao hàng"
+msgid "Địa chỉ nhận hàng"
+msgstr ""
+
+#: templates/partials/account/address.php:39
+msgid "Địa chỉ này dùng cho cả đơn hàng và hoá đơn. Sửa ở đây là sửa luôn địa chỉ trong tab Địa chỉ."
 msgstr ""
 
 #: includes/OTP/class-placeholders.php:157

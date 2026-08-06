@@ -69,12 +69,21 @@ final class ProfileCompletionService {
 			$required[] = $this->item( 'email', __( 'Email', 'smart-login' ), true );
 		}
 
+		/*
+		 * The same words the card that fixes it is headed with. 17.4 found this
+		 * concept carrying three names — "Địa chỉ giao hàng" as a heading, "Địa
+		 * chỉ" here, "địa chỉ giao hàng mặc định" in the note — so a member was
+		 * told to complete one thing and shown another.
+		 */
+		$address_label   = __( 'Địa chỉ nhận hàng', 'smart-login' );
+		$address_missing = ! AddressFields::is_complete( $user_id ) || ! get_user_meta( $user_id, 'billing_address_1', true );
+
 		if ( Settings::is_on( 'address.required_in_profile' ) ) {
-			if ( ! AddressFields::is_complete( $user_id ) || ! get_user_meta( $user_id, 'billing_address_1', true ) ) {
-				$required[] = $this->item( 'address', __( 'Địa chỉ', 'smart-login' ), false );
+			if ( $address_missing ) {
+				$required[] = $this->item( 'address', $address_label, false );
 			}
-		} elseif ( Settings::is_on( 'address.enabled' ) && ( ! AddressFields::is_complete( $user_id ) || ! get_user_meta( $user_id, 'billing_address_1', true ) ) ) {
-			$recommended[] = $this->item( 'address', __( 'Địa chỉ', 'smart-login' ), false );
+		} elseif ( Settings::is_on( 'address.enabled' ) && $address_missing ) {
+			$recommended[] = $this->item( 'address', $address_label, false );
 		}
 
 		if ( Settings::is_on( 'profile.dob' ) && ! get_user_meta( $user_id, UserManager::META_DOB, true ) ) {

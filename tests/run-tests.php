@@ -1209,9 +1209,38 @@ if ( AddressRepository::is_dataset_installed() ) {
 	check( 'ward is stored as a name, so invoices read properly', $boundary_name, get_user_meta( 4001, 'billing_city', true ) );
 	check( 'the ward code is kept alongside it', $boundary_ward, get_user_meta( 4001, AddressFields::META_WARD_CODE, true ) );
 
-	// Shipping is left alone on purpose: a customer may deliver somewhere other
-	// than they are billed, and the profile card only ever edits the default.
-	check( 'the profile form never touches shipping', '', get_user_meta( 4001, 'shipping_city', true ) );
+	/*
+	 * Reversed in 17.4, and the reversal is the decision rather than a detail.
+	 *
+	 * 8.5 asserted the opposite here — "the profile form never touches shipping"
+	 * — on the reasoning that a customer may deliver somewhere other than they
+	 * are billed. That is true, and it is exactly the cost docs/account-card.md
+	 * states: a customer holding a deliberately different delivery address loses
+	 * it the next time they save this form.
+	 *
+	 * It is paid on purpose. The card is headed "Địa chỉ nhận hàng" and until
+	 * 17.4 it wrote `billing_*` only, so the heading named an address the form
+	 * did not touch — and the note under it told the reader that editing here
+	 * edited both, which was false for precisely the customers 8.5 was
+	 * protecting. One address, mirrored, with the heading true.
+	 *
+	 * Billing stays the only side that is *read*: `get_for_user()` and
+	 * `is_complete()` are unchanged, so the mirror cannot become a second source
+	 * of truth. That property has its own assertion in the account card suite.
+	 */
+	foreach ( array( 'state', 'city', 'address_1' ) as $mirrored ) {
+		check(
+			'the shipping book mirrors the billing one on ' . $mirrored,
+			get_user_meta( 4001, 'billing_' . $mirrored, true ),
+			get_user_meta( 4001, 'shipping_' . $mirrored, true )
+		);
+	}
+
+	check(
+		'and the ward code is mirrored with it',
+		get_user_meta( 4001, AddressFields::META_WARD_CODE, true ),
+		get_user_meta( 4001, AddressFields::META_SHIPPING_WARD_CODE, true )
+	);
 }
 
 // ---------------------------------------------------------------------
