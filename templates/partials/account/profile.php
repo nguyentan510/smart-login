@@ -14,18 +14,14 @@
  * @package SmartLogin
  */
 
-use SmartLogin\Frontend\AccountForm;
+use SmartLogin\Frontend\TemplateLoader;
 use SmartLogin\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
-$sl_headings = AccountForm::headings();
 ?>
 <section class="sl-card" id="sl-section-profile">
-	<h3 class="sl-card__title">
-		<span class="sl-card__icon" aria-hidden="true">&#9679;</span>
-		<?php echo esc_html( $sl_headings['profile'] ); ?>
-	</h3>
+	<?php TemplateLoader::output( 'partials/account/card-head', array( 'sl_section' => 'profile' ) ); ?>
 
 	<div class="sl-field">
 		<label class="sl-label" for="smartlogin_full_name">

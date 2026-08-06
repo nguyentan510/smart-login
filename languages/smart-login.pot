@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-06 13:18+0000\n"
+"POT-Creation-Date: 2026-08-06 13:22+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -57,7 +57,7 @@ msgid "%s không hợp lệ."
 msgstr ""
 
 #. translators: %s: Số điện thoại or Email.
-#: templates/partials/account/contact.php:156
+#: templates/partials/account/contact.php:151
 msgid "%s mới"
 msgstr ""
 
@@ -76,7 +76,7 @@ msgstr ""
 msgid "%s — tiêu đề"
 msgstr ""
 
-#: templates/partials/account/profile.php:34
+#: templates/partials/account/profile.php:30
 msgid "(bắt buộc)"
 msgstr ""
 
@@ -194,7 +194,7 @@ msgstr ""
 msgid "Bảng nhật ký"
 msgstr ""
 
-#: includes/Frontend/class-account-form.php:97
+#: includes/Frontend/class-account-form.php:128
 msgid "Bảo mật"
 msgstr ""
 
@@ -321,7 +321,7 @@ msgstr ""
 msgid "Chép mẫu để sửa"
 msgstr ""
 
-#: templates/partials/account/contact.php:140
+#: templates/partials/account/contact.php:135
 #: templates/partials/linked-identities.php:86
 msgid "Chính"
 msgstr ""
@@ -366,7 +366,7 @@ msgstr ""
 msgid "Chưa có dữ liệu hành chính."
 msgstr ""
 
-#: templates/partials/account/contact.php:75
+#: templates/partials/account/contact.php:73
 msgid "Chưa có email"
 msgstr ""
 
@@ -374,11 +374,11 @@ msgstr ""
 msgid "Chưa có mật khẩu, hoặc không nhớ?"
 msgstr ""
 
-#: templates/partials/account/password.php:141
+#: templates/partials/account/password.php:136
 msgid "Chưa có mật khẩu, hoặc không nhớ? Ở màn hình đăng nhập, chọn \"Chưa có mật khẩu, hoặc không nhớ?\" để nhận mã xác thực và đặt mật khẩu mới."
 msgstr ""
 
-#: templates/partials/account/contact.php:65
+#: templates/partials/account/contact.php:63
 msgid "Chưa có số điện thoại"
 msgstr ""
 
@@ -657,7 +657,7 @@ msgstr ""
 #: includes/Auth/class-profile-completion-service.php:128
 #: includes/Auth/class-register-handler.php:505
 #: includes/Identity/Channels/class-mail-channel.php:63
-#: templates/partials/account/contact.php:70
+#: templates/partials/account/contact.php:68
 #: templates/profile-summary.php:46
 msgid "Email"
 msgstr ""
@@ -774,7 +774,7 @@ msgstr ""
 
 #: includes/Auth/class-profile-completion-service.php:170
 #: includes/class-field-registry.php:746
-#: templates/partials/account/profile.php:66
+#: templates/partials/account/profile.php:62
 msgid "Giới tính"
 msgstr ""
 
@@ -862,7 +862,7 @@ msgstr ""
 msgid "Gửi lại"
 msgstr ""
 
-#: templates/partials/account/contact.php:193
+#: templates/partials/account/contact.php:188
 msgid "Gửi lại mã"
 msgstr ""
 
@@ -872,7 +872,7 @@ msgid "Gửi lại sau %ds"
 msgstr ""
 
 #: includes/class-field-registry.php:47
-#: templates/partials/account/contact.php:176
+#: templates/partials/account/contact.php:171
 msgid "Gửi mã"
 msgstr ""
 
@@ -978,7 +978,7 @@ msgstr ""
 msgid "Hoặc"
 msgstr ""
 
-#: templates/partials/account/password.php:57
+#: templates/partials/account/password.php:52
 msgid "Hãy xác thực email hoặc số điện thoại trước — đó là thông tin bạn sẽ dùng để đăng nhập. Sau đó bạn có thể đặt mật khẩu."
 msgstr ""
 
@@ -1006,7 +1006,7 @@ msgstr ""
 
 #: includes/Auth/class-profile-completion-service.php:118
 #: templates/form-signup.php:67
-#: templates/partials/account/profile.php:32
+#: templates/partials/account/profile.php:28
 #: templates/profile-summary.php:38
 msgid "Họ tên"
 msgstr ""
@@ -1085,7 +1085,7 @@ msgid "Khoảng thời gian của trần: giờ hoặc ngày"
 msgstr ""
 
 #: templates/onboarding.php:141
-#: templates/partials/account/profile.php:71
+#: templates/partials/account/profile.php:67
 msgid "Khác"
 msgstr ""
 
@@ -1361,7 +1361,7 @@ msgid "Mã 6 số, hiệu lực 5 phút, tối đa 5 mã mỗi số mỗi giờ.
 msgstr ""
 
 #: includes/OTP/class-placeholders.php:150
-#: templates/partials/account/contact.php:189
+#: templates/partials/account/contact.php:184
 msgid "Mã OTP"
 msgstr ""
 
@@ -1448,7 +1448,7 @@ msgstr ""
 msgid "Mật khẩu"
 msgstr ""
 
-#: templates/partials/account/password.php:84
+#: templates/partials/account/password.php:79
 msgid "Mật khẩu hiện tại"
 msgstr ""
 
@@ -1461,7 +1461,7 @@ msgid "Mật khẩu không đúng."
 msgstr ""
 
 #: templates/form-reset.php:54
-#: templates/partials/account/password.php:99
+#: templates/partials/account/password.php:94
 msgid "Mật khẩu mới"
 msgstr ""
 
@@ -1526,7 +1526,7 @@ msgid "Mức hoàn thiện hồ sơ"
 msgstr ""
 
 #: templates/onboarding.php:140
-#: templates/partials/account/profile.php:70
+#: templates/partials/account/profile.php:66
 msgid "Nam"
 msgstr ""
 
@@ -1537,7 +1537,7 @@ msgstr ""
 
 #: includes/Auth/class-profile-completion-service.php:160
 #: includes/class-field-registry.php:738
-#: templates/partials/account/profile.php:50
+#: templates/partials/account/profile.php:46
 msgid "Ngày sinh"
 msgstr ""
 
@@ -1572,7 +1572,7 @@ msgid "Nhập giá trị"
 msgstr ""
 
 #: templates/form-reset.php:63
-#: templates/partials/account/password.php:110
+#: templates/partials/account/password.php:105
 msgid "Nhập lại mật khẩu mới"
 msgstr ""
 
@@ -1647,7 +1647,7 @@ msgid "Nội dung email"
 msgstr ""
 
 #: templates/onboarding.php:139
-#: templates/partials/account/profile.php:69
+#: templates/partials/account/profile.php:65
 msgid "Nữ"
 msgstr ""
 
@@ -1947,7 +1947,7 @@ msgstr ""
 #: includes/Identity/Channels/class-phone-channel.php:48
 #: templates/form-otp.php:39
 #: templates/form-signup.php:38
-#: templates/partials/account/contact.php:60
+#: templates/partials/account/contact.php:58
 #: templates/profile-summary.php:42
 msgid "Số điện thoại"
 msgstr ""
@@ -2029,8 +2029,8 @@ msgstr ""
 msgid "Thái Lan (+66)"
 msgstr ""
 
-#: templates/partials/account/contact.php:66
-#: templates/partials/account/contact.php:76
+#: templates/partials/account/contact.php:64
+#: templates/partials/account/contact.php:74
 msgid "Thêm"
 msgstr ""
 
@@ -2043,7 +2043,7 @@ msgstr ""
 msgid "Thông tin bắt buộc còn thiếu"
 msgstr ""
 
-#: includes/Frontend/class-account-form.php:94
+#: includes/Frontend/class-account-form.php:116
 msgid "Thông tin cá nhân"
 msgstr ""
 
@@ -2184,7 +2184,7 @@ msgstr ""
 msgid "Tuỳ chỉnh — tự khai báo mọi thứ"
 msgstr ""
 
-#: templates/partials/account/password.php:54
+#: templates/partials/account/password.php:49
 msgid "Tài khoản của bạn đang đăng nhập bằng Google hoặc Zalo và chưa có email hoặc số điện thoại nào được xác thực."
 msgstr ""
 
@@ -2287,7 +2287,7 @@ msgstr ""
 msgid "Tổng quan"
 msgstr ""
 
-#: templates/partials/account/password.php:60
+#: templates/partials/account/password.php:55
 msgid "Tới mục Liên hệ"
 msgstr ""
 
@@ -2517,7 +2517,7 @@ msgstr ""
 
 #: templates/form-otp.php:40
 #: templates/form-signup.php:39
-#: templates/partials/account/contact.php:191
+#: templates/partials/account/contact.php:186
 msgid "Xác thực"
 msgstr ""
 
@@ -2599,16 +2599,16 @@ msgstr ""
 msgid "các điều khoản áp dụng"
 msgstr ""
 
-#: templates/partials/account/contact.php:95
+#: templates/partials/account/contact.php:90
 msgid "có hiệu lực ngay"
 msgstr ""
 
 #: templates/onboarding.php:126
-#: templates/partials/account/profile.php:57
+#: templates/partials/account/profile.php:53
 msgid "dd/mm/yyyy"
 msgstr ""
 
-#: templates/partials/account/contact.php:137
+#: templates/partials/account/contact.php:132
 msgid "dùng để đăng nhập"
 msgstr ""
 
@@ -2821,7 +2821,7 @@ msgstr ""
 msgid "Đăng nhập"
 msgstr ""
 
-#: includes/Frontend/class-account-form.php:95
+#: includes/Frontend/class-account-form.php:120
 msgid "Đăng nhập & liên hệ"
 msgstr ""
 
@@ -2915,7 +2915,7 @@ msgid "Để trống nếu không có trang điều khoản riêng."
 msgstr ""
 
 #. translators: %s: a relative age, e.g. "3 tháng trước".
-#: templates/partials/account/password.php:74
+#: templates/partials/account/password.php:69
 msgid "Để trống nếu không muốn thay đổi"
 msgstr ""
 
@@ -2959,11 +2959,11 @@ msgid "Địa chỉ email không hợp lệ."
 msgstr ""
 
 #: includes/Auth/class-profile-completion-service.php:149
-#: includes/Frontend/class-account-form.php:96
+#: includes/Frontend/class-account-form.php:124
 msgid "Địa chỉ nhận hàng"
 msgstr ""
 
-#: templates/partials/account/address.php:39
+#: templates/partials/account/address.php:35
 msgid "Địa chỉ này dùng cho cả đơn hàng và hoá đơn. Sửa ở đây là sửa luôn địa chỉ trong tab Địa chỉ."
 msgstr ""
 
@@ -2995,17 +2995,17 @@ msgid "Đồng bộ SĐT"
 msgstr ""
 
 #: templates/form-password.php:29
-#: templates/partials/account/contact.php:66
-#: templates/partials/account/contact.php:76
+#: templates/partials/account/contact.php:64
+#: templates/partials/account/contact.php:74
 msgid "Đổi"
 msgstr ""
 
 #. translators: %s: a relative age, e.g. "3 tháng trước".
-#: templates/partials/account/password.php:70
+#: templates/partials/account/password.php:65
 msgid "Đổi lần cuối %s"
 msgstr ""
 
-#: templates/partials/account/password.php:65
+#: templates/partials/account/password.php:60
 msgid "Đổi mật khẩu"
 msgstr ""
 

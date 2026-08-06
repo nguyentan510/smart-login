@@ -140,14 +140,17 @@ $suites = array(
 		// rules, one per sub-phase, so "17.4 is done" and "rule 4 is green" are
 		// the same sentence.
 		//
-		// `spec` for the same reason 16.0 needed its own suite: the account
-		// surface suite has been `required` since 8.3, and rules that are meant
-		// to fail cannot live in a suite that blocks. Promote it in the
-		// sub-phase that turns the last one green, not later — 15.4 found this
-		// kind being abused for four phases.
+		// Landed `spec` for the same reason 16.0 needed its own suite: the
+		// account surface suite has been `required` since 8.3, and rules that
+		// are meant to fail cannot live in a suite that blocks.
+		//
+		// `required` since 17.8, the sub-phase that turned the last two green,
+		// rather than left for later — 15.4 found this kind being abused for
+		// four phases, and a green suite that cannot block can only hide the
+		// next regression.
 		'name' => 'Account card',
 		'file' => 'identity/run-account-card-tests.php',
-		'kind' => 'spec',
+		'kind' => 'required',
 	),
 );
 

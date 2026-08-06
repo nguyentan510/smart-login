@@ -24,13 +24,11 @@
  * @package SmartLogin
  */
 
-use SmartLogin\Frontend\AccountForm;
 use SmartLogin\Frontend\TemplateLoader;
 use SmartLogin\Security\SecurityMeta;
 
 defined( 'ABSPATH' ) || exit;
 
-$sl_headings    = AccountForm::headings();
 $sl_has_contact = ! empty( $sl_has_contact );
 
 /*
@@ -44,10 +42,7 @@ $sl_password_age = isset( $sl_user ) && $sl_user instanceof WP_User
 	: '';
 ?>
 <section class="sl-card" id="sl-section-password">
-	<h3 class="sl-card__title">
-		<span class="sl-card__icon" aria-hidden="true">&#9679;</span>
-		<?php echo esc_html( $sl_headings['password'] ); ?>
-	</h3>
+	<?php TemplateLoader::output( 'partials/account/card-head', array( 'sl_section' => 'password' ) ); ?>
 
 	<?php if ( ! $sl_has_contact ) : ?>
 		<p class="sl-hint">

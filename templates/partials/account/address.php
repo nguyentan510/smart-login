@@ -24,17 +24,13 @@
  */
 
 use SmartLogin\Address\AddressFields;
-use SmartLogin\Frontend\AccountForm;
+use SmartLogin\Frontend\TemplateLoader;
 
 defined( 'ABSPATH' ) || exit;
 
-$sl_headings = AccountForm::headings();
 ?>
 <section class="sl-card" id="sl-section-address">
-	<h3 class="sl-card__title">
-		<span class="sl-card__icon" aria-hidden="true">&#9679;</span>
-		<?php echo esc_html( $sl_headings['address'] ); ?>
-	</h3>
+	<?php TemplateLoader::output( 'partials/account/card-head', array( 'sl_section' => 'address' ) ); ?>
 	<p class="sl-hint sl-card__note">
 		<?php esc_html_e( 'Địa chỉ này dùng cho cả đơn hàng và hoá đơn. Sửa ở đây là sửa luôn địa chỉ trong tab Địa chỉ.', 'smart-login' ); ?>
 	</p>

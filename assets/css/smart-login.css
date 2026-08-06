@@ -1071,10 +1071,17 @@
 	margin-top: var(--sl-space-4);
 }
 
+/* A slot for a mark, sized like the provider marks so the card has one glyph
+   size rather than two. It held a 10px text bullet until 17.8 — the same bullet
+   in all four cards, which is a slot that was never filled rather than a mark. */
 .sl-card__icon {
+	display: inline-flex;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
 	color: var(--sl-accent);
-	font-size: var(--sl-fs-xs);
-	line-height: 1;
 }
 
 /* Declared, not subtracted. This was `margin-top: -8px`, which was cancelling

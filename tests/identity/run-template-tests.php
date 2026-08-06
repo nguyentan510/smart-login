@@ -271,6 +271,9 @@ $fixtures = array(
 		'sl_required' => false,
 	),
 	'partials/account/password'      => array(),
+	// 17.8. The section id is the whole input: the label and the mark both come
+	// from AccountForm::sections_meta(), which is the point of the partial.
+	'partials/account/card-head'     => array( 'sl_section' => 'profile' ),
 	'partials/linked-identities'     => array(
 		'sl_identities' => array(
 			array(

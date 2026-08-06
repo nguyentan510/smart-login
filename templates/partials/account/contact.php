@@ -27,7 +27,6 @@
  * @package SmartLogin
  */
 
-use SmartLogin\Frontend\AccountForm;
 use SmartLogin\Frontend\TemplateLoader;
 use SmartLogin\Identity\Channels\MailChannel;
 use SmartLogin\Identity\Channels\PhoneChannel;
@@ -35,7 +34,6 @@ use SmartLogin\Identity\Phone;
 
 defined( 'ABSPATH' ) || exit;
 
-$sl_headings   = AccountForm::headings();
 $sl_pending    = isset( $sl_pending ) && is_array( $sl_pending ) ? $sl_pending : array();
 $sl_otp_length = isset( $sl_otp_length ) ? (int) $sl_otp_length : 6;
 
@@ -80,10 +78,7 @@ $sl_rows = array(
 ?>
 <section class="sl-card" id="sl-section-contact">
 	<div class="sl-card__head">
-		<h3 class="sl-card__title">
-			<span class="sl-card__icon" aria-hidden="true">&#9679;</span>
-			<?php echo esc_html( $sl_headings['contact'] ); ?>
-		</h3>
+		<?php TemplateLoader::output( 'partials/account/card-head', array( 'sl_section' => 'contact' ) ); ?>
 		<?php
 		/*
 		 * States the effect, not the mechanism. "lưu riêng, không qua nút Cập
