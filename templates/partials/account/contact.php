@@ -29,6 +29,8 @@
 
 use SmartLogin\Frontend\AccountForm;
 use SmartLogin\Frontend\TemplateLoader;
+use SmartLogin\Identity\Channels\MailChannel;
+use SmartLogin\Identity\Channels\PhoneChannel;
 use SmartLogin\Identity\Phone;
 
 defined( 'ABSPATH' ) || exit;
@@ -36,6 +38,22 @@ defined( 'ABSPATH' ) || exit;
 $sl_headings   = AccountForm::headings();
 $sl_pending    = isset( $sl_pending ) && is_array( $sl_pending ) ? $sl_pending : array();
 $sl_otp_length = isset( $sl_otp_length ) ? (int) $sl_otp_length : 6;
+
+/*
+ * The identity record behind each contact channel, keyed by channel id.
+ *
+ * This is what the second list used to say and says no longer — that the value
+ * is a way in, and which one is primary. It belongs beside the value rather than
+ * in a list underneath it. Already in scope: `sl_providers` is handed to this
+ * partial for the block at the foot of the card, so no new query is added.
+ */
+$sl_records = array();
+
+foreach ( ( is_array( $sl_providers ?? null ) ? ( $sl_providers['sl_identities'] ?? array() ) : array() ) as $sl_record ) {
+	if ( is_array( $sl_record ) && ! empty( $sl_record['channel'] ) ) {
+		$sl_records[ (string) $sl_record['channel'] ] = $sl_record;
+	}
+}
 
 $sl_rows = array(
 	'phone' => array(
@@ -46,6 +64,7 @@ $sl_rows = array(
 		'value'    => '' !== $sl_phone ? Phone::to_local( $sl_phone ) : '',
 		'empty'    => __( 'Chưa có số điện thoại', 'smart-login' ),
 		'action'   => '' !== $sl_phone ? __( 'Đổi', 'smart-login' ) : __( 'Thêm', 'smart-login' ),
+		'identity' => $sl_records[ PhoneChannel::ID ] ?? null,
 	),
 	'email' => array(
 		'label'    => __( 'Email', 'smart-login' ),
@@ -55,6 +74,7 @@ $sl_rows = array(
 		'value'    => $sl_synthetic ? '' : (string) $sl_user->user_email,
 		'empty'    => __( 'Chưa có email', 'smart-login' ),
 		'action'   => $sl_synthetic ? __( 'Thêm', 'smart-login' ) : __( 'Đổi', 'smart-login' ),
+		'identity' => $sl_records[ MailChannel::ID ] ?? null,
 	),
 );
 ?>
@@ -87,10 +107,29 @@ $sl_rows = array(
 					<?php endif; ?>
 				</span>
 
-				<?php if ( '' !== $sl_row['value'] ) : ?>
-					<span class="sl-badge sl-badge--verified" data-sl-contact-verified>
-						<?php esc_html_e( 'đã xác thực', 'smart-login' ); ?>
-					</span>
+				<?php
+				/*
+				 * The badge is rendered whether or not it applies, and hidden when
+				 * it does not. smart-login.js unhides it after a successful
+				 * verification, and that line was unreachable for the one case it
+				 * was written for: an account adding its first phone had no badge
+				 * in the DOM to unhide.
+				 *
+				 * The condition is the directory's answer, not the value's. It used
+				 * to read `'' !== $sl_row['value']`, which claims a phone is
+				 * verified on the strength of a user-meta key — the over-claim
+				 * AccountForm::has_contact_identity() is documented at length for
+				 * avoiding.
+				 */
+				?>
+				<span
+					class="sl-badge sl-badge--verified"
+					data-sl-contact-verified
+					<?php echo null === $sl_row['identity'] ? 'hidden' : ''; ?>
+				><?php esc_html_e( 'dùng để đăng nhập', 'smart-login' ); ?></span>
+
+				<?php if ( ! empty( $sl_row['identity']['is_primary'] ) ) : ?>
+					<span class="sl-badge sl-badge--primary"><?php esc_html_e( 'Chính', 'smart-login' ); ?></span>
 				<?php endif; ?>
 
 				<button

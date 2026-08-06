@@ -925,6 +925,20 @@
 	color: #0f6b3c;
 }
 
+/* Which of your ways in the account treats as primary. Moved onto the contact
+   row in 16.1, from the second list that used to carry it. */
+.sl-badge--primary {
+	background: #eaf1fe;
+	color: #1c4bb8;
+}
+
+/* `.sl-badge` sets a display, and an author display beats the user agent's
+   `[hidden] { display: none }`. Without this the badge JS unhides is visible
+   from the start, which is the opposite of what the attribute is there for. */
+.sl-badge[hidden] {
+	display: none;
+}
+
 /* Says out loud that this card does not wait for the submit button. A control
    that takes effect immediately inside a form you must still submit is the
    single most confusing thing about the screen this replaces. */

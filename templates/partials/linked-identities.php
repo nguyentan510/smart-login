@@ -1,12 +1,22 @@
 <?php
 /**
- * The identities attached to the current account, with a way to remove one.
+ * The external accounts attached to this one, with a way to detach one.
  *
  * Override at yourtheme/smart-login/partials/linked-identities.php
  *
  * Before this existed the UI offered "link" unconditionally and never showed what
  * was already linked, so nobody could tell an account with two providers from one
  * with none.
+ *
+ * **Federated identities only.** `IdentityLinkService::linked()` returns every
+ * identity record, phone and email included, and this partial rendered all of
+ * them — so an account's own address printed once whole in the contact row above
+ * and once masked here, and a member read two addresses. The flag that separates
+ * the two kinds has been in the payload since Phase 6 and nothing read it.
+ *
+ * The filter is presentational, which is why it lives here and not in the
+ * service: `can_unlink()` counts every identity, and the REST route serves
+ * callers that are not this card. See docs/sign-in-card.md, decision 2.
  *
  * @var array<int,array<string,mixed>> $sl_identities Output of IdentityLinkService::linked()
  * @var bool                           $sl_can_unlink
@@ -19,12 +29,31 @@ use SmartLogin\Frontend\FormController;
 
 defined( 'ABSPATH' ) || exit;
 
+$sl_identities = array_values(
+	array_filter(
+		isset( $sl_identities ) && is_array( $sl_identities ) ? $sl_identities : array(),
+		static function ( $sl_candidate ): bool {
+			return is_array( $sl_candidate ) && ! empty( $sl_candidate['federated'] );
+		}
+	)
+);
+
+// After the filter, not before: "nothing federated" and "nothing at all" are
+// different states, and an account whose only identity is its phone must render
+// no heading rather than an empty one.
 if ( empty( $sl_identities ) ) {
 	return;
 }
 ?>
 <div class="sl-identities">
-	<h3 class="sl-subtitle"><?php esc_html_e( 'Cách đăng nhập của bạn', 'smart-login' ); ?></h3>
+	<?php
+	/*
+	 * Not "Cách đăng nhập của bạn" any more. With the contact rows above owning
+	 * phone and email, a heading claiming to list every way in would sit over a
+	 * list that holds none of them.
+	 */
+	?>
+	<h3 class="sl-subtitle"><?php esc_html_e( 'Tài khoản đã liên kết', 'smart-login' ); ?></h3>
 
 	<ul class="sl-identity-list">
 		<?php foreach ( $sl_identities as $sl_identity ) : ?>

@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-05 15:49+0000\n"
+"POT-Creation-Date: 2026-08-06 11:55+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -39,7 +39,7 @@ msgid "%s không hợp lệ."
 msgstr ""
 
 #. translators: %s: Số điện thoại or Email.
-#: templates/partials/account/contact.php:109
+#: templates/partials/account/contact.php:148
 msgid "%s mới"
 msgstr ""
 
@@ -232,7 +232,7 @@ msgstr ""
 msgid "Bỏ bắt buộc nhập email ở trang thanh toán"
 msgstr ""
 
-#: templates/partials/linked-identities.php:45
+#: templates/partials/linked-identities.php:74
 msgid "Bỏ liên kết"
 msgstr ""
 
@@ -303,7 +303,8 @@ msgstr ""
 msgid "Chép mẫu để sửa"
 msgstr ""
 
-#: templates/partials/linked-identities.php:36
+#: templates/partials/account/contact.php:132
+#: templates/partials/linked-identities.php:65
 msgid "Chính"
 msgstr ""
 
@@ -347,7 +348,7 @@ msgstr ""
 msgid "Chưa có dữ liệu hành chính."
 msgstr ""
 
-#: templates/partials/account/contact.php:56
+#: templates/partials/account/contact.php:75
 msgid "Chưa có email"
 msgstr ""
 
@@ -359,7 +360,7 @@ msgstr ""
 msgid "Chưa có mật khẩu, hoặc không nhớ? Ở màn hình đăng nhập, chọn \"Chưa có mật khẩu, hoặc không nhớ?\" để nhận mã xác thực và đặt mật khẩu mới."
 msgstr ""
 
-#: templates/partials/account/contact.php:47
+#: templates/partials/account/contact.php:65
 msgid "Chưa có số điện thoại"
 msgstr ""
 
@@ -524,7 +525,6 @@ msgid "Các thẻ dùng được trong mẫu này"
 msgstr ""
 
 #: includes/Frontend/class-account-form.php:91
-#: templates/partials/linked-identities.php:27
 msgid "Cách đăng nhập của bạn"
 msgstr ""
 
@@ -643,7 +643,7 @@ msgstr ""
 #: includes/Auth/class-profile-completion-service.php:69
 #: includes/Auth/class-register-handler.php:505
 #: includes/Identity/Channels/class-mail-channel.php:63
-#: templates/partials/account/contact.php:51
+#: templates/partials/account/contact.php:70
 #: templates/profile-summary.php:46
 msgid "Email"
 msgstr ""
@@ -848,7 +848,7 @@ msgstr ""
 msgid "Gửi lại"
 msgstr ""
 
-#: templates/partials/account/contact.php:137
+#: templates/partials/account/contact.php:176
 msgid "Gửi lại mã"
 msgstr ""
 
@@ -858,7 +858,7 @@ msgid "Gửi lại sau %ds"
 msgstr ""
 
 #: includes/class-field-registry.php:47
-#: templates/partials/account/contact.php:120
+#: templates/partials/account/contact.php:159
 msgid "Gửi mã"
 msgstr ""
 
@@ -1120,7 +1120,7 @@ msgstr ""
 msgid "Không thể bỏ liên kết. Vui lòng thử lại."
 msgstr ""
 
-#: templates/partials/linked-identities.php:41
+#: templates/partials/linked-identities.php:70
 msgid "Không thể bỏ — đây là cách đăng nhập duy nhất"
 msgstr ""
 
@@ -1343,7 +1343,7 @@ msgid "Mã 6 số, hiệu lực 5 phút, tối đa 5 mã mỗi số mỗi giờ.
 msgstr ""
 
 #: includes/OTP/class-placeholders.php:150
-#: templates/partials/account/contact.php:133
+#: templates/partials/account/contact.php:172
 msgid "Mã OTP"
 msgstr ""
 
@@ -1558,7 +1558,7 @@ msgstr ""
 msgid "Nhập mật khẩu"
 msgstr ""
 
-#: templates/partials/linked-identities.php:56
+#: templates/partials/linked-identities.php:85
 msgid "Nhập mật khẩu để xác nhận"
 msgstr ""
 
@@ -1925,7 +1925,7 @@ msgstr ""
 #: includes/Identity/Channels/class-phone-channel.php:48
 #: templates/form-otp.php:39
 #: templates/form-signup.php:38
-#: templates/partials/account/contact.php:42
+#: templates/partials/account/contact.php:60
 #: templates/profile-summary.php:42
 msgid "Số điện thoại"
 msgstr ""
@@ -2007,8 +2007,8 @@ msgstr ""
 msgid "Thái Lan (+66)"
 msgstr ""
 
-#: templates/partials/account/contact.php:48
-#: templates/partials/account/contact.php:57
+#: templates/partials/account/contact.php:66
+#: templates/partials/account/contact.php:76
 msgid "Thêm"
 msgstr ""
 
@@ -2182,6 +2182,10 @@ msgstr ""
 #: includes/Auth/class-login-handler.php:98
 #: includes/Auth/class-login-handler.php:114
 msgid "Tài khoản tạm thời bị khoá do đăng nhập sai nhiều lần. Vui lòng thử lại sau %d phút."
+msgstr ""
+
+#: templates/partials/linked-identities.php:56
+msgid "Tài khoản đã liên kết"
 msgstr ""
 
 #: includes/Auth/class-account-provisioner.php:245
@@ -2493,13 +2497,13 @@ msgstr ""
 msgid "Xác nhận"
 msgstr ""
 
-#: templates/partials/linked-identities.php:68
+#: templates/partials/linked-identities.php:97
 msgid "Xác nhận bỏ liên kết"
 msgstr ""
 
 #: templates/form-otp.php:40
 #: templates/form-signup.php:39
-#: templates/partials/account/contact.php:135
+#: templates/partials/account/contact.php:174
 msgid "Xác thực"
 msgstr ""
 
@@ -2582,6 +2586,10 @@ msgstr ""
 msgid "dd/mm/yyyy"
 msgstr ""
 
+#: templates/partials/account/contact.php:129
+msgid "dùng để đăng nhập"
+msgstr ""
+
 #: includes/Admin/Screens/class-settings-screen.php:221
 #: templates/partials/account/status.php:66
 #: templates/partials/account/status.php:73
@@ -2602,7 +2610,7 @@ msgstr ""
 msgid "không giới hạn"
 msgstr ""
 
-#: templates/partials/account/contact.php:67
+#: templates/partials/account/contact.php:87
 msgid "lưu riêng, không qua nút Cập nhật"
 msgstr ""
 
@@ -2963,8 +2971,8 @@ msgid "Đồng bộ SĐT"
 msgstr ""
 
 #: templates/form-password.php:29
-#: templates/partials/account/contact.php:48
-#: templates/partials/account/contact.php:57
+#: templates/partials/account/contact.php:66
+#: templates/partials/account/contact.php:76
 msgid "Đổi"
 msgstr ""
 
@@ -2974,10 +2982,6 @@ msgstr ""
 
 #: includes/class-field-registry.php:241
 msgid "Độ dài mật khẩu tối thiểu"
-msgstr ""
-
-#: templates/partials/account/contact.php:92
-msgid "đã xác thực"
 msgstr ""
 
 #: includes/class-field-registry.php:770

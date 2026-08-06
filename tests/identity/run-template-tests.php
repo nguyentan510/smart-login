@@ -210,7 +210,23 @@ $fixtures = array(
 		'sl_pending'    => array( 'type' => 'email', 'masked' => 'ng•••@example.test' ),
 		'sl_otp_length' => 6,
 		'sl_providers'  => array(
-			'sl_identities'     => array(),
+			// Held an empty list from 8.2 until 16.0, so the smoke test never
+			// executed the branch where a contact channel also owns an identity
+			// row — the shape 14.4 and 14.5 gave nearly every account, and the one
+			// that printed the address twice for four phases.
+			'sl_identities'     => array(
+				array(
+					'channel'     => 'email',
+					'subject'     => 'user@example.test',
+					'masked'      => 'us•••@example.test',
+					'label'       => 'Email',
+					'federated'   => false,
+					'is_primary'  => true,
+					'linked_by'   => 'otp',
+					'verified_at' => '2026-07-30 08:00:00',
+					'removable'   => true,
+				),
+			),
 			'sl_can_unlink'     => false,
 			'sl_redirect'       => 'https://example.test/my-account/',
 			'sl_link_providers' => array(),
@@ -265,6 +281,19 @@ $fixtures = array(
 				'federated'   => true,
 				'is_primary'  => false,
 				'linked_by'   => 'oauth',
+				'verified_at' => '2026-07-30 08:00:00',
+				'removable'   => true,
+			),
+			// The row this partial must now drop. Rendering only federated
+			// fixtures is how it went unnoticed that it rendered everything.
+			array(
+				'channel'     => 'phone',
+				'subject'     => '84969789475',
+				'masked'      => '0969•••475',
+				'label'       => 'Số điện thoại',
+				'federated'   => false,
+				'is_primary'  => true,
+				'linked_by'   => 'otp',
 				'verified_at' => '2026-07-30 08:00:00',
 				'removable'   => true,
 			),
