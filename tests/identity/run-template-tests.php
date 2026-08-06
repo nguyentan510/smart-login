@@ -277,6 +277,7 @@ $fixtures = array(
 				'channel'     => 'google',
 				'subject'     => 'sub-1',
 				'masked'      => 'sub-••••••',
+				'display'     => 'Cai Hoa',
 				'label'       => 'Google',
 				'federated'   => true,
 				'is_primary'  => false,

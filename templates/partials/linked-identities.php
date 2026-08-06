@@ -59,7 +59,17 @@ if ( empty( $sl_identities ) ) {
 		<?php foreach ( $sl_identities as $sl_identity ) : ?>
 			<li class="sl-identity-item sl-identity-item--<?php echo esc_attr( $sl_identity['channel'] ); ?>">
 				<span class="sl-identity-label"><?php echo esc_html( $sl_identity['label'] ); ?></span>
-				<span class="sl-identity-value"><?php echo esc_html( $sl_identity['masked'] ); ?></span>
+				<?php
+				/*
+				 * `display` names the account; `masked` is the provider's `sub`
+				 * claim, which identifies nobody to the person reading it. The
+				 * masked value stays in the payload for the REST route and for
+				 * integrators — it is only this row that stops rendering it.
+				 */
+				?>
+				<span class="sl-identity-value">
+					<?php echo esc_html( '' !== (string) ( $sl_identity['display'] ?? '' ) ? $sl_identity['display'] : $sl_identity['masked'] ); ?>
+				</span>
 
 				<?php if ( ! empty( $sl_identity['is_primary'] ) ) : ?>
 					<span class="sl-identity-badge"><?php esc_html_e( 'Chính', 'smart-login' ); ?></span>

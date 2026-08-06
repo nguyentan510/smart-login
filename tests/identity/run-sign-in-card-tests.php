@@ -150,6 +150,70 @@ sl_assert(
 );
 
 // ---------------------------------------------------------------------
+sl_section( 'Rule 6 — a provider row names the account, not the number (16.2)' );
+
+/*
+ * Through linked() and the stub $wpdb rather than around them: Phase 6 added
+ * that stub precisely so a repository test exercises the real path instead of a
+ * mock of it, and the resolution order is the thing under test.
+ *
+ * Each level gets its own record. 11.1 shipped a fallback chain as a no-op with
+ * its tests passing, because one assertion that "something resolves" was taken
+ * for three that resolve differently.
+ */
+$sl_row = static function ( string $subject, ?array $meta ): array {
+	return array(
+		'id'          => 1,
+		'user_id'     => 7,
+		'channel'     => 'google',
+		'subject'     => $subject,
+		'is_primary'  => 0,
+		'verified_at' => '2026-07-30 08:00:00',
+		'linked_by'   => 'oauth',
+		'meta_json'   => null === $meta ? null : wp_json_encode( $meta ),
+		'created_at'  => '2026-07-30 08:00:00',
+	);
+};
+
+$GLOBALS['sl_wpdb_results'] = array(
+	$sl_row( '117100000000000000001', array( 'name' => 'Cai Hoa', 'email' => 'hoa@example.test' ) ),
+	$sl_row( '117100000000000000002', array( 'email' => 'hoa@example.test' ) ),
+	$sl_row( '117100000000000000003', null ),
+);
+
+$sl_linked = ( new \SmartLogin\Auth\IdentityLinkService() )->linked( 7 );
+
+sl_check( 'a stored display name wins', 'Cai Hoa', $sl_linked[0]['display'] ?? null );
+
+$sl_by_email = (string) ( $sl_linked[1]['display'] ?? '' );
+
+sl_assert(
+	'no name falls to the provider address, masked',
+	false !== strpos( $sl_by_email, '@example.test' ) && false === strpos( $sl_by_email, 'hoa@' ),
+	'A provider address is a real identifier, so the screen-sharing rule that applies to subjects applies to it. Got: ' . $sl_by_email
+);
+
+sl_assert(
+	'no meta at all falls to the linked date',
+	false !== strpos( (string) ( $sl_linked[2]['display'] ?? '' ), '30/07/2026' ),
+	'Every identity linked before the claims were stored has empty meta, and a row with no value reads as a rendering fault. Got: ' . ( $sl_linked[2]['display'] ?? '' )
+);
+
+$GLOBALS['sl_wpdb_results'] = array();
+
+// Asserted on the markup, not on the payload: `masked` stays in the array for
+// the REST route, and it is the row that must stop rendering it.
+$sl_sub_row = $sl_list(
+	array( $sl_identity( 'google', '117100000000000000000', '1171••••••', 'Google', true ) + array( 'display' => 'Cai Hoa' ) )
+);
+
+sl_assert(
+	'the rendered row carries no masked subject',
+	false === strpos( $sl_sub_row, '1171••••••' ) && false !== strpos( $sl_sub_row, 'Cai Hoa' ),
+	'`1171••••••` is the OIDC subject masked. Its owner has never seen that number here or at Google.'
+);
+
+// ---------------------------------------------------------------------
 sl_section( 'Rule 3 — every input the plugin renders is styled by the plugin (16.3)' );
 
 $sl_css = sl_source( 'assets/css/smart-login.css' );

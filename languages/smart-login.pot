@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-06 11:55+0000\n"
+"POT-Creation-Date: 2026-08-06 11:58+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -232,7 +232,7 @@ msgstr ""
 msgid "Bỏ bắt buộc nhập email ở trang thanh toán"
 msgstr ""
 
-#: templates/partials/linked-identities.php:74
+#: templates/partials/linked-identities.php:84
 msgid "Bỏ liên kết"
 msgstr ""
 
@@ -304,7 +304,7 @@ msgid "Chép mẫu để sửa"
 msgstr ""
 
 #: templates/partials/account/contact.php:132
-#: templates/partials/linked-identities.php:65
+#: templates/partials/linked-identities.php:75
 msgid "Chính"
 msgstr ""
 
@@ -1116,11 +1116,11 @@ msgstr ""
 msgid "Không kết nối được tới máy chủ."
 msgstr ""
 
-#: includes/Auth/class-identity-link-service.php:148
+#: includes/Auth/class-identity-link-service.php:209
 msgid "Không thể bỏ liên kết. Vui lòng thử lại."
 msgstr ""
 
-#: templates/partials/linked-identities.php:70
+#: templates/partials/linked-identities.php:80
 msgid "Không thể bỏ — đây là cách đăng nhập duy nhất"
 msgstr ""
 
@@ -1171,7 +1171,7 @@ msgstr ""
 
 #: includes/Auth/class-account-provisioner.php:98
 #: includes/Auth/class-contact-verification-service.php:50
-#: includes/Auth/class-identity-link-service.php:113
+#: includes/Auth/class-identity-link-service.php:174
 #: includes/Auth/class-password-reset-handler.php:103
 #: includes/Auth/class-password-reset-handler.php:141
 #: includes/Auth/class-session-issuer.php:28
@@ -1286,7 +1286,7 @@ msgstr ""
 msgid "Liên kết %s"
 msgstr ""
 
-#: includes/Auth/class-identity-link-service.php:130
+#: includes/Auth/class-identity-link-service.php:191
 msgid "Liên kết này không thuộc về tài khoản của bạn."
 msgstr ""
 
@@ -1438,7 +1438,7 @@ msgstr ""
 msgid "Mật khẩu hiện tại không đúng."
 msgstr ""
 
-#: includes/Auth/class-identity-link-service.php:194
+#: includes/Auth/class-identity-link-service.php:255
 msgid "Mật khẩu không đúng."
 msgstr ""
 
@@ -1558,7 +1558,7 @@ msgstr ""
 msgid "Nhập mật khẩu"
 msgstr ""
 
-#: templates/partials/linked-identities.php:85
+#: templates/partials/linked-identities.php:95
 msgid "Nhập mật khẩu để xác nhận"
 msgstr ""
 
@@ -2058,7 +2058,7 @@ msgstr ""
 msgid "Thông tin xác thực"
 msgstr ""
 
-#: includes/Auth/class-identity-link-service.php:119
+#: includes/Auth/class-identity-link-service.php:180
 #: includes/Auth/class-register-handler.php:182
 #: includes/Auth/class-register-handler.php:222
 msgid "Thông tin định danh không hợp lệ."
@@ -2333,7 +2333,7 @@ msgstr ""
 msgid "Vui lòng nhập mã xác thực."
 msgstr ""
 
-#: includes/Auth/class-identity-link-service.php:187
+#: includes/Auth/class-identity-link-service.php:248
 msgid "Vui lòng nhập mật khẩu để xác nhận."
 msgstr ""
 
@@ -2497,7 +2497,7 @@ msgstr ""
 msgid "Xác nhận"
 msgstr ""
 
-#: templates/partials/linked-identities.php:97
+#: templates/partials/linked-identities.php:107
 msgid "Xác nhận bỏ liên kết"
 msgstr ""
 
@@ -2713,7 +2713,7 @@ msgstr ""
 msgid "Điền sẵn <code>billing_phone</code> từ số điện thoại đã xác thực khi ô đó còn trống"
 msgstr ""
 
-#: includes/Auth/class-identity-link-service.php:137
+#: includes/Auth/class-identity-link-service.php:198
 msgid "Đây là cách đăng nhập duy nhất của bạn. Hãy thêm số điện thoại, email hoặc một liên kết khác trước khi bỏ liên kết này."
 msgstr ""
 
@@ -2755,6 +2755,11 @@ msgstr ""
 
 #: includes/Frontend/class-form-controller.php:724
 msgid "Đã gửi lại mã xác thực."
+msgstr ""
+
+#. translators: %s: date the provider account was linked, d/m/Y.
+#: includes/Auth/class-identity-link-service.php:134
+msgid "Đã liên kết %s"
 msgstr ""
 
 #: includes/Frontend/class-form-controller.php:181

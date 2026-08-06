@@ -25,10 +25,12 @@
 
 namespace SmartLogin\Auth;
 
+use SmartLogin\Identity\Channels\MailChannel;
 use SmartLogin\Identity\Claim;
 use SmartLogin\Identity\ChannelRegistry;
 use SmartLogin\Identity\IdentityDirectory;
 use SmartLogin\Identity\IdentityHistory;
+use SmartLogin\Identity\IdentityRecord;
 use SmartLogin\Security\AuditLog;
 use SmartLogin\Security\RateLimiter;
 use WP_Error;
@@ -63,6 +65,7 @@ final class IdentityLinkService {
 				'channel'     => $record->channel(),
 				'subject'     => $record->subject(),
 				'masked'      => $channel ? $channel->mask( $record->subject() ) : '•••',
+				'display'     => $this->display_for( $record ),
 				'label'       => $channel ? $channel->label() : $record->channel(),
 				'federated'   => $channel ? ! $channel->is_self_asserted() : false,
 				'is_primary'  => $record->is_primary(),
@@ -73,6 +76,64 @@ final class IdentityLinkService {
 		}
 
 		return $out;
+	}
+
+	/**
+	 * Something a person can recognise, in place of the subject.
+	 *
+	 * A federated subject is the provider's `sub` claim, and its owner has never
+	 * seen that number — not here and not at the provider. Masking it, which is
+	 * what this screen used to render, produces `1171••••••`: an identifier for
+	 * nobody, and two indistinguishable rows on an account with two links.
+	 *
+	 * Three levels, most identifying first, and the third always answers so a
+	 * row can never come out blank:
+	 *
+	 *   1. the display name the provider sent
+	 *   2. the provider address, masked — this one is a real identifier, so the
+	 *      screen-sharing rule that applies to subjects applies to it
+	 *   3. the date the link was made
+	 *
+	 * Resolved here rather than in the template because `meta_json` holding the
+	 * provider's claims is a storage fact, and profile-summary renders the same
+	 * partial. A second reader would be a second place to know it.
+	 *
+	 * **This is a link-time snapshot and it can go stale**, which is accepted
+	 * deliberately: the row's subject is "which account you attached", and that
+	 * is exactly the fact recorded at link time. See docs/sign-in-card.md,
+	 * decision 5.
+	 */
+	private function display_for( IdentityRecord $record ): string {
+		$meta = $record->meta();
+		$name = trim( (string) ( $meta['name'] ?? '' ) );
+
+		if ( '' !== $name ) {
+			return $name;
+		}
+
+		$email = trim( (string) ( $meta['email'] ?? '' ) );
+
+		if ( '' !== $email ) {
+			$mail = $this->channels->get( MailChannel::ID );
+
+			return $mail ? $mail->mask( $email ) : $email;
+		}
+
+		$linked = strtotime( $record->verified_at() );
+
+		if ( ! $linked ) {
+			// Every record carries a verified_at — the column is NOT NULL — so
+			// this is unreachable rather than merely unlikely. It returns the
+			// label's own fallback instead of an empty cell, because a row with
+			// no value at all reads as a rendering fault.
+			return '—';
+		}
+
+		return sprintf(
+			/* translators: %s: date the provider account was linked, d/m/Y. */
+			__( 'Đã liên kết %s', 'smart-login' ),
+			gmdate( 'd/m/Y', $linked )
+		);
 	}
 
 	/**
