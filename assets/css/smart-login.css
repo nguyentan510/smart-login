@@ -378,6 +378,35 @@
 	outline-color: rgba(180, 35, 24, 0.28);
 }
 
+/*
+ * Text for a screen reader and for nothing else.
+ *
+ * `.screen-reader-text` is a *theme* convention. WordPress declares it in
+ * wp-admin and in the block library; nothing guarantees it on the front end of
+ * an arbitrary theme. Three templates have used it since 8.4 — the required
+ * marker's "(bắt buộc)", the step indicator's position, and since 17.3 the
+ * provider name on "Liên kết" — and on a theme that does not carry the class
+ * the profile card reads "Họ tên * (bắt buộc)" in the label itself.
+ *
+ * Found by looking at the rendered page, not by any suite. Scoped under
+ * `.smart-login` so a theme that *does* declare it keeps its own.
+ *
+ * clip-path rather than `display: none` or `visibility: hidden`, both of which
+ * take the text out of the accessibility tree — which is the opposite of the
+ * point.
+ */
+.smart-login .screen-reader-text {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	border: 0;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
 /* Honeypot: off-screen but not display:none, which some bots skip. */
 .smart-login .smart-login-hp {
 	position: absolute !important;
@@ -461,6 +490,25 @@
 .sl-btn--block {
 	display: block;
 	width: 100%;
+}
+
+/*
+ * Width is a property of the button, not of what it was put inside.
+ *
+ * Three rules used to take `width: 100%` back from an ancestor selector — the
+ * save bar, the unlink panel and the contact row — so identical markup was a
+ * block in one place and inline in another with nothing in the markup saying
+ * which.
+ *
+ * The base keeps `width: 100%` deliberately: 20 of the 27 `.sl-btn` in
+ * `templates/` want it, and inverting would mean editing 18 call sites across
+ * the sign-in screens Phase 16 has just settled, to shorten the minority case.
+ * What moves is where the exception is written down.
+ */
+.sl-btn--inline {
+	display: inline-block;
+	width: auto;
+	margin-bottom: 0;
 }
 
 /* The recovery route on the password screen. Same door as Quên mật khẩu was, one
@@ -626,10 +674,10 @@
 	align-items: center;
 }
 
+/* The button carries .sl-btn--inline; this only says how narrow it may get
+   before the label wraps, which is a fact about this two-column row. */
 .sl-contact-row .sl-btn {
-	width: auto;
 	min-width: 112px;
-	margin: 0;
 }
 
 .sl-contact-confirm {
@@ -1028,6 +1076,68 @@
 	color: #1c4bb8;
 }
 
+/* ---------- Row actions ----------
+   Đổi, Bỏ liên kết and Liên kết are one class of action: a small control that
+   acts on the row it sits in. Until 17.3 they were three — a link-styled
+   button, a <details> summary and a full-width outline anchor — at three
+   weights, in one card.
+
+   The *element* still varies, and has to: the unlink control is a <summary>
+   because it opens a password form and has to work with JavaScript off. What
+   stops varying is what it looks like and how much space it takes. */
+
+.sl-action {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--sl-space-1);
+	min-height: 32px;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--sl-accent);
+	font: inherit;
+	font-size: var(--sl-fs-sm);
+	line-height: 1.4;
+	text-align: left;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.sl-action:hover {
+	text-decoration: underline;
+}
+
+.sl-action:disabled {
+	color: var(--sl-muted);
+	cursor: default;
+	text-decoration: none;
+}
+
+/* A <summary> draws a disclosure triangle from the UA stylesheet. This control
+   reads as an action and opens a panel; the marker is the browser's idea of
+   what that means, at a size and position this card does not choose. */
+.sl-action--summary {
+	list-style: none;
+}
+
+.sl-action--summary::-webkit-details-marker {
+	display: none;
+}
+
+/* The rarest and most destructive control in the card, and it should not be the
+   most prominent thing in its row. Same argument 16.3 made about the size of
+   the confirmation button, applied to the control that opens it: quiet until
+   somebody goes looking, and unmistakable once they do. */
+.sl-action--danger {
+	color: var(--sl-muted);
+}
+
+.sl-action--danger:hover,
+.sl-action--danger:focus-visible {
+	color: var(--sl-accent);
+}
+
 /* ---------- Value rows ---------- */
 
 /* The row is only a line of content: label, value, badge, action. Separation and
@@ -1118,11 +1228,10 @@
 
 /* The rarest and most destructive control in the card, and until 16.3 the
    largest thing on the page — a full-width block heavier than the form's own
-   "Cập nhật". It confirms one row; it is sized like it. */
+   "Cập nhật". It confirms one row; it is sized like it. The width itself is
+   .sl-btn--inline on the element since 17.3; what is left here is the floor. */
 .sl-identity-unlink .sl-btn {
-	width: auto;
 	min-width: 180px;
-	margin-bottom: 0;
 }
 
 .sl-btn--danger {
@@ -1130,10 +1239,13 @@
 	color: var(--sl-accent);
 }
 
+/* Since 17.3 this is a list of rows continuing the one above it, not a block
+   of buttons under it — .sl-identity already draws the separator between each
+   pair, so a border here would draw a second one over the first. */
 .sl-link-providers {
-	margin-top: var(--sl-space-3);
-	padding-top: var(--sl-space-3);
-	border-top: 1px solid var(--sl-border);
+	margin: 0;
+	padding: 0;
+	list-style: none;
 }
 
 /* ---------- Disclosure ---------- */
@@ -1171,8 +1283,7 @@
 }
 
 .sl-savebar .sl-btn {
-	margin: 0 0 0 auto;
-	width: auto;
+	margin-left: auto;
 	min-width: 160px;
 }
 

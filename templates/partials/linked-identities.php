@@ -92,7 +92,16 @@ if ( empty( $sl_identities ) ) {
 						</span>
 					<?php else : ?>
 						<details class="sl-identity-unlink">
-							<summary class="sl-link"><?php esc_html_e( 'Bỏ liên kết', 'smart-login' ); ?></summary>
+							<?php
+								/*
+								 * `<details>` stays as the mechanism — it holds a password
+								 * form and has to work with JavaScript off. 17.3 changes
+								 * what the summary looks like and nothing else, so the
+								 * rarest control in the card stops being a third visual
+								 * weight beside "Đổi" and "Liên kết".
+								 */
+								?>
+								<summary class="sl-action sl-action--summary sl-action--danger"><?php esc_html_e( 'Bỏ liên kết', 'smart-login' ); ?></summary>
 
 							<form method="post" class="sl-identity-unlink-form">
 								<?php wp_nonce_field( 'smart_login_unlink_identity' ); ?>
@@ -115,7 +124,7 @@ if ( empty( $sl_identities ) ) {
 									/>
 								</div>
 
-								<button type="submit" class="sl-btn sl-btn--outline sl-btn--danger">
+								<button type="submit" class="sl-btn sl-btn--outline sl-btn--danger sl-btn--inline">
 									<?php esc_html_e( 'Xác nhận bỏ liên kết', 'smart-login' ); ?>
 								</button>
 							</form>

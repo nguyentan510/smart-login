@@ -45,24 +45,52 @@ TemplateLoader::output(
 ?>
 
 <?php if ( ! empty( $sl_link_providers ) ) : ?>
-	<div class="sl-link-providers">
-		<p class="sl-hint"><?php esc_html_e( 'Thêm một cách đăng nhập nhanh:', 'smart-login' ); ?></p>
-		<div class="sl-provider-buttons">
-			<?php foreach ( $sl_link_providers as $sl_link_provider ) : ?>
-				<a
-					class="sl-btn sl-btn--outline"
-					href="<?php echo esc_url( ProviderAuthController::start_url( $sl_link_provider->id(), '', true ) ); ?>"
-					data-sl-provider="<?php echo esc_attr( $sl_link_provider->id() ); ?>"
-					data-sl-provider-mode="link"
-				>
-					<?php
-					ProviderMark::output_for_provider( $sl_link_provider );
+	<?php
+	/*
+	 * A row, not a block of buttons.
+	 *
+	 * 16.3 folded the linked providers into the contact card's own list so the
+	 * card holds one list of ways in. A full-width outline button underneath it
+	 * was the last piece of the geometry that preceded that — and the loudest
+	 * control in a card whose other actions are small text.
+	 *
+	 * "Zalo · chưa liên kết · Liên kết" is the same shape as every row above it,
+	 * which is also what makes the two halves readable as one list: what you
+	 * have, and what you could have.
+	 *
+	 * `data-sl-provider-mode="link"` and the start URL are unchanged. The
+	 * account surface suite asserts that this invitation lives in exactly one
+	 * template, and it still does.
+	 */
+	?>
+	<ul class="sl-identity-list sl-link-providers">
+		<?php foreach ( $sl_link_providers as $sl_link_provider ) : ?>
+			<li class="sl-identity sl-identity--<?php echo esc_attr( $sl_link_provider->id() ); ?>">
+				<div class="sl-row">
+					<?php ProviderMark::output_for_provider( $sl_link_provider ); ?>
+					<span class="sl-row__label"><?php echo esc_html( $sl_link_provider->name() ); ?></span>
+					<span class="sl-row__value sl-muted"><?php esc_html_e( 'chưa liên kết', 'smart-login' ); ?></span>
 
-					/* translators: %s: provider name, e.g. Google. */
-					printf( esc_html__( 'Liên kết %s', 'smart-login' ), esc_html( $sl_link_provider->name() ) );
-					?>
-				</a>
-			<?php endforeach; ?>
-		</div>
-	</div>
+					<a
+						class="sl-action"
+						href="<?php echo esc_url( ProviderAuthController::start_url( $sl_link_provider->id(), '', true ) ); ?>"
+						data-sl-provider="<?php echo esc_attr( $sl_link_provider->id() ); ?>"
+						data-sl-provider-mode="link"
+					>
+						<?php esc_html_e( 'Liên kết', 'smart-login' ); ?>
+						<?php
+						/*
+						 * The visible word is the same in every row, so on its own it
+						 * names nothing when a screen reader lists the links on the
+						 * page. The brand goes with it, out of sight.
+						 */
+						?>
+						<span class="screen-reader-text">
+							<?php echo esc_html( $sl_link_provider->name() ); ?>
+						</span>
+					</a>
+				</div>
+			</li>
+		<?php endforeach; ?>
+	</ul>
 <?php endif; ?>

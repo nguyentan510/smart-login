@@ -142,7 +142,7 @@ $sl_rows = array(
 
 				<button
 					type="button"
-					class="sl-link sl-link--button"
+					class="sl-action"
 					data-sl-contact-toggle
 					aria-expanded="false"
 					aria-controls="sl-edit-<?php echo esc_attr( $sl_type ); ?>"
@@ -164,7 +164,16 @@ $sl_rows = array(
 						data-sl-contact-value
 						autocomplete="<?php echo esc_attr( $sl_row['complete'] ); ?>"
 					/>
-					<button type="button" class="sl-btn sl-btn--outline" data-sl-contact-start><?php esc_html_e( 'Gửi mã', 'smart-login' ); ?></button>
+					<?php
+					/*
+					 * A button, not a `.sl-action`: this is the primary action of the
+					 * editor it sits in, and the row above already carries the small
+					 * control that opened it. `--inline` is 17.3's replacement for the
+					 * `.sl-contact-row .sl-btn { width: auto }` that used to decide
+					 * this from an ancestor.
+					 */
+					?>
+					<button type="button" class="sl-btn sl-btn--outline sl-btn--inline" data-sl-contact-start><?php esc_html_e( 'Gửi mã', 'smart-login' ); ?></button>
 				</div>
 
 				<div class="sl-contact-confirm" data-sl-contact-confirm hidden>
@@ -179,9 +188,9 @@ $sl_rows = array(
 							maxlength="<?php echo esc_attr( (string) $sl_otp_length ); ?>"
 							placeholder="<?php esc_attr_e( 'Mã OTP', 'smart-login' ); ?>"
 						/>
-						<button type="button" class="sl-btn sl-btn--primary" data-sl-contact-verify><?php esc_html_e( 'Xác thực', 'smart-login' ); ?></button>
+						<button type="button" class="sl-btn sl-btn--primary sl-btn--inline" data-sl-contact-verify><?php esc_html_e( 'Xác thực', 'smart-login' ); ?></button>
 					</div>
-					<button type="button" class="sl-link sl-link--button" data-sl-contact-resend><?php esc_html_e( 'Gửi lại mã', 'smart-login' ); ?></button>
+					<button type="button" class="sl-action" data-sl-contact-resend><?php esc_html_e( 'Gửi lại mã', 'smart-login' ); ?></button>
 				</div>
 
 				<p class="sl-contact-status" data-sl-contact-status aria-live="polite"></p>

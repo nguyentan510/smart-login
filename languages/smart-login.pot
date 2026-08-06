@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-06 12:02+0000\n"
+"POT-Creation-Date: 2026-08-06 13:01+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -62,7 +62,7 @@ msgstr ""
 msgid "(bắt buộc)"
 msgstr ""
 
-#: templates/form-auth.php:96
+#: templates/form-auth.php:97
 msgid "0969 789 475"
 msgstr ""
 
@@ -232,7 +232,7 @@ msgstr ""
 msgid "Bỏ bắt buộc nhập email ở trang thanh toán"
 msgstr ""
 
-#: templates/partials/linked-identities.php:85
+#: templates/partials/linked-identities.php:104
 msgid "Bỏ liên kết"
 msgstr ""
 
@@ -304,7 +304,7 @@ msgid "Chép mẫu để sửa"
 msgstr ""
 
 #: templates/partials/account/contact.php:140
-#: templates/partials/linked-identities.php:76
+#: templates/partials/linked-identities.php:86
 msgid "Chính"
 msgstr ""
 
@@ -844,7 +844,7 @@ msgstr ""
 msgid "Gửi lại"
 msgstr ""
 
-#: templates/partials/account/contact.php:184
+#: templates/partials/account/contact.php:193
 msgid "Gửi lại mã"
 msgstr ""
 
@@ -854,7 +854,7 @@ msgid "Gửi lại sau %ds"
 msgstr ""
 
 #: includes/class-field-registry.php:47
-#: templates/partials/account/contact.php:167
+#: templates/partials/account/contact.php:176
 msgid "Gửi mã"
 msgstr ""
 
@@ -950,7 +950,7 @@ msgstr ""
 msgid "Hoàn tất đăng ký"
 msgstr ""
 
-#: templates/form-auth.php:121
+#: templates/form-auth.php:122
 #: templates/form-forgot.php:51
 msgid "Hoặc"
 msgstr ""
@@ -1045,7 +1045,7 @@ msgid "Khi nào hiện"
 msgstr ""
 
 #. translators: %s: linked terms and conditions label.
-#: templates/form-auth.php:154
+#: templates/form-auth.php:152
 msgid "Khi tiếp tục, bạn đồng ý với %s."
 msgstr ""
 
@@ -1116,7 +1116,7 @@ msgstr ""
 msgid "Không thể bỏ liên kết. Vui lòng thử lại."
 msgstr ""
 
-#: templates/partials/linked-identities.php:81
+#: templates/partials/linked-identities.php:91
 msgid "Không thể bỏ — đây là cách đăng nhập duy nhất"
 msgstr ""
 
@@ -1277,9 +1277,8 @@ msgstr ""
 msgid "Link điều kiện áp dụng"
 msgstr ""
 
-#. translators: %s: provider name, e.g. Google.
-#: templates/partials/account/providers.php:59
-msgid "Liên kết %s"
+#: templates/partials/account/providers.php:80
+msgid "Liên kết"
 msgstr ""
 
 #: includes/Auth/class-identity-link-service.php:191
@@ -1339,7 +1338,7 @@ msgid "Mã 6 số, hiệu lực 5 phút, tối đa 5 mã mỗi số mỗi giờ.
 msgstr ""
 
 #: includes/OTP/class-placeholders.php:150
-#: templates/partials/account/contact.php:180
+#: templates/partials/account/contact.php:189
 msgid "Mã OTP"
 msgstr ""
 
@@ -1537,7 +1536,7 @@ msgstr ""
 msgid "Nhà cung cấp không trả về định danh hợp lệ."
 msgstr ""
 
-#: templates/form-auth.php:61
+#: templates/form-auth.php:62
 msgid "Nhập email để tiếp tục."
 msgstr ""
 
@@ -1554,7 +1553,7 @@ msgstr ""
 msgid "Nhập mật khẩu"
 msgstr ""
 
-#: templates/partials/linked-identities.php:96
+#: templates/partials/linked-identities.php:115
 msgid "Nhập mật khẩu để xác nhận"
 msgstr ""
 
@@ -1566,11 +1565,11 @@ msgstr ""
 msgid "Nhập số điện thoại hoặc email để gửi thử."
 msgstr ""
 
-#: templates/form-auth.php:63
+#: templates/form-auth.php:64
 msgid "Nhập số điện thoại hoặc email để tiếp tục."
 msgstr ""
 
-#: templates/form-auth.php:59
+#: templates/form-auth.php:60
 msgid "Nhập số điện thoại để tiếp tục."
 msgstr ""
 
@@ -2008,10 +2007,6 @@ msgstr ""
 msgid "Thêm"
 msgstr ""
 
-#: templates/partials/account/providers.php:48
-msgid "Thêm một cách đăng nhập nhanh:"
-msgstr ""
-
 #: templates/form-otp.php:41
 #: templates/form-signup.php:40
 msgid "Thông tin"
@@ -2108,7 +2103,7 @@ msgstr ""
 msgid "Tiến độ đăng ký"
 msgstr ""
 
-#: templates/form-auth.php:107
+#: templates/form-auth.php:108
 #: templates/form-otp.php:128
 #: templates/registered-success.php:36
 msgid "Tiếp tục"
@@ -2229,7 +2224,7 @@ msgstr ""
 msgid "Tạo OAuth Client trên Google Cloud"
 msgstr ""
 
-#: templates/form-auth.php:40
+#: templates/form-auth.php:41
 msgid "Tạo tài khoản"
 msgstr ""
 
@@ -2489,13 +2484,13 @@ msgstr ""
 msgid "Xác nhận"
 msgstr ""
 
-#: templates/partials/linked-identities.php:109
+#: templates/partials/linked-identities.php:128
 msgid "Xác nhận bỏ liên kết"
 msgstr ""
 
 #: templates/form-otp.php:40
 #: templates/form-signup.php:39
-#: templates/partials/account/contact.php:182
+#: templates/partials/account/contact.php:191
 msgid "Xác thực"
 msgstr ""
 
@@ -2563,12 +2558,16 @@ msgid "Zalo từ chối yêu cầu đăng nhập."
 msgstr ""
 
 #: includes/Admin/Screens/class-settings-screen.php:364
-#: templates/form-auth.php:96
+#: templates/form-auth.php:97
 msgid "ban@example.com"
 msgstr ""
 
+#: templates/partials/account/providers.php:72
+msgid "chưa liên kết"
+msgstr ""
+
 #. translators: %s: linked terms and conditions label.
-#: templates/form-auth.php:155
+#: templates/form-auth.php:153
 #: templates/form-signup.php:113
 msgid "các điều khoản áp dụng"
 msgstr ""
@@ -2807,7 +2806,7 @@ msgstr ""
 msgid "Đăng nhập bằng"
 msgstr ""
 
-#: templates/form-auth.php:41
+#: templates/form-auth.php:42
 msgid "Đăng nhập hoặc đăng ký"
 msgstr ""
 

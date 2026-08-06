@@ -273,6 +273,15 @@ sl_assert(
  * file rather than by rendered ancestry because these three partials are the
  * ones that draw rows; sl-link--button stays legitimate on the OTP screen,
  * where it is a standalone control and not a row action.
+ *
+ * The second half of this rule was written in 17.0 as "no sl-btn--outline in
+ * any of the three" and that was too blunt — it flagged two controls that are
+ * not row actions at all: contact.php's "Gửi mã", which is the primary action
+ * of the editor it sits in, and linked-identities.php's "Xác nhận bỏ liên
+ * kết", which is the submit of a confirmation form. Both are buttons and
+ * should look like buttons. Narrowed here, before the code was contorted to
+ * satisfy a rule that was measuring the wrong thing — and it stays red on all
+ * three halves for the defect it is actually about.
  */
 $sl_row_partials = array(
 	'templates/partials/account/contact.php',
@@ -290,7 +299,7 @@ foreach ( $sl_row_partials as $sl_partial ) {
 		$sl_without_action[] = $sl_partial;
 	}
 
-	if ( preg_match( '/sl-link--button|sl-btn--outline/', $sl_body ) ) {
+	if ( false !== strpos( $sl_body, 'sl-link--button' ) ) {
 		$sl_other_vocab[] = $sl_partial;
 	}
 }
@@ -305,6 +314,57 @@ sl_assert(
 	'and no second control vocabulary survives beside it',
 	array() === $sl_other_vocab,
 	'One shape or three; there is no version of this where both are true. → ' . implode( ', ', $sl_other_vocab )
+);
+
+// The invitation is the third weight, and the loudest: a full-width outline
+// button under a list of rows, left over from the two-list geometry 16.3
+// removed. A provider that is not linked yet is a row like the ones above it.
+sl_assert(
+	'the invitation to link is a row, not a block',
+	false === strpos( sl_source( 'templates/partials/account/providers.php' ), 'sl-btn' ),
+	'"Zalo · chưa liên kết · Liên kết" is the same shape as every other way in listed above it.'
+);
+
+/*
+ * Written after the defect was seen on screen rather than before, and said so
+ * in 17.3's commit message with the red output that preceded the fix.
+ *
+ * `.screen-reader-text` is a *theme* convention. WordPress declares it in
+ * wp-admin and in the block library; nothing guarantees it on the front end of
+ * an arbitrary theme. Three templates have used it since 8.4 to carry text that
+ * must not be visible, and on a theme that does not declare it the profile card
+ * reads "Họ tên * (bắt buộc)" out loud, in the label.
+ *
+ * The class of defect is the plugin depending on somebody else's stylesheet to
+ * hide its own text — which is 16.0's rule 3 ("every input the plugin renders is
+ * styled by the plugin") pointed at a different property.
+ */
+$sl_hiding_classes = array();
+
+foreach ( sl_plugin_sources() as $sl_relative => $sl_contents ) {
+	if ( 0 !== strpos( $sl_relative, 'templates/' ) ) {
+		continue;
+	}
+
+	if ( preg_match_all( '/\b(screen-reader-text|sr-only|visually-hidden)\b/', $sl_contents, $sl_found ) ) {
+		foreach ( $sl_found[1] as $sl_class ) {
+			$sl_hiding_classes[ $sl_class ] = true;
+		}
+	}
+}
+
+$sl_undeclared_hiding = array();
+
+foreach ( array_keys( $sl_hiding_classes ) as $sl_class ) {
+	if ( ! preg_match( '/\.' . preg_quote( $sl_class, '/' ) . '(?![a-zA-Z0-9_-])/', $sl_css_code ) ) {
+		$sl_undeclared_hiding[] = '.' . $sl_class;
+	}
+}
+
+sl_assert(
+	'the plugin does not rely on the theme to hide its own text',
+	array() === $sl_undeclared_hiding,
+	'Used in three templates since 8.4, declared in none of them. A theme that does not carry the class renders "(bắt buộc)" beside the label it was meant to explain. → ' . implode( ', ', $sl_undeclared_hiding )
 );
 
 // ---------------------------------------------------------------------
