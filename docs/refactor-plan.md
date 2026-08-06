@@ -1412,16 +1412,38 @@ the two kinds since Phase 6 and no template has ever read it.
 
 ### Sub-phases
 
-- [ ] **16.0** [Guard rails](sign-in-card/16.0-guard-rails.md) — five rules, its
-      own `spec` suite, landed red before any production file moves
-- [ ] **16.1** [One value, one place](sign-in-card/16.1-one-value-one-place.md) —
-      the list filters on `federated`; the contact row absorbs the state the
-      second list was carrying
-- [ ] **16.2** [A provider row a person can read](sign-in-card/16.2-provider-row.md)
-      — `Google 1171••••••` names the account instead of the OIDC subject
-- [ ] **16.3** [The card's geometry](sign-in-card/16.3-card-geometry.md) — one
-      grid, the box-model guard generalised, the unstyled password box, the
-      weight inversion. Visible, and last
+- [x] **16.0** [Guard rails](sign-in-card/16.0-guard-rails.md) — landed red as
+      intended: `2 passed, 6 failed, 0 pending`, no file outside `tests/`
+      touched. The address turned out to appear **three** times, not two — the
+      third is the unlink form's hidden `subject` input, which is the address
+      travelling as the subject of a retire operation. Rule 4 found a second
+      component with the reported one's exposure, `.sl-combo__input`, that no
+      screenshot shows. **One of my own rules never ran while looking as though
+      it had**: a PHP close tag inside a `//` comment ended PHP mode, so two
+      rules were echoed as HTML and the suite still exited red on a third
+- [x] **16.1** [One value, one place](sign-in-card/16.1-one-value-one-place.md) —
+      the list filters on `federated`; three occurrences of the address become
+      one, and the third leaves with the control it belonged to. **The brief had
+      the subtitle in the wrong sub-phase**: a federated-only list under "Cách
+      đăng nhập của bạn" is actively false rather than merely redundant, so the
+      heading changed here and its removal waited for the grid. Found on the way:
+      the verified badge was claiming verification from a `user_meta` read while
+      `has_contact_identity()` documents at length that only the directory knows;
+      and `smart-login.js:564` had never been reachable, because the badge it
+      unhides did not exist for the one case it was written for
+- [x] **16.2** [A provider row a person can read](sign-in-card/16.2-provider-row.md)
+      — `Google 1171••••••` names the account instead of the OIDC subject, from
+      `meta_json` that has held the claims since Phase 2 with nothing reading
+      them. Rule 6 arrives with the feature it guards, so it was **stashed and
+      re-run red** rather than assumed. All three fallback levels asserted
+      separately, for the reason 11.1 recorded; the masked-subject assertion is
+      made on the markup, since `masked` stays in the payload for the REST route
+- [ ] **16.3** [The card's geometry](sign-in-card/16.3-card-geometry.md) — code
+      landed and the suite is fully green and **promoted to `required`**; the row
+      stays open because its acceptance requires reproducing the overflow in a
+      browser and reading the computed `box-sizing`, and that has not been done.
+      The cause is a hypothesis inferred from a screenshot. 10.3 committed with
+      its row unticked for the same reason
 
 ---
 
