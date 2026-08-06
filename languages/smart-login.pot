@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-06 13:08+0000\n"
+"POT-Creation-Date: 2026-08-06 13:13+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -106,7 +106,7 @@ msgstr ""
 msgid "Bước %1$d trên %2$d"
 msgstr ""
 
-#: templates/partials/account/status.php:51
+#: templates/partials/account/status.php:56
 msgid "Bạn có thể bổ sung thêm"
 msgstr ""
 
@@ -244,7 +244,7 @@ msgstr ""
 msgid "Bỏ trống dòng không dùng. Giá trị chứa từ khoá bảo mật sẽ được che khi hiển thị kết quả gửi thử."
 msgstr ""
 
-#: templates/partials/account/status.php:54
+#: templates/partials/account/status.php:57
 msgid "Bổ sung thông tin"
 msgstr ""
 
@@ -291,7 +291,7 @@ msgstr ""
 msgid "Chào %s! Thêm chút thông tin nữa để nhận đầy đủ ưu đãi hội viên — hoặc để sau cũng được."
 msgstr ""
 
-#: templates/partials/account/status.php:37
+#: templates/partials/account/status.php:72
 msgid "Chào mừng bạn! Hãy bổ sung thông tin để nhận đầy đủ ưu đãi hội viên."
 msgstr ""
 
@@ -579,7 +579,7 @@ msgstr ""
 msgid "Cập nhật"
 msgstr ""
 
-#: templates/partials/account/status.php:46
+#: templates/partials/account/status.php:52
 msgid "Cập nhật ngay"
 msgstr ""
 
@@ -996,7 +996,7 @@ msgstr ""
 msgid "Hồ sơ & Địa chỉ"
 msgstr ""
 
-#: templates/partials/account/status.php:33
+#: templates/partials/account/status.php:68
 msgid "Hồ sơ của bạn đã đầy đủ. Bạn có thể tiếp tục sử dụng hệ thống."
 msgstr ""
 
@@ -2012,7 +2012,7 @@ msgstr ""
 msgid "Thông tin"
 msgstr ""
 
-#: templates/partials/account/status.php:43
+#: templates/partials/account/status.php:51
 msgid "Thông tin bắt buộc còn thiếu"
 msgstr ""
 
@@ -2586,8 +2586,8 @@ msgid "dùng để đăng nhập"
 msgstr ""
 
 #: includes/Admin/Screens/class-settings-screen.php:221
-#: templates/partials/account/status.php:66
-#: templates/partials/account/status.php:73
+#: templates/partials/account/status.php:114
+#: templates/partials/account/status.php:121
 msgid "email"
 msgstr ""
 
@@ -2610,8 +2610,8 @@ msgid "ngày"
 msgstr ""
 
 #: includes/Admin/Screens/class-settings-screen.php:220
-#: templates/partials/account/status.php:66
-#: templates/partials/account/status.php:73
+#: templates/partials/account/status.php:114
+#: templates/partials/account/status.php:121
 msgid "số điện thoại"
 msgstr ""
 
@@ -2641,12 +2641,12 @@ msgid "Đang chặn"
 msgstr ""
 
 #. translators: 1: contact type, 2: masked destination.
-#: templates/partials/account/status.php:72
+#: templates/partials/account/status.php:120
 msgid "Đang chờ xác thực %1$s: %2$s. Bạn có thể gửi lại một mã mới bên dưới."
 msgstr ""
 
 #. translators: 1: contact type, 2: masked destination.
-#: templates/partials/account/status.php:65
+#: templates/partials/account/status.php:113
 msgid "Đang chờ xác thực %1$s: %2$s. Mở trang chỉnh sửa hồ sơ để nhập mã OTP."
 msgstr ""
 

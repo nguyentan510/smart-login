@@ -8,6 +8,16 @@
  * out as a blue box containing "Địa chỉ, Ngày sinh, Giới tính". The maintained
  * version is the one kept here.
  *
+ * 17.5 gives it the *reason* each item is worth filling in. Those sentences have
+ * been written and translated since Phase 8 and one screen read them:
+ * `ProfileCompletionService::onboarding_reasons()`. They are looked up here and
+ * never copied — 8.4 removed a second source of truth from this exact block, and
+ * pasting the strings back in is how it would return.
+ *
+ * The two branches collapsed into one in 17.5 as well. They differed in a class,
+ * a heading and the wording of a link, and had a duplicated list, a duplicated
+ * link and a duplicated conditional between them.
+ *
  * Override at yourtheme/smart-login/partials/account/status.php
  *
  * @var array  $sl_status   Output of ProfileCompletionService::status()
@@ -18,6 +28,8 @@
  * @package SmartLogin
  */
 
+use SmartLogin\Auth\ProfileCompletionService;
+
 defined( 'ABSPATH' ) || exit;
 
 $sl_status   = isset( $sl_status ) && is_array( $sl_status ) ? $sl_status : array();
@@ -26,6 +38,29 @@ $sl_welcome  = ! empty( $sl_welcome );
 $sl_edit_url = isset( $sl_edit_url ) ? (string) $sl_edit_url : '';
 $sl_required = $sl_status['required_missing'] ?? array();
 $sl_optional = $sl_status['recommended_missing'] ?? array();
+
+$sl_reasons = ProfileCompletionService::onboarding_reasons();
+
+/*
+ * Required outranks recommended: a member with both is shown the half they
+ * cannot proceed without, not a list of six things at one weight.
+ */
+if ( ! empty( $sl_required ) ) {
+	$sl_missing = $sl_required;
+	$sl_kind    = 'warning';
+	$sl_heading = __( 'Thông tin bắt buộc còn thiếu', 'smart-login' );
+	$sl_action  = __( 'Cập nhật ngay', 'smart-login' );
+} elseif ( ! empty( $sl_optional ) ) {
+	$sl_missing = $sl_optional;
+	$sl_kind    = 'info';
+	$sl_heading = __( 'Bạn có thể bổ sung thêm', 'smart-login' );
+	$sl_action  = __( 'Bổ sung thông tin', 'smart-login' );
+} else {
+	$sl_missing = array();
+	$sl_kind    = '';
+	$sl_heading = '';
+	$sl_action  = '';
+}
 ?>
 
 <?php if ( $sl_welcome && ! empty( $sl_status['complete'] ) && empty( $sl_optional ) ) : ?>
@@ -38,20 +73,33 @@ $sl_optional = $sl_status['recommended_missing'] ?? array();
 	</div>
 <?php endif; ?>
 
-<?php if ( ! empty( $sl_required ) ) : ?>
-	<div class="sl-notice sl-notice--warning">
-		<strong><?php esc_html_e( 'Thông tin bắt buộc còn thiếu', 'smart-login' ); ?></strong>
-		<p><?php echo esc_html( implode( ', ', wp_list_pluck( $sl_required, 'label' ) ) ); ?></p>
+<?php if ( ! empty( $sl_missing ) ) : ?>
+	<div class="sl-notice sl-notice--<?php echo esc_attr( $sl_kind ); ?>">
+		<strong><?php echo esc_html( $sl_heading ); ?></strong>
+
+		<ul class="sl-missing">
+			<?php foreach ( $sl_missing as $sl_item ) : ?>
+				<?php $sl_reason = (string) ( $sl_reasons[ (string) ( $sl_item['key'] ?? '' ) ] ?? '' ); ?>
+				<li class="sl-missing__item">
+					<span class="sl-missing__label"><?php echo esc_html( (string) ( $sl_item['label'] ?? '' ) ); ?></span>
+					<?php
+					/*
+					 * An item with no reason renders its label alone. `email` is the
+					 * one that has none, deliberately — changing it needs its own OTP
+					 * round trip and does not belong on a welcome screen — and
+					 * inventing a sentence here would be the copy drifting away from
+					 * the place it lives.
+					 */
+					?>
+					<?php if ( '' !== $sl_reason ) : ?>
+						<span class="sl-missing__reason"><?php echo esc_html( $sl_reason ); ?></span>
+					<?php endif; ?>
+				</li>
+			<?php endforeach; ?>
+		</ul>
+
 		<?php if ( '' !== $sl_edit_url ) : ?>
-			<a class="sl-link" href="<?php echo esc_url( $sl_edit_url ); ?>"><?php esc_html_e( 'Cập nhật ngay', 'smart-login' ); ?></a>
-		<?php endif; ?>
-	</div>
-<?php elseif ( ! empty( $sl_optional ) ) : ?>
-	<div class="sl-notice sl-notice--info">
-		<strong><?php esc_html_e( 'Bạn có thể bổ sung thêm', 'smart-login' ); ?></strong>
-		<p><?php echo esc_html( implode( ', ', wp_list_pluck( $sl_optional, 'label' ) ) ); ?></p>
-		<?php if ( '' !== $sl_edit_url ) : ?>
-			<a class="sl-link" href="<?php echo esc_url( $sl_edit_url ); ?>"><?php esc_html_e( 'Bổ sung thông tin', 'smart-login' ); ?></a>
+			<a class="sl-link" href="<?php echo esc_url( $sl_edit_url ); ?>"><?php echo esc_html( $sl_action ); ?></a>
 		<?php endif; ?>
 	</div>
 <?php endif; ?>

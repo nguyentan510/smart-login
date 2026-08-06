@@ -875,6 +875,38 @@
 	color: #1c4bb8;
 }
 
+/* What is missing, and why it is worth giving.
+
+   This block rendered `implode( ', ', … labels )` until 17.5 — on a live page,
+   a box containing the words "Địa chỉ, Ngày sinh". The label is a demand; the
+   reason beside it is an offer, which is the same argument `.sl-hint--reason`
+   carries on the onboarding form. No bullets: the list is the shape, and a
+   marker in a coloured notice is one ornament too many. */
+.sl-missing {
+	margin: var(--sl-space-2) 0;
+	padding: 0;
+	list-style: none;
+}
+
+.sl-missing__item {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: var(--sl-space-1) var(--sl-space-2);
+	padding: var(--sl-space-1) 0;
+}
+
+.sl-missing__label {
+	font-weight: 600;
+}
+
+/* Inherits the notice's colour rather than going muted grey: a reason set in
+   the palette's --sl-muted inside a warning box reads as disabled text. */
+.sl-missing__reason {
+	font-size: var(--sl-fs-sm);
+	opacity: 0.85;
+}
+
 /* ---------- Success screen ---------- */
 
 .smart-login--done {
