@@ -548,6 +548,17 @@
 	max-height: 20px;
 }
 
+/* A mark inside a text control lines up with the text rather than becoming a
+   block of its own. `.sl-btn` is display:block with centred text, so the box
+   above — inline-flex — flows inline with the label it belongs to. Inside a
+   `.sl-row` no rule is needed at all: the row is already a flex container with
+   its own gap, which is why the mark is a sibling of the label there and a
+   child of the control here. */
+.sl-btn .sl-provider-icon {
+	margin-right: 8px;
+	vertical-align: -4px;
+}
+
 /* .sl-contact-grid and the grey bordered box that .sl-contact-verification used
    to carry both belonged to the pre-8.4 design, where two OTP panels sat open
    on the page permanently. The panels are rows now, inside a card that already

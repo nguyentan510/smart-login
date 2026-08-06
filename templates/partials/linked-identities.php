@@ -26,6 +26,7 @@
  */
 
 use SmartLogin\Frontend\FormController;
+use SmartLogin\Frontend\ProviderMark;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -59,6 +60,15 @@ if ( empty( $sl_identities ) ) {
 			<?php $sl_field_id = 'sl-unlink-pass-' . md5( $sl_identity['channel'] . $sl_identity['subject'] ); ?>
 			<li class="sl-identity sl-identity--<?php echo esc_attr( $sl_identity['channel'] ); ?>">
 				<div class="sl-row">
+					<?php
+					/*
+					 * A flex item of the row rather than something inside the label: the
+					 * label column is the 108px one the contact rows above share, and a
+					 * mark inside it would move where "Google" starts relative to
+					 * "Email" — the misalignment 16.3 exists to have removed.
+					 */
+					ProviderMark::output( (string) $sl_identity['channel'] );
+					?>
 					<span class="sl-row__label"><?php echo esc_html( $sl_identity['label'] ); ?></span>
 					<?php
 					/*

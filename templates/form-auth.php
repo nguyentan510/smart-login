@@ -20,6 +20,7 @@ use SmartLogin\Auth\ProviderAuthController;
 use SmartLogin\Auth\Providers\ProviderRegistry;
 use SmartLogin\Auth\RegisterHandler;
 use SmartLogin\Frontend\Flow;
+use SmartLogin\Frontend\ProviderMark;
 use SmartLogin\Frontend\TemplateLoader;
 use SmartLogin\Security\RequestGuard;
 use SmartLogin\Settings;
@@ -127,19 +128,16 @@ $sl_email     = Settings::email_enabled();
 					data-sl-provider="<?php echo esc_attr( $sl_provider->id() ); ?>"
 					data-sl-provider-mode="login"
 				>
-					<span class="sl-provider-icon" aria-hidden="true">
-						<?php
-						/*
-						 * The provider owns its mark; this only places it. The filter is
-						 * the supported way to drop in an official brand asset — Zalo's
-						 * wordmark in particular ships as a file this plugin cannot
-						 * redistribute. Not escaped because it is markup by definition,
-						 * and it comes from plugin code or from site code, never from a
-						 * request.
-						 */
-						echo apply_filters( 'smart_login_provider_icon_svg', $sl_provider->icon_svg(), $sl_provider->id() ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-						?>
-					</span>
+					<?php
+					/*
+					 * The provider owns its mark; ProviderMark only places it. The box,
+					 * the filter and the escaping decision moved there in 17.1, when the
+					 * account card became the second caller — this was the only place
+					 * that applied `smart_login_provider_icon_svg`, so a site filtering
+					 * it would have got a mark on one screen and not the other.
+					 */
+					ProviderMark::output_for_provider( $sl_provider );
+					?>
 					<span><?php echo esc_html( $sl_provider->label() ); ?></span>
 				</a>
 			<?php endforeach; ?>

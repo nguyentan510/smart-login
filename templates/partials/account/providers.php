@@ -26,6 +26,7 @@
  */
 
 use SmartLogin\Auth\ProviderAuthController;
+use SmartLogin\Frontend\ProviderMark;
 use SmartLogin\Frontend\TemplateLoader;
 
 defined( 'ABSPATH' ) || exit;
@@ -55,6 +56,8 @@ TemplateLoader::output(
 					data-sl-provider-mode="link"
 				>
 					<?php
+					ProviderMark::output_for_provider( $sl_link_provider );
+
 					/* translators: %s: provider name, e.g. Google. */
 					printf( esc_html__( 'Liên kết %s', 'smart-login' ), esc_html( $sl_link_provider->name() ) );
 					?>
