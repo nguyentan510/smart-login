@@ -135,6 +135,20 @@ $suites = array(
 		'file' => 'identity/run-sign-in-card-tests.php',
 		'kind' => 'required',
 	),
+	array(
+		// Phase 17, landed red at 17.0 before any production file moved. Eight
+		// rules, one per sub-phase, so "17.4 is done" and "rule 4 is green" are
+		// the same sentence.
+		//
+		// `spec` for the same reason 16.0 needed its own suite: the account
+		// surface suite has been `required` since 8.3, and rules that are meant
+		// to fail cannot live in a suite that blocks. Promote it in the
+		// sub-phase that turns the last one green, not later — 15.4 found this
+		// kind being abused for four phases.
+		'name' => 'Account card',
+		'file' => 'identity/run-account-card-tests.php',
+		'kind' => 'spec',
+	),
 );
 
 $results  = array();

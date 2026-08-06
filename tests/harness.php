@@ -239,12 +239,21 @@ function sl_require_single_template( string $label, string $pattern, string $hin
  *
  * Used to tie a dangerous call site to its mandatory helper, e.g. every
  * wp_insert_user() call must go through OpaqueLogin.
+ *
+ * The allowlist is passed in at the call site, the same as sl_forbid_pattern's:
+ * a file that legitimately triggers the pattern and must *not* carry the
+ * companion is an exception somebody has to write down. 17.0 added it for the
+ * first such case — a provisioned account's random password is not a password
+ * its holder ever chose, so recording a change date for it would state
+ * something false.
+ *
+ * @param string[] $allowed_files Relative paths exempt from the requirement.
  */
-function sl_require_companion( string $label, string $trigger_pattern, string $required_pattern, string $hint = '' ): void {
+function sl_require_companion( string $label, string $trigger_pattern, string $required_pattern, string $hint = '', array $allowed_files = array() ): void {
 	$offenders = array();
 
 	foreach ( sl_plugin_sources() as $relative => $contents ) {
-		if ( ! preg_match( $trigger_pattern, $contents ) ) {
+		if ( ! preg_match( $trigger_pattern, $contents ) || in_array( $relative, $allowed_files, true ) ) {
 			continue;
 		}
 
