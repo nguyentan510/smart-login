@@ -77,18 +77,24 @@ final class AccountForm {
 	const FORM_SECTIONS = array( 'profile', 'contact', 'address', 'password' );
 
 	/**
-	 * Heading for each section. Real headings, not <p class="sl-lead">: the old
-	 * screen had no document outline at all.
+	 * Heading for each section that draws one. Real headings, not
+	 * <p class="sl-lead">: the old screen had no document outline at all.
+	 *
+	 * `providers` is absent, and that is not the same absence as in
+	 * FORM_SECTIONS above. It is a section, and it renders — but since 16.3 it
+	 * renders as rows inside the contact card's own list, under the contact
+	 * card's own heading. A `providers` entry here would be a translatable string
+	 * naming a heading nothing draws, which is the class of statement 15.4 exists
+	 * to stop the plugin shipping.
 	 *
 	 * @return array<string,string>
 	 */
 	public static function headings(): array {
 		return array(
-			'profile'   => __( 'Thông tin cá nhân', 'smart-login' ),
-			'contact'   => __( 'Đăng nhập & liên hệ', 'smart-login' ),
-			'address'   => __( 'Địa chỉ giao hàng', 'smart-login' ),
-			'password'  => __( 'Bảo mật', 'smart-login' ),
-			'providers' => __( 'Cách đăng nhập của bạn', 'smart-login' ),
+			'profile'  => __( 'Thông tin cá nhân', 'smart-login' ),
+			'contact'  => __( 'Đăng nhập & liên hệ', 'smart-login' ),
+			'address'  => __( 'Địa chỉ giao hàng', 'smart-login' ),
+			'password' => __( 'Bảo mật', 'smart-login' ),
 		);
 	}
 

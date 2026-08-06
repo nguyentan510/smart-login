@@ -84,7 +84,15 @@ $sl_rows = array(
 			<span class="sl-card__icon" aria-hidden="true">&#9679;</span>
 			<?php echo esc_html( $sl_headings['contact'] ); ?>
 		</h3>
-		<span class="sl-badge sl-badge--instant"><?php esc_html_e( 'lưu riêng, không qua nút Cập nhật', 'smart-login' ); ?></span>
+		<?php
+		/*
+		 * States the effect, not the mechanism. "lưu riêng, không qua nút Cập
+		 * nhật" described the implementation and asked the reader to hold a rule
+		 * about which button applies to which card. `saves_own` and its three
+		 * readers are untouched — this is the badge's copy, not its source.
+		 */
+		?>
+		<span class="sl-badge sl-badge--instant"><?php esc_html_e( 'có hiệu lực ngay', 'smart-login' ); ?></span>
 	</div>
 
 	<?php foreach ( $sl_rows as $sl_type => $sl_row ) : ?>

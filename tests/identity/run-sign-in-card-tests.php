@@ -5,11 +5,12 @@
  * Normative spec: docs/sign-in-card.md. Progress: docs/refactor-plan.md
  * Phase 16.
  *
- * Registered `spec` in run-all.php, which is what that kind is for. Four of the
- * five rules below are red the day they land, deliberately: the account surface
- * suite has been `required` since 8.3 and rules that are meant to fail cannot
- * live in a suite that blocks. Promote this one to `required` when 16.3 turns it
- * green.
+ * Landed `spec` in 16.0, which is what that kind is for. Four of the five rules
+ * below were red the day they landed, deliberately: the account surface suite
+ * has been `required` since 8.3 and rules that are meant to fail cannot live in
+ * a suite that blocks.
+ *
+ * `required` since 16.3, the sub-phase that turned the last two green.
  *
  * Run with:  php tests/identity/run-sign-in-card-tests.php
  *

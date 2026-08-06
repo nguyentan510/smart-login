@@ -48,67 +48,70 @@ if ( empty( $sl_identities ) ) {
 <div class="sl-identities">
 	<?php
 	/*
-	 * Not "Cách đăng nhập của bạn" any more. With the contact rows above owning
-	 * phone and email, a heading claiming to list every way in would sit over a
-	 * list that holds none of them.
+	 * No subtitle. Since 16.1 these rows are the only ones left here, and since
+	 * 16.3 they use the same grid as the contact rows above — so the card holds
+	 * one list of ways in, and a heading over its last two entries would divide
+	 * a list that has stopped being two lists.
 	 */
 	?>
-	<h3 class="sl-subtitle"><?php esc_html_e( 'Tài khoản đã liên kết', 'smart-login' ); ?></h3>
-
 	<ul class="sl-identity-list">
 		<?php foreach ( $sl_identities as $sl_identity ) : ?>
-			<li class="sl-identity-item sl-identity-item--<?php echo esc_attr( $sl_identity['channel'] ); ?>">
-				<span class="sl-identity-label"><?php echo esc_html( $sl_identity['label'] ); ?></span>
-				<?php
-				/*
-				 * `display` names the account; `masked` is the provider's `sub`
-				 * claim, which identifies nobody to the person reading it. The
-				 * masked value stays in the payload for the REST route and for
-				 * integrators — it is only this row that stops rendering it.
-				 */
-				?>
-				<span class="sl-identity-value">
-					<?php echo esc_html( '' !== (string) ( $sl_identity['display'] ?? '' ) ? $sl_identity['display'] : $sl_identity['masked'] ); ?>
-				</span>
-
-				<?php if ( ! empty( $sl_identity['is_primary'] ) ) : ?>
-					<span class="sl-identity-badge"><?php esc_html_e( 'Chính', 'smart-login' ); ?></span>
-				<?php endif; ?>
-
-				<?php if ( empty( $sl_identity['removable'] ) ) : ?>
-					<span class="sl-muted sl-identity-note">
-						<?php esc_html_e( 'Không thể bỏ — đây là cách đăng nhập duy nhất', 'smart-login' ); ?>
+			<?php $sl_field_id = 'sl-unlink-pass-' . md5( $sl_identity['channel'] . $sl_identity['subject'] ); ?>
+			<li class="sl-identity sl-identity--<?php echo esc_attr( $sl_identity['channel'] ); ?>">
+				<div class="sl-row">
+					<span class="sl-row__label"><?php echo esc_html( $sl_identity['label'] ); ?></span>
+					<?php
+					/*
+					 * `display` names the account; `masked` is the provider's `sub`
+					 * claim, which identifies nobody to the person reading it. The
+					 * masked value stays in the payload for the REST route and for
+					 * integrators — it is only this row that stops rendering it.
+					 */
+					?>
+					<span class="sl-row__value">
+						<?php echo esc_html( '' !== (string) ( $sl_identity['display'] ?? '' ) ? $sl_identity['display'] : $sl_identity['masked'] ); ?>
 					</span>
-				<?php else : ?>
-					<details class="sl-identity-unlink">
-						<summary class="sl-link"><?php esc_html_e( 'Bỏ liên kết', 'smart-login' ); ?></summary>
 
-						<form method="post" class="sl-identity-unlink-form">
-							<?php wp_nonce_field( 'smart_login_unlink_identity' ); ?>
-							<input type="hidden" name="<?php echo esc_attr( FormController::ACTION_FIELD ); ?>" value="unlink_identity" />
-							<input type="hidden" name="channel" value="<?php echo esc_attr( $sl_identity['channel'] ); ?>" />
-							<input type="hidden" name="subject" value="<?php echo esc_attr( $sl_identity['subject'] ); ?>" />
-							<input type="hidden" name="_redirect" value="<?php echo esc_url( $sl_redirect ); ?>" />
+					<?php if ( ! empty( $sl_identity['is_primary'] ) ) : ?>
+						<span class="sl-badge sl-badge--primary"><?php esc_html_e( 'Chính', 'smart-login' ); ?></span>
+					<?php endif; ?>
 
-							<p class="sl-field">
-								<label for="sl-unlink-pass-<?php echo esc_attr( md5( $sl_identity['channel'] . $sl_identity['subject'] ) ); ?>">
-									<?php esc_html_e( 'Nhập mật khẩu để xác nhận', 'smart-login' ); ?>
-								</label>
-								<input
-									type="password"
-									id="sl-unlink-pass-<?php echo esc_attr( md5( $sl_identity['channel'] . $sl_identity['subject'] ) ); ?>"
-									name="password"
-									autocomplete="current-password"
-									required
-								/>
-							</p>
+					<?php if ( empty( $sl_identity['removable'] ) ) : ?>
+						<span class="sl-muted sl-identity-note">
+							<?php esc_html_e( 'Không thể bỏ — đây là cách đăng nhập duy nhất', 'smart-login' ); ?>
+						</span>
+					<?php else : ?>
+						<details class="sl-identity-unlink">
+							<summary class="sl-link"><?php esc_html_e( 'Bỏ liên kết', 'smart-login' ); ?></summary>
 
-							<button type="submit" class="sl-btn sl-btn--outline sl-btn--danger">
-								<?php esc_html_e( 'Xác nhận bỏ liên kết', 'smart-login' ); ?>
-							</button>
-						</form>
-					</details>
-				<?php endif; ?>
+							<form method="post" class="sl-identity-unlink-form">
+								<?php wp_nonce_field( 'smart_login_unlink_identity' ); ?>
+								<input type="hidden" name="<?php echo esc_attr( FormController::ACTION_FIELD ); ?>" value="unlink_identity" />
+								<input type="hidden" name="channel" value="<?php echo esc_attr( $sl_identity['channel'] ); ?>" />
+								<input type="hidden" name="subject" value="<?php echo esc_attr( $sl_identity['subject'] ); ?>" />
+								<input type="hidden" name="_redirect" value="<?php echo esc_url( $sl_redirect ); ?>" />
+
+								<div class="sl-field">
+									<label class="sl-label" for="<?php echo esc_attr( $sl_field_id ); ?>">
+										<?php esc_html_e( 'Nhập mật khẩu để xác nhận', 'smart-login' ); ?>
+									</label>
+									<input
+										type="password"
+										class="sl-input"
+										id="<?php echo esc_attr( $sl_field_id ); ?>"
+										name="password"
+										autocomplete="current-password"
+										required
+									/>
+								</div>
+
+								<button type="submit" class="sl-btn sl-btn--outline sl-btn--danger">
+									<?php esc_html_e( 'Xác nhận bỏ liên kết', 'smart-login' ); ?>
+								</button>
+							</form>
+						</details>
+					<?php endif; ?>
+				</div>
 			</li>
 		<?php endforeach; ?>
 	</ul>

@@ -248,20 +248,29 @@
 	padding-right: 46px;
 }
 
-/* Padding counted inside the box, declared on the input instead of inherited.
-   `.smart-login *` above sets `box-sizing: inherit`, but that is one class of
-   specificity — a single theme rule on `input[type="password"]` outranks it,
-   and then `width: 100%` plus the 46px the toggle button reserves pushes the
-   field out through the card's own padding. Stating it here, and capping the
-   width, makes the blow-out unrepresentable whatever the theme resets. The
-   password fields show it worst because their right padding is the largest;
-   every `.sl-input` has the same exposure.
+/* Padding counted inside the box, declared on each component instead of
+   inherited. `.smart-login *` above sets `box-sizing: inherit`, but that is one
+   class of specificity — a single theme rule on `input[type="password"]`
+   outranks it, and then `width: 100%` plus whatever padding the component
+   carries pushes it out through the card's own padding. Stating it here, and
+   capping the width, makes the blow-out unrepresentable whatever the theme
+   resets.
 
    The class is repeated on purpose: `.smart-login .sl-input` alone loses to a
    theme rule like `.woocommerce-account input[type="password"]`, and load order
    between the theme and this stylesheet is not ours to guarantee. Repeating it
-   buys the specificity without an `!important` and without new markup. */
-.smart-login .sl-input.sl-input {
+   buys the specificity without an `!important` and without new markup.
+
+   Written for `.sl-input` alone in 8.4, on the reasoning that the password
+   fields showed it worst. Every full-width component had the same exposure and
+   two others were living with it: `.sl-btn`, which is what put the unlink
+   confirmation through the side of its panel, and `.sl-combo__input`, which
+   nobody had reported. The sign-in card suite asserts the property now instead
+   of this comment predicting it — a rule that names the class of defect rather
+   than the instance that was seen. */
+.smart-login .sl-input.sl-input,
+.smart-login .sl-btn.sl-btn,
+.smart-login .sl-combo__input.sl-combo__input {
 	box-sizing: border-box;
 	max-width: 100%;
 }
@@ -991,19 +1000,16 @@
 
 /* ---------- Linked identities ----------
    Phase 6 shipped this markup with no CSS at all, so it rendered as a bulleted
-   list with a bare <details>. */
+   list with a bare <details>. 8.4 gave it a grid of its own, and 16.3 takes that
+   grid away again: a second column geometry inside one card is why "Email" and
+   "Google" started their values at different x positions while the contact rows
+   above them shared a 108px column. These rows are `.sl-row` now, and the only
+   rules left here are the ones about being a list item and about the
+   confirmation that opens inside one. */
 
 .sl-identities {
-	margin-top: 4px;
-	padding-top: 4px;
-	border-top: 1px solid var(--sl-border);
-}
-
-.sl-subtitle {
-	margin: 12px 0 8px;
-	font-size: 13px;
-	font-weight: 600;
-	color: var(--sl-muted);
+	margin: 0;
+	padding: 0;
 }
 
 .sl-identity-list {
@@ -1012,35 +1018,11 @@
 	list-style: none;
 }
 
-.sl-identity-item {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 10px;
-	padding: 10px 0;
+/* Matches the rhythm `.sl-contact-verification` sets for the rows above, so the
+   card reads as one list rather than as two blocks that happen to touch. */
+.sl-identity {
+	padding: 12px 0;
 	border-top: 1px solid var(--sl-border);
-}
-
-.sl-identity-item:first-child {
-	border-top: 0;
-}
-
-.sl-identity-label {
-	font-weight: 500;
-}
-
-.sl-identity-value {
-	flex: 1 1 auto;
-	color: var(--sl-muted);
-	word-break: break-all;
-}
-
-.sl-identity-badge {
-	padding: 2px 8px;
-	border-radius: 999px;
-	background: #eaf1fe;
-	color: #1c4bb8;
-	font-size: 11px;
 }
 
 .sl-identity-note {
@@ -1060,6 +1042,15 @@
 	border: 1px solid var(--sl-border);
 	border-radius: var(--sl-radius);
 	background: #fafafa;
+}
+
+/* The rarest and most destructive control in the card, and until 16.3 the
+   largest thing on the page — a full-width block heavier than the form's own
+   "Cập nhật". It confirms one row; it is sized like it. */
+.sl-identity-unlink .sl-btn {
+	width: auto;
+	min-width: 180px;
+	margin-bottom: 0;
 }
 
 .sl-btn--danger {
