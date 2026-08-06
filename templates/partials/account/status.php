@@ -42,6 +42,15 @@ $sl_optional = $sl_status['recommended_missing'] ?? array();
 $sl_reasons = ProfileCompletionService::onboarding_reasons();
 
 /*
+ * Counted in the service, never here. The denominator moves with five settings
+ * — profile.email_optional, address.required_in_profile, address.enabled,
+ * profile.dob, profile.gender — and re-deriving those in a template is a second
+ * implementation of the rule that decides what the form asks for.
+ */
+$sl_total = (int) ( $sl_status['total'] ?? 0 );
+$sl_done  = (int) ( $sl_status['done'] ?? 0 );
+
+/*
  * Required outranks recommended: a member with both is shown the half they
  * cannot proceed without, not a list of six things at one weight.
  */
@@ -70,6 +79,35 @@ if ( ! empty( $sl_required ) ) {
 <?php elseif ( $sl_welcome ) : ?>
 	<div class="sl-notice sl-notice--success">
 		<?php esc_html_e( 'Chào mừng bạn! Hãy bổ sung thông tin để nhận đầy đủ ưu đãi hội viên.', 'smart-login' ); ?>
+	</div>
+<?php endif; ?>
+
+<?php if ( $sl_total > 0 ) : ?>
+	<?php
+	/*
+	 * The meter carries its value in two ways. The bar is the visual answer; the
+	 * progressbar role and its two attributes are the answer for anything that
+	 * is not looking at pixels, and the same numbers are printed in words beside
+	 * it — a bar with no number is a shape, not a statement.
+	 */
+	?>
+	<div class="sl-progress">
+		<div
+			class="sl-progress__track"
+			role="progressbar"
+			aria-valuemin="0"
+			aria-valuemax="<?php echo esc_attr( (string) $sl_total ); ?>"
+			aria-valuenow="<?php echo esc_attr( (string) $sl_done ); ?>"
+			aria-label="<?php esc_attr_e( 'Mức hoàn thiện hồ sơ', 'smart-login' ); ?>"
+		>
+			<span class="sl-progress__fill" style="width: <?php echo esc_attr( (string) round( ( $sl_done / $sl_total ) * 100 ) ); ?>%"></span>
+		</div>
+		<span class="sl-progress__count">
+			<?php
+			/* translators: 1: fields completed, 2: fields asked for. */
+			printf( esc_html__( 'Hoàn thiện %1$d/%2$d', 'smart-login' ), (int) $sl_done, (int) $sl_total );
+			?>
+		</span>
 	</div>
 <?php endif; ?>
 

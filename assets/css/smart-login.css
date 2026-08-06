@@ -875,6 +875,37 @@
 	color: #1c4bb8;
 }
 
+/* How much of the profile is filled in. The number is beside the bar and not
+   inside it: a bar on its own is a shape, and "4/6" is the statement. */
+.sl-progress {
+	display: flex;
+	align-items: center;
+	gap: var(--sl-space-3);
+	margin-bottom: var(--sl-space-4);
+}
+
+.sl-progress__track {
+	flex: 1 1 auto;
+	height: 6px;
+	border-radius: 999px;
+	background: var(--sl-border);
+	overflow: hidden;
+}
+
+.sl-progress__fill {
+	display: block;
+	height: 100%;
+	border-radius: inherit;
+	background: var(--sl-accent);
+}
+
+.sl-progress__count {
+	flex: 0 0 auto;
+	color: var(--sl-muted);
+	font-size: var(--sl-fs-sm);
+	white-space: nowrap;
+}
+
 /* What is missing, and why it is worth giving.
 
    This block rendered `implode( ', ', … labels )` until 17.5 — on a live page,

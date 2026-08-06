@@ -58,15 +58,78 @@ final class ProfileCompletionService {
 				'complete'            => false,
 				'required_missing'    => $required,
 				'recommended_missing' => $recommended,
+				'total'               => 0,
+				'done'                => 0,
 			);
 		}
 
-		if ( '' === trim( (string) $user->display_name ) || (string) $user->user_login === (string) $user->display_name ) {
-			$required[] = $this->item( 'full_name', __( 'Họ tên', 'smart-login' ), false );
+		$total = 0;
+		$done  = 0;
+
+		foreach ( $this->fields_in_scope( $user_id, $user ) as $field ) {
+			++$total;
+
+			if ( ! $field['missing'] ) {
+				++$done;
+				continue;
+			}
+
+			$item = $this->item( $field['key'], $field['label'], $field['verification_required'] );
+
+			if ( $field['required'] ) {
+				$required[] = $item;
+			} else {
+				$recommended[] = $item;
+			}
 		}
 
-		if ( ! Settings::is_on( 'profile.email_optional' ) && UserManager::is_synthetic_email( (string) $user->user_email ) ) {
-			$required[] = $this->item( 'email', __( 'Email', 'smart-login' ), true );
+		$status = array(
+			'complete'            => empty( $required ),
+			'required_missing'    => $required,
+			'recommended_missing' => $recommended,
+			'total'               => $total,
+			'done'                => $done,
+		);
+
+		return (array) apply_filters( 'smart_login_profile_status', $status, $user_id );
+	}
+
+	/**
+	 * Every field this account is asked for, whether it holds one or not.
+	 *
+	 * Split out in 17.7, and the split is what makes the fraction possible: the
+	 * old shape only ever built the list of what was *missing*, so "4 of 6" had
+	 * no six to count. Deriving the six anywhere else would mean re-implementing
+	 * these five settings lookups in a template, and the settings are exactly why
+	 * the denominator moves.
+	 *
+	 * One array decides whether a field is in scope, whether it is required, and
+	 * whether it holds a value — the FieldRegistry shape, applied to the one
+	 * other place in this plugin that had a rule spread across five branches.
+	 *
+	 * @param \WP_User $user
+	 * @return array<int,array{key:string,label:string,required:bool,verification_required:bool,missing:bool}>
+	 */
+	private function fields_in_scope( int $user_id, $user ): array {
+		$fields = array();
+
+		$fields[] = array(
+			'key'                   => 'full_name',
+			'label'                 => __( 'Họ tên', 'smart-login' ),
+			'required'              => true,
+			'verification_required' => false,
+			'missing'               => '' === trim( (string) $user->display_name )
+				|| (string) $user->user_login === (string) $user->display_name,
+		);
+
+		if ( ! Settings::is_on( 'profile.email_optional' ) ) {
+			$fields[] = array(
+				'key'                   => 'email',
+				'label'                 => __( 'Email', 'smart-login' ),
+				'required'              => true,
+				'verification_required' => true,
+				'missing'               => UserManager::is_synthetic_email( (string) $user->user_email ),
+			);
 		}
 
 		/*
@@ -74,33 +137,44 @@ final class ProfileCompletionService {
 		 * concept carrying three names — "Địa chỉ giao hàng" as a heading, "Địa
 		 * chỉ" here, "địa chỉ giao hàng mặc định" in the note — so a member was
 		 * told to complete one thing and shown another.
+		 *
+		 * `required_in_profile` puts the field in scope on its own, without
+		 * `enabled`. That is the behaviour that was here and it is preserved
+		 * rather than tidied: an admin who has marked the address required has
+		 * said something more specific than an admin who has merely enabled it.
 		 */
-		$address_label   = __( 'Địa chỉ nhận hàng', 'smart-login' );
-		$address_missing = ! AddressFields::is_complete( $user_id ) || ! get_user_meta( $user_id, 'billing_address_1', true );
-
-		if ( Settings::is_on( 'address.required_in_profile' ) ) {
-			if ( $address_missing ) {
-				$required[] = $this->item( 'address', $address_label, false );
-			}
-		} elseif ( Settings::is_on( 'address.enabled' ) && $address_missing ) {
-			$recommended[] = $this->item( 'address', $address_label, false );
+		if ( Settings::is_on( 'address.required_in_profile' ) || Settings::is_on( 'address.enabled' ) ) {
+			$fields[] = array(
+				'key'                   => 'address',
+				'label'                 => __( 'Địa chỉ nhận hàng', 'smart-login' ),
+				'required'              => Settings::is_on( 'address.required_in_profile' ),
+				'verification_required' => false,
+				'missing'               => ! AddressFields::is_complete( $user_id )
+					|| ! get_user_meta( $user_id, 'billing_address_1', true ),
+			);
 		}
 
-		if ( Settings::is_on( 'profile.dob' ) && ! get_user_meta( $user_id, UserManager::META_DOB, true ) ) {
-			$recommended[] = $this->item( 'dob', __( 'Ngày sinh', 'smart-login' ), false );
+		if ( Settings::is_on( 'profile.dob' ) ) {
+			$fields[] = array(
+				'key'                   => 'dob',
+				'label'                 => __( 'Ngày sinh', 'smart-login' ),
+				'required'              => false,
+				'verification_required' => false,
+				'missing'               => ! get_user_meta( $user_id, UserManager::META_DOB, true ),
+			);
 		}
 
-		if ( Settings::is_on( 'profile.gender' ) && ! get_user_meta( $user_id, UserManager::META_GENDER, true ) ) {
-			$recommended[] = $this->item( 'gender', __( 'Giới tính', 'smart-login' ), false );
+		if ( Settings::is_on( 'profile.gender' ) ) {
+			$fields[] = array(
+				'key'                   => 'gender',
+				'label'                 => __( 'Giới tính', 'smart-login' ),
+				'required'              => false,
+				'verification_required' => false,
+				'missing'               => ! get_user_meta( $user_id, UserManager::META_GENDER, true ),
+			);
 		}
 
-		$status = array(
-			'complete'            => empty( $required ),
-			'required_missing'    => $required,
-			'recommended_missing' => $recommended,
-		);
-
-		return (array) apply_filters( 'smart_login_profile_status', $status, $user_id );
+		return $fields;
 	}
 
 	/**

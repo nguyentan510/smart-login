@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-06 13:15+0000\n"
+"POT-Creation-Date: 2026-08-06 13:18+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -124,7 +124,7 @@ msgstr ""
 msgid "Bước %1$d trên %2$d"
 msgstr ""
 
-#: templates/partials/account/status.php:56
+#: templates/partials/account/status.php:65
 msgid "Bạn có thể bổ sung thêm"
 msgstr ""
 
@@ -262,7 +262,7 @@ msgstr ""
 msgid "Bỏ trống dòng không dùng. Giá trị chứa từ khoá bảo mật sẽ được che khi hiển thị kết quả gửi thử."
 msgstr ""
 
-#: templates/partials/account/status.php:57
+#: templates/partials/account/status.php:66
 msgid "Bổ sung thông tin"
 msgstr ""
 
@@ -309,7 +309,7 @@ msgstr ""
 msgid "Chào %s! Thêm chút thông tin nữa để nhận đầy đủ ưu đãi hội viên — hoặc để sau cũng được."
 msgstr ""
 
-#: templates/partials/account/status.php:72
+#: templates/partials/account/status.php:81
 msgid "Chào mừng bạn! Hãy bổ sung thông tin để nhận đầy đủ ưu đãi hội viên."
 msgstr ""
 
@@ -597,7 +597,7 @@ msgstr ""
 msgid "Cập nhật"
 msgstr ""
 
-#: templates/partials/account/status.php:52
+#: templates/partials/account/status.php:61
 msgid "Cập nhật ngay"
 msgstr ""
 
@@ -654,7 +654,7 @@ msgstr ""
 
 #: includes/Admin/class-mail-messages.php:45
 #: includes/Admin/class-readiness.php:162
-#: includes/Auth/class-profile-completion-service.php:69
+#: includes/Auth/class-profile-completion-service.php:128
 #: includes/Auth/class-register-handler.php:505
 #: includes/Identity/Channels/class-mail-channel.php:63
 #: templates/partials/account/contact.php:70
@@ -772,7 +772,7 @@ msgstr ""
 msgid "Giá trị triển khai đang được ưu tiên; các ô trên là cấu hình dự phòng."
 msgstr ""
 
-#: includes/Auth/class-profile-completion-service.php:94
+#: includes/Auth/class-profile-completion-service.php:170
 #: includes/class-field-registry.php:746
 #: templates/partials/account/profile.php:66
 msgid "Giới tính"
@@ -960,6 +960,11 @@ msgstr ""
 msgid "Hoa Kỳ / Canada (+1)"
 msgstr ""
 
+#. translators: 1: fields completed, 2: fields asked for.
+#: templates/partials/account/status.php:108
+msgid "Hoàn thiện %1$d/%2$d"
+msgstr ""
+
 #: templates/onboarding.php:155
 msgid "Hoàn tất"
 msgstr ""
@@ -999,7 +1004,7 @@ msgstr ""
 msgid "Hệ thống đang tạm thời không gửi được mã. Vui lòng thử lại sau."
 msgstr ""
 
-#: includes/Auth/class-profile-completion-service.php:65
+#: includes/Auth/class-profile-completion-service.php:118
 #: templates/form-signup.php:67
 #: templates/partials/account/profile.php:32
 #: templates/profile-summary.php:38
@@ -1014,7 +1019,7 @@ msgstr ""
 msgid "Hồ sơ & Địa chỉ"
 msgstr ""
 
-#: templates/partials/account/status.php:68
+#: templates/partials/account/status.php:77
 msgid "Hồ sơ của bạn đã đầy đủ. Bạn có thể tiếp tục sử dụng hệ thống."
 msgstr ""
 
@@ -1516,6 +1521,10 @@ msgstr ""
 msgid "Mức bảo mật"
 msgstr ""
 
+#: templates/partials/account/status.php:101
+msgid "Mức hoàn thiện hồ sơ"
+msgstr ""
+
 #: templates/onboarding.php:140
 #: templates/partials/account/profile.php:70
 msgid "Nam"
@@ -1526,7 +1535,7 @@ msgstr ""
 msgid "Nguồn: %s"
 msgstr ""
 
-#: includes/Auth/class-profile-completion-service.php:90
+#: includes/Auth/class-profile-completion-service.php:160
 #: includes/class-field-registry.php:738
 #: templates/partials/account/profile.php:50
 msgid "Ngày sinh"
@@ -2030,7 +2039,7 @@ msgstr ""
 msgid "Thông tin"
 msgstr ""
 
-#: templates/partials/account/status.php:51
+#: templates/partials/account/status.php:60
 msgid "Thông tin bắt buộc còn thiếu"
 msgstr ""
 
@@ -2604,8 +2613,8 @@ msgid "dùng để đăng nhập"
 msgstr ""
 
 #: includes/Admin/Screens/class-settings-screen.php:221
-#: templates/partials/account/status.php:114
-#: templates/partials/account/status.php:121
+#: templates/partials/account/status.php:152
+#: templates/partials/account/status.php:159
 msgid "email"
 msgstr ""
 
@@ -2632,8 +2641,8 @@ msgid "ngày"
 msgstr ""
 
 #: includes/Admin/Screens/class-settings-screen.php:220
-#: templates/partials/account/status.php:114
-#: templates/partials/account/status.php:121
+#: templates/partials/account/status.php:152
+#: templates/partials/account/status.php:159
 msgid "số điện thoại"
 msgstr ""
 
@@ -2663,12 +2672,12 @@ msgid "Đang chặn"
 msgstr ""
 
 #. translators: 1: contact type, 2: masked destination.
-#: templates/partials/account/status.php:120
+#: templates/partials/account/status.php:158
 msgid "Đang chờ xác thực %1$s: %2$s. Bạn có thể gửi lại một mã mới bên dưới."
 msgstr ""
 
 #. translators: 1: contact type, 2: masked destination.
-#: templates/partials/account/status.php:113
+#: templates/partials/account/status.php:151
 msgid "Đang chờ xác thực %1$s: %2$s. Mở trang chỉnh sửa hồ sơ để nhập mã OTP."
 msgstr ""
 
@@ -2949,7 +2958,7 @@ msgstr ""
 msgid "Địa chỉ email không hợp lệ."
 msgstr ""
 
-#: includes/Auth/class-profile-completion-service.php:78
+#: includes/Auth/class-profile-completion-service.php:149
 #: includes/Frontend/class-account-form.php:96
 msgid "Địa chỉ nhận hàng"
 msgstr ""
