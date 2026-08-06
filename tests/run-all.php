@@ -121,6 +121,15 @@ $suites = array(
 		'file' => 'mail/run-template-tests.php',
 		'kind' => 'required',
 	),
+	array(
+		// Phase 16, landed red at 16.0 before any production file moved. It needs
+		// its own suite rather than rows in the account surface one, which has
+		// been `required` since 8.3 — rules that are meant to fail cannot live in
+		// a suite that blocks. Promote when 16.3 turns it green.
+		'name' => 'Sign-in card',
+		'file' => 'identity/run-sign-in-card-tests.php',
+		'kind' => 'spec',
+	),
 );
 
 $results  = array();
