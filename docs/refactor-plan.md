@@ -30,7 +30,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 14 — The email identity**
 - [x] **Phase 15 — The unreleased install**
 - [x] **Phase 16 — The sign-in card**
-- [ ] **Phase 17 — The account card**
+- [x] **Phase 17 — The account card**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -1498,28 +1498,67 @@ row has no stored fact behind it at all.
 
 ### Sub-phases
 
-- [ ] **17.0** [Guard rails](account-card/17.0-guard-rails.md) — eight rules,
-      one per sub-phase below, landed red before any production file moves
-- [ ] **17.1** [The provider's own mark](account-card/17.1-provider-marks.md) —
-      `icon_svg()` has been on the interface since Phase 12 and only the sign-in
-      screen has ever called it
-- [ ] **17.2** [The scale](account-card/17.2-the-scale.md) — six spacing steps
-      and five type steps, declared once; the input and the button beside it stop
-      being different heights by construction rather than by luck
-- [ ] **17.3** [One shape for one class of action](account-card/17.3-one-action-shape.md)
-      — `.sl-action`, and width intent moves onto the element
-- [ ] **17.4** [The address the card names](account-card/17.4-the-address.md) —
-      option (a): one address, mirrored to both Woo address books, and a heading
-      that is true
-- [ ] **17.5** [The notice says why](account-card/17.5-the-notice-says-why.md) —
-      the reason string has existed since Phase 8 and one screen reads it
-- [ ] **17.6** [The password remembers when](account-card/17.6-password-age.md) —
-      three writers, one recorder
-- [ ] **17.7** [The fraction](account-card/17.7-the-fraction.md) — a denominator
-      that moves with five settings, computed where those settings are already
-      read
-- [ ] **17.8** [One glyph set, one owner](account-card/17.8-card-icons.md) — four
-      cards, four marks, one array
+- [x] **17.0** [Guard rails](account-card/17.0-guard-rails.md) — landed red as
+      intended: `9 passed, 25 failed, 0 pending`, no file outside `tests/`
+      touched but the one row in `run-all.php`. **There are four password
+      writers, not three** — and the fourth is the one that must *not* record:
+      `AccountProvisioner` writes a random string nobody has ever seen, so a
+      date there would put "đổi lần cuối 2 năm trước" on the card of somebody
+      who has never had a password. `sl_require_companion()` grew the allowlist
+      `sl_forbid_pattern()` has carried since Phase 4. The nine passes are all
+      halves that stop other halves passing vacuously
+- [x] **17.1** [The provider's own mark](account-card/17.1-provider-marks.md) —
+      one helper, two call sites, against an asset that had been on the interface
+      since Phase 12. Found on the way: `form-auth.php` was the **only** place
+      applying `smart_login_provider_icon_svg`, so a site filtering in an
+      official brand asset would have got it on the sign-in screen and the
+      plugin's own drawing in the account card
+- [x] **17.2** [The scale](account-card/17.2-the-scale.md) — six spacing steps
+      and five type steps, thirty literals removed from the region, both negative
+      margins gone. **The measurement corrected the finding it was meant to
+      confirm**: the button was 45px against the input's 47 and *shorter*, not
+      50px and taller — a `button` takes `line-height: normal` from the UA
+      stylesheet, which beats inheritance. Right defect, wrong number, wrong
+      direction; the spec was corrected rather than left describing something
+      that does not happen
+- [x] **17.3** [One shape for one class of action](account-card/17.3-one-action-shape.md)
+      — `.sl-action`, the invitation becomes a row, and width intent moves onto
+      the element as `.sl-btn--inline` (the base keeps `width: 100%`: **20 of 27**
+      call sites want it). **Rule 3's second half was narrowed here** before the
+      markup was bent to satisfy it — it had flagged two controls that are not
+      row actions. And a defect no suite could see: `.screen-reader-text` is a
+      *theme* convention this plugin has depended on since 8.4 without declaring,
+      so on a theme without it the profile card reads "Họ tên * (bắt buộc)". The
+      rule for it was written **after** the defect, declared as such, with its
+      red in the commit
+- [x] **17.4** [The address the card names](account-card/17.4-the-address.md) —
+      option (a). **A Phase 8.5 assertion had to be reversed, not deleted**:
+      "the profile form never touches shipping", written with a reason that is
+      true and a cost this phase pays on purpose. Replaced by its inverse with
+      the history and the cost in the comment above it. Three docs corrected.
+      `tests/integration/run-wordpress-gate.php` **was not run** — no WordPress
+      bootstrap in this environment — and that is the one acceptance item this
+      sub-phase did not meet
+- [x] **17.5** [The notice says why](account-card/17.5-the-notice-says-why.md) —
+      the reason has been translated since Phase 8 and one screen read it. The
+      two branches turned out to be one: they differed in a class, a heading and
+      a link's wording, and carried three duplicated blocks between them
+- [x] **17.6** [The password remembers when](account-card/17.6-password-age.md) —
+      four writers, three recorders, one written-down exemption. Recorded at the
+      writers rather than through a hook, because `apply_password_hash()` writes
+      through `$wpdb` and fires nothing. `''` is a designed answer and has its
+      own assertion: it is the state of every account that exists today
+- [x] **17.7** [The fraction](account-card/17.7-the-fraction.md) —
+      `fields_in_scope()` lists what the account is asked for, filled or not, so
+      the denominator is counted where the five settings are already read.
+      Splitting the settings lookup from the missing test made an oddity visible
+      and it is written down rather than tidied: `required_in_profile` puts the
+      address in scope without `enabled`
+- [x] **17.8** [One glyph set, one owner](account-card/17.8-card-icons.md) —
+      `headings()` becomes `sections_meta()`, label and mark in one array, drawn
+      by one partial. Suite fully green and **promoted to `required`** here
+      rather than left for later. The template suite caught the new partial
+      having no fixture, which is the mechanism 8.2 built it for
 
 ---
 

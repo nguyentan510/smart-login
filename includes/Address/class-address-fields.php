@@ -179,7 +179,8 @@ class AddressFields {
 	 * `is_complete()` are unchanged, so the mirror cannot become a second source
 	 * of truth that disagrees with the first.
 	 *
-	 * @param array $clean Output of validate().
+	 * @param int   $user_id
+	 * @param array $clean   Output of validate().
 	 */
 	public static function save_for_user( int $user_id, array $clean ): void {
 		if ( '' === $clean['province_code'] ) {

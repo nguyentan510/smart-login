@@ -93,15 +93,15 @@ if ( empty( $sl_identities ) ) {
 					<?php else : ?>
 						<details class="sl-identity-unlink">
 							<?php
-								/*
-								 * `<details>` stays as the mechanism — it holds a password
-								 * form and has to work with JavaScript off. 17.3 changes
-								 * what the summary looks like and nothing else, so the
-								 * rarest control in the card stops being a third visual
-								 * weight beside "Đổi" and "Liên kết".
-								 */
-								?>
-								<summary class="sl-action sl-action--summary sl-action--danger"><?php esc_html_e( 'Bỏ liên kết', 'smart-login' ); ?></summary>
+							/*
+							 * `<details>` stays as the mechanism — it holds a password
+							 * form and has to work with JavaScript off. 17.3 changes
+							 * what the summary looks like and nothing else, so the
+							 * rarest control in the card stops being a third visual
+							 * weight beside "Đổi" and "Liên kết".
+							 */
+							?>
+							<summary class="sl-action sl-action--summary sl-action--danger"><?php esc_html_e( 'Bỏ liên kết', 'smart-login' ); ?></summary>
 
 							<form method="post" class="sl-identity-unlink-form">
 								<?php wp_nonce_field( 'smart_login_unlink_identity' ); ?>

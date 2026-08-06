@@ -107,6 +107,7 @@ final class ProfileCompletionService {
 	 * whether it holds a value — the FieldRegistry shape, applied to the one
 	 * other place in this plugin that had a rule spread across five branches.
 	 *
+	 * @param int      $user_id
 	 * @param \WP_User $user
 	 * @return array<int,array{key:string,label:string,required:bool,verification_required:bool,missing:bool}>
 	 */
