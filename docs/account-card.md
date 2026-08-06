@@ -40,11 +40,18 @@ its own spacing does not have a scale; it has arithmetic.
 ### 2. The input and the button beside it are not the same height
 
 `.sl-input` is `padding: 12px 14px; font-size: 15px; line-height: 1.4`
-(`:225-234`) — 47px. `.sl-btn` is `padding: 13px 16px; font-size: 15px` with **no
-`line-height` at all** (`:352-365`), so it inherits 1.5 from `.smart-login:20` —
-about 50px. They sit in one grid row in the contact editor
-(`:558-563`), where `align-items: center` hides the difference rather than
-removing it.
+(`:225-234`). `.sl-btn` is `padding: 13px 16px; font-size: 15px` with **no
+`line-height` at all** (`:352-365`). They sit in one grid row in the contact
+editor (`:558-563`), where `align-items: center` hides the difference rather
+than removing it.
+
+**Measured, after the first reading of it was wrong.** The prediction here was
+that the button inherits `1.5` from `.smart-login` and comes out *taller*, near
+50px. In a browser it computes `line-height: normal` — the UA stylesheet for
+`button` sets it, and that beats inheritance — so the button is 45px against the
+input's 47 and is *shorter*. Two pixels, the other way round. The defect is
+real; the number and the direction in the first draft of this finding were not,
+and 17.2's outcome records the correction.
 
 This is a *consequence* of finding 1, not a separate defect: 12 and 13 are both
 off any grid, and nothing forced them to agree.

@@ -9,7 +9,43 @@
 	--sl-text: #1f2430;
 	--sl-muted: #6b7280;
 	--sl-border: #d9dde5;
+
+	/* Two recessed surfaces, each of which was a hex repeated in two places.
+	   A card that layers a sub-panel on itself needs the second one to be a
+	   value somebody can change, not a colour that happens to appear twice. */
+	--sl-surface-2: #f7f8fa;
+	--sl-surface-3: #fafafa;
+
 	--sl-radius: 6px;
+	--sl-radius-card: 12px;
+
+	/*
+	 * The scale. Six spacing steps and five type steps, so a distance is chosen
+	 * from a set rather than invented at the component.
+	 *
+	 * Until 17.2 this block held six tokens and all six were colours, which is
+	 * how the account card came to carry ten spacing values, nine font sizes,
+	 * and two negative margins whose entire job was to cancel a distance the
+	 * component above them had emitted.
+	 *
+	 * The account surface reads these; the sign-in screens still hold their own
+	 * literals. That is a deferral written down in docs/account-card.md, not an
+	 * oversight — converting a stylesheet shared with the screens Phase 16 has
+	 * just finished measuring, in the same commit as an unrelated change, leaves
+	 * no way to attribute a regression to either.
+	 */
+	--sl-space-1: 4px;
+	--sl-space-2: 8px;
+	--sl-space-3: 12px;
+	--sl-space-4: 16px;
+	--sl-space-5: 20px;
+	--sl-space-6: 24px;
+
+	--sl-fs-xs: 12px;
+	--sl-fs-sm: 13px;
+	--sl-fs-md: 15px;
+	--sl-fs-lg: 16px;
+	--sl-fs-xl: 20px;
 
 	box-sizing: border-box;
 	max-width: 460px;
@@ -213,9 +249,13 @@
 }
 
 /* Why a field is worth filling in, directly under its label. Onboarding leans
-   on this: "Ngày sinh" is a demand, "để nhận ưu đãi sinh nhật" is an offer. */
+   on this: "Ngày sinh" is a demand, "để nhận ưu đãi sinh nhật" is an offer.
+
+   The -3px this carried was cancelling part of the label's own bottom margin,
+   arrived at by trying numbers. Both margins are stated now, which is the same
+   correction .sl-card__note gets in 17.2 and for the same reason. */
 .sl-hint--reason {
-	margin: -3px 0 8px;
+	margin: 0 0 var(--sl-space-2);
 }
 
 .sl-required {
@@ -349,14 +389,27 @@
 
 /* ---------- Buttons ---------- */
 
+/* The line-height is the whole point of this rule changing in 17.2.
+   `.sl-input` declares padding 12 and line-height 1.4; this declared padding 13
+   and no line-height at all. The two share one grid row in the contact editor
+   (`.sl-contact-row`), where `align-items: center` hid the difference rather
+   than removing it.
+
+   Not inheritance: a `button` gets `line-height: normal` from the UA stylesheet,
+   which outranks the 1.5 on `.smart-login`. Measured at 45px against the input's
+   47 — the button was the *shorter* of the two, which is the opposite of what
+   reading the file predicted. Declaring both properties makes them equal by
+   construction rather than by argument: 12 + 12 + 15 × 1.4 + 2 borders, on each
+   side. */
 .sl-btn {
 	display: block;
 	width: 100%;
-	margin-bottom: 12px;
-	padding: 13px 16px;
+	margin-bottom: var(--sl-space-3);
+	padding: var(--sl-space-3) var(--sl-space-4);
 	border: 1px solid transparent;
 	border-radius: var(--sl-radius);
-	font-size: 15px;
+	font-size: var(--sl-fs-md);
+	line-height: 1.4;
 	font-weight: 600;
 	text-align: center;
 	text-decoration: none;
@@ -875,10 +928,10 @@
 }
 
 .sl-card {
-	margin: 0 0 16px;
-	padding: 18px 20px;
+	margin: 0 0 var(--sl-space-4);
+	padding: var(--sl-space-4) var(--sl-space-5);
 	border: 1px solid var(--sl-border);
-	border-radius: 12px;
+	border-radius: var(--sl-radius-card);
 	background: #fff;
 }
 
@@ -887,15 +940,15 @@
 	flex-wrap: wrap;
 	align-items: center;
 	justify-content: space-between;
-	gap: 8px;
+	gap: var(--sl-space-2);
 }
 
 .sl-card__title {
 	display: flex;
 	align-items: center;
-	gap: 8px;
-	margin: 0 0 16px;
-	font-size: 16px;
+	gap: var(--sl-space-2);
+	margin: 0 0 var(--sl-space-4);
+	font-size: var(--sl-fs-lg);
 	font-weight: 600;
 }
 
@@ -904,39 +957,47 @@
 }
 
 .sl-card__head + * {
-	margin-top: 16px;
+	margin-top: var(--sl-space-4);
 }
 
 .sl-card__icon {
 	color: var(--sl-accent);
-	font-size: 10px;
+	font-size: var(--sl-fs-xs);
 	line-height: 1;
 }
 
+/* Declared, not subtracted. This was `margin-top: -8px`, which was cancelling
+   the theme's default paragraph margin plus part of the title's — a distance
+   nothing here controls, arrived at by trying numbers. Stating both margins
+   makes the note's position a property of the note. */
 .sl-card__note {
-	margin-top: -8px;
+	margin: 0 0 var(--sl-space-4);
 }
 
 .sl-grid-2 {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-	gap: 0 16px;
+	gap: 0 var(--sl-space-4);
 }
 
 .sl-static {
 	margin: 0;
-	padding: 9px 0;
+	padding: var(--sl-space-2) 0;
 	font-weight: 500;
 }
 
 /* ---------- Badges ---------- */
 
+/* 11px with line-height 1.6 was the fourth distinct size for "small text" in a
+   single card, beside the note's 12, the row label's 13 and the label's 14. It
+   is the scale's xs now, and the line-height comes down to keep the pill the
+   height it was in a 36px row. */
 .sl-badge {
 	display: inline-block;
-	padding: 2px 8px;
+	padding: var(--sl-space-1) var(--sl-space-2);
 	border-radius: 999px;
-	font-size: 11px;
-	line-height: 1.6;
+	font-size: var(--sl-fs-xs);
+	line-height: 1.3;
 	white-space: nowrap;
 }
 
@@ -977,7 +1038,7 @@
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 10px;
+	gap: var(--sl-space-3);
 	min-height: 36px;
 }
 
@@ -986,18 +1047,18 @@
    first div in the card — so the first contact block was never matched and kept
    a rule above it with nothing to separate it from. */
 .sl-contact-verification {
-	padding-bottom: 12px;
+	padding-bottom: var(--sl-space-3);
 }
 
 .sl-contact-verification + .sl-contact-verification {
-	padding-top: 12px;
+	padding-top: var(--sl-space-3);
 	border-top: 1px solid var(--sl-border);
 }
 
 .sl-row__label {
 	flex: 0 0 108px;
 	color: var(--sl-muted);
-	font-size: 13px;
+	font-size: var(--sl-fs-sm);
 }
 
 .sl-row__value {
@@ -1006,7 +1067,7 @@
 }
 
 .sl-contact-edit {
-	padding-top: 12px;
+	padding-top: var(--sl-space-3);
 }
 
 /* ---------- Linked identities ----------
@@ -1032,27 +1093,27 @@
 /* Matches the rhythm `.sl-contact-verification` sets for the rows above, so the
    card reads as one list rather than as two blocks that happen to touch. */
 .sl-identity {
-	padding: 12px 0;
+	padding: var(--sl-space-3) 0;
 	border-top: 1px solid var(--sl-border);
 }
 
 .sl-identity-note {
 	flex: 1 1 100%;
-	font-size: 12px;
+	font-size: var(--sl-fs-xs);
 }
 
 .sl-identity-unlink summary {
 	cursor: pointer;
-	font-size: 13px;
+	font-size: var(--sl-fs-sm);
 }
 
 .sl-identity-unlink[open] {
 	flex: 1 1 100%;
-	margin-top: 6px;
-	padding: 12px;
+	margin-top: var(--sl-space-2);
+	padding: var(--sl-space-3);
 	border: 1px solid var(--sl-border);
 	border-radius: var(--sl-radius);
-	background: #fafafa;
+	background: var(--sl-surface-3);
 }
 
 /* The rarest and most destructive control in the card, and until 16.3 the
@@ -1070,8 +1131,8 @@
 }
 
 .sl-link-providers {
-	margin-top: 12px;
-	padding-top: 12px;
+	margin-top: var(--sl-space-3);
+	padding-top: var(--sl-space-3);
 	border-top: 1px solid var(--sl-border);
 }
 
@@ -1081,13 +1142,13 @@
 	display: flex;
 	flex-wrap: wrap;
 	align-items: baseline;
-	gap: 10px;
+	gap: var(--sl-space-3);
 	cursor: pointer;
 	font-weight: 500;
 }
 
 .sl-disclosure__body {
-	margin-top: 16px;
+	margin-top: var(--sl-space-4);
 }
 
 /* ---------- Save bar ----------
@@ -1101,11 +1162,11 @@
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 12px;
+	gap: var(--sl-space-3);
 	margin: 0;
-	padding: 12px 16px;
+	padding: var(--sl-space-3) var(--sl-space-4);
 	border: 1px solid var(--sl-border);
-	border-radius: 12px;
+	border-radius: var(--sl-radius-card);
 	background: #fff;
 }
 
@@ -1117,7 +1178,7 @@
 
 .sl-savebar__state {
 	color: var(--sl-muted);
-	font-size: 13px;
+	font-size: var(--sl-fs-sm);
 }
 
 .sl-savebar.is-dirty {
@@ -1132,7 +1193,7 @@
 
 @media (max-width: 480px) {
 	.sl-card {
-		padding: 14px;
+		padding: var(--sl-space-3);
 	}
 
 	.sl-row__label {
