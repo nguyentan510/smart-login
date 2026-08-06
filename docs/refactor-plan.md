@@ -29,6 +29,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 13 — The mail surface**
 - [x] **Phase 14 — The email identity**
 - [x] **Phase 15 — The unreleased install**
+- [ ] **Phase 16 — The sign-in card**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -1391,6 +1392,63 @@ is worth.
 
 ---
 
+## Phase 16 — The sign-in card
+
+Normative spec: [`sign-in-card.md`](sign-in-card.md) — the findings, the eight
+decisions, the ownership boundary held over from 8.2 and the one deferral written
+down where it is decided all live there.
+
+Execution briefs: [`sign-in-card/`](sign-in-card/), one file per sub-phase.
+**Status lives here and only here.**
+
+Short version: the "Đăng nhập & liên hệ" card answers one question twice.
+`IdentityLinkService::linked()` returns every identity record and has never
+filtered by channel, so the account's own email prints once whole in the contact
+row and once masked in the list below it — two rows a member reads as two
+addresses. Phase 8 named that defect in writing and 8.4 fixed it; 14.4 and 14.5
+handed an `email` row to nearly every account and it came back, through code that
+was already there. The payload has carried the `federated` flag that separates
+the two kinds since Phase 6 and no template has ever read it.
+
+### Sub-phases
+
+- [ ] **16.0** [Guard rails](sign-in-card/16.0-guard-rails.md) — five rules, its
+      own `spec` suite, landed red before any production file moves
+- [ ] **16.1** [One value, one place](sign-in-card/16.1-one-value-one-place.md) —
+      the list filters on `federated`; the contact row absorbs the state the
+      second list was carrying
+- [ ] **16.2** [A provider row a person can read](sign-in-card/16.2-provider-row.md)
+      — `Google 1171••••••` names the account instead of the OIDC subject
+- [ ] **16.3** [The card's geometry](sign-in-card/16.3-card-geometry.md) — one
+      grid, the box-model guard generalised, the unstyled password box, the
+      weight inversion. Visible, and last
+
+---
+
+**Ordering rationale.** 16.0 first, for the reason the Postscript gives.
+
+**16.1 must precede 16.3.** 16.3 merges two grids into one; doing that before
+16.1 decides which rows survive is laying out rows that are about to be deleted,
+and the label column's width is a function of the rows that remain.
+
+**16.2 must not precede 16.1** — both edit the same `linked()` payload and the
+same partial, and keeping them apart is what lets 16.1's acceptance be *unchanged
+suite counts*. It is otherwise independent and may be dropped; the row would stay
+unreadable but not wrong.
+
+**16.3 is last and is the visible one** — the same trap 10.6, 11.4 and 14.6 each
+named. The button through the side of its panel is what was reported, and it is
+the smallest of the four things wrong with that card.
+
+**No `SMART_LOGIN_DB_VERSION` bump, and no schema change.** Every value this
+phase renders is already stored; `meta_json` has held the provider claims since
+Phase 2 and nothing has read them.
+
+**No change to `unlink()`, its orphan guard or the REST routes.** The phase is
+presentation plus one computed display key.
+
+---
+
 ## Risks
 
 | Risk | Mitigation |
@@ -1421,3 +1479,8 @@ is worth.
 | 14.5 grants existing accounts a login route their holders did not ask for | Deliberate and argued in the brief: core's own form already reaches them at that address. Skips synthetic addresses and any address held by two users, both asserted; count written to the audit log; opting out is turning the 14.4 flag off before upgrading |
 | 14.3 adds a caller to an OTP send, which is the shape of 9.4's original defect | The new route spends `check_identify()` and `check_otp_send()` unchanged, asserted by exhausting the budget rather than by reading the call site |
 | 14.6's branch is re-derived from `user_email` by a later change and silently breaks for Google accounts | The acceptance asserts the non-synthetic-plus-no-email-row case specifically — the one a synthetic-email predicate gets wrong — so the predicate is pinned by a test rather than by a comment |
+| 16.1 hides a row a member relies on: an account whose only identity is federated renders an empty card | Acceptance asserts the provider-first shape specifically, not only the shape being fixed. The early return moves *after* the filter, so "nothing federated" and "nothing at all" stay different states |
+| 16.1 filters in the template, so a second surface renders the unfiltered list | One partial owns the list and both surfaces call it — 8.2's contract, asserted by the existing single-template rule. The filter is presentational by decision, and `linked()` keeps returning everything because `can_unlink()` counts it |
+| 16.2 promotes `meta_json` from forensic context to display, and a link-time snapshot goes stale | Accepted and argued in the spec: the row's subject *is* the link-time fact. Three-level fallback asserted separately, so an identity with no meta still renders |
+| 16.3's box-model fix is aimed at a cause that was inferred from a screenshot, not measured | Reproducing the overflow and reading the computed `box-sizing` is a completion condition of the sub-phase, not a follow-up. The guard is correct whatever the answer; if the hypothesis is wrong the real cause is found before the CSS is edited |
+| The unlink route disappears for phone and email, and somebody needs it | A deliberate narrowing, written down in the spec with its reason. `unlink()` and the REST route are untouched, so nothing is lost but the control on this one screen |
