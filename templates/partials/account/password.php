@@ -26,11 +26,22 @@
 
 use SmartLogin\Frontend\AccountForm;
 use SmartLogin\Frontend\TemplateLoader;
+use SmartLogin\Security\SecurityMeta;
 
 defined( 'ABSPATH' ) || exit;
 
 $sl_headings    = AccountForm::headings();
 $sl_has_contact = ! empty( $sl_has_contact );
+
+/*
+ * '' for every account that exists on the day 17.6 ships, and that is the
+ * designed answer rather than a fallback — see SecurityMeta. The row renders the
+ * control without an age instead of guessing one from user_registered, which
+ * would be wrong for exactly the people most likely to read it.
+ */
+$sl_password_age = isset( $sl_user ) && $sl_user instanceof WP_User
+	? SecurityMeta::describe_password_age( (int) $sl_user->ID )
+	: '';
 ?>
 <section class="sl-card" id="sl-section-password">
 	<h3 class="sl-card__title">
@@ -52,7 +63,16 @@ $sl_has_contact = ! empty( $sl_has_contact );
 	<details class="sl-disclosure">
 		<summary class="sl-disclosure__summary">
 			<span><?php esc_html_e( 'Đổi mật khẩu', 'smart-login' ); ?></span>
-			<span class="sl-hint"><?php esc_html_e( 'Để trống nếu không muốn thay đổi', 'smart-login' ); ?></span>
+			<?php if ( '' !== $sl_password_age ) : ?>
+				<span class="sl-hint">
+					<?php
+					/* translators: %s: a relative age, e.g. "3 tháng trước". */
+					printf( esc_html__( 'Đổi lần cuối %s', 'smart-login' ), esc_html( $sl_password_age ) );
+					?>
+				</span>
+			<?php else : ?>
+				<span class="sl-hint"><?php esc_html_e( 'Để trống nếu không muốn thay đổi', 'smart-login' ); ?></span>
+			<?php endif; ?>
 		</summary>
 
 		<div class="sl-disclosure__body">

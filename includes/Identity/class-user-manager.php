@@ -9,6 +9,7 @@ namespace SmartLogin\Identity;
 
 use SmartLogin\Identity\Channels\MailChannel;
 use SmartLogin\Identity\Channels\PhoneChannel;
+use SmartLogin\Security\SecurityMeta;
 use SmartLogin\Settings;
 use WP_Error;
 use WP_User;
@@ -270,6 +271,15 @@ class UserManager {
 		);
 
 		clean_user_cache( $user_id );
+
+		/*
+		 * The hash reaching here came from a password its owner typed on the
+		 * signup form, so this is the moment they chose one — and it is the
+		 * writer no WordPress hook can see, because the row was written straight
+		 * through $wpdb. See SecurityMeta for why the rule is over the writers
+		 * rather than over an event.
+		 */
+		SecurityMeta::record_password_change( $user_id );
 	}
 
 	/**

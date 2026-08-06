@@ -12,6 +12,7 @@ use SmartLogin\Identity\UserManager;
 use SmartLogin\OTP\OtpService;
 use SmartLogin\Security\AuditLog;
 use SmartLogin\Security\RateLimiter;
+use SmartLogin\Security\SecurityMeta;
 use SmartLogin\Settings;
 use WP_Error;
 use WP_Session_Tokens;
@@ -177,6 +178,7 @@ class PasswordResetHandler {
 		}
 
 		wp_set_password( $password, $user_id );
+		SecurityMeta::record_password_change( $user_id );
 
 		// Kick every other session; a reset is meaningless if a stolen cookie survives.
 		$tokens = WP_Session_Tokens::get_instance( $user_id );

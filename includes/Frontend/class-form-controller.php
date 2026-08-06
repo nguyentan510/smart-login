@@ -229,7 +229,15 @@ class FormController {
 			)
 		);
 
-		return is_wp_error( $updated ) ? $updated : true;
+		if ( is_wp_error( $updated ) ) {
+			return $updated;
+		}
+
+		// After the write and not before: a failed update must not leave a date
+		// claiming a password changed when it did not.
+		\SmartLogin\Security\SecurityMeta::record_password_change( $user_id );
+
+		return true;
 	}
 
 	/**

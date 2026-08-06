@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-06 13:13+0000\n"
+"POT-Creation-Date: 2026-08-06 13:15+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -27,6 +27,24 @@ msgstr ""
 msgid "%1$s. Đang chấp nhận %2$d mã quốc gia — mỗi mã mở thêm là một đường để đốt tin nhắn."
 msgstr ""
 
+#. translators: %d: number of days.
+#: includes/Security/class-security-meta.php:93
+msgid "%d ngày trước"
+msgid_plural "%d ngày trước"
+msgstr[0] ""
+
+#. translators: %d: number of years.
+#: includes/Security/class-security-meta.php:106
+msgid "%d năm trước"
+msgid_plural "%d năm trước"
+msgstr[0] ""
+
+#. translators: %d: number of months.
+#: includes/Security/class-security-meta.php:100
+msgid "%d tháng trước"
+msgid_plural "%d tháng trước"
+msgstr[0] ""
+
 #. translators: %s: identifier label, e.g. "Số điện thoại hoặc Email".
 #: includes/Auth/class-login-handler.php:212
 msgid "%s hoặc mật khẩu không đúng."
@@ -34,7 +52,7 @@ msgstr ""
 
 #. translators: %s: identifier label, e.g. "Số điện thoại".
 #: includes/Auth/class-register-handler.php:420
-#: includes/Frontend/class-form-controller.php:335
+#: includes/Frontend/class-form-controller.php:343
 msgid "%s không hợp lệ."
 msgstr ""
 
@@ -122,7 +140,7 @@ msgstr ""
 msgid "Bạn cần đăng nhập để thay đổi thông tin liên hệ."
 msgstr ""
 
-#: includes/Frontend/class-form-controller.php:243
+#: includes/Frontend/class-form-controller.php:251
 msgid "Bạn cần đăng nhập để thực hiện việc này."
 msgstr ""
 
@@ -356,7 +374,7 @@ msgstr ""
 msgid "Chưa có mật khẩu, hoặc không nhớ?"
 msgstr ""
 
-#: templates/partials/account/password.php:121
+#: templates/partials/account/password.php:141
 msgid "Chưa có mật khẩu, hoặc không nhớ? Ở màn hình đăng nhập, chọn \"Chưa có mật khẩu, hoặc không nhớ?\" để nhận mã xác thực và đặt mật khẩu mới."
 msgstr ""
 
@@ -955,7 +973,7 @@ msgstr ""
 msgid "Hoặc"
 msgstr ""
 
-#: templates/partials/account/password.php:46
+#: templates/partials/account/password.php:57
 msgid "Hãy xác thực email hoặc số điện thoại trước — đó là thông tin bạn sẽ dùng để đăng nhập. Sau đó bạn có thể đặt mật khẩu."
 msgstr ""
 
@@ -1121,7 +1139,7 @@ msgid "Không thể bỏ — đây là cách đăng nhập duy nhất"
 msgstr ""
 
 #: includes/Auth/class-contact-verification-service.php:217
-#: includes/Identity/class-user-manager.php:231
+#: includes/Identity/class-user-manager.php:232
 msgid "Không thể cập nhật thông tin liên hệ."
 msgstr ""
 
@@ -1168,12 +1186,12 @@ msgstr ""
 #: includes/Auth/class-account-provisioner.php:98
 #: includes/Auth/class-contact-verification-service.php:50
 #: includes/Auth/class-identity-link-service.php:174
-#: includes/Auth/class-password-reset-handler.php:103
-#: includes/Auth/class-password-reset-handler.php:141
+#: includes/Auth/class-password-reset-handler.php:104
+#: includes/Auth/class-password-reset-handler.php:142
 #: includes/Auth/class-session-issuer.php:28
 #: includes/Frontend/class-form-controller.php:208
-#: includes/Frontend/class-form-controller.php:671
-#: includes/Frontend/class-form-controller.php:801
+#: includes/Frontend/class-form-controller.php:679
+#: includes/Frontend/class-form-controller.php:809
 #: includes/Frontend/class-rest-controller.php:222
 #: includes/Frontend/class-rest-controller.php:305
 msgid "Không tìm thấy tài khoản."
@@ -1237,7 +1255,7 @@ msgstr ""
 msgid "Kênh gửi: sms / email"
 msgstr ""
 
-#: includes/Identity/class-user-manager.php:224
+#: includes/Identity/class-user-manager.php:225
 msgid "Kênh không phải email."
 msgstr ""
 
@@ -1425,7 +1443,7 @@ msgstr ""
 msgid "Mật khẩu"
 msgstr ""
 
-#: templates/partials/account/password.php:64
+#: templates/partials/account/password.php:84
 msgid "Mật khẩu hiện tại"
 msgstr ""
 
@@ -1438,7 +1456,7 @@ msgid "Mật khẩu không đúng."
 msgstr ""
 
 #: templates/form-reset.php:54
-#: templates/partials/account/password.php:79
+#: templates/partials/account/password.php:99
 msgid "Mật khẩu mới"
 msgstr ""
 
@@ -1545,7 +1563,7 @@ msgid "Nhập giá trị"
 msgstr ""
 
 #: templates/form-reset.php:63
-#: templates/partials/account/password.php:90
+#: templates/partials/account/password.php:110
 msgid "Nhập lại mật khẩu mới"
 msgstr ""
 
@@ -1602,7 +1620,7 @@ msgstr ""
 msgid "Nếu nhà cung cấp báo lỗi, thông báo của họ sẽ hiện ra — thường gặp nhất là redirect URI khai báo lệch so với URL dưới đây."
 msgstr ""
 
-#: includes/Auth/class-password-reset-handler.php:96
+#: includes/Auth/class-password-reset-handler.php:97
 msgid "Nếu thông tin hợp lệ, mã xác thực sẽ được gửi tới bạn."
 msgstr ""
 
@@ -1645,15 +1663,15 @@ msgstr ""
 msgid "Phiên làm việc đã hết hạn. Vui lòng tải lại trang và thử lại."
 msgstr ""
 
-#: includes/Frontend/class-form-controller.php:248
+#: includes/Frontend/class-form-controller.php:256
 #: includes/Frontend/class-rest-controller.php:117
 msgid "Phiên làm việc đã hết hạn. Vui lòng tải lại trang."
 msgstr ""
 
-#: includes/Auth/class-password-reset-handler.php:135
+#: includes/Auth/class-password-reset-handler.php:136
 #: includes/Auth/class-register-handler.php:167
 #: includes/Auth/class-session-issuer.php:37
-#: includes/Frontend/class-form-controller.php:618
+#: includes/Frontend/class-form-controller.php:626
 #: includes/Frontend/class-rest-controller.php:247
 #: includes/OTP/class-otp-service.php:224
 msgid "Phiên xác thực không hợp lệ."
@@ -1668,8 +1686,8 @@ msgstr ""
 msgid "Phiên xác thực thông tin liên hệ không hợp lệ."
 msgstr ""
 
-#: includes/Frontend/class-form-controller.php:595
-#: includes/Frontend/class-form-controller.php:704
+#: includes/Frontend/class-form-controller.php:603
+#: includes/Frontend/class-form-controller.php:712
 #: includes/Frontend/class-rest-controller.php:465
 msgid "Phiên xác thực đã hết hạn. Vui lòng thực hiện lại."
 msgstr ""
@@ -1699,7 +1717,7 @@ msgstr ""
 msgid "Phiên đặt lại mật khẩu đã hết hạn."
 msgstr ""
 
-#: includes/Auth/class-password-reset-handler.php:158
+#: includes/Auth/class-password-reset-handler.php:159
 msgid "Phiên đặt lại mật khẩu đã hết hạn. Vui lòng thực hiện lại."
 msgstr ""
 
@@ -1973,7 +1991,7 @@ msgstr ""
 msgid "Thay thế form đăng nhập/đăng ký mặc định của WooCommerce"
 msgstr ""
 
-#: includes/Frontend/class-form-controller.php:832
+#: includes/Frontend/class-form-controller.php:840
 msgid "Thiết bị mới được phát hiện. Vui lòng nhập mã xác thực vừa gửi cho bạn."
 msgstr ""
 
@@ -1985,7 +2003,7 @@ msgstr ""
 msgid "Thiếu số điện thoại hoặc email nhận mã."
 msgstr ""
 
-#: includes/Identity/class-user-manager.php:102
+#: includes/Identity/class-user-manager.php:103
 msgid "Thiếu thông tin định danh."
 msgstr ""
 
@@ -2020,7 +2038,7 @@ msgstr ""
 msgid "Thông tin cá nhân"
 msgstr ""
 
-#: includes/Auth/class-password-reset-handler.php:68
+#: includes/Auth/class-password-reset-handler.php:69
 msgid "Thông tin không hợp lệ."
 msgstr ""
 
@@ -2036,7 +2054,7 @@ msgstr ""
 msgid "Thông tin liên hệ đã được xác thực."
 msgstr ""
 
-#: includes/Auth/class-password-reset-handler.php:90
+#: includes/Auth/class-password-reset-handler.php:91
 msgid "Thông tin này chưa được đăng ký. Vui lòng kiểm tra lại hoặc tạo tài khoản mới."
 msgstr ""
 
@@ -2157,7 +2175,7 @@ msgstr ""
 msgid "Tuỳ chỉnh — tự khai báo mọi thứ"
 msgstr ""
 
-#: templates/partials/account/password.php:43
+#: templates/partials/account/password.php:54
 msgid "Tài khoản của bạn đang đăng nhập bằng Google hoặc Zalo và chưa có email hoặc số điện thoại nào được xác thực."
 msgstr ""
 
@@ -2177,9 +2195,9 @@ msgstr ""
 
 #: includes/Auth/class-account-provisioner.php:245
 #: includes/Auth/class-register-handler.php:307
-#: includes/Identity/class-user-manager.php:107
-#: includes/Identity/class-user-manager.php:117
-#: includes/Identity/class-user-manager.php:149
+#: includes/Identity/class-user-manager.php:108
+#: includes/Identity/class-user-manager.php:118
+#: includes/Identity/class-user-manager.php:150
 msgid "Tài khoản đã tồn tại."
 msgstr ""
 
@@ -2260,7 +2278,7 @@ msgstr ""
 msgid "Tổng quan"
 msgstr ""
 
-#: templates/partials/account/password.php:49
+#: templates/partials/account/password.php:60
 msgid "Tới mục Liên hệ"
 msgstr ""
 
@@ -2306,8 +2324,8 @@ msgid "Vui lòng hoàn tất bước xác minh chống robot."
 msgstr ""
 
 #. translators: %s: identifier label.
-#: includes/Auth/class-password-reset-handler.php:46
-#: includes/Frontend/class-form-controller.php:300
+#: includes/Auth/class-password-reset-handler.php:47
+#: includes/Frontend/class-form-controller.php:308
 msgid "Vui lòng nhập %s."
 msgstr ""
 
@@ -2346,7 +2364,7 @@ msgstr ""
 msgid "Vui lòng nhập vào mã OTP đã được gửi đến số điện thoại %s"
 msgstr ""
 
-#: includes/Frontend/class-form-controller.php:760
+#: includes/Frontend/class-form-controller.php:768
 #: includes/Frontend/class-rest-controller.php:273
 msgid "Vui lòng nhập đầy đủ thông tin đăng nhập."
 msgstr ""
@@ -2599,6 +2617,10 @@ msgstr ""
 msgid "hCaptcha"
 msgstr ""
 
+#: includes/Security/class-security-meta.php:86
+msgid "hôm nay"
+msgstr ""
+
 #. translators: 1: codes sent this hour, 2: hourly ceiling, 3: daily ceiling.
 #: includes/Admin/class-readiness.php:326
 #: includes/Admin/class-readiness.php:327
@@ -2712,7 +2734,7 @@ msgstr ""
 msgid "Đã bật · thiếu credentials"
 msgstr ""
 
-#: includes/Frontend/class-form-controller.php:263
+#: includes/Frontend/class-form-controller.php:271
 msgid "Đã bỏ liên kết."
 msgstr ""
 
@@ -2740,7 +2762,7 @@ msgstr ""
 msgid "Đã cấu hình · chưa bật"
 msgstr ""
 
-#: includes/Frontend/class-form-controller.php:724
+#: includes/Frontend/class-form-controller.php:732
 msgid "Đã gửi lại mã xác thực."
 msgstr ""
 
@@ -2806,7 +2828,7 @@ msgstr ""
 msgid "Đăng nhập hoặc đăng ký"
 msgstr ""
 
-#: includes/Frontend/class-form-controller.php:789
+#: includes/Frontend/class-form-controller.php:797
 #: includes/Frontend/class-rest-controller.php:331
 msgid "Đăng nhập không thành công."
 msgstr ""
@@ -2855,7 +2877,7 @@ msgstr ""
 msgid "Đặt lại mật khẩu"
 msgstr ""
 
-#: includes/Frontend/class-form-controller.php:907
+#: includes/Frontend/class-form-controller.php:915
 msgid "Đặt lại mật khẩu thành công. Vui lòng đăng nhập bằng mật khẩu mới."
 msgstr ""
 
@@ -2883,7 +2905,8 @@ msgstr ""
 msgid "Để trống nếu không có trang điều khoản riêng."
 msgstr ""
 
-#: templates/partials/account/password.php:55
+#. translators: %s: a relative age, e.g. "3 tháng trước".
+#: templates/partials/account/password.php:74
 msgid "Để trống nếu không muốn thay đổi"
 msgstr ""
 
@@ -2968,7 +2991,12 @@ msgstr ""
 msgid "Đổi"
 msgstr ""
 
-#: templates/partials/account/password.php:54
+#. translators: %s: a relative age, e.g. "3 tháng trước".
+#: templates/partials/account/password.php:70
+msgid "Đổi lần cuối %s"
+msgstr ""
+
+#: templates/partials/account/password.php:65
 msgid "Đổi mật khẩu"
 msgstr ""
 
