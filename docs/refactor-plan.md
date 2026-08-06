@@ -30,6 +30,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 14 — The email identity**
 - [x] **Phase 15 — The unreleased install**
 - [x] **Phase 16 — The sign-in card**
+- [ ] **Phase 17 — The account card**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -1478,6 +1479,75 @@ presentation plus one computed display key.
 
 ---
 
+## Phase 17 — The account card
+
+Normative spec: [`account-card.md`](account-card.md) — the eight findings, the
+eight decisions, the four deferrals and the one stated cost all live there.
+
+Execution briefs: [`account-card/`](account-card/), one file per sub-phase.
+**Status lives here and only here.**
+
+Short version: Phase 16 fixed what one card *said*. This phase is about what the
+whole surface is *made of*. The stylesheet declares six tokens and all six are
+colours, so the account card carries nine font sizes, ten spacing values and two
+negative margins that exist to cancel a distance something above them emitted.
+Three row-level actions are three different elements at three weights. And two
+things on screen are claims the code does not back: the card headed "Địa chỉ
+giao hàng" writes `billing_*` and nothing else, and the proposed "đổi lần cuối"
+row has no stored fact behind it at all.
+
+### Sub-phases
+
+- [ ] **17.0** [Guard rails](account-card/17.0-guard-rails.md) — eight rules,
+      one per sub-phase below, landed red before any production file moves
+- [ ] **17.1** [The provider's own mark](account-card/17.1-provider-marks.md) —
+      `icon_svg()` has been on the interface since Phase 12 and only the sign-in
+      screen has ever called it
+- [ ] **17.2** [The scale](account-card/17.2-the-scale.md) — six spacing steps
+      and five type steps, declared once; the input and the button beside it stop
+      being different heights by construction rather than by luck
+- [ ] **17.3** [One shape for one class of action](account-card/17.3-one-action-shape.md)
+      — `.sl-action`, and width intent moves onto the element
+- [ ] **17.4** [The address the card names](account-card/17.4-the-address.md) —
+      option (a): one address, mirrored to both Woo address books, and a heading
+      that is true
+- [ ] **17.5** [The notice says why](account-card/17.5-the-notice-says-why.md) —
+      the reason string has existed since Phase 8 and one screen reads it
+- [ ] **17.6** [The password remembers when](account-card/17.6-password-age.md) —
+      three writers, one recorder
+- [ ] **17.7** [The fraction](account-card/17.7-the-fraction.md) — a denominator
+      that moves with five settings, computed where those settings are already
+      read
+- [ ] **17.8** [One glyph set, one owner](account-card/17.8-card-icons.md) — four
+      cards, four marks, one array
+
+---
+
+**Ordering rationale.** 17.0 first, for the reason the Postscript gives.
+
+**17.2 must precede 17.3 and 17.8.** Both write new CSS. Writing it in literals
+and converting it afterwards is two edits to the same lines, and the second edit
+is the one nobody reviews.
+
+**17.1 is first among the fixes because it is the cheapest** — one helper and two
+call sites, against an asset that already exists. It is otherwise independent and
+may be dropped.
+
+**17.4 is the only sub-phase that changes stored data**, and the only one whose
+acceptance names `tests/integration/`. Its cost is stated in the spec rather than
+discovered later: a customer holding a deliberately different shipping address
+loses it on the next save.
+
+**17.8 is last and is the most visible** — the same trap 10.6, 11.4, 14.6 and
+16.3 each named. Four identical dots are the least consequential thing wrong with
+this surface.
+
+**No `SMART_LOGIN_DB_VERSION` bump, and no schema change.** One new user meta key
+and one set of mirrored Woo profile fields, both written through paths that
+already exist.
+
+---
+
 ## Risks
 
 | Risk | Mitigation |
@@ -1513,3 +1583,9 @@ presentation plus one computed display key.
 | 16.2 promotes `meta_json` from forensic context to display, and a link-time snapshot goes stale | Accepted and argued in the spec: the row's subject *is* the link-time fact. Three-level fallback asserted separately, so an identity with no meta still renders |
 | 16.3's box-model fix is aimed at a cause that was inferred from a screenshot, not measured | Reproducing the overflow and reading the computed `box-sizing` is a completion condition of the sub-phase, not a follow-up. The guard is correct whatever the answer; if the hypothesis is wrong the real cause is found before the CSS is edited |
 | The unlink route disappears for phone and email, and somebody needs it | A deliberate narrowing, written down in the spec with its reason. `unlink()` and the REST route are untouched, so nothing is lost but the control on this one screen |
+| 17.2 tokenises a stylesheet shared with the sign-in screens Phase 16 has just finished measuring | Scoped to the account-surface region by decision, not by accident. Rule 2 names its region and asserts the marker exists first, so narrowing the rule to nothing fails loudly. The rest of the file is a written deferral |
+| 17.4 overwrites a shipping address a customer chose on purpose | The stated cost of one address, argued in the spec and repeated in the brief rather than left to a bug report. `billing_*` stays the only reader, so the mirror cannot become a second source of truth |
+| 17.4 is a rename across four files plus the string catalogue — the failure mode CLAUDE.md records five times | The grep across `includes/`, `templates/`, `tests/`, `docs/` and `languages/` is a completion condition of the sub-phase, not a follow-up |
+| 17.6 records the date at three call sites and a fourth writer is added later | A companion rule over the writers, not an assertion about a hook. `apply_password_hash()` writes through `$wpdb` and fires nothing, which is why a listener would have been the wrong answer |
+| 17.7 ships a denominator that is secretly a constant and passes every test | Acceptance asserts `total` **moves** with `profile.dob` off and on, not merely that it is returned |
+| 17.8 renames `headings()`, which four templates call | Same grep condition as 17.4. The rename is the point — one array carries the label and the mark, so the two cannot drift |
