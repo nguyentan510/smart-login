@@ -29,7 +29,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 13 — The mail surface**
 - [x] **Phase 14 — The email identity**
 - [x] **Phase 15 — The unreleased install**
-- [ ] **Phase 16 — The sign-in card**
+- [x] **Phase 16 — The sign-in card**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -1438,12 +1438,19 @@ the two kinds since Phase 6 and no template has ever read it.
       re-run red** rather than assumed. All three fallback levels asserted
       separately, for the reason 11.1 recorded; the masked-subject assertion is
       made on the markup, since `masked` stays in the payload for the REST route
-- [ ] **16.3** [The card's geometry](sign-in-card/16.3-card-geometry.md) — code
-      landed and the suite is fully green and **promoted to `required`**; the row
-      stays open because its acceptance requires reproducing the overflow in a
-      browser and reading the computed `box-sizing`, and that has not been done.
-      The cause is a hypothesis inferred from a screenshot. 10.3 committed with
-      its row unticked for the same reason
+- [x] **16.3** [The card's geometry](sign-in-card/16.3-card-geometry.md) — one
+      grid, so the three rows finally share a label column; suite fully green and
+      **promoted to `required`** here rather than left for later. Committed first
+      with this row **unticked**, the way 10.3 did: the cause was a hypothesis
+      inferred from a screenshot, and a guard that is correct either way is not
+      the same as a cause that was measured. Ticked once it was — on the live
+      site, in the active theme, the guard's `box-sizing` disabled and
+      `width: 100%` restored: `border-box → content-box`, 180px → 557px, and the
+      button's right edge **21px outside** the panel it confirms from. The defect
+      reproduces, and the +21px reconciles with the predicted 34px once the
+      panel's own 12px padding is counted. **Two acceptance checks were not run**
+      — the 480px pass and the keyboard-only pass — and are written down as not
+      run rather than dropped
 
 ---
 
