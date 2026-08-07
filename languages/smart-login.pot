@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-07 03:17+0000\n"
+"POT-Creation-Date: 2026-08-07 03:20+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -374,7 +374,12 @@ msgstr ""
 msgid "Chưa có mật khẩu, hoặc không nhớ?"
 msgstr ""
 
+#. translators: %s: link to the sign-in screen.
 #: templates/partials/account/password.php:136
+msgid "Chưa có mật khẩu, hoặc không nhớ? %s và chọn \"Chưa có mật khẩu, hoặc không nhớ?\" để nhận mã xác thực và đặt mật khẩu mới."
+msgstr ""
+
+#: templates/partials/account/password.php:143
 msgid "Chưa có mật khẩu, hoặc không nhớ? Ở màn hình đăng nhập, chọn \"Chưa có mật khẩu, hoặc không nhớ?\" để nhận mã xác thực và đặt mật khẩu mới."
 msgstr ""
 
@@ -1507,6 +1512,11 @@ msgstr ""
 
 #: includes/Admin/Screens/class-overview-screen.php:89
 msgid "Mở lại việc gửi mã"
+msgstr ""
+
+#. translators: %s: link to the sign-in screen.
+#: templates/partials/account/password.php:138
+msgid "Mở màn hình đăng nhập"
 msgstr ""
 
 #: includes/Admin/class-provider-cards.php:339

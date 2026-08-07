@@ -131,4 +131,38 @@ class Flow {
 		 */
 		return (string) apply_filters( 'smart_login_step_url', $url, $step );
 	}
+
+	/**
+	 * The plugin's own sign-in screen, from anywhere on the site, or ''.
+	 *
+	 * `url()` above appends a step to the *current* URL, which is the right
+	 * answer inside the flow and useless outside it: the account page renders
+	 * `[smart_account]`, so `url( STEP_FORGOT )` there points the visitor back at
+	 * their own profile with a query string it does not read.
+	 *
+	 * That is the deferral `templates/partials/account/password.php` has carried
+	 * since 14.3 — the recovery route was a sentence rather than a link because
+	 * there was no third answer. `wp_lostpassword_url()` is not one: it lands on
+	 * `wp-login.php`, which is exactly the leak
+	 * `tests/identity/run-account-surface-tests.php` forbids elsewhere.
+	 *
+	 * Resolution order matches `AccountForm::edit_url()`: an explicit filter, then
+	 * the page hosting the shortcode. No new setting — a site that has put the
+	 * shortcode on a page has already answered the question, and one that has not
+	 * gets `''` and the sentence it had before.
+	 */
+	public static function login_url(): string {
+		/**
+		 * Point the plugin's own "go and sign in" links at a specific page.
+		 *
+		 * @param string $url
+		 */
+		$filtered = (string) apply_filters( 'smart_login_login_url', '' );
+
+		if ( '' !== $filtered ) {
+			return $filtered;
+		}
+
+		return SitePage::url( array( 'smart_login', 'smart_auth' ), 'smart_login_login_page' );
+	}
 }

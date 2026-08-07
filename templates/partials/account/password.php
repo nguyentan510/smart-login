@@ -121,19 +121,27 @@ $sl_password_age = isset( $sl_user ) && $sl_user instanceof WP_User
 			 * for existing accounts, and somebody who does know their password loses
 			 * nothing by reading one extra line.
 			 *
-			 * DEFERRED, and this is where it is configured: this is a sentence and not a
-			 * link, because the plugin has no addressable URL for its own recovery
-			 * screen from another page. Flow::url() appends a step to the *current* URL,
-			 * which on this page renders [smart_account] and not [smart_login]; and
-			 * wp_lostpassword_url() lands on wp-login.php, which is exactly the leak
-			 * tests/identity/run-account-surface-tests.php already forbids elsewhere.
-			 * Fixing it properly means a "login page" setting, which is a decision about
-			 * configuration surface rather than a line of markup. 14.3 put the same door
-			 * on the login screen itself, where the flow is already in scope.
+			 * A sentence from 14.3 until P3, because the plugin had no addressable URL
+			 * for its own sign-in screen from another page. `Flow::login_url()` is that
+			 * URL now — a filter, then the page hosting the shortcode. It still returns
+			 * '' on a site that has neither, and the sentence is what that site keeps.
 			 */
+			$sl_login_url = \SmartLogin\Frontend\Flow::login_url();
 			?>
 			<p class="sl-hint">
-				<?php esc_html_e( 'Chưa có mật khẩu, hoặc không nhớ? Ở màn hình đăng nhập, chọn "Chưa có mật khẩu, hoặc không nhớ?" để nhận mã xác thực và đặt mật khẩu mới.', 'smart-login' ); ?>
+				<?php if ( '' !== $sl_login_url ) : ?>
+					<?php
+					printf(
+						/* translators: %s: link to the sign-in screen. */
+						esc_html__( 'Chưa có mật khẩu, hoặc không nhớ? %s và chọn "Chưa có mật khẩu, hoặc không nhớ?" để nhận mã xác thực và đặt mật khẩu mới.', 'smart-login' ),
+						'<a class="sl-link" href="' . esc_url( $sl_login_url ) . '">'
+							. esc_html__( 'Mở màn hình đăng nhập', 'smart-login' )
+							. '</a>'
+					);
+					?>
+				<?php else : ?>
+					<?php esc_html_e( 'Chưa có mật khẩu, hoặc không nhớ? Ở màn hình đăng nhập, chọn "Chưa có mật khẩu, hoặc không nhớ?" để nhận mã xác thực và đặt mật khẩu mới.', 'smart-login' ); ?>
+				<?php endif; ?>
 			</p>
 		</div>
 	</details>

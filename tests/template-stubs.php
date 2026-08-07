@@ -145,6 +145,15 @@ function get_user_by( $field, $value ) {
 	return 'id' === $field && (int) $value > 0 ? new WP_User( (int) $value ) : false;
 }
 
+/**
+ * No page hosts a shortcode in a stub environment, and that is the honest
+ * answer rather than a gap: it is the branch SitePage::url() returns '' from,
+ * which is what a site that has not put the shortcode anywhere actually gets.
+ */
+function get_posts( $args = array() ) {
+	return array();
+}
+
 function get_permalink( $post = null ) {
 	return 'https://example.test/my-account/';
 }

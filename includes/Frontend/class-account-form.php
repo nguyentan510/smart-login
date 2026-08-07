@@ -387,32 +387,7 @@ final class AccountForm {
 	 * every notice that wants to link somewhere.
 	 */
 	private static function shortcode_page_url(): string {
-		$cached = get_option( 'smart_login_account_page', null );
-
-		if ( null !== $cached && '' !== $cached ) {
-			$url = get_permalink( (int) $cached );
-
-			if ( $url ) {
-				return (string) $url;
-			}
-		}
-
-		$pages = get_posts(
-			array(
-				'post_type'        => 'page',
-				'post_status'      => 'publish',
-				'numberposts'      => 1,
-				's'                => '[smart_account',
-				'fields'           => 'ids',
-				'suppress_filters' => false,
-			)
-		);
-
-		$page_id = $pages ? (int) $pages[0] : 0;
-
-		update_option( 'smart_login_account_page', $page_id, false );
-
-		return $page_id ? (string) get_permalink( $page_id ) : '';
+		return SitePage::url( array( 'smart_account' ), 'smart_login_account_page' );
 	}
 
 	private function redirect_url(): string {
