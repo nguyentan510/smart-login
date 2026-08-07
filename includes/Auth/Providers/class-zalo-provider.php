@@ -88,13 +88,25 @@ final class ZaloProvider implements LoginProviderInterface {
 			return new WP_Error( 'smart_login_zalo_callback', __( 'Zalo không trả về mã xác thực hợp lệ.', 'smart-login' ) );
 		}
 
+		/*
+		 * The app secret is a header, not a body field.
+		 *
+		 * Zalo v4 reads it from `secret_key` and ignores an `app_secret` in the
+		 * form body, which is where this sent it until a live sign-in failed:
+		 * every request came back HTTP 200 with `{"error":-124}` and no token,
+		 * so the visitor was told "Zalo không trả về access token" — a symptom
+		 * one call downstream of the cause. The integration gate answered on a
+		 * URL match and never looked at a header, so nothing here was red.
+		 */
 		$token_url = (string) apply_filters( 'smart_login_zalo_token_url', 'https://oauth.zaloapp.com/v4/access_token' );
 		$args      = array(
 			'timeout' => 15,
-			'headers' => array( 'Content-Type' => 'application/x-www-form-urlencoded' ),
+			'headers' => array(
+				'Content-Type' => 'application/x-www-form-urlencoded',
+				'secret_key'   => ProviderCredentials::secret( $this->id() ),
+			),
 			'body'    => array(
 				'app_id'        => ProviderCredentials::client_id( $this->id() ),
-				'app_secret'    => ProviderCredentials::secret( $this->id() ),
 				'code'          => $code,
 				'grant_type'    => 'authorization_code',
 				'redirect_uri'  => $this->callback_url(),
@@ -112,9 +124,31 @@ final class ZaloProvider implements LoginProviderInterface {
 			return new WP_Error( 'smart_login_zalo_token', __( 'Zalo không trả về access token.', 'smart-login' ) );
 		}
 
-		$profile_url = (string) apply_filters( 'smart_login_zalo_profile_url', 'https://graph.zalo.me/v2.0/me?fields=id,name,picture,email' );
-		$profile_url = add_query_arg( 'access_token', $access_token, $profile_url );
-		$profile     = $this->json_response( wp_remote_get( $profile_url, array( 'timeout' => 15 ) ), 'smart_login_zalo_profile' );
+		/*
+		 * Same correction, one call later: Graph v2.0 takes the token from an
+		 * `access_token` header. In a query string it is also a value that ends
+		 * up in every proxy and access log between here and Zalo, which is the
+		 * second reason not to put it back.
+		 *
+		 * `email` is not requested because Zalo v4 does not grant it — a user
+		 * access token reaches id, name and picture. The mapping below still
+		 * reads `email` so a site that adds the field through
+		 * `smart_login_zalo_profile_url` keeps working; an account arriving
+		 * without one is provisioned with a synthetic address and asked for a
+		 * real one during onboarding, which is the path already covered by
+		 * tests/integration/run-provider-gates.php.
+		 */
+		$profile_url = (string) apply_filters( 'smart_login_zalo_profile_url', 'https://graph.zalo.me/v2.0/me?fields=id,name,picture' );
+		$profile     = $this->json_response(
+			wp_remote_get(
+				$profile_url,
+				array(
+					'timeout' => 15,
+					'headers' => array( 'access_token' => $access_token ),
+				)
+			),
+			'smart_login_zalo_profile'
+		);
 		if ( is_wp_error( $profile ) ) {
 			return $profile;
 		}
@@ -147,15 +181,35 @@ final class ZaloProvider implements LoginProviderInterface {
 		return ProviderCredentials::redirect_uri( $this->id() );
 	}
 
-	/** @return array|WP_Error */
+	/**
+	 * @return array|WP_Error
+	 *
+	 * Zalo signals a refusal in the body, not in the status line: a rejected
+	 * exchange arrives as HTTP 200 carrying `{"error":-124,"error_name":…}`.
+	 * Read as a success it leaves the caller holding a response with no
+	 * `access_token` in it and nothing to say about why, which is exactly how
+	 * one misplaced header cost a live diagnosis. What Zalo said is kept on the
+	 * error's data so the audit log records it; the visitor still reads one
+	 * sentence, because the cause is the operator's to fix, not theirs.
+	 */
 	private function json_response( $response, string $code ) {
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( $code, __( 'Không thể kết nối tới Zalo. Vui lòng thử lại.', 'smart-login' ) );
 		}
-		$status = (int) wp_remote_retrieve_response_code( $response );
-		$data   = json_decode( (string) wp_remote_retrieve_body( $response ), true );
-		if ( $status < 200 || $status >= 300 || ! is_array( $data ) ) {
-			return new WP_Error( $code, __( 'Zalo từ chối yêu cầu đăng nhập.', 'smart-login' ) );
+		$status   = (int) wp_remote_retrieve_response_code( $response );
+		$data     = json_decode( (string) wp_remote_retrieve_body( $response ), true );
+		$rejected = is_array( $data ) && ! empty( $data['error'] );
+		if ( $status < 200 || $status >= 300 || ! is_array( $data ) || $rejected ) {
+			return new WP_Error(
+				$code,
+				__( 'Zalo từ chối yêu cầu đăng nhập.', 'smart-login' ),
+				$rejected
+					? array(
+						'provider_error'      => $data['error'],
+						'provider_error_name' => (string) ( $data['error_name'] ?? $data['message'] ?? '' ),
+					)
+					: array( 'status' => $status )
+			);
 		}
 		return $data;
 	}

@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-07 04:12+0000\n"
+"POT-Creation-Date: 2026-08-07 05:05+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1156,7 +1156,7 @@ msgstr ""
 msgid "Không thể kết nối tới Google. Vui lòng thử lại."
 msgstr ""
 
-#: includes/Auth/Providers/class-zalo-provider.php:153
+#: includes/Auth/Providers/class-zalo-provider.php:197
 msgid "Không thể kết nối tới Zalo. Vui lòng thử lại."
 msgstr ""
 
@@ -2585,7 +2585,7 @@ msgstr ""
 msgid "Zalo Login và Zalo OA/ZNS là hai chức năng khác nhau. Phần này chỉ cấu hình đăng nhập; gửi OTP qua OA/ZNS thuộc kênh OTP riêng."
 msgstr ""
 
-#: includes/Auth/Providers/class-zalo-provider.php:112
+#: includes/Auth/Providers/class-zalo-provider.php:124
 msgid "Zalo không trả về access token."
 msgstr ""
 
@@ -2593,11 +2593,11 @@ msgstr ""
 msgid "Zalo không trả về mã xác thực hợp lệ."
 msgstr ""
 
-#: includes/Auth/Providers/class-zalo-provider.php:125
+#: includes/Auth/Providers/class-zalo-provider.php:159
 msgid "Zalo không trả về định danh tài khoản."
 msgstr ""
 
-#: includes/Auth/Providers/class-zalo-provider.php:158
+#: includes/Auth/Providers/class-zalo-provider.php:205
 msgid "Zalo từ chối yêu cầu đăng nhập."
 msgstr ""
 

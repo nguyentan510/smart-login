@@ -164,12 +164,28 @@ final class ProviderAuthController {
 		$request['_transaction'] = $transaction;
 		$identity                = $provider->complete( $request );
 		if ( is_wp_error( $identity ) ) {
+			/*
+			 * The provider's own words, when it supplied any.
+			 *
+			 * `reason` is this plugin's error code, which says which step
+			 * failed and nothing about why. A misconfigured Zalo app spent a
+			 * live debugging session hiding behind one such code; the detail
+			 * that would have named it in a sentence was on the WP_Error all
+			 * along and was being dropped here.
+			 */
+			$detail = is_array( $identity->get_error_data() ) ? $identity->get_error_data() : array();
 			AuditLog::record(
 				AuditLog::PROVIDER_FAILED,
 				'',
-				array(
-					'provider' => $provider_id,
-					'reason'   => $identity->get_error_code(),
+				array_merge(
+					array(
+						'provider' => $provider_id,
+						'reason'   => $identity->get_error_code(),
+					),
+					array_intersect_key(
+						$detail,
+						array_flip( array( 'status', 'provider_error', 'provider_error_name' ) )
+					)
 				)
 			);
 			$this->fail( $identity );

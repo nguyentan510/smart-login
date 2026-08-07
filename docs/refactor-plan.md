@@ -1810,6 +1810,90 @@ here would put a second source of truth in the file that forbids one.
 
 ---
 
+## Zalo Login — the v4 transport
+
+Reported from a live sign-in on 2026-08-07: **"Zalo không trả về access token."**
+Every required suite was green at the time, and had been for the whole life of
+the defect.
+
+The message was accurate and useless. It is the branch after a token exchange
+that returned HTTP 200 with valid JSON, so nothing upstream had rejected
+anything — Zalo had refused in the body and the code read the refusal as a
+success with a field missing.
+
+- [x] **Z1** — **the app secret was a body field; Zalo v4 wants a header.**
+      `class-zalo-provider.php:97` posted `app_secret` in the form body. Zalo
+      reads it from a `secret_key` request header and answers an unauthenticated
+      exchange with `{"error":-124,"error_name":"Invalid app secret key"}` under
+      HTTP 200. Moved to the header and dropped from the body, which is also one
+      fewer place a secret can be logged. Two independent implementations agree
+      on the placement — `SocialiteProviders/Zalo` and the Zalo v4 update in
+      `AspNet.Security.OAuth.Providers#733` — and neither the plugin's docs nor
+      its tests said anything about it, which is the CLAUDE.md rule about
+      documentation not being evidence, arriving from the other direction.
+- [x] **Z2** — **the access token travelled in the profile query string.**
+      `graph.zalo.me/v2.0/me` reads it from an `access_token` header. In the URL
+      it was both wrong and a credential written into every log between here and
+      Zalo. `email` was dropped from the requested fields at the same time: a v4
+      user access token does not reach it, so the parameter was asking for
+      something Zalo will not grant. The mapping still reads `email`, so a site
+      that re-adds the field through `smart_login_zalo_profile_url` is unchanged.
+- [x] **Z3** — **a refusal in the body was thrown away.** `json_response()`
+      treated any 2xx-with-JSON as success, so the one sentence that names the
+      cause never left the method. It now fails closed on a non-zero `error` and
+      keeps `provider_error` / `provider_error_name` on the `WP_Error`, and
+      `ProviderAuthController::callback()` writes them into the audit log entry
+      it was already recording. The visitor still reads one sentence; the
+      operator gets Zalo's own words. `! empty()` rather than `isset()` is
+      deliberate — Graph v2.0 returns `"error":0` on success.
+
+**Why the gates missed it.** `tests/integration/run-provider-gates.php` answered
+on a URL match: anything posted to `/v4/access_token` got a token back. A
+fixture that accepts every request shape tests the URL and nothing else, and
+this one had been green across both placements. It now answers the way Zalo
+answers — no `secret_key` header, no token, `{"error":-124}` under HTTP 200 —
+and rejects a Graph call whose token is in the query string. The five request-shape
+rules also live in `tests/run-tests.php`, where they cost nothing to run, because
+this class of defect should not need a WordPress and a database to catch.
+
+**Landed red first.** Pure suite, before any production file moved:
+
+```text
+  FAIL  Zalo token exchange sends the app secret as a secret_key header
+         expected: 'zalo-secret-belongs-in-a-header'
+         actual:   ''
+  FAIL  Zalo token exchange does not carry the secret in the body
+         expected: false
+         actual:   true
+  FAIL  Zalo profile call sends the token as an access_token header
+         expected: 'zalo-access-token'
+         actual:   ''
+  FAIL  Zalo profile call keeps the token out of the query string
+         expected: false
+         actual:   true
+  FAIL  a rejected exchange keeps what Zalo said
+331 passed, 5 failed
+```
+
+and the integration gate, against the corrected fixture:
+
+```text
+SMART_LOGIN_PROVIDER_GATES_FAILED
+reason=Zalo callback fixture failed: smart_login_zalo_token
+```
+
+**Green after.** `336 passed, 0 failed`; `SMART_LOGIN_ZALO_STAGING_SMOKE_OK`;
+every required suite in `run-all.php` PASS; coding standards unchanged at its
+documented baseline, `18 ERRORS AND 22 WARNINGS ... IN 16 FILES`.
+
+**Not verified here, and it is the one that matters.** No test in this repo has
+ever spoken to Zalo. Both fixtures are now modelled on Zalo's documented
+behaviour rather than on this plugin's, which is a strictly better model and
+still a model. The remaining check is a real round trip — **Kiểm tra kết nối** on
+the providers tab, which performs the exchange and issues nothing.
+
+---
+
 ## Risks
 
 | Risk | Mitigation |
@@ -1855,3 +1939,5 @@ here would put a second source of truth in the file that forbids one.
 | 18.4's readings are manual, so they rot the moment somebody stops taking them | Recorded as numbers in the brief rather than as ticks, and the protocol is a committed file with commands in it. The alternative was a second toolchain, declined in writing |
 | A rendered page is not a WordPress page, and 18.1 makes it easy to believe otherwise | Stated in the spec: the renderer does not substitute for `tests/integration/`, and 17.4's meta writes stay unverified against a live database rather than being quietly closed by a picture |
 | 18.3's floor changes row height across the account card | Acceptance is a measurement of `.sl-row` before and after, not a reading of the CSS. 17.2 is the precedent — the prediction from the source was wrong in both magnitude and direction |
+| Z2 stops asking Zalo for `email`, and a site that was receiving one silently stops | A v4 user access token does not grant it, so the field was already never arriving — the change removes a request, not a result. `smart_login_zalo_profile_url` re-adds it in one filter, and the mapping still reads `email`, so nothing downstream assumes its absence |
+| Both Zalo fixtures now encode a reading of Zalo's docs, so a wrong reading is now asserted rather than merely believed | Stated where it is configured: the fixture comments name the behaviour they model and why. A real round trip through **Kiểm tra kết nối** is the check neither fixture replaces, and it is listed as the open item in Z1–Z3 rather than closed by a green run |

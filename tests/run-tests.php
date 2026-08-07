@@ -28,6 +28,7 @@ use SmartLogin\Auth\Providers\ProviderIdentity;
 use SmartLogin\Auth\Providers\ProviderCredentials;
 use SmartLogin\Auth\Providers\ProviderRedirect;
 use SmartLogin\Auth\Providers\ProviderRegistry;
+use SmartLogin\Auth\Providers\ZaloProvider;
 use SmartLogin\Identity\Phone;
 use SmartLogin\Identity\UserManager;
 use SmartLogin\OTP\Transports\TransportRouter;
@@ -227,6 +228,85 @@ Settings::sanitize(
 check( 'blank secret input preserves encrypted secret', $google_secret, ProviderCredentials::secret( 'google' ) );
 check( 'explicit secret clear succeeds', true, ProviderCredentials::clear_secret( 'google' ) );
 check( 'cleared secret is no longer available', '', ProviderCredentials::secret( 'google' ) );
+
+// ---------------------------------------------------------------------
+section( 'Zalo v4 transport shape' );
+
+/*
+ * Written from a live failure, not from the source: a real sign-in returned
+ * "Zalo không trả về access token." while every suite in this repo was green.
+ *
+ * These rules are about *where* two values are carried, which is the one thing
+ * the integration gate could not see — it simulated Zalo by matching on the URL
+ * and answering, so any placement passed. Zalo v4 wants the app secret in a
+ * `secret_key` request header and the access token in an `access_token` header,
+ * and answers HTTP 200 with an error body when it does not get them, which is
+ * why the failure surfaced as a missing field rather than as a rejection.
+ */
+// The callback URL is pinned to a constant rather than left to admin_url(),
+// which lives in template-stubs.php and cannot be copied here — two suites load
+// both files, so a second definition is a redeclare fatal, not a fallback.
+define( 'SMART_LOGIN_ZALO_REDIRECT_URI', 'https://example.test/wp-admin/admin-post.php?action=smart_login_provider_callback&provider=zalo' );
+
+Settings::update(
+	array(
+		'providers.zalo.enabled' => 1,
+		'providers.zalo.app_id'  => 'zalo-app-from-settings',
+	)
+);
+$zalo_secret = 'zalo-secret-belongs-in-a-header';
+ProviderCredentials::store_secret( 'zalo', $zalo_secret );
+
+$zalo_provider    = new ZaloProvider();
+$zalo_transaction = ( new OAuthTransactionStore() )->create( 'zalo', '', false, 0 );
+
+$GLOBALS['sl_http_requests'] = array();
+$GLOBALS['sl_http_response'] = array(
+	'response' => array( 'code' => 200 ),
+	'body'     => wp_json_encode( array( 'access_token' => 'zalo-access-token', 'expires_in' => 3600 ) ),
+);
+$zalo_provider->complete( array( 'code' => 'zalo-code', '_transaction' => $zalo_transaction ) );
+
+$zalo_token_request   = $GLOBALS['sl_http_requests'][0] ?? array();
+$zalo_profile_request = $GLOBALS['sl_http_requests'][1] ?? array();
+
+check( 'Zalo token exchange is the first outbound call', true, false !== strpos( (string) ( $zalo_token_request['url'] ?? '' ), '/v4/access_token' ) );
+check( 'Zalo token exchange sends the app secret as a secret_key header', $zalo_secret, $zalo_token_request['args']['headers']['secret_key'] ?? '' );
+check( 'Zalo token exchange does not carry the secret in the body', false, array_key_exists( 'app_secret', (array) ( $zalo_token_request['args']['body'] ?? array() ) ) );
+check( 'Zalo token exchange still binds the PKCE verifier', $zalo_transaction['pkce_verifier'], $zalo_token_request['args']['body']['code_verifier'] ?? '' );
+
+check( 'Zalo profile call is the second outbound call', true, false !== strpos( (string) ( $zalo_profile_request['url'] ?? '' ), 'graph.zalo.me' ) );
+check( 'Zalo profile call sends the token as an access_token header', 'zalo-access-token', $zalo_profile_request['args']['headers']['access_token'] ?? '' );
+check( 'Zalo profile call keeps the token out of the query string', false, false !== strpos( (string) ( $zalo_profile_request['url'] ?? '' ), 'access_token=' ) );
+
+// Zalo answers a rejected exchange with HTTP 200 and an error body. Read as a
+// success it produces "không trả về access token", which names the symptom and
+// hides the cause; the diagnosis it withheld took a live sign-in to recover.
+$zalo_error_transaction      = ( new OAuthTransactionStore() )->create( 'zalo', '', false, 0 );
+$GLOBALS['sl_http_requests'] = array();
+$GLOBALS['sl_http_response'] = array(
+	'response' => array( 'code' => 200 ),
+	'body'     => wp_json_encode( array( 'error' => -124, 'error_name' => 'Invalid app secret key' ) ),
+);
+$zalo_rejected = $zalo_provider->complete( array( 'code' => 'zalo-code', '_transaction' => $zalo_error_transaction ) );
+
+check( 'a 200-with-error token response fails closed', true, is_wp_error( $zalo_rejected ) );
+check( 'a rejected exchange stops before the profile call', 1, count( $GLOBALS['sl_http_requests'] ) );
+check(
+	'a rejected exchange keeps what Zalo said',
+	array( 'code' => -124, 'name' => 'Invalid app secret key' ),
+	is_wp_error( $zalo_rejected )
+		? array(
+			'code' => $zalo_rejected->get_error_data()['provider_error'] ?? null,
+			'name' => $zalo_rejected->get_error_data()['provider_error_name'] ?? null,
+		)
+		: null
+);
+
+unset( $GLOBALS['sl_http_response'] );
+$GLOBALS['sl_http_requests'] = array();
+ProviderCredentials::clear_secret( 'zalo' );
+Settings::update( array( 'providers.zalo.enabled' => 0 ) );
 
 // ---------------------------------------------------------------------
 section( 'Phone::normalize — Vietnamese input formats' );

@@ -485,6 +485,28 @@ try {
 					(string) $zalo_consumed['pkce_verifier'],
 					(string) ( $args['body']['code_verifier'] ?? '' )
 				);
+				/*
+				 * Answer the way Zalo answers, not the way the URL suggests.
+				 *
+				 * This fixture used to reply with a token to anything posted at
+				 * this address, so it was green while production sent the app
+				 * secret as a body field and every real sign-in failed. Zalo v4
+				 * reads the secret from a `secret_key` header and returns
+				 * HTTP 200 with an error body when it is absent — which is why
+				 * the live symptom was a missing field rather than a rejection.
+				 */
+				if ( ! hash_equals( SMART_LOGIN_ZALO_APP_SECRET, (string) ( $args['headers']['secret_key'] ?? '' ) ) ) {
+					return array(
+						'response' => array( 'code' => 200, 'message' => 'OK' ),
+						'headers'  => array(),
+						'body'     => wp_json_encode(
+							array(
+								'error'      => -124,
+								'error_name' => 'Invalid app secret key',
+							)
+						),
+					);
+				}
 				if ( 'token_error' === $zalo_mode ) {
 					return array(
 						'response' => array( 'code' => 401, 'message' => 'Unauthorized' ),
@@ -499,8 +521,15 @@ try {
 				);
 			}
 			if ( false !== strpos( $url, 'graph.zalo.me/v2.0/me' ) ) {
-				if ( false === strpos( $url, 'access_token=zalo-fixture-access' ) ) {
-					return new \WP_Error( 'zalo_fixture_token', 'Missing fixture access token' );
+				// Same correction, one call later: Graph v2.0 reads the token
+				// from an `access_token` header. Accepting it from the query
+				// string is what let the old fixture pass a request Zalo would
+				// have answered with `error` and no `id`.
+				if ( 'zalo-fixture-access' !== (string) ( $args['headers']['access_token'] ?? '' ) ) {
+					return new \WP_Error( 'zalo_fixture_token', 'Missing fixture access token header' );
+				}
+				if ( false !== strpos( $url, 'access_token=' ) ) {
+					return new \WP_Error( 'zalo_fixture_token', 'Access token must not travel in the query string' );
 				}
 				return array(
 					'response' => array( 'code' => 200, 'message' => 'OK' ),

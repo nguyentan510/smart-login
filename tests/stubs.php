@@ -360,6 +360,19 @@ function wp_remote_post( $url, $args = array() ) {
 	return wp_remote_request( $url, $args );
 }
 
+/**
+ * Delegates for the same reason wp_remote_post() does.
+ *
+ * Added when the Zalo profile call turned out to be the only outbound GET in the
+ * plugin that no pure suite could see: the provider read its token back out of a
+ * query string, and there was no stub to record that it had.
+ */
+function wp_remote_get( $url, $args = array() ) {
+	$args['method'] = 'GET';
+
+	return wp_remote_request( $url, $args );
+}
+
 function wp_remote_retrieve_response_code( $response ) {
 	return (int) ( $response['response']['code'] ?? 0 );
 }
