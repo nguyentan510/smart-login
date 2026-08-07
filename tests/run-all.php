@@ -152,6 +152,17 @@ $suites = array(
 		'file' => 'identity/run-account-card-tests.php',
 		'kind' => 'required',
 	),
+	array(
+		// Phase 18, landed red at 18.0 before the tool it specifies existed.
+		//
+		// The first suite here that reads a *rendered* surface as a DOM rather
+		// than a template as a string. Both defects Phase 17 found by looking at
+		// a page were invisible to every string-matching rule in this repo, and
+		// two more turned up the moment a parser was pointed at the markup.
+		'name' => 'Rendered surface',
+		'file' => 'identity/run-rendered-surface-tests.php',
+		'kind' => 'spec',
+	),
 );
 
 $results  = array();
