@@ -48,6 +48,22 @@ class FragmentRenderer {
 	public function render( string $step, string $page, string $redirect_to = '', array $data = array() ): array {
 		Flow::set_base( $page, $redirect_to );
 
+		/*
+		 * The welcome screen is the one step a caller may ask for that is not on
+		 * `Flow::PUBLIC_STEPS`, and only because the round trip through a
+		 * provider cannot carry a decision home: the visitor comes back with
+		 * `smartlogin_welcome=1` in the URL and the dialog reopens on it.
+		 *
+		 * So it is allowed, and then checked. Rendering onboarding for somebody
+		 * who is not signed in would draw a form about an account that is not
+		 * theirs — which is the argument `Flow::PUBLIC_STEPS` makes for keeping
+		 * it off the list in the first place.
+		 */
+		if ( Flow::STEP_ONBOARD === $step && ! is_user_logged_in() ) {
+			$step = Flow::STEP_IDENTIFY;
+			$data = array();
+		}
+
 		// A step chosen by the server — password, signup, onboard — carries the
 		// state that makes it meaningful. One asked for by a caller does not, so
 		// it goes through Flow::step(), which allowlists it.

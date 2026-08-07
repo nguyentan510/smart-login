@@ -144,7 +144,15 @@ $sl_identity_id = wp_unique_id( 'sl-identity-' );
 			<?php foreach ( $sl_providers as $sl_provider ) : ?>
 				<a
 					class="sl-btn sl-btn--provider sl-btn--<?php echo esc_attr( $sl_provider->id() ); ?>"
-					href="<?php echo esc_url( ProviderAuthController::start_url( $sl_provider->id(), $sl_redirect ) ); ?>"
+					<?php
+					/*
+					 * The fourth argument is whether a dialog is asking. Google is a
+					 * full-page navigation either way, so the round trip has to
+					 * remember to come back here and reopen — see the marker in
+					 * ProviderAuthController.
+					 */
+					?>
+					href="<?php echo esc_url( ProviderAuthController::start_url( $sl_provider->id(), $sl_redirect, false, '' !== Flow::base() ) ); ?>"
 					data-sl-provider="<?php echo esc_attr( $sl_provider->id() ); ?>"
 					data-sl-provider-mode="login"
 				>

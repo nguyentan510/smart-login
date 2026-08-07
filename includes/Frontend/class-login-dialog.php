@@ -43,7 +43,12 @@ class LoginDialog {
 		 *
 		 * @param bool $enabled
 		 */
-		return (bool) apply_filters( 'smart_login_popup_enabled', ! is_user_logged_in() );
+		// A member who has just come back from Google is signed in *and* still
+		// needs the welcome screen the dialog was going to draw. Without this
+		// second clause the launcher is not on the page that has to reopen it.
+		$wanted = ! is_user_logged_in() || Shortcodes::is_welcome_request();
+
+		return (bool) apply_filters( 'smart_login_popup_enabled', $wanted );
 	}
 
 	/**
@@ -117,6 +122,13 @@ class LoginDialog {
 			'steps'     => Flow::public_steps(),
 			'aliases'   => self::aliases(),
 			'loginUrl'  => Flow::login_url(),
+			// The one step the launcher may open that is not on the public list,
+			// and the URL flag that authorises it. Both named here rather than
+			// spelled in JavaScript — rule 9.
+			'welcome'   => array(
+				'flag' => 'smartlogin_welcome',
+				'step' => Flow::STEP_ONBOARD,
+			),
 			'assets'    => array(
 				'css' => SMART_LOGIN_URL . 'assets/css/smart-login.css',
 				'js'  => SMART_LOGIN_URL . 'assets/js/smart-login.js',

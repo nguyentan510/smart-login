@@ -36,7 +36,15 @@ $sl_fields = (array) ( $fields ?? array() );
 $sl_first  = trim( (string) ( $user->first_name ?? '' ) );
 $sl_name   = '' !== $sl_first ? $sl_first : (string) $user->display_name;
 ?>
-<div class="smart-login smart-login--onboard">
+<?php
+/*
+ * `data-sl-onboarding` is how the launcher knows this screen is already on the
+ * page. A member returning from a provider carries `smartlogin_welcome=1`, and
+ * both this template and the dialog answer to it — without a marker they would
+ * both draw, and the visitor would be asked the same questions twice.
+ */
+?>
+<div class="smart-login smart-login--onboard" data-sl-onboarding>
 
 	<?php TemplateLoader::output( 'partials/notices', array( 'notices' => $notices ) ); ?>
 

@@ -37,9 +37,30 @@ final class ProviderAuthController {
 		add_action( 'admin_post_smart_login_provider_callback', array( $this, 'callback' ) );
 	}
 
-	public static function start_url( string $provider, string $return_url = '', bool $linking = false ): string {
+	/**
+	 * Marker carried on the return url of a round trip a dialog started.
+	 *
+	 * It rides on the return url rather than being a fifth column on the
+	 * transaction, because the alternative is a new parameter on
+	 * `LoginProviderInterface::begin()` — an interface third-party providers
+	 * implement, and widening it would break every one of them for a fact only
+	 * this controller reads. `callback()` strips it before the url is used.
+	 */
+	const IN_PLACE_ARG = 'sl_place';
+
+	/**
+	 * @param bool $in_place Whether a dialog started this, and so expects the
+	 *                       visitor back on the page they left rather than on
+	 *                       the account screen. See AuthContext::$in_place.
+	 */
+	public static function start_url( string $provider, string $return_url = '', bool $linking = false, bool $in_place = false ): string {
 		$provider = sanitize_key( $provider );
-		$url      = add_query_arg(
+
+		if ( $in_place && '' !== $return_url ) {
+			$return_url = add_query_arg( self::IN_PLACE_ARG, '1', $return_url );
+		}
+
+		$url = add_query_arg(
 			array(
 				'action'      => 'smart_login_provider_start',
 				'provider'    => $provider,
@@ -256,8 +277,22 @@ final class ProviderAuthController {
 			);
 			$this->fail( $resolved, $failure_return );
 		}
-		$context               = $resolved['context'];
-		$context->intended_url = (string) ( $transaction['return_url'] ?? '' );
+		$context = $resolved['context'];
+
+		/*
+		 * Where the visitor came from, and whether a dialog sent them.
+		 *
+		 * A provider hand-off is a full-page navigation and cannot be otherwise —
+		 * `window.open` plus `postMessage` loses to popup blockers on mobile, to
+		 * COOP headers, and to providers that refuse embedded contexts. So the
+		 * dialog closes when the visitor leaves and has to be reopened when they
+		 * come back, which is what the marker is for.
+		 */
+		$return_url            = (string) ( $transaction['return_url'] ?? '' );
+		$in_place              = '' !== $return_url && (bool) self::in_place_marker( $return_url );
+		$return_url            = remove_query_arg( self::IN_PLACE_ARG, $return_url );
+		$context->intended_url = $return_url;
+		$context->in_place     = $in_place;
 		$proof                 = AuthProof::from_oauth(
 			\SmartLogin\Identity\VerifiedClaim::from(
 				\SmartLogin\Identity\Claim::canonical( $identity->provider, $identity->subject ),
@@ -278,8 +313,40 @@ final class ProviderAuthController {
 			),
 			$result->user_id
 		);
-		wp_safe_redirect( ( new PostAuthRedirector() )->redirect( $result, $context->intended_url ) );
+		$destination = ( new PostAuthRedirector() )->redirect( $result, $context->intended_url );
+
+		/*
+		 * '' means "a new member, and the flow draws its own welcome screen" —
+		 * see PostAuthRedirector. There is no dialog to draw it in yet, because
+		 * the visitor has been at Google since it closed, so they go back to the
+		 * page they left carrying the flag that reopens it.
+		 *
+		 * `smartlogin_welcome=1` rather than a marker of this phase's own: it is
+		 * already what a finished registration puts in a URL, already read by
+		 * `Shortcodes::is_welcome_request()`, and adding a second spelling of it
+		 * is the mistake rule 9 exists to prevent.
+		 */
+		if ( '' === $destination ) {
+			$destination = add_query_arg( 'smartlogin_welcome', '1', $context->intended_url );
+		}
+
+		wp_safe_redirect( $destination );
 		exit;
+	}
+
+	/**
+	 * Whether a return url was stamped by a dialog.
+	 */
+	private static function in_place_marker( string $url ): bool {
+		$query = (string) wp_parse_url( $url, PHP_URL_QUERY );
+
+		if ( '' === $query ) {
+			return false;
+		}
+
+		parse_str( $query, $args );
+
+		return ! empty( $args[ self::IN_PLACE_ARG ] );
 	}
 
 	/**

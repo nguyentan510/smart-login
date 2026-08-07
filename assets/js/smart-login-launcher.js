@@ -179,6 +179,42 @@
 		}
 	}
 
+	/**
+	 * A visitor coming back from a provider as a brand-new member.
+	 *
+	 * The hand-off to Google is a full-page navigation, so the dialog closed
+	 * when they left. They return to the page they started on carrying
+	 * `smartlogin_welcome=1`, which is the flag a finished registration has
+	 * always put in a URL — not a new spelling invented for this.
+	 *
+	 * Skipped when the page already renders the welcome screen itself. A page
+	 * hosting `[smart_login]` draws it from the same flag, and opening a dialog
+	 * on top of it would ask the same questions twice.
+	 */
+	function welcomeStep() {
+		var welcome = data.welcome || {};
+
+		if ( ! welcome.flag ) {
+			return '';
+		}
+
+		var params = new URLSearchParams( window.location.search );
+
+		if ( ! params.get( welcome.flag ) ) {
+			return '';
+		}
+
+		return document.querySelector( '[data-sl-onboarding]' ) ? '' : welcome.step;
+	}
+
+	function forgetWelcome() {
+		var welcome = data.welcome || {};
+		var url = new URL( window.location.href );
+
+		url.searchParams.delete( welcome.flag );
+		window.history.replaceState( window.history.state, '', url.toString() );
+	}
+
 	ready( function () {
 		if ( ! data.endpoint ) {
 			return;
@@ -186,6 +222,22 @@
 
 		document.addEventListener( 'click', onClick );
 		window.addEventListener( 'hashchange', onHashChange );
+
+		var welcome = welcomeStep();
+
+		if ( welcome ) {
+			// Stripped straight away, so a reload does not ask a member who has
+			// already answered to answer again.
+			forgetWelcome();
+
+			loadDialog().then( function () {
+				if ( window.SmartLoginDialogApi ) {
+					window.SmartLoginDialogApi.open( welcome );
+				}
+			} );
+
+			return;
+		}
 
 		var initial = requestedStep();
 

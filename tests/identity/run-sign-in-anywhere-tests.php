@@ -537,4 +537,61 @@ foreach ( $sl_writers as $sl_relative ) {
 	);
 }
 
+// ---------------------------------------------------------------------------
+sl_section( 'Rule 12 — the provider round trip comes home (19.6)' );
+// ---------------------------------------------------------------------------
+
+/*
+ * A provider hand-off is a full-page navigation and cannot be otherwise, so the
+ * dialog closes when the visitor leaves. Coming back to the page they started
+ * on is the whole of the round trip, and it hangs on two values: the return url
+ * the start link carries, and the marker that says a dialog asked.
+ *
+ * The stored transaction needs a database and is asserted in tests/integration/.
+ * What is checkable here is the link, and whether the marker is conditional —
+ * a marker applied unconditionally would reopen the dialog for every visitor
+ * who ever used Google, including on the page path.
+ */
+$sl_host_page = 'https://example.test/san-pham/ao-thun/';
+
+$sl_plain  = \SmartLogin\Auth\ProviderAuthController::start_url( 'google', $sl_host_page );
+$sl_placed = \SmartLogin\Auth\ProviderAuthController::start_url( 'google', $sl_host_page, false, true );
+
+sl_assert(
+	'a start url carries the page the visitor was on',
+	false !== strpos( rawurldecode( $sl_plain ), $sl_host_page ),
+	'form-auth.php passes Flow::redirect_to(), which for a fragment is the host page. Got: ' . $sl_plain
+);
+
+sl_assert(
+	'a dialog stamps the return url so the round trip can reopen it',
+	false !== strpos( rawurldecode( $sl_placed ), \SmartLogin\Auth\ProviderAuthController::IN_PLACE_ARG ),
+	'Without the marker a new member returns to the account page instead of the page they left.'
+);
+
+sl_assert(
+	'a page-hosted button stamps nothing',
+	false === strpos( rawurldecode( $sl_plain ), \SmartLogin\Auth\ProviderAuthController::IN_PLACE_ARG ),
+	'The marker must be conditional. Applied always, it would reopen a dialog on the sign-in page too.'
+);
+
+sl_check(
+	'an off-site return url is still refused',
+	false,
+	false !== strpos( \SmartLogin\Auth\ProviderAuthController::start_url( 'google', 'https://evil.test/', false, true ), 'evil.test' )
+);
+
+/*
+ * And the marker is the flag the plugin already had, not a second spelling of
+ * it. Rule 9's argument, applied to a URL instead of to a script: this project
+ * has watched a rename cross an untested boundary six times, and two names for
+ * "this member has just registered" is how a seventh starts.
+ */
+sl_assert(
+	'the reopen flag is the one a finished registration already writes',
+	false !== strpos( $sl_file( 'includes/Auth/class-provider-auth-controller.php' ), 'smartlogin_welcome' )
+		&& false !== strpos( $sl_file( 'includes/Frontend/class-login-dialog.php' ), 'smartlogin_welcome' ),
+	'PostAuthRedirector and Shortcodes::is_welcome_request() already use it.'
+);
+
 sl_summary( 'Sign-in anywhere' );
