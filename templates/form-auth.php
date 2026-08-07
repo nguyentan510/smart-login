@@ -53,6 +53,13 @@ $sl_email     = Settings::email_enabled();
  * whether the visitor is looking at this form or at the page behind it.
  */
 $sl_identity_id = wp_unique_id( 'sl-identity-' );
+
+/*
+ * Whether a dialog is rendering this, which the provider round trip has to
+ * know: Google is a full-page navigation either way, so the return has to
+ * remember to come back here and reopen. See ProviderAuthController's marker.
+ */
+$sl_in_dialog = '' !== Flow::base();
 ?>
 <div class="smart-login smart-login--identify">
 
@@ -144,15 +151,7 @@ $sl_identity_id = wp_unique_id( 'sl-identity-' );
 			<?php foreach ( $sl_providers as $sl_provider ) : ?>
 				<a
 					class="sl-btn sl-btn--provider sl-btn--<?php echo esc_attr( $sl_provider->id() ); ?>"
-					<?php
-					/*
-					 * The fourth argument is whether a dialog is asking. Google is a
-					 * full-page navigation either way, so the round trip has to
-					 * remember to come back here and reopen — see the marker in
-					 * ProviderAuthController.
-					 */
-					?>
-					href="<?php echo esc_url( ProviderAuthController::start_url( $sl_provider->id(), $sl_redirect, false, '' !== Flow::base() ) ); ?>"
+					href="<?php echo esc_url( ProviderAuthController::start_url( $sl_provider->id(), $sl_redirect, false, $sl_in_dialog ) ); ?>"
 					data-sl-provider="<?php echo esc_attr( $sl_provider->id() ); ?>"
 					data-sl-provider-mode="login"
 				>

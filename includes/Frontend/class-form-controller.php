@@ -130,6 +130,13 @@ class FormController {
 	// The flow: decided by FlowEngine, applied here
 	// -----------------------------------------------------------------
 
+	/**
+	 * Step 1: one identifier, and the flow works out the rest.
+	 *
+	 * Each handler below is one line for a reason. The decision moved to
+	 * `FlowEngine` in 19.1 so the dialog could drive the same state machine, and
+	 * a handler that grew a branch of its own would be a second copy of it.
+	 */
 	private function handle_identify( array $post ): void {
 		$this->apply( $this->engine()->identify( $post ) );
 	}

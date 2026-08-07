@@ -38,16 +38,16 @@ class LoginDialog {
 	 * left to be discovered.
 	 */
 	public static function enabled(): bool {
-		/**
-		 * Turn the site-wide sign-in dialog off.
-		 *
-		 * @param bool $enabled
-		 */
 		// A member who has just come back from Google is signed in *and* still
 		// needs the welcome screen the dialog was going to draw. Without this
 		// second clause the launcher is not on the page that has to reopen it.
 		$wanted = ! is_user_logged_in() || Shortcodes::is_welcome_request();
 
+		/**
+		 * Turn the site-wide sign-in dialog off.
+		 *
+		 * @param bool $wanted
+		 */
 		return (bool) apply_filters( 'smart_login_popup_enabled', $wanted );
 	}
 
@@ -205,11 +205,11 @@ class LoginDialog {
 	 */
 	public static function aliases(): array {
 		$map = array(
-			'login'      => Flow::STEP_IDENTIFY,
-			'dang-nhap'  => Flow::STEP_IDENTIFY,
-			'register'   => Flow::STEP_REGISTER,
-			'dang-ky'    => Flow::STEP_REGISTER,
-			'forgot'     => Flow::STEP_FORGOT,
+			'login'         => Flow::STEP_IDENTIFY,
+			'dang-nhap'     => Flow::STEP_IDENTIFY,
+			'register'      => Flow::STEP_REGISTER,
+			'dang-ky'       => Flow::STEP_REGISTER,
+			'forgot'        => Flow::STEP_FORGOT,
 			'quen-mat-khau' => Flow::STEP_FORGOT,
 		);
 

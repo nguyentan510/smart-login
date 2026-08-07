@@ -174,14 +174,18 @@ $suites = array(
 		// are meant to fail cannot live in a suite that blocks, and every
 		// neighbouring suite here has been `required` for phases.
 		//
-		// Seven of its assertions report PENDING rather than passing, because
-		// their subject does not exist yet. That is the 10.0 precedent — a rule
+		// Seven of its assertions reported PENDING rather than passing, because
+		// their subject did not exist yet. That is the 10.0 precedent — a rule
 		// that passes for want of a subject states the opposite of the truth.
 		//
-		// Promoted to `required` in 19.7, per the working agreement.
+		// `required` since 19.7, the sub-phase that took the readings. Three of
+		// these rules had to be rewritten from a structural form to a
+		// behavioural one during the phase — a rule that reads source proves a
+		// thing was written, not that it works — and a suite that can no longer
+		// block would hide the next regression in exactly those three.
 		'name' => 'Sign-in anywhere',
 		'file' => 'identity/run-sign-in-anywhere-tests.php',
-		'kind' => 'spec',
+		'kind' => 'required',
 	),
 );
 

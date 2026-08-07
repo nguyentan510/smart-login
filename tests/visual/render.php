@@ -161,6 +161,20 @@ $sl_surfaces = array(
 	'otp'       => array( 'form-otp', $sl_fixtures['form-otp'], 'otp' ),
 	'forgot'    => array( 'form-forgot', $sl_fixtures['form-forgot'], 'forgot' ),
 	'onboarding' => array( 'onboarding', $sl_fixtures['onboarding'], 'onboarding' ),
+
+	/*
+	 * The dialog, added in 19.7. It is the one surface here that is not a
+	 * fragment of a page but a container *around* one, so it is dispatched
+	 * specially below: the shell wraps the sign-in step, both stylesheets are
+	 * inlined, and the only line of JavaScript this tool has ever emitted calls
+	 * showModal().
+	 *
+	 * That line is load-bearing rather than decorative. A `<dialog>` that has
+	 * not been opened modally is `display:none`, and one opened with the `open`
+	 * attribute renders without a backdrop and without the top layer — so a
+	 * picture taken that way would be a picture of a different element.
+	 */
+	'dialog'    => array( 'login-dialog', $sl_fixtures['login-dialog'], null ),
 );
 
 /**
@@ -206,6 +220,18 @@ $sl_render = static function ( string $template, array $args ) use ( $sl_root ):
 $sl_page = static function ( string $name, string $body, ?string $modifier = 'account' ) use ( $sl_root ): string {
 	$css = (string) file_get_contents( $sl_root . 'assets/css/smart-login.css' );
 
+	/*
+	 * The dialog ships its own stylesheet, and the two-stage asset load is why:
+	 * the shell has to be styled before the fragment arrives, so its rules live
+	 * apart from the form's. A picture built from only the main stylesheet is a
+	 * picture of an unstyled container — which is exactly what the first run of
+	 * this surface produced, and it read as a defect in the CSS rather than as a
+	 * gap in the tool.
+	 */
+	if ( 'dialog' === $name ) {
+		$css .= "\n" . (string) file_get_contents( $sl_root . 'assets/css/smart-login-dialog.css' );
+	}
+
 	return "<!doctype html>\n"
 		. '<html lang="vi"><head><meta charset="utf-8">'
 		. '<meta name="viewport" content="width=device-width, initial-scale=1">'
@@ -223,6 +249,7 @@ $sl_page = static function ( string $name, string $body, ?string $modifier = 'ac
 		. ( null === $modifier ? '' : '<div class="smart-login smart-login--' . $modifier . '">' )
 		. $body
 		. ( null === $modifier ? '' : '</div>' )
+		. ( 'dialog' === $name ? '<script>document.querySelector("dialog").showModal()</script>' : '' )
 		. '</body></html>';
 };
 
@@ -266,6 +293,16 @@ foreach ( $sl_names as $sl_name ) {
 	} else {
 		fwrite( STDERR, "Unknown surface: {$sl_name}\n" );
 		exit( 1 );
+	}
+
+	if ( 'dialog' === $sl_name ) {
+		// The shell holds a step, because a picture of an empty container says
+		// nothing about the thing anybody looks at.
+		$sl_body = str_replace(
+			'<p class="sl-dialog__loading">Đang tải…</p>',
+			'<div class="smart-login smart-login--identify">' . $sl_render( 'form-auth', $sl_fixtures['form-auth'] ) . '</div>',
+			$sl_body
+		);
 	}
 
 	$sl_html = $sl_page( $sl_name, $sl_body, $sl_modifier );
