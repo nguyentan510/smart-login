@@ -64,6 +64,14 @@ Settings::update(
 	)
 );
 
+/* The entry screen only draws a provider button for a provider that is
+ * *configured*, and ProviderCredentials::is_configured() reads these constants.
+ * Same values run-template-tests.php uses; nothing here dials anything. */
+define( 'SMART_LOGIN_GOOGLE_CLIENT_ID', 'google-client-for-render' );
+define( 'SMART_LOGIN_GOOGLE_CLIENT_SECRET', 'google-secret-for-render' );
+define( 'SMART_LOGIN_ZALO_APP_ID', 'zalo-app-for-render' );
+define( 'SMART_LOGIN_ZALO_APP_SECRET', 'zalo-secret-for-render' );
+
 $GLOBALS['sl_logged_in']       = true;
 $GLOBALS['sl_current_user_id'] = 7;
 
@@ -129,6 +137,22 @@ $sl_surfaces = array(
 		array( 'sl_user' => new WP_User( 7, 'Nguyễn Như' ), 'sl_has_contact' => true ),
 	),
 	'card-head' => array( 'partials/account/card-head', array( 'sl_section' => 'profile' ) ),
+
+	/*
+	 * The sign-in screens, added in P5. Phase 18's spec left pointing the tool at
+	 * them to "the next reader's call"; P5 is the change that needed to look at
+	 * them, having just converted 51 declarations in the stylesheet they share
+	 * with the account card.
+	 *
+	 * Rule 1 only requires the account partials, so these are here because they
+	 * are useful rather than because anything fails without them.
+	 */
+	'sign-in'   => array( 'form-auth', $sl_fixtures['form-auth'], 'identify' ),
+	'sign-in-password' => array( 'form-password', $sl_fixtures['form-password'], 'password' ),
+	'signup'    => array( 'form-signup', $sl_fixtures['form-signup'], 'signup' ),
+	'otp'       => array( 'form-otp', $sl_fixtures['form-otp'], 'otp' ),
+	'forgot'    => array( 'form-forgot', $sl_fixtures['form-forgot'], 'forgot' ),
+	'onboarding' => array( 'onboarding', $sl_fixtures['onboarding'], 'onboarding' ),
 );
 
 /**
@@ -165,7 +189,7 @@ $sl_render = static function ( string $template, array $args ) use ( $sl_root ):
 /**
  * Wrap markup in a standalone document carrying the real stylesheet inline.
  */
-$sl_page = static function ( string $name, string $body ) use ( $sl_root ): string {
+$sl_page = static function ( string $name, string $body, string $modifier = 'account' ) use ( $sl_root ): string {
 	$css = (string) file_get_contents( $sl_root . 'assets/css/smart-login.css' );
 
 	return "<!doctype html>\n"
@@ -181,7 +205,7 @@ $sl_page = static function ( string $name, string $body ) use ( $sl_root ): stri
 		 */
 		. '<style>body{margin:0;padding:24px;background:#f1f2f4;'
 		. 'font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}</style>'
-		. '</head><body><div class="smart-login smart-login--account">'
+				. '</head><body><div class="smart-login smart-login--' . $modifier . '">'
 		. $body
 		. '</div></body></html>';
 };
@@ -214,19 +238,21 @@ if ( ! $sl_stdout && ! is_dir( $sl_out_dir ) && ! mkdir( $sl_out_dir, 0777, true
 
 foreach ( $sl_names as $sl_name ) {
 	if ( isset( $sl_composites[ $sl_name ] ) ) {
-		$sl_body = '';
+		$sl_body     = '';
+		$sl_modifier = 'account';
 
 		foreach ( $sl_composites[ $sl_name ] as $sl_part ) {
 			$sl_body .= $sl_render( $sl_surfaces[ $sl_part ][0], $sl_surfaces[ $sl_part ][1] );
 		}
 	} elseif ( isset( $sl_surfaces[ $sl_name ] ) ) {
-		$sl_body = $sl_render( $sl_surfaces[ $sl_name ][0], $sl_surfaces[ $sl_name ][1] );
+		$sl_body     = $sl_render( $sl_surfaces[ $sl_name ][0], $sl_surfaces[ $sl_name ][1] );
+		$sl_modifier = $sl_surfaces[ $sl_name ][2] ?? 'account';
 	} else {
 		fwrite( STDERR, "Unknown surface: {$sl_name}\n" );
 		exit( 1 );
 	}
 
-	$sl_html = $sl_page( $sl_name, $sl_body );
+	$sl_html = $sl_page( $sl_name, $sl_body, $sl_modifier );
 
 	if ( $sl_stdout ) {
 		echo $sl_html;

@@ -386,4 +386,63 @@ sl_assert(
 );
 
 // ---------------------------------------------------------------------
+sl_section( 'Rule 8 — the off-scale remainder shrinks, and never grows (P5)' );
+
+/*
+ * 17.2 tokenised the account region and left the rest of the stylesheet as a
+ * written deferral. P5 converted every other declaration whose values were
+ * *already* on the scale — 51 of them, no value changed, so nothing moved on
+ * screen — and left the ones holding genuinely off-scale numbers alone.
+ *
+ * Those are judgement calls with visual consequences, and some of them are not
+ * rhythm at all: `padding-right: 46px` reserves room for the password eye.
+ * Converting them in bulk would be the scale inventing requirements.
+ *
+ * So the remainder is a baseline rather than a rule, the same way phpcs is: the
+ * count may fall and must not rise. A ratchet is the only honest shape for debt
+ * somebody has decided not to pay today.
+ */
+$sl_scaled_props = 'margin|margin-top|margin-right|margin-bottom|margin-left|padding|padding-top|padding-right|padding-bottom|padding-left|gap|row-gap|column-gap|font-size';
+
+preg_match_all(
+	'/(?<![-\w])(' . $sl_scaled_props . ')\s*:\s*([^;{}]*\d+px[^;{}]*)/',
+	$sl_css_code,
+	$sl_remaining,
+	PREG_SET_ORDER
+);
+
+$sl_off_scale = array();
+
+foreach ( $sl_remaining as $sl_decl ) {
+	$sl_off_scale[] = trim( $sl_decl[1] ) . ': ' . trim( $sl_decl[2] );
+}
+
+/*
+ * The baseline, as of P5. Lower it whenever a conversion lands; the assertion
+ * below fails loudly if somebody forgets, which is the point of pinning a
+ * number rather than a direction.
+ */
+$sl_off_scale_baseline = 40;
+
+sl_assert(
+	sprintf( 'at most %d off-scale spacing or type literals remain', $sl_off_scale_baseline ),
+	count( $sl_off_scale ) <= $sl_off_scale_baseline,
+	sprintf(
+		'Counted %d. A new literal is a new value nobody chose from a set. → %s',
+		count( $sl_off_scale ),
+		implode( ' | ', array_slice( array_unique( $sl_off_scale ), 0, 8 ) )
+	)
+);
+
+sl_assert(
+	'and the baseline is not stale',
+	count( $sl_off_scale ) === $sl_off_scale_baseline,
+	sprintf(
+		'Counted %d against a baseline of %d. Lower the baseline in this file — a ratchet nobody tightens is a ratchet that has stopped working.',
+		count( $sl_off_scale ),
+		$sl_off_scale_baseline
+	)
+);
+
+// ---------------------------------------------------------------------
 sl_summary( 'Rendered surface' );
