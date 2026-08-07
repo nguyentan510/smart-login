@@ -346,4 +346,44 @@ foreach ( array( '_wpnonce', 'channel', 'subject' ) as $sl_field ) {
 }
 
 // ---------------------------------------------------------------------
+sl_section( 'Rule 6 — the plugin draws its own focus ring (P2)' );
+
+/*
+ * Found by 18.4's keyboard pass. The stylesheet declares `:focus` for
+ * `.sl-input`, `.sl-otp-digit` and `.sl-action--danger` and for nothing else, so
+ * every button and every row action falls back to the browser's ring — which a
+ * theme carrying `*:focus { outline: none }` removes.
+ *
+ * Same shape as 17.3's `.screen-reader-text`: the plugin already declined to
+ * trust themes for one property and did not for its neighbour.
+ */
+$sl_unfocused = array();
+
+foreach ( array( 'sl-btn', 'sl-action', 'sl-link' ) as $sl_class ) {
+	if ( ! preg_match( '/\.' . preg_quote( $sl_class, '/' ) . '(?![a-zA-Z0-9_-])[^{}]*:focus(-visible)?[^{}]*\{[^{}]*outline/s', $sl_css_code ) ) {
+		$sl_unfocused[] = '.' . $sl_class;
+	}
+}
+
+sl_assert(
+	'every interactive class declares its own focus outline',
+	array() === $sl_unfocused,
+	'A keyboard user on a theme that zeroes outlines has no idea where they are. The plugin does not get to rely on somebody else for that. → ' . implode( ', ', $sl_unfocused )
+);
+
+// ---------------------------------------------------------------------
+sl_section( 'Rule 7 — a control that needs JavaScript says so (P2)' );
+
+/*
+ * Also 18.4. With JavaScript off, "Đổi" is a button that does nothing and
+ * explains nothing. `partials/address-fields.php` has carried a <noscript> doing
+ * exactly this job for the ward select since 8.5; the contact card never got one.
+ */
+sl_assert(
+	'the contact card explains itself with JavaScript off',
+	$sl_xpath->query( '//section[@id="sl-section-contact"]//noscript' )->length >= 1,
+	'The editor is hidden and opened by a listener. Without one, the row offers a control that cannot work and says nothing about why.'
+);
+
+// ---------------------------------------------------------------------
 sl_summary( 'Rendered surface' );

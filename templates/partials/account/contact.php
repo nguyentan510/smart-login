@@ -210,5 +210,22 @@ $sl_rows = array(
 		</div>
 	<?php endforeach; ?>
 
+	<?php
+	/*
+	 * The rows above offer "Đổi", and "Đổi" is a listener. With JavaScript off it
+	 * is a control that cannot work and, until this was added, said nothing about
+	 * why. `partials/address-fields.php` has carried the same courtesy for the
+	 * ward select since 8.5; this card never got one.
+	 *
+	 * Found by 18.4, on the first reading of a page that carries no JavaScript at
+	 * all — which is the state the visual renderer is permanently in.
+	 */
+	?>
+	<noscript>
+		<p class="sl-hint">
+			<?php esc_html_e( 'Trình duyệt đang tắt JavaScript: chưa đổi được số điện thoại hoặc email ở đây, vì bước nhập mã xác thực cần JavaScript. Hãy bật JavaScript rồi tải lại trang.', 'smart-login' ); ?>
+		</p>
+	</noscript>
+
 	<?php TemplateLoader::output( 'partials/account/providers', is_array( $sl_providers ?? null ) ? $sl_providers : array() ); ?>
 </section>

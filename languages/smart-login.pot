@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-07 02:54+0000\n"
+"POT-Creation-Date: 2026-08-07 03:17+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -2150,6 +2150,10 @@ msgstr ""
 
 #: includes/Admin/class-provider-cards.php:412
 msgid "Trong cấu hình callback/redirect URL, dán chính xác Callback URL ở tab Thiết lập."
+msgstr ""
+
+#: templates/partials/account/contact.php:226
+msgid "Trình duyệt đang tắt JavaScript: chưa đổi được số điện thoại hoặc email ở đây, vì bước nhập mã xác thực cần JavaScript. Hãy bật JavaScript rồi tải lại trang."
 msgstr ""
 
 #: templates/partials/address-fields.php:93

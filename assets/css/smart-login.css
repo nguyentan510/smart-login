@@ -552,6 +552,26 @@
 	text-decoration: none;
 }
 
+/*
+ * The plugin draws its own focus ring, for the same reason it declares
+ * `.screen-reader-text`: a theme carrying `*:focus { outline: none }` removes
+ * the browser's, and a keyboard user then has no idea where they are.
+ *
+ * `.sl-input` has had one since Phase 8 and its neighbours had none — the plugin
+ * had already decided not to trust themes for one property and had not for the
+ * other. Found by 18.4's keyboard pass, which is the first time anybody looked.
+ *
+ * `:focus-visible`, not `:focus`: a mouse click on a button should not leave a
+ * ring behind it, and every browser this plugin supports knows the difference.
+ */
+.smart-login .sl-btn:focus-visible,
+.smart-login .sl-action:focus-visible,
+.smart-login .sl-link:focus-visible {
+	outline: 2px solid var(--sl-accent);
+	outline-offset: 2px;
+	border-radius: var(--sl-radius);
+}
+
 /* ---------- Divider ---------- */
 
 .sl-divider {
