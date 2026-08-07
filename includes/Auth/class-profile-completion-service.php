@@ -116,7 +116,7 @@ final class ProfileCompletionService {
 
 		$fields[] = array(
 			'key'                   => 'full_name',
-			'label'                 => __( 'Họ tên', 'smart-login' ),
+			'label'                 => __( 'Họ và tên', 'smart-login' ),
 			'required'              => true,
 			'verification_required' => false,
 			'missing'               => '' === trim( (string) $user->display_name )

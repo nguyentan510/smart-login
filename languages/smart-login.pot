@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-07 03:20+0000\n"
+"POT-Creation-Date: 2026-08-07 03:33+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1013,11 +1013,11 @@ msgstr ""
 #: templates/form-signup.php:67
 #: templates/partials/account/profile.php:28
 #: templates/profile-summary.php:38
-msgid "Họ tên"
+msgid "Họ và tên"
 msgstr ""
 
 #: includes/OTP/class-placeholders.php:158
-msgid "Họ tên người dùng (nếu có)"
+msgid "Họ và tên người dùng (nếu có)"
 msgstr ""
 
 #: includes/class-field-registry.php:52
@@ -2423,6 +2423,7 @@ msgid "Ví dụ địa chỉ cửa hàng hoặc câu nhắc không trả lời e
 msgstr ""
 
 #: includes/Address/class-woo-address.php:170
+#: templates/partials/address-fields.php:120
 msgid "Ví dụ: 12 Trần Duy Hưng"
 msgstr ""
 

@@ -445,4 +445,46 @@ sl_assert(
 );
 
 // ---------------------------------------------------------------------
+sl_section( 'Rule 9 — a placeholder is not a second copy of the label (P6)' );
+
+/*
+ * The rule this project settled on when the question was first asked, and never
+ * wrote down: a placeholder gives the *format* ("dd/mm/yyyy") or an example
+ * ("Ví dụ: 12 Trần Duy Hưng"). Anything that restates the label above it is
+ * noise that disappears the moment somebody types.
+ *
+ * 18.2 applied it to the OTP box — `placeholder="Mã OTP"` beside a new label
+ * saying the same thing — and removed the placeholder rather than keeping both.
+ * This is that decision as a rule, so the next field does not have to
+ * rediscover it.
+ */
+$sl_echoing = array();
+
+foreach ( $sl_xpath->query( '//input[@placeholder]' ) as $sl_input ) {
+	$sl_placeholder = trim( $sl_input->getAttribute( 'placeholder' ) );
+	$sl_id          = $sl_input->getAttribute( 'id' );
+
+	if ( '' === $sl_id || '' === $sl_placeholder ) {
+		continue;
+	}
+
+	foreach ( $sl_xpath->query( '//label[@for="' . $sl_id . '"]' ) as $sl_label ) {
+		$sl_text = trim( (string) preg_replace( '/\s+/u', ' ', $sl_label->textContent ) );
+
+		// Compared case-insensitively and without the required marker, so
+		// "Họ và tên *" and "họ và tên" are still the same sentence.
+		if ( '' !== $sl_text
+			&& 0 === strcasecmp( rtrim( $sl_text, " *\t\n" ), $sl_placeholder ) ) {
+			$sl_echoing[] = $sl_id . ': "' . $sl_placeholder . '"';
+		}
+	}
+}
+
+sl_assert(
+	'no placeholder repeats the label above it',
+	array() === $sl_echoing,
+	'A placeholder is the format or an example. A restated label is text that vanishes exactly when somebody most needs it. → ' . implode( ', ', $sl_echoing )
+);
+
+// ---------------------------------------------------------------------
 sl_summary( 'Rendered surface' );

@@ -35,7 +35,7 @@ $sl_summary = new AccountForm( (int) $user->ID, AccountForm::CONTEXT_SUMMARY );
 	<?php $sl_summary->output_section( 'providers' ); ?>
 
 	<dl class="sl-profile-list">
-		<dt><?php esc_html_e( 'Họ tên', 'smart-login' ); ?></dt>
+		<dt><?php esc_html_e( 'Họ và tên', 'smart-login' ); ?></dt>
 		<dd><?php echo esc_html( $user->display_name ); ?></dd>
 
 		<?php if ( '' !== $phone ) : ?>

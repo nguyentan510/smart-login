@@ -173,7 +173,7 @@ class WooIntegration {
 	 *  - A phone-registered user sees an empty Email box. Submitting it empty
 	 *    must mean "still no email", not a validation error, so the placeholder
 	 *    address goes back in.
-	 *  - The form collects one "Họ tên" field; Woo wants first/last/display.
+	 *  - The form collects one "Họ và tên" field; Woo wants first/last/display.
 	 */
 	public function prepare_account_post(): void {
 		if ( 'POST' !== strtoupper( sanitize_key( wp_unslash( $_SERVER['REQUEST_METHOD'] ?? '' ) ) ) ) {

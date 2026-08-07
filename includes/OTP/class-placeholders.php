@@ -155,7 +155,7 @@ class Placeholders {
 			'{{expires_at}}'   => __( 'Thời điểm hết hạn', 'smart-login' ),
 			'{{site_name}}'    => __( 'Tên website', 'smart-login' ),
 			'{{site_url}}'     => __( 'Địa chỉ website', 'smart-login' ),
-			'{{user_name}}'    => __( 'Họ tên người dùng (nếu có)', 'smart-login' ),
+			'{{user_name}}'    => __( 'Họ và tên người dùng (nếu có)', 'smart-login' ),
 			'{{delivery_id}}'  => __( 'Mã giao nhận ổn định giữa các lần retry', 'smart-login' ),
 
 			// Operational alerts only. Never offered beside an OTP template,

@@ -25,7 +25,7 @@ defined( 'ABSPATH' ) || exit;
 
 	<div class="sl-field">
 		<label class="sl-label" for="smartlogin_full_name">
-			<?php esc_html_e( 'Họ tên', 'smart-login' ); ?>
+			<?php esc_html_e( 'Họ và tên', 'smart-login' ); ?>
 			<span class="sl-required" aria-hidden="true">*</span>
 			<span class="screen-reader-text"><?php esc_html_e( '(bắt buộc)', 'smart-login' ); ?></span>
 		</label>

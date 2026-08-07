@@ -64,7 +64,7 @@ $sl_min   = max( 6, (int) ( $min_password ?? 8 ) );
 
 			<div class="sl-field">
 				<label class="sl-label" for="sl-full-name">
-					<?php esc_html_e( 'Họ tên', 'smart-login' ); ?>
+					<?php esc_html_e( 'Họ và tên', 'smart-login' ); ?>
 					<span class="sl-required">*</span>
 				</label>
 				<input

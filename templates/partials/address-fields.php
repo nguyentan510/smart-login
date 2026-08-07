@@ -99,12 +99,25 @@ $sl_req = ! empty( $required );
 		<label class="sl-label" for="<?php echo esc_attr( $sl_uid ); ?>-street">
 			<?php esc_html_e( 'Số nhà, tên đường', 'smart-login' ); ?>
 		</label>
+		<?php
+		/*
+		 * The same example WooCommerce's own checkout shows for this field —
+		 * WooAddress::relabel_default_fields() has set it there since Phase 5, and
+		 * this copy of the field never got it. One field, two screens, one hint.
+		 *
+		 * An example, not a repeat of the label, which is the rule this project
+		 * settled on: a placeholder says the *format* or gives an instance, and
+		 * anything that restates the label above it is noise that disappears the
+		 * moment somebody types.
+		 */
+		?>
 		<input
 			type="text"
 			class="sl-input"
 			id="<?php echo esc_attr( $sl_uid ); ?>-street"
 			name="<?php echo esc_attr( AddressFields::FIELD_STREET ); ?>"
 			value="<?php echo esc_attr( $values['street'] ); ?>"
+			placeholder="<?php esc_attr_e( 'Ví dụ: 12 Trần Duy Hưng', 'smart-login' ); ?>"
 			autocomplete="address-line1"
 		/>
 	</div>
