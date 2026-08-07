@@ -155,10 +155,37 @@ final class ProviderAuthController {
 		}
 		$is_test = OAuthTransactionStore::is_test( $transaction );
 
+		/*
+		 * Where a refusal from here on returns to.
+		 *
+		 * Only for a linking attempt. A failed *sign-in* must not be sent to the
+		 * page the visitor was heading for — they are not signed in, so that
+		 * page cannot serve them, and the sign-in screen is exactly where they
+		 * need to be. A failed *link* is the opposite case: the visitor is
+		 * signed in, started on their account page, and the sign-in step is a
+		 * screen they never see — which is where the one sentence explaining
+		 * the refusal was being delivered.
+		 */
+		$failure_return = ! empty( $transaction['linking'] )
+			? (string) ( $transaction['return_url'] ?? '' )
+			: '';
+
 		// The check moved from the top of this method. Anything that is not a
 		// test still needs the provider switched on before it goes any further.
 		if ( ! $is_test && ! $provider->is_available() ) {
-			$this->fail( new \WP_Error( 'smart_login_provider_unavailable', __( 'Phương thức đăng nhập chưa sẵn sàng.', 'smart-login' ) ) );
+			AuditLog::record(
+				AuditLog::PROVIDER_FAILED,
+				'',
+				array(
+					'provider' => $provider_id,
+					'reason'   => 'unavailable',
+					'linking'  => ! empty( $transaction['linking'] ),
+				)
+			);
+			$this->fail(
+				new \WP_Error( 'smart_login_provider_unavailable', __( 'Phương thức đăng nhập chưa sẵn sàng.', 'smart-login' ) ),
+				$failure_return
+			);
 		}
 		$request                 = wp_unslash( $_REQUEST ); // phpcs:ignore WordPress.Security.NonceVerification
 		$request['_transaction'] = $transaction;
@@ -181,6 +208,7 @@ final class ProviderAuthController {
 					array(
 						'provider' => $provider_id,
 						'reason'   => $identity->get_error_code(),
+						'linking'  => ! empty( $transaction['linking'] ),
 					),
 					array_intersect_key(
 						$detail,
@@ -188,7 +216,7 @@ final class ProviderAuthController {
 					)
 				)
 			);
-			$this->fail( $identity );
+			$this->fail( $identity, $failure_return );
 		}
 
 		/*
@@ -208,7 +236,25 @@ final class ProviderAuthController {
 
 		$resolved = ( new AccountProvisioner() )->resolve( $identity, $transaction );
 		if ( is_wp_error( $resolved ) ) {
-			$this->fail( $resolved );
+			/*
+			 * The fourth refusal, which for a long time was the only silent one.
+			 *
+			 * The three branches above record; this one did not, and it is the
+			 * one a visitor actually meets — `smart_login_provider_conflict`,
+			 * raised when the provider account is already linked to somebody
+			 * else. Three presses of "Liên kết" left an empty log and the
+			 * diagnosis had to be rebuilt against the database by hand.
+			 */
+			AuditLog::record(
+				AuditLog::PROVIDER_FAILED,
+				'',
+				array(
+					'provider' => $provider_id,
+					'reason'   => $resolved->get_error_code(),
+					'linking'  => ! empty( $transaction['linking'] ),
+				)
+			);
+			$this->fail( $resolved, $failure_return );
 		}
 		$context               = $resolved['context'];
 		$context->intended_url = (string) ( $transaction['return_url'] ?? '' );
@@ -317,13 +363,21 @@ final class ProviderAuthController {
 		exit;
 	}
 
-	private function fail( \WP_Error $error ): void {
+	private function fail( \WP_Error $error, string $return_url = '' ): void {
 		Notices::flash( $error->get_error_message(), 'error' );
-		wp_safe_redirect( self::failure_url() );
+		wp_safe_redirect( self::failure_url( $return_url ) );
 		exit;
 	}
 
-	public static function failure_url(): string {
+	/**
+	 * Where a failed provider round trip lands.
+	 *
+	 * `$return_url` is the page a linking attempt started on. It is validated
+	 * here rather than trusted, so an off-site value falls back to the sign-in
+	 * step instead of becoming an open redirect — and the decision lives in one
+	 * function that a test can call, rather than inside a method that exits.
+	 */
+	public static function failure_url( string $return_url = '' ): string {
 		$base = function_exists( 'wc_get_page_permalink' )
 			? (string) wc_get_page_permalink( 'myaccount' )
 			: '';
@@ -333,7 +387,8 @@ final class ProviderAuthController {
 
 		$fallback = add_query_arg( 'smart_login_step', Flow::STEP_LOGIN, $base );
 		$filtered = (string) apply_filters( 'smart_login_provider_failure_redirect', $fallback );
+		$fallback = wp_validate_redirect( $filtered, $fallback );
 
-		return wp_validate_redirect( $filtered, $fallback );
+		return '' !== $return_url ? wp_validate_redirect( $return_url, $fallback ) : $fallback;
 	}
 }

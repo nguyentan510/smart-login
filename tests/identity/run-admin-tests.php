@@ -236,6 +236,63 @@ sl_assert(
 );
 
 // ---------------------------------------------------------------------
+sl_section( 'A provider secret that is really the provider id' );
+
+/*
+ * The save-time rule refuses this pair, but it cannot reach a site that already
+ * holds one — and this site did, for as long as Zalo login had been switched on.
+ * Zalo answered -14004 "Invalid secret key" to every attempt and the readiness
+ * screen, whose whole job is to say what is wrong before a visitor finds out,
+ * reported the provider as OK.
+ */
+Settings::update(
+	array(
+		'providers.zalo.enabled' => 1,
+		'providers.zalo.app_id'  => '2895898387789399761',
+	)
+);
+\SmartLogin\Auth\Providers\ProviderCredentials::store_secret( 'zalo', '2895898387789399761' );
+
+$provider_check = null;
+
+foreach ( ( new \SmartLogin\Admin\Readiness() )->checks() as $check ) {
+	if ( 'providers' === $check['key'] ) {
+		$provider_check = $check;
+	}
+}
+
+sl_check(
+	'a secret equal to the app id is reported',
+	\SmartLogin\Admin\Readiness::WARN,
+	$provider_check['status'] ?? 'missing'
+);
+
+sl_assert(
+	'and the detail names the provider that holds it',
+	false !== stripos( (string) ( $provider_check['detail'] ?? '' ), 'zalo' ),
+	'An administrator with two providers configured needs to know which one to open. Detail was: ' . ( $provider_check['detail'] ?? '' )
+);
+
+\SmartLogin\Auth\Providers\ProviderCredentials::store_secret( 'zalo', 'a-secret-that-is-not-the-app-id' );
+
+$provider_check_after = null;
+
+foreach ( ( new \SmartLogin\Admin\Readiness() )->checks() as $check ) {
+	if ( 'providers' === $check['key'] ) {
+		$provider_check_after = $check;
+	}
+}
+
+sl_check(
+	'a correct pair clears it',
+	\SmartLogin\Admin\Readiness::OK,
+	$provider_check_after['status'] ?? 'missing'
+);
+
+Settings::update( array( 'providers.zalo.enabled' => 0 ) );
+\SmartLogin\Auth\Providers\ProviderCredentials::clear_secret( 'zalo' );
+
+// ---------------------------------------------------------------------
 sl_section( 'The spend estimate follows the channel, not the transport' );
 
 /*

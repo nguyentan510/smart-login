@@ -528,4 +528,57 @@ if ( $missing ) {
 }
 
 // ---------------------------------------------------------------------
+/*
+ * Every way callback() can refuse leaves a row behind.
+ *
+ * Three of its four failure branches recorded PROVIDER_FAILED and the fourth —
+ * the one guarding AccountProvisioner::resolve() — did not. That branch is the
+ * one a visitor meets when the provider account is already linked elsewhere, so
+ * the single most confusing failure in the whole flow was the only one that
+ * wrote nothing anywhere. Three clicks on "Liên kết" left an empty log and the
+ * diagnosis had to be rebuilt by hand.
+ *
+ * Source-level on purpose: callback() ends in exit(), so no suite in this repo
+ * can call it. This asks the weaker question it can actually answer — is there
+ * a record before each refusal — and would have gone red on the tree that had
+ * the gap.
+ */
+$sl_callback = sl_source( 'includes/Auth/class-provider-auth-controller.php' );
+$sl_body     = '';
+
+if ( preg_match( '/public function callback\(\).*?\n\t\}\n/s', $sl_callback, $sl_match ) ) {
+	$sl_body = $sl_match[0];
+}
+
+sl_assert(
+	'callback() is still a method this rule can read',
+	'' !== $sl_body,
+	'The rule below is vacuous unless the body was found, and a rule that passes for want of a subject states the opposite of the truth.'
+);
+
+$sl_unrecorded = 0;
+
+foreach ( explode( '$this->fail(', $sl_body ) as $sl_index => $sl_before ) {
+	if ( 0 === $sl_index ) {
+		continue;
+	}
+
+	// The text preceding this fail() call, back to the previous one.
+	if ( false === strpos( $sl_before, 'AuditLog::record(' ) && false === strpos( $sl_before, 'PROVIDER_FAILED' ) ) {
+		$sl_segments = explode( '$this->fail(', $sl_body );
+		$sl_preceding = $sl_segments[ $sl_index - 1 ];
+
+		if ( false === strpos( $sl_preceding, 'AuditLog::record(' ) ) {
+			++$sl_unrecorded;
+		}
+	}
+}
+
+sl_check(
+	'every refusal in callback() writes an audit row first',
+	0,
+	$sl_unrecorded
+);
+
+// ---------------------------------------------------------------------
 sl_summary( 'Identity fitness' );

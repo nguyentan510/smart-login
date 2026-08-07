@@ -34,6 +34,17 @@ defined( 'ABSPATH' ) || exit;
 $sl_identities     = isset( $sl_identities ) && is_array( $sl_identities ) ? $sl_identities : array();
 $sl_link_providers = isset( $sl_link_providers ) && is_array( $sl_link_providers ) ? $sl_link_providers : array();
 
+/*
+ * The page this control starts on, carried so a refusal can end on it.
+ *
+ * It used to be omitted, so the transaction held nowhere to return to and a
+ * refused link — the common one being "this provider account already belongs to
+ * somebody else" — landed on the sign-in step of My Account. A signed-in visitor
+ * never sees that screen, and the sentence explaining the refusal was being
+ * delivered to it.
+ */
+$sl_link_return = isset( $sl_redirect ) ? (string) $sl_redirect : '';
+
 TemplateLoader::output(
 	'partials/linked-identities',
 	array(
@@ -73,7 +84,7 @@ TemplateLoader::output(
 
 					<a
 						class="sl-action"
-						href="<?php echo esc_url( ProviderAuthController::start_url( $sl_link_provider->id(), '', true ) ); ?>"
+						href="<?php echo esc_url( ProviderAuthController::start_url( $sl_link_provider->id(), $sl_link_return, true ) ); ?>"
 						data-sl-provider="<?php echo esc_attr( $sl_link_provider->id() ); ?>"
 						data-sl-provider-mode="link"
 					>

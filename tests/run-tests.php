@@ -305,8 +305,80 @@ check(
 
 unset( $GLOBALS['sl_http_response'] );
 $GLOBALS['sl_http_requests'] = array();
+
+// ---------------------------------------------------------------------
+section( 'Provider secret entry — the App Secret is not the App ID' );
+
+/*
+ * Written from the second half of the same live failure.
+ *
+ * Once the secret reached Zalo in the right header, Zalo evaluated it and said
+ * -14004 "Invalid secret key": the value saved in the App Secret box was the
+ * App ID, byte for byte. The two sit next to each other on Zalo's dashboard,
+ * are the same shape, and nothing anywhere complained — the first thing that
+ * noticed was a customer pressing a button.
+ *
+ * A save is the only place this is cheap to catch, because it is the only place
+ * both values are in one hand.
+ */
+$zalo_app_id = 'zalo-app-from-settings';
+ProviderCredentials::store_secret( 'zalo', 'a-secret-that-is-not-the-id' );
+
+Settings::sanitize( array( 'zalo_app_secret' => $zalo_app_id ) );
+check( 'a secret equal to the stored app id is refused', 'a-secret-that-is-not-the-id', ProviderCredentials::secret( 'zalo' ) );
+
+// The realistic shape: both boxes filled in one save, so there is no stored id
+// to compare against yet — the submitted one is the answer.
+Settings::sanitize(
+	array(
+		'providers'        => array( 'zalo' => array( 'app_id' => 'a-brand-new-app-id' ) ),
+		'zalo_app_secret'  => 'a-brand-new-app-id',
+	)
+);
+check( 'a secret equal to the app id in the same save is refused', 'a-secret-that-is-not-the-id', ProviderCredentials::secret( 'zalo' ) );
+
+// The same rule must not stand between an administrator and a correct secret.
+Settings::sanitize( array( 'zalo_app_secret' => 'the-real-32-character-app-secret' ) );
+check( 'a secret that differs from the app id is stored', 'the-real-32-character-app-secret', ProviderCredentials::secret( 'zalo' ) );
+
+// Google is the same control with different labels, so it gets the same rule
+// rather than a comment saying it should.
+Settings::update( array( 'providers.google.client_id' => 'google-client-from-settings' ) );
+ProviderCredentials::store_secret( 'google', 'a-google-secret' );
+Settings::sanitize( array( 'google_client_secret' => 'google-client-from-settings' ) );
+check( 'the rule covers Google too', 'a-google-secret', ProviderCredentials::secret( 'google' ) );
+
+ProviderCredentials::clear_secret( 'google' );
 ProviderCredentials::clear_secret( 'zalo' );
 Settings::update( array( 'providers.zalo.enabled' => 0 ) );
+
+// ---------------------------------------------------------------------
+section( 'Where a provider failure returns to' );
+
+/*
+ * A linking attempt starts on the account page, and its failure used to end on
+ * the sign-in step of My Account — a screen a signed-in visitor does not see,
+ * carrying the one sentence explaining what just happened. Three clicks on
+ * "Liên kết" produced three silent bounces.
+ *
+ * The destination is a decision, so it lives in one function that can be
+ * asserted rather than in the middle of a method that exits.
+ */
+check(
+	'a failure with no return url still reaches the sign-in step',
+	'https://example.test/?smart_login_step=login',
+	ProviderAuthController::failure_url()
+);
+check(
+	'a linking failure returns to the page it started on',
+	'https://example.test/my-account/',
+	ProviderAuthController::failure_url( 'https://example.test/my-account/' )
+);
+check(
+	'an off-site return url is refused',
+	'https://example.test/?smart_login_step=login',
+	ProviderAuthController::failure_url( 'https://evil.test/collect' )
+);
 
 // ---------------------------------------------------------------------
 section( 'Phone::normalize — Vietnamese input formats' );

@@ -22,6 +22,7 @@
 namespace SmartLogin\Admin;
 
 use SmartLogin\Address\AddressRepository;
+use SmartLogin\Auth\Providers\ProviderCredentials;
 use SmartLogin\Auth\Providers\ProviderRegistry;
 use SmartLogin\Identity\Channels\MailChannel;
 use SmartLogin\Identity\Channels\PhoneChannel;
@@ -550,6 +551,40 @@ final class Readiness {
 				__( 'Đăng nhập nhanh', 'smart-login' ),
 				self::OFF,
 				__( 'Chưa bật Google hoặc Zalo. Không bắt buộc.', 'smart-login' ),
+				'providers'
+			);
+		}
+
+		/*
+		 * A secret that is really the id.
+		 *
+		 * The save-time rule in Settings::sanitize() refuses this pair, but it
+		 * cannot reach a site that already holds one — and one did, silently,
+		 * for as long as Zalo login had been switched on. Every sign-in came
+		 * back -14004 "Invalid secret key" while this screen, whose whole job is
+		 * to say what is wrong before a visitor finds out, reported OK.
+		 */
+		$confused = array();
+
+		foreach ( $available as $provider ) {
+			$id     = ProviderCredentials::client_id( $provider->id() );
+			$secret = ProviderCredentials::secret( $provider->id() );
+
+			if ( '' !== $id && hash_equals( $id, $secret ) ) {
+				$confused[] = $provider->name();
+			}
+		}
+
+		if ( $confused ) {
+			return $this->check(
+				'providers',
+				__( 'Đăng nhập nhanh', 'smart-login' ),
+				self::WARN,
+				sprintf(
+					/* translators: %s: comma-separated provider names. */
+					__( '%s: secret đang trùng với ID ứng dụng, nên mọi lần đăng nhập đều bị từ chối. Hãy dán đúng App Secret Key.', 'smart-login' ),
+					implode( ', ', $confused )
+				),
 				'providers'
 			);
 		}

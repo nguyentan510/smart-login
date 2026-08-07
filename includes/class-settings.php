@@ -458,17 +458,40 @@ class Settings {
 			'google' => array(
 				'secret' => 'google_client_secret',
 				'clear'  => 'google_clear_secret',
+				'id'     => 'providers.google.client_id',
 			),
 			'zalo'   => array(
 				'secret' => 'zalo_app_secret',
 				'clear'  => 'zalo_clear_secret',
+				'id'     => 'providers.zalo.app_id',
 			),
 		);
 
 		foreach ( $providers as $provider => $fields ) {
+			$submitted = trim( (string) ( $input[ $fields['secret'] ] ?? '' ) );
+
 			if ( ! empty( $input[ $fields['clear'] ] ) ) {
 				\SmartLogin\Auth\Providers\ProviderCredentials::clear_secret( $provider );
-			} elseif ( '' !== trim( (string) ( $input[ $fields['secret'] ] ?? '' ) ) ) {
+			} elseif ( '' !== $submitted && self::secret_is_the_id( $provider, $fields['id'], $submitted, $input ) ) {
+				/*
+				 * Refused rather than stored, and the stored one is left alone.
+				 *
+				 * The App ID and the App Secret sit next to each other on Zalo's
+				 * dashboard, are the same shape, and one in the other's box is
+				 * accepted by everything until a visitor presses the button —
+				 * at which point Zalo answers -14004 "Invalid secret key" and
+				 * the site owner has a failing sign-in and no idea why. This is
+				 * the only place both values are in one hand.
+				 */
+				if ( function_exists( 'add_settings_error' ) ) {
+					add_settings_error(
+						self::OPTION,
+						'smart_login_provider_secret',
+						__( 'Secret trùng với ID ứng dụng nên không được lưu. Hãy dán đúng App Secret Key từ trang quản lý ứng dụng — nó là một giá trị khác với App ID.', 'smart-login' ),
+						'error'
+					);
+				}
+			} elseif ( '' !== $submitted ) {
 				$stored = \SmartLogin\Auth\Providers\ProviderCredentials::store_secret(
 					$provider,
 					(string) $input[ $fields['secret'] ]
@@ -486,6 +509,27 @@ class Settings {
 
 			unset( $input[ $fields['secret'] ], $input[ $fields['clear'] ] );
 		}
+	}
+
+	/**
+	 * Is this "secret" the provider's public id wearing the wrong label?
+	 *
+	 * The id submitted in the same save wins over the stored one, because an
+	 * administrator filling both boxes at once has no stored id to be compared
+	 * against yet — and that is the save where the mistake is easiest to make.
+	 *
+	 * @param string $provider Provider slug.
+	 * @param string $id_path  Registry path holding that provider's public id.
+	 * @param string $secret   The secret just submitted.
+	 * @param array  $input    Raw submitted values.
+	 */
+	private static function secret_is_the_id( string $provider, string $id_path, string $secret, array $input ): bool {
+		$submitted_id = trim( (string) ( self::dig( $input, $id_path ) ?? '' ) );
+		$id           = '' !== $submitted_id
+			? $submitted_id
+			: trim( \SmartLogin\Auth\Providers\ProviderCredentials::client_id( $provider ) );
+
+		return '' !== $id && hash_equals( $id, $secret );
 	}
 
 	/**

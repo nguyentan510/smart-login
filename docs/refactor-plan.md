@@ -1928,6 +1928,110 @@ hold such a pair are specified and not yet built.
 
 ---
 
+## Linking a provider — a correct refusal nobody could see
+
+Reported on 2026-08-07: pressing **Liên kết** on the account page "redirects and
+loads" and never opens Zalo's QR screen.
+
+Nothing was broken in the control. The href was rebuilt as the signed-in
+administrator and every guard `start()` applies was run against it — nonce
+verifies, provider found, `is_available()` true, `linking` true. Zalo showed no
+QR because the visitor had signed in with Zalo minutes earlier and the session
+was still live, so the permission step approved silently and bounced straight
+back.
+
+The refusal came from the callback, and it was right. `resolve()` was run
+against the real subject, as administrator:
+
+```text
+zalo subject held by user 585 (sl_1d391c4359d98cf67e28a787)
+linking as user 1 (admin)
+
+resolve() -> WP_Error smart_login_provider_conflict
+            "Tài khoản nhà cung cấp đã liên kết với người dùng khác."
+
+identity rows 8 -> 8      (nothing written)
+users         7 -> 7
+```
+
+The first Zalo sign-in had provisioned its own account, so the identity belonged
+to user 585 and not to `admin`. The plugin declined to move it. Everything after
+that was the problem.
+
+- [x] **L1** — **the only silent refusal was the one visitors meet.** Three of
+      `callback()`'s four failure branches recorded `PROVIDER_FAILED`; the one
+      guarding `resolve()` did not. Three presses left an empty audit log and
+      the diagnosis had to be rebuilt against the database by hand. All four now
+      record, and each carries whether it was a linking attempt. The rule is
+      source-level — `callback()` ends in `exit()`, so no suite here can call it
+      — and asks the weaker question it can answer: is there a record before each
+      refusal. It found exactly one gap.
+- [x] **L2** — **the refusal was delivered to a screen the visitor cannot be
+      on.** `fail()` always redirected to `failure_url()`, which is My Account
+      with `smart_login_step=login`. A signed-in visitor sees the dashboard, so
+      the sentence explaining the refusal went nowhere. The account partial built
+      its link with an empty return url, so the transaction had nowhere to send
+      anyone back to; it now carries `$sl_redirect`, and `failure_url()` takes an
+      optional return url, validated there rather than trusted. Applied to
+      linking only — a failed *sign-in* still belongs on the sign-in screen,
+      because the page that visitor was heading for cannot serve them.
+- [x] **L3** — **the App-Secret-is-the-App-ID pair can no longer be saved.**
+      `Settings::sanitize()` refuses a secret equal to the provider's public id
+      and leaves the stored one alone, preferring the id submitted in the same
+      save over the stored one — that is the save where the mistake is easiest
+      to make. `Readiness` reports the pair as a warning for sites already
+      holding one, which is every site this rule cannot reach. Google gets the
+      same rule rather than a comment saying it should.
+
+**Landed red first**, four suites, before any production file moved:
+
+```text
+  FAIL  a secret equal to the stored app id is refused
+         expected: 'a-secret-that-is-not-the-id'
+         actual:   'zalo-app-from-settings'
+  FAIL  a secret equal to the app id in the same save is refused
+  FAIL  the rule covers Google too
+  FAIL  a linking failure returns to the page it started on
+         expected: 'https://example.test/my-account/'
+         actual:   'https://example.test/?smart_login_step=login'
+  339 passed, 4 failed
+
+  FAIL  every refusal in callback() writes an audit row first
+         expected: 0
+         actual:   1
+  Identity fitness: 45 passed, 1 failed, 0 pending
+
+  FAIL  the invitation carries a return url back to the account page
+  Account card: 40 passed, 1 failed, 0 pending
+
+  FAIL  a secret equal to the app id is reported
+         expected: 'warn'
+         actual:   'ok'
+  Admin screens: 138 passed, 1 failed, 0 pending
+```
+
+**Green after.** `343 passed, 0 failed`; fitness `46 passed`; account card
+`41 passed`; admin `139 passed`; every required suite in `run-all.php` PASS;
+`SMART_LOGIN_ZALO_STAGING_SMOKE_OK`; coding standards back at its documented
+baseline, `18 ERRORS AND 22 WARNINGS ... IN 16 FILES` — it went to 19 on a
+`@param` this work introduced, which is the reason the baseline is compared
+rather than assumed.
+
+**Known limitation, written down rather than discovered.** `$sl_redirect` comes
+from `AccountForm::redirect_url()`, which is `get_permalink()`. Inside a
+WooCommerce endpoint that resolves to the My Account page, not to
+`/my-account/edit-account/`, so a refused link returns to the account page and
+not to the exact tab it started on. The notice arrives, which is the defect
+being fixed; the last hop would take either a WooCommerce-aware branch or a
+request-URI read, and neither was worth adding without a rule over it.
+
+**Not this project's to fix.** The account that holds the contested identity is
+a real account, and moving an identity between accounts is a merge. The site
+owner deletes or unlinks the holder; the plugin refuses, says so, and now says
+so where it can be read.
+
+---
+
 ## Risks
 
 | Risk | Mitigation |
@@ -1975,3 +2079,6 @@ hold such a pair are specified and not yet built.
 | 18.3's floor changes row height across the account card | Acceptance is a measurement of `.sl-row` before and after, not a reading of the CSS. 17.2 is the precedent — the prediction from the source was wrong in both magnitude and direction |
 | Z2 stops asking Zalo for `email`, and a site that was receiving one silently stops | A v4 user access token does not grant it, so the field was already never arriving — the change removes a request, not a result. `smart_login_zalo_profile_url` re-adds it in one filter, and the mapping still reads `email`, so nothing downstream assumes its absence |
 | Both Zalo fixtures now encode a reading of Zalo's docs, so a wrong reading is now asserted rather than merely believed | Stated where it is configured: the fixture comments name the behaviour they model and why. A real round trip through **Kiểm tra kết nối** is the check neither fixture replaces, and it is listed as the open item in Z1–Z3 rather than closed by a green run |
+| L2 lets a linking failure choose its own redirect target, which is the shape of an open redirect | The value is validated by `wp_validate_redirect()` inside `failure_url()` rather than by its callers, and asserted directly — an off-site return url falls back to the sign-in step. Sign-in failures are excluded entirely, so the widened path is only reachable by a visitor who is already authenticated |
+| L3 refuses a save, and an administrator whose provider genuinely issues id and secret alike can no longer configure it | No provider does — an id is public and a secret is not, and a provider that made them equal would have no secret. The refusal names the fix in its message rather than only reporting a rejection, and `Readiness` names which provider holds the bad pair |
+| L1's rule reads source text, so it passes the day somebody renames `fail()` | It asserts the method body was found before counting anything, so narrowing the rule to nothing fails loudly instead of passing vacuously — the failure mode 10.0's PENDING rows were written to avoid |

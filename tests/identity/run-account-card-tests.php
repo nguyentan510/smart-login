@@ -126,6 +126,21 @@ sl_assert(
 );
 
 /*
+ * The link has to say where it came from.
+ *
+ * It was built with an empty return url, so the transaction carried nowhere to
+ * go back to, and a refused link ended on the sign-in step of My Account —
+ * which a signed-in visitor never sees, along with the sentence explaining the
+ * refusal. The control that starts on this page has to be able to end on it.
+ */
+sl_assert(
+	'the invitation carries a return url back to the account page',
+	false !== strpos( $sl_invitation, 'redirect_to=https%3A%2F%2Fexample.test%2Fmy-account%2F' )
+		|| false !== strpos( $sl_invitation, 'redirect_to=https%3A//example.test/my-account/' ),
+	'start_url() was called with an empty return url, so a failure has nowhere to return to and lands on a screen the visitor cannot be on.'
+);
+
+/*
  * linked() returns email and phone rows as well, so the helper is going to be
  * handed channels no provider claims. Asserted here rather than left to a
  * fatal on a live page.
