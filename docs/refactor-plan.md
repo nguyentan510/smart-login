@@ -1886,11 +1886,45 @@ reason=Zalo callback fixture failed: smart_login_zalo_token
 every required suite in `run-all.php` PASS; coding standards unchanged at its
 documented baseline, `18 ERRORS AND 22 WARNINGS ... IN 16 FILES`.
 
-**Not verified here, and it is the one that matters.** No test in this repo has
-ever spoken to Zalo. Both fixtures are now modelled on Zalo's documented
-behaviour rather than on this plugin's, which is a strictly better model and
-still a model. The remaining check is a real round trip — **Kiểm tra kết nối** on
-the providers tab, which performs the exchange and issues nothing.
+**Verified against Zalo, 2026-08-07.** A real sign-in through Zalo QR completed
+and issued a session. No test in this repo speaks to Zalo — both fixtures model
+Zalo's documented behaviour rather than this plugin's, which is a strictly
+better model and still a model, so this round trip is the evidence and the
+fixtures are the regression cover.
+
+**The second cause, which only Z3 could show.** With the header in place the
+message changed from *"không trả về access token"* to *"Zalo từ chối yêu cầu
+đăng nhập."*, and the audit row Z3 added said why:
+
+```text
+{"provider":"zalo","reason":"smart_login_zalo_token",
+ "provider_error":-14004,"provider_error_name":"Invalid secret key"}
+```
+
+The stored App Secret was the **App ID** — byte-identical, confirmed by reading
+both out of the live site (`hash_equals( $app_id, $secret ) === true`). Zalo had
+been evaluating the header correctly and refusing correctly. Two defects sat on
+top of each other: one in this code, one in the configuration, and the second
+was unreachable until the first was gone.
+
+Two things this cost, worth recording because both are cheap to repeat:
+
+- A first probe reported `secret length = 0` and `source = missing`. That was an
+  artefact of the probe, not a fact about the site: `SecretBox::key()` derives
+  from `wp_salt()`, and a bootstrap that defines DB constants and skips
+  `wp-config.php` decrypts nothing. Anything reading a sealed value needs the
+  site's real salts or it will confidently report an empty secret.
+- The plugin directory had been a junction to a working copy elsewhere. When it
+  was replaced by a real directory under `wp-content/plugins/`, PHP's cached
+  path resolution still pointed at the old target, and the site fatalled with
+  `is_readable()` returning true one line above a `require_once` that could not
+  open the same file. Restarting PHP is the whole fix; no file was lost.
+
+**Open.** Nothing stops the same App-ID-as-App-Secret entry from being saved
+again — the two values sit next to each other in Zalo's dashboard, are the same
+shape, and nothing complains until a visitor presses the button. A save-time
+rule in `Settings::sanitize()` and a `Readiness` warning for sites that already
+hold such a pair are specified and not yet built.
 
 ---
 
