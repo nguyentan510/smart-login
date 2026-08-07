@@ -65,7 +65,7 @@ TemplateLoader::output(
 	 * was the last piece of the geometry that preceded that — and the loudest
 	 * control in a card whose other actions are small text.
 	 *
-	 * "Zalo · chưa liên kết · Liên kết" is the same shape as every row above it,
+	 * "Google · chưa liên kết · Liên kết" is the same shape as every row above it,
 	 * which is also what makes the two halves readable as one list: what you
 	 * have, and what you could have.
 	 *

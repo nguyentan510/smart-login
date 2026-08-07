@@ -620,7 +620,7 @@
  *
  * The base values are Google's, because Google's are the only ones prescribed:
  * #FFFFFF surface, #1F1F1F label, #747775 border, weight 500, 40px minimum
- * height. Zalo overrides what is Zalo's below.
+ * height. A provider with its own prescribed colours overrides them below.
  */
 .sl-btn--provider {
 	display: flex;
@@ -642,21 +642,6 @@
 	color: #1f1f1f;
 }
 
-/* #0068ff is Zalo's blue. The two shades that used to be here — one for the
-   border, a darker one for the label — were the plugin's approximation of it,
-   and are not repeated in this comment: the rule that keeps them out greps the
-   stylesheet, and a rule that reads prose is a rule that fails on a sentence
-   explaining why it exists. */
-.sl-btn--zalo {
-	border-color: #0068ff;
-	color: #0068ff;
-}
-
-.sl-btn--zalo:hover {
-	background: #f0f6ff;
-	color: #0068ff;
-}
-
 /* A box the mark sits in, not a badge drawn around it. The circle and the
    1px currentColor border that used to be here existed to contain a letter —
    around a real logo they read as a frame nobody designed, and currentColor
@@ -671,8 +656,8 @@
 }
 
 /* The svg carries its own width/height so a mark that needs a little more room
-   can ask for it — Zalo's is a bubble with a wordmark inside, and at 18px the
-   wordmark closes up. Bounded here so no mark can grow past the button. */
+   can ask for it — a bubble with a wordmark inside closes up at 18px. Bounded
+   here so no mark can grow past the button. */
 .sl-provider-icon svg {
 	display: block;
 	max-width: 20px;

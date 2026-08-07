@@ -88,7 +88,7 @@ sl_section( 'Rule 1 — the provider\'s own mark, wherever the provider is named
 
 /*
  * LoginProviderInterface::icon_svg() has been on the interface since Phase 12,
- * Google and Zalo both implement it, and templates/form-auth.php renders it on
+ * Every shipped provider implements it, and templates/form-auth.php renders it on
  * the sign-in screen. The account card names a provider in two places and draws
  * a mark in neither.
  */
@@ -337,7 +337,7 @@ sl_assert(
 sl_assert(
 	'the invitation to link is a row, not a block',
 	false === strpos( sl_source( 'templates/partials/account/providers.php' ), 'sl-btn' ),
-	'"Zalo · chưa liên kết · Liên kết" is the same shape as every other way in listed above it.'
+	'"Google · chưa liên kết · Liên kết" is the same shape as every other way in listed above it.'
 );
 
 /*

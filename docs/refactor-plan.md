@@ -2032,6 +2032,88 @@ so where it can be read.
 
 ---
 
+## Removing Zalo Login
+
+Asked for on 2026-08-07, after the research below was put in front of the
+decision and the answer came back unchanged: remove it entirely.
+
+**Why, in one sentence the code can back up.** `AccountProvisioner`'s auto-link
+branch requires `email_verified && '' !== email`, and Zalo v4 grants neither — so
+every Zalo sign-in by an existing customer fell through to
+`create_provider_user()` and made them a second account. Not an edge case: the
+default path.
+
+- [x] **R1** — **a rule that can answer "did we get all of it".** A removal
+      crosses every boundary a rename does, and this repo has been bitten five
+      times by exactly that. The rule walks `sl_plugin_sources()` plus the two
+      shipped assets and names every survivor. It landed red with **18 files**,
+      including `smart-login.php` and `templates/partials/account/providers.php`
+      — both of which a hand-grep of `includes/` had missed. One allowlist entry,
+      and it is not an exception being excused: `class-transport-router.php`
+      mentions Zalo **ZNS**, an OTP transport, which a grep-and-delete removal
+      would have taken with it.
+- [x] **R2** — **the code.** `ZaloProvider` deleted; the provider registry, the
+      identity channel, the three `FieldRegistry` rows, the admin card, the
+      secret absorber, the connection-test branch and the deployment constants
+      all follow. Two things were deliberately *not* deleted: `FederatedChannel`
+      and `ProviderMark` are parameterised and belong to no provider.
+- [x] **R3** — **the ternary that was one provider away from being wrong.**
+      `ProviderCredentials` read `'google' === $provider ? … : …` four times, so
+      *every* id that was not `google` collected Zalo's constants. With Zalo gone
+      that is not a dead branch, it is a trap for the next provider. Replaced by
+      a `PROVIDERS` map; an unknown provider now resolves to nothing, asserted
+      directly.
+- [x] **R4** — **the leftovers, cleaned by property rather than by name.**
+      Removing a provider strands its settings block and its sealed secret, and
+      a secret with no interface left to clear it outlives the feature it
+      belonged to. `maybe_upgrade()` — empty of migrations since Phase 15, with a
+      comment saying the next one goes here in the same commit as the change that
+      needs it — now drops any provider block `ProviderCredentials` does not
+      ship. Written that way on purpose: a cleanup that names the provider it was
+      written for is correct exactly once.
+- [x] **R5** — **the gate rewritten, not deleted.** `run-provider-gates.php` had
+      80 Zalo references asserting the behaviour being removed. Deleting them
+      would delete the policy; they now assert the new one — the registry offers
+      only Google, and an install seeded with a leftover block and a sealed
+      secret comes out of `maybe_upgrade()` with both gone and Google untouched.
+      That last one is the only test the migration has, and the migration is new
+      code that had never run anywhere.
+
+**Measured before the decision, not argued.** On this install, one account is
+stranded by the removal:
+
+```text
+accounts holding a zalo identity: 2
+  user 585  sl_1d391c4359d98cf67e28a787  channels=[zalo]  synthetic_email=yes  -> LOCKED OUT
+  user 560  sl_gate_guard_uxqhck0w       channels=[zalo]  synthetic_email=no   -> still has a way in
+accounts with no way in once zalo is removed: 1
+```
+
+`can_unlink()` refuses to drop an account's last identity because `user_login` is
+opaque — an account with none cannot be signed into or recovered. The stranded
+one here is a test account, and the query to run before any real upgrade is in
+`CHANGELOG.md` rather than in this file, because it is the site owner who needs
+it.
+
+**Identity rows are deliberately untouched.** They are customer data, deleting
+them is not reversible, and an account whose only identity was Zalo needs a human
+decision rather than an upgrade hook running while nobody is watching. The rows
+render as an unknown channel, which `run-account-card-tests.php` already asserts
+does not error.
+
+**Green.** Every required suite in `run-all.php` PASS;
+`SMART_LOGIN_PROVIDER_REMOVAL_OK` and `SMART_LOGIN_AUTH_INTEGRATION_OK` from the
+integration gates; `db_version=2` observed on the live database, so the migration
+ran rather than being assumed.
+
+**The coding-standards baseline moved, and this is the note that says so.** It
+was `18 ERRORS AND 22 WARNINGS ... IN 16 FILES` and is now **`18 ERRORS AND 20
+WARNINGS ... IN 16 FILES`** — two warnings left with `class-zalo-provider.php`.
+Down is still a change, and a baseline nobody restates is a baseline that has
+stopped meaning anything.
+
+---
+
 ## Risks
 
 | Risk | Mitigation |
@@ -2082,3 +2164,6 @@ so where it can be read.
 | L2 lets a linking failure choose its own redirect target, which is the shape of an open redirect | The value is validated by `wp_validate_redirect()` inside `failure_url()` rather than by its callers, and asserted directly — an off-site return url falls back to the sign-in step. Sign-in failures are excluded entirely, so the widened path is only reachable by a visitor who is already authenticated |
 | L3 refuses a save, and an administrator whose provider genuinely issues id and secret alike can no longer configure it | No provider does — an id is public and a secret is not, and a provider that made them equal would have no secret. The refusal names the fix in its message rather than only reporting a rejection, and `Readiness` names which provider holds the bad pair |
 | L1's rule reads source text, so it passes the day somebody renames `fail()` | It asserts the method body was found before counting anything, so narrowing the rule to nothing fails loudly instead of passing vacuously — the failure mode 10.0's PENDING rows were written to avoid |
+| R2 locks out every account whose only identity was Zalo, and the plugin cannot tell the operator afterwards | Measured before the change rather than discovered after, and the counting query ships in `CHANGELOG.md` under a heading that says what it costs. The rows are left in place so the decision stays reversible by hand — a cleanup that deleted them would make the lockout permanent in the same breath as reporting it |
+| R4's cleanup runs on upgrade and deletes stored configuration | It only ever touches provider blocks `ProviderCredentials::PROVIDERS` does not name, so the shipped provider and the shared `auto_link_email` policy are unreachable by it — both asserted in the gate, against a real database, not reasoned about |
+| R1's allowlist becomes the place future references hide | One entry, with the reason written beside it, and it names a *different feature* rather than a file that was too hard to clean. Any second entry has to be argued in the same place |

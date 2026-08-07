@@ -363,7 +363,7 @@ function wp_remote_post( $url, $args = array() ) {
 /**
  * Delegates for the same reason wp_remote_post() does.
  *
- * Added when the Zalo profile call turned out to be the only outbound GET in the
+ * Added when a provider's profile call turned out to be the only outbound GET in the
  * plugin that no pure suite could see: the provider read its token back out of a
  * query string, and there was no stub to record that it had.
  */

@@ -112,7 +112,7 @@ class WooIntegration {
 	 *
 	 * Two cases land here. A registration that finished on this page renders its
 	 * own step. And a visitor arriving with `smartlogin_welcome=1` — which is how
-	 * a Google or Zalo signup gets here, since OAuth returns through a redirect
+	 * a provider signup gets here, since OAuth returns through a redirect
 	 * and cannot render anything in place — gets the same welcome screen the
 	 * native flow shows inline. Before this, that second case landed on the full
 	 * account editing form, which is not a welcome.

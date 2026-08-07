@@ -39,16 +39,21 @@ class Installer {
 	/**
 	 * Runs on every load; cheap option read, only does work after an upgrade.
 	 *
-	 * Deliberately empty of migrations. Phase 15 deleted every one of them: each was
-	 * written for the development installs that existed when its change landed, ran on
-	 * one machine, and was never exercised by a fresh install — which is what 14.5's
-	 * cursor defect was worth. This plugin upgrades from nothing.
+	 * Phase 15 deleted every migration this plugin had: each was written for the
+	 * development installs that existed when its change landed, ran on one machine, and
+	 * was never exercised by a fresh install — which is what 14.5's cursor defect was
+	 * worth. The comment that replaced them said the next one goes here, in the same
+	 * commit as the change that needs it, deliberately and in writing.
 	 *
-	 * The hook stays because it is how the next schema change arrives. When there is
-	 * genuinely something to migrate it goes here, in the same commit as the change that
-	 * needs it, and the fitness rule naming these surfaces is edited alongside it —
-	 * deliberately and in writing, which is the whole difference from the habit this
-	 * phase retired.
+	 * This is that one. Dropping a login provider leaves two pieces of stored state that
+	 * no screen can reach any more: its block in the settings option, and its secret
+	 * sealed in the provider secret store. A secret with no interface left to clear it
+	 * is a liability that outlives the feature it belonged to.
+	 *
+	 * Identity rows are deliberately **not** touched. They are customer data, deleting
+	 * them is not reversible, and an account whose only identity came from the removed
+	 * provider needs a human decision rather than an upgrade hook that runs while
+	 * nobody is watching.
 	 */
 	public static function maybe_upgrade(): void {
 		if ( get_option( self::DB_VERSION_OPTION ) === SMART_LOGIN_DB_VERSION ) {
@@ -56,7 +61,41 @@ class Installer {
 		}
 
 		self::install_tables();
+		self::forget_unshipped_providers();
 		update_option( self::DB_VERSION_OPTION, SMART_LOGIN_DB_VERSION );
+	}
+
+	/**
+	 * Drop stored state belonging to any provider this plugin no longer ships.
+	 *
+	 * Asks `ProviderCredentials` what is shipped rather than naming what was removed.
+	 * A cleanup that names the provider it was written for is correct exactly once and
+	 * then becomes a line nobody dares delete; this one is correct for the next removal
+	 * too, and it needs no edit to be.
+	 */
+	private static function forget_unshipped_providers(): void {
+		$shipped  = array_keys( \SmartLogin\Auth\Providers\ProviderCredentials::PROVIDERS );
+		$settings = get_option( Settings::OPTION, array() );
+		$blocks   = is_array( $settings ) && isset( $settings['providers'] ) && is_array( $settings['providers'] )
+			? $settings['providers']
+			: array();
+		$changed  = false;
+
+		foreach ( $blocks as $key => $value ) {
+			// Only a provider's own block, which is an array. `auto_link_email` is a
+			// scalar policy that lives alongside them and belongs to no provider.
+			if ( ! is_array( $value ) || in_array( $key, $shipped, true ) ) {
+				continue;
+			}
+
+			\SmartLogin\Security\SecretBox::forget( \SmartLogin\Auth\Providers\ProviderCredentials::SECRET_OPTION, (string) $key );
+			unset( $settings['providers'][ $key ] );
+			$changed = true;
+		}
+
+		if ( $changed ) {
+			update_option( Settings::OPTION, $settings );
+		}
 	}
 
 	public static function otp_table(): string {

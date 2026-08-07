@@ -421,8 +421,8 @@ if ( method_exists( 'SmartLogin\Identity\UserManager', 'adopt_verified_email' ) 
 // Rule 4 (14.4) — the two per-provider defaults, pinned because they are the
 // security-relevant half of the decision and a default is the value almost every
 // site will run. Google on: it asserts email_verified, and that assertion already
-// decides the account's user_email. Zalo off: its profile response is not documented
-// to carry a verification flag.
+// decides the account's user_email. A provider that does not assert it is absent
+// from AccountProvisioner::EMAIL_IDENTITY_FLAG and gets no row at all.
 $sl_fields = \SmartLogin\FieldRegistry::all();
 
 sl_check(
@@ -432,9 +432,9 @@ sl_check(
 );
 
 sl_check(
-	'Zalo verified email is not, by default',
-	0,
-	(int) ( $sl_fields['providers.zalo.email_identity']['default'] ?? -1 )
+	'a provider that cannot assert verification declares no flag',
+	array( 'google' ),
+	array_keys( \SmartLogin\Auth\AccountProvisioner::EMAIL_IDENTITY_FLAG )
 );
 
 // Rule 3 — proof is required to reach the directory. Passes today, and must keep

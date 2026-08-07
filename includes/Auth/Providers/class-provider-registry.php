@@ -14,7 +14,7 @@ final class ProviderRegistry {
 	private array $providers = array();
 
 	public function __construct( ?array $providers = null ) {
-		foreach ( $providers ?? array( new GoogleProvider(), new ZaloProvider() ) as $provider ) {
+		foreach ( $providers ?? array( new GoogleProvider() ) as $provider ) {
 			if ( $provider instanceof LoginProviderInterface ) {
 				$this->register( $provider );
 			}

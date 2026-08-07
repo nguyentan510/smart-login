@@ -33,7 +33,7 @@ Chọn `Tuỳ chỉnh` nếu gateway của bạn chưa có preset; khi đó mọ
 Có hai cách, dùng được đồng thời:
 
 - **WooCommerce**: bật *Thay form My Account* ở tab Hồ sơ & Địa chỉ. Trang `/my-account/` sẽ tự dùng form của plugin.
-- **Shortcode**: đặt `[smart_auth]` hoặc `[smart_login]` vào bất kỳ trang nào. Box hỏi **một ô định danh duy nhất** rồi tự phân nhánh, kèm OAuth Google/Zalo phía dưới, và bao trọn cả luồng cho tới màn hình chào mừng.
+- **Shortcode**: đặt `[smart_auth]` hoặc `[smart_login]` vào bất kỳ trang nào. Box hỏi **một ô định danh duy nhất** rồi tự phân nhánh, kèm OAuth Google phía dưới, và bao trọn cả luồng cho tới màn hình chào mừng.
 
 Không còn cặp tab Đăng nhập / Đăng ký: người dùng hiếm khi biết mình thuộc nhánh nào, nên server tra định danh và tự quyết định. `[smart_register]` vẫn dùng được và mở cùng màn hình đó, chỉ đổi tiêu đề. Các shortcode khác: `[smart_verify_otp]`, `[smart_forgot_password]`, `[smart_profile]`.
 
@@ -116,7 +116,7 @@ Hiện ngay tại chỗ, không chuyển trang. Chỉ hỏi những gì hồ sơ
 
 Không có rào chắn nào ở đây. Bản trước đặt cờ `smartlogin_gate` mà không nơi nào đọc, nên giao diện nói "bắt buộc" trong khi chẳng có gì cưỡng chế; cờ đó đã bị gỡ bỏ thay vì được cưỡng chế.
 
-Đăng nhập qua Google/Zalo quay về bằng redirect nên không hiện tại chỗ được — luồng đó tới `/my-account/edit-account/?smartlogin_welcome=1`, và trang đó hiển thị đúng màn hình chào mừng này thay vì form sửa hồ sơ đầy đủ.
+Đăng nhập qua provider quay về bằng redirect nên không hiện tại chỗ được — luồng đó tới `/my-account/edit-account/?smartlogin_welcome=1`, và trang đó hiển thị đúng màn hình chào mừng này thay vì form sửa hồ sơ đầy đủ.
 
 ### Đăng nhập
 Số điện thoại (hoặc email) + mật khẩu. Cắm vào filter `authenticate` của WordPress nên hoạt động ở cả `wp-login.php`, WooCommerce và form của plugin. Sai 5 lần → khoá 15 phút theo cặp IP + tài khoản.
@@ -278,12 +278,12 @@ Namespace `smart-login/v1`. Mọi endpoint dùng `POST` và cần header `X-WP-N
 
 ---
 
-## Google Login và Zalo Login
+## Google Login
 
-Hai provider mặc định tắt. Cách cấu hình thông thường:
+Provider mặc định tắt. Cách cấu hình thông thường:
 
 1. Vào **Smart Login → Đăng nhập nhanh**.
-2. Mở thẻ **Google Login** hoặc **Zalo Login**.
+2. Mở thẻ **Google Login**.
 3. Tab **Thiết lập** có chỗ nhập Client/App ID, Secret và Callback URL cần sao chép.
 4. Tab **Hướng dẫn** trình bày các bước khai báo ứng dụng ngay trong WordPress.
 5. Bật provider và bấm **Lưu thay đổi**.
@@ -296,17 +296,13 @@ Với deployment được quản lý tập trung, có thể dùng các constant 
 define( 'SMART_LOGIN_GOOGLE_CLIENT_ID', '...' );
 define( 'SMART_LOGIN_GOOGLE_CLIENT_SECRET', '...' );
 define( 'SMART_LOGIN_GOOGLE_REDIRECT_URI', 'https://example.com/wp-admin/admin-post.php?action=smart_login_provider_callback&provider=google' );
-
-define( 'SMART_LOGIN_ZALO_APP_ID', '...' );
-define( 'SMART_LOGIN_ZALO_APP_SECRET', '...' );
-define( 'SMART_LOGIN_ZALO_REDIRECT_URI', 'https://example.com/wp-admin/admin-post.php?action=smart_login_provider_callback&provider=zalo' );
 ```
 
-Google ID token được kiểm tra chữ ký bằng public certificate, sau đó kiểm tra issuer, audience, expiry và nonce. Zalo dùng `id` làm định danh chính; nếu Zalo không cung cấp email verified, plugin tạo tài khoản provider-only và đưa user tới hồ sơ để bổ sung contact.
+Google ID token được kiểm tra chữ ký bằng public certificate, sau đó kiểm tra issuer, audience, expiry và nonce. Provider nào không cung cấp email verified thì plugin tạo tài khoản provider-only và đưa user tới hồ sơ để bổ sung contact.
 
 Provider đã xác thực không cần OTP bổ sung. Mọi phone/email do user tự nhập hoặc thay đổi trong trang hồ sơ vẫn phải hoàn tất OTP trước khi dữ liệu chính được cập nhật.
 
-Zalo OA/ZNS không thuộc Login Provider và chưa được triển khai trong phase này; khi cần, nó phải được thêm như một OTP Channel riêng.
+Zalo Login đã được gỡ khỏi plugin — Zalo không cấp email cho user access token, nên mọi lần đăng nhập Zalo đều sinh một tài khoản riêng thay vì tìm thấy tài khoản sẵn có. Zalo OA/ZNS là chức năng khác và không liên quan: nếu cần gửi OTP qua đó, nó phải được thêm như một OTP Channel riêng.
 
 ---
 

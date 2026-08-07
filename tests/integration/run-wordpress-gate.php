@@ -265,7 +265,7 @@ try {
 	$guard_service = new \SmartLogin\Auth\IdentityLinkService();
 	$guard_claims  = array(
 		\SmartLogin\Identity\Claim::canonical( 'google', 'guard-' . wp_generate_uuid4() ),
-		\SmartLogin\Identity\Claim::canonical( 'zalo', 'guard-' . wp_generate_uuid4() ),
+		\SmartLogin\Identity\Claim::canonical( 'google', 'guard-' . wp_generate_uuid4() ),
 	);
 
 	foreach ( $guard_claims as $guard_claim ) {
@@ -310,7 +310,7 @@ try {
 	}
 
 	// The second must be refused, whatever the caller does.
-	$second = $guard_service->unlink( (int) $guard_id, 'zalo', $guard_claims[1]->subject(), $guard_pass );
+	$second = $guard_service->unlink( (int) $guard_id, 'google', $guard_claims[1]->subject(), $guard_pass );
 	if ( ! is_wp_error( $second ) || 'smart_login_last_identity' !== $second->get_error_code() ) {
 		$failed( 'unlink removed the last identity and orphaned the account' );
 	}
@@ -323,7 +323,7 @@ try {
 
 	// Retrying does not wear the guard down.
 	for ( $attempt = 0; $attempt < 3; $attempt++ ) {
-		$guard_service->unlink( (int) $guard_id, 'zalo', $guard_claims[1]->subject(), $guard_pass );
+		$guard_service->unlink( (int) $guard_id, 'google', $guard_claims[1]->subject(), $guard_pass );
 	}
 	if ( 1 !== $repository->count_for_user( (int) $guard_id ) ) {
 		$failed( 'repeated unlink attempts eventually orphaned the account' );

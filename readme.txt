@@ -16,7 +16,7 @@ Smart Login thay thế màn hình đăng nhập mặc định của WordPress b�
 
 **Định danh**
 
-Mỗi cách đăng nhập của người dùng — số điện thoại, email, Google, Zalo — là một *identity* riêng trong bảng `smartlogin_identities`, với ràng buộc `UNIQUE (channel, subject)`. Đó là nơi duy nhất trả lời câu hỏi "số này thuộc về ai".
+Mỗi cách đăng nhập của người dùng — số điện thoại, email, Google — là một *identity* riêng trong bảng `smartlogin_identities`, với ràng buộc `UNIQUE (channel, subject)`. Đó là nơi duy nhất trả lời câu hỏi "số này thuộc về ai".
 
 Hệ quả thực tế: khi người dùng đổi số điện thoại, số cũ được **thu hồi** chứ không phải ghi đè. Người nhận SIM tái sử dụng sau đó không thể dùng số ấy để lấy lại mật khẩu của chủ cũ.
 
@@ -66,7 +66,7 @@ Không. WooCommerce chỉ cần khi bạn muốn dùng phần địa chỉ và c
 * Mục Bảo mật hiện "đổi lần cuối" khi biết; tài khoản đã tồn tại không có mốc này và thẻ không đoán.
 * Thanh "Hoàn thiện n/m" trên hồ sơ, mẫu số tính theo bộ cài đặt đang bật.
 * Ô báo thiếu thông tin nói **lý do** từng mục đáng điền, thay vì liệt kê tên trường.
-* Logo Google/Zalo hiện trong thẻ tài khoản; mỗi thẻ có icon riêng.
+* Logo provider hiện trong thẻ tài khoản; mỗi thẻ có icon riêng.
 * Sửa: ô nhập mã xác thực không có nhãn, trình đọc màn hình không đọc được tên của nó.
 * Sửa: trên theme không tự khai `.screen-reader-text`, thẻ hồ sơ hiện chữ "Họ tên * (bắt buộc)" ngay trong nhãn.
 * Sửa: nút "Đổi" nhỏ hơn ngưỡng chạm 24×24 của WCAG 2.2 AA.

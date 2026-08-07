@@ -18,7 +18,9 @@
 defined( 'ABSPATH' ) || exit;
 
 define( 'SMART_LOGIN_VERSION', '1.1.0' );
-define( 'SMART_LOGIN_DB_VERSION', '1' );
+// Bumped to 2 so maybe_upgrade() runs once more: a login provider was dropped and
+// its stored settings block and sealed secret have no screen left to clear them.
+define( 'SMART_LOGIN_DB_VERSION', '2' );
 define( 'SMART_LOGIN_FILE', __FILE__ );
 define( 'SMART_LOGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SMART_LOGIN_URL', plugin_dir_url( __FILE__ ) );
@@ -29,9 +31,6 @@ foreach ( array(
 	'SMART_LOGIN_GOOGLE_CLIENT_ID',
 	'SMART_LOGIN_GOOGLE_CLIENT_SECRET',
 	'SMART_LOGIN_GOOGLE_REDIRECT_URI',
-	'SMART_LOGIN_ZALO_APP_ID',
-	'SMART_LOGIN_ZALO_APP_SECRET',
-	'SMART_LOGIN_ZALO_REDIRECT_URI',
 ) as $smart_login_provider_constant ) {
 	if ( ! defined( $smart_login_provider_constant ) && function_exists( 'getenv' ) ) {
 		$smart_login_provider_value = getenv( $smart_login_provider_constant );

@@ -42,7 +42,6 @@ final class AccountProvisioner {
 	 */
 	const EMAIL_IDENTITY_FLAG = array(
 		'google' => 'providers.google.email_identity',
-		'zalo'   => 'providers.zalo.email_identity',
 	);
 
 	private IdentityRepository $identities;
@@ -183,10 +182,9 @@ final class AccountProvisioner {
 	 * address was never registered; `wp-login.php` alone found the account, and asked
 	 * for a password the holder has never seen.
 	 *
-	 * Per provider, because the guarantees differ. Google asserts `email_verified`.
-	 * Zalo is off by default and belt-and-braces besides — `ZaloProvider` reads
-	 * `email_verified` from a field its profile response is not documented to send,
-	 * so the condition below cannot be met there today.
+	 * Per provider, because the guarantees differ. Google asserts `email_verified`;
+	 * a provider that does not is absent from EMAIL_IDENTITY_FLAG and gets no row,
+	 * which is the fail-closed reading.
 	 *
 	 * Deliberately **after** the federated row is claimed, and deliberately not
 	 * fatal. The email row is an addition; a provider login that cannot have one must

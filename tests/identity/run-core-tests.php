@@ -49,7 +49,7 @@ sl_check( 'a claim missing a subject is empty', true, Claim::canonical( 'phone',
 sl_check( 'a claim missing a channel is empty', true, Claim::canonical( '', '84969789475' )->is_empty() );
 
 sl_check( 'equal claims compare equal', true, $claim->equals( Claim::canonical( 'phone', '84969789475' ) ) );
-sl_check( 'same subject in another channel is a different claim', false, $claim->equals( Claim::canonical( 'zalo', '84969789475' ) ) );
+sl_check( 'same subject in another channel is a different claim', false, $claim->equals( Claim::canonical( 'google', '84969789475' ) ) );
 
 sl_assert(
 	'Claim exposes no public property that could be rewritten',
@@ -197,13 +197,13 @@ sl_check( 'masking keeps the first two characters', 'ng••••••••@
 sl_check( 'a very short local part still gets two dots', 'ab••@example.com', $mail->mask( 'ab@example.com' ) );
 
 // ---------------------------------------------------------------------
-sl_section( 'FederatedChannel — google and zalo cost zero classes' );
+sl_section( 'FederatedChannel — a provider costs zero classes' );
 
-$google = new FederatedChannel( 'google', 'Google' );
-$zalo   = new FederatedChannel( 'zalo' );
+$google  = new FederatedChannel( 'google', 'Google' );
+$unnamed = new FederatedChannel( 'acme' );
 
 sl_check( 'the id is the provider slug', 'google', $google->id() );
-sl_check( 'an omitted label is derived', 'Zalo', $zalo->label() );
+sl_check( 'an omitted label is derived', 'Acme', $unnamed->label() );
 sl_check( 'subjects are only whitespace-trimmed', '108234', $google->normalize( '  108234  ' ) );
 sl_check( 'case is preserved — the subject is provider-owned', 'AbC_123', $google->normalize( 'AbC_123' ) );
 sl_check( 'a normal subject is valid', true, $google->is_valid( '108234' ) );
@@ -219,7 +219,7 @@ sl_section( 'ChannelRegistry' );
 
 $registry = new ChannelRegistry();
 
-sl_check( 'the four built-in channels are registered', 4, count( $registry->all() ) );
+sl_check( 'the three built-in channels are registered', 3, count( $registry->all() ) );
 sl_check( 'phone resolves', 'phone', $registry->get( 'phone' )->id() );
 sl_check( 'email resolves', 'email', $registry->get( 'email' )->id() );
 sl_check( 'google resolves', 'google', $registry->get( 'google' )->id() );
@@ -234,7 +234,7 @@ sl_check( 'claim_any() routes a phone number', 'phone:84969789475', $registry->c
 sl_check( 'claim_any() routes an email address', 'email:nhu@example.com', $registry->claim_any( 'NHU@example.com' )->key() );
 sl_check( 'claim_any() rejects nonsense', true, $registry->claim_any( '???' )->is_empty() );
 
-Settings::update( array( 'identity.mode' => 'phone_only', 'providers.google.enabled' => 0, 'providers.zalo.enabled' => 0 ) );
+Settings::update( array( 'identity.mode' => 'phone_only', 'providers.google.enabled' => 0 ) );
 $enabled = ( new ChannelRegistry() )->enabled();
 sl_check( 'legacy id_mode=phone_only enables one channel', array( 'phone' ), array_keys( $enabled ) );
 sl_check( 'a disabled channel is not claimable through claim_any()', true, ( new ChannelRegistry() )->claim_any( 'nhu@example.com' )->is_empty() );
@@ -473,8 +473,8 @@ $GLOBALS['sl_wpdb_results'] = array(
 
 sl_check(
 	'an already-linked provider is not offered again',
-	array( 'zalo' ),
-	$link_service->unlinked_providers( 7, array( 'google', 'zalo' ) )
+	array( 'acme' ),
+	$link_service->unlinked_providers( 7, array( 'google', 'acme' ) )
 );
 
 // linked() is what the profile screen renders: masked, labelled, never raw.

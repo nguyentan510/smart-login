@@ -581,4 +581,63 @@ sl_check(
 );
 
 // ---------------------------------------------------------------------
+/*
+ * Zalo Login is gone, and this is what says so.
+ *
+ * A removal crosses every boundary a rename does, and this repo has been bitten
+ * five times by exactly that. "Did we get all of it?" is a question of belief
+ * until something can answer it, so this walks the shipped source and names
+ * every survivor.
+ *
+ * One allowlist entry, and it is not an exception being excused — Zalo OA/ZNS
+ * is a *different feature*, an OTP delivery channel, which the provider card's
+ * own help text used to spell out because the two were confused before. A
+ * grep-and-delete removal would have taken it with them.
+ */
+$sl_zalo_allowed = array(
+	// Zalo ZNS: an OTP transport, not a login provider.
+	'includes/OTP/Transports/class-transport-router.php',
+);
+
+$sl_zalo_survivors = array();
+
+foreach ( sl_plugin_sources() as $sl_relative => $sl_code ) {
+	if ( in_array( $sl_relative, $sl_zalo_allowed, true ) ) {
+		continue;
+	}
+
+	if ( false !== stripos( $sl_code, 'zalo' ) ) {
+		$sl_zalo_survivors[] = $sl_relative;
+	}
+}
+
+// templates/ and assets/ are not PHP-only, so they are walked separately rather
+// than trusted to the source list above.
+foreach ( array( 'assets/css/smart-login.css', 'assets/js/smart-login.js' ) as $sl_asset ) {
+	$sl_asset_code = sl_source( $sl_asset );
+
+	if ( '' !== $sl_asset_code && false !== stripos( $sl_asset_code, 'zalo' ) ) {
+		$sl_zalo_survivors[] = $sl_asset;
+	}
+}
+
+if ( $sl_zalo_survivors ) {
+	++$GLOBALS['sl_harness']['failed'];
+	printf( "  FAIL     no shipped file mentions Zalo Login\n" );
+	printf( "           A removal that leaves references behind is a half-removal, and the half that stays is the half nobody tests.\n" );
+
+	foreach ( $sl_zalo_survivors as $sl_offender ) {
+		printf( "           → %s\n", $sl_offender );
+	}
+} else {
+	++$GLOBALS['sl_harness']['passed'];
+}
+
+sl_assert(
+	'the Zalo provider class is gone from disk',
+	'' === sl_source( 'includes/Auth/Providers/class-zalo-provider.php' ),
+	'The file is still there, so the autoloader can still reach it and a stray reference would still resolve.'
+);
+
+// ---------------------------------------------------------------------
 sl_summary( 'Identity fitness' );

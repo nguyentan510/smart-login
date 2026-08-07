@@ -195,10 +195,10 @@ final class ProviderAuthController {
 			 * The provider's own words, when it supplied any.
 			 *
 			 * `reason` is this plugin's error code, which says which step
-			 * failed and nothing about why. A misconfigured Zalo app spent a
-			 * live debugging session hiding behind one such code; the detail
-			 * that would have named it in a sentence was on the WP_Error all
-			 * along and was being dropped here.
+			 * failed and nothing about why. A misconfigured provider app once
+			 * spent a live debugging session hiding behind one such code; the
+			 * detail that would have named it in a sentence was on the WP_Error
+			 * all along and was being dropped here.
 			 */
 			$detail = is_array( $identity->get_error_data() ) ? $identity->get_error_data() : array();
 			AuditLog::record(
@@ -289,7 +289,7 @@ final class ProviderAuthController {
 	 * request uses, and a provider that could be switched into test mode after
 	 * construction is a provider that could be left there.
 	 *
-	 * Only the two shipped classes are rebuilt. A third-party provider from
+	 * Only the shipped class is rebuilt. A third-party provider from
 	 * `smart_login_providers` cannot be, because nothing guarantees its
 	 * constructor takes a store — so it simply has no test button, which is a
 	 * better failure than a test that silently signs somebody in.
@@ -300,9 +300,6 @@ final class ProviderAuthController {
 		switch ( $provider_id ) {
 			case 'google':
 				return new \SmartLogin\Auth\Providers\GoogleProvider( $store );
-
-			case 'zalo':
-				return new \SmartLogin\Auth\Providers\ZaloProvider( $store );
 
 			default:
 				return null;

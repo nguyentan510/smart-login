@@ -2,10 +2,10 @@
 /**
  * The one place a provider's mark is turned into markup.
  *
- * `icon_svg()` has been on LoginProviderInterface since Phase 12 and Google and
- * Zalo have both implemented it since. Exactly one caller existed —
+ * `icon_svg()` has been on LoginProviderInterface since Phase 12 and every
+ * shipped provider has implemented it since. Exactly one caller existed —
  * templates/form-auth.php — so the sign-in screen wore each brand's own mark
- * while the account card, which names the same two brands twice, drew nothing at
+ * while the account card, which names the same brands again, drew nothing at
  * all.
  *
  * Two entry points, because the two callers hold different things. The sign-in
@@ -52,10 +52,10 @@ final class ProviderMark {
 		/**
 		 * Replace a provider's mark with an official brand asset.
 		 *
-		 * The supported way to drop one in: Zalo's wordmark in particular ships
-		 * as a file this plugin cannot redistribute. Applied here rather than at
-		 * each call site, so a site that filters it gets the same mark on the
-		 * sign-in screen and in the account card.
+		 * The supported way to drop one in, for a brand whose official artwork
+		 * ships as a file this plugin cannot redistribute. Applied here rather
+		 * than at each call site, so a site that filters it gets the same mark
+		 * on the sign-in screen and in the account card.
 		 *
 		 * @param string $svg
 		 * @param string $provider_id

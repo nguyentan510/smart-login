@@ -403,7 +403,6 @@ sl_forbid_pattern(
 		'includes/OTP/Transports/class-webhook-transport.php',
 		'includes/Security/class-captcha.php',
 		'includes/Auth/Providers/class-google-provider.php',
-		'includes/Auth/Providers/class-zalo-provider.php',
 		'includes/Auth/Providers/class-google-id-token-verifier.php',
 	),
 	'An unsigned request carrying an OTP is the failure mode HMAC exists to prevent.'

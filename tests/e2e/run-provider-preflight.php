@@ -26,8 +26,8 @@ $blocked = static function ( string $reason ): never {
 	exit( 2 );
 };
 
-if ( ! in_array( $selection, array( 'google', 'zalo', 'both' ), true ) ) {
-	$blocked( 'SMART_LOGIN_E2E_PROVIDER must be google, zalo, or both' );
+if ( ! in_array( $selection, array( 'google', 'both' ), true ) ) {
+	$blocked( 'SMART_LOGIN_E2E_PROVIDER must be google or both' );
 }
 if ( ! is_file( $wp_root . DIRECTORY_SEPARATOR . 'wp-settings.php' ) ) {
 	$blocked( 'WordPress runtime is missing' );
@@ -46,9 +46,6 @@ $constant_map = array(
 	'SMART_LOGIN_GOOGLE_CLIENT_ID',
 	'SMART_LOGIN_GOOGLE_CLIENT_SECRET',
 	'SMART_LOGIN_GOOGLE_REDIRECT_URI',
-	'SMART_LOGIN_ZALO_APP_ID',
-	'SMART_LOGIN_ZALO_APP_SECRET',
-	'SMART_LOGIN_ZALO_REDIRECT_URI',
 );
 foreach ( $constant_map as $constant_name ) {
 	$value = (string) getenv( $constant_name );
@@ -84,9 +81,8 @@ if (
 
 $providers = array(
 	'google' => new \SmartLogin\Auth\Providers\GoogleProvider(),
-	'zalo'   => new \SmartLogin\Auth\Providers\ZaloProvider(),
 );
-$selected = 'both' === $selection ? array( 'google', 'zalo' ) : array( $selection );
+$selected = 'both' === $selection ? array_keys( $providers ) : array( $selection );
 
 foreach ( $selected as $provider_id ) {
 	$provider = $providers[ $provider_id ];

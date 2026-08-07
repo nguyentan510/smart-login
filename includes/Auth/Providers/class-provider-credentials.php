@@ -23,18 +23,45 @@ final class ProviderCredentials {
 	 */
 	const CIPHER = SecretBox::CIPHER;
 
+	/**
+	 * Deployment constants and the settings path, per provider.
+	 *
+	 * A map rather than the pair of `'google' === $provider ? … : …` ternaries
+	 * this used to be. With two providers those ternaries read as a choice; with
+	 * one they were an accident waiting for the next provider, because *every*
+	 * id that was not `google` collected the other provider's constants. A
+	 * provider absent from this map now resolves to nothing, which is the answer
+	 * an unknown provider should get.
+	 */
+	const PROVIDERS = array(
+		'google' => array(
+			'id'       => 'SMART_LOGIN_GOOGLE_CLIENT_ID',
+			'secret'   => 'SMART_LOGIN_GOOGLE_CLIENT_SECRET',
+			'redirect' => 'SMART_LOGIN_GOOGLE_REDIRECT_URI',
+			'setting'  => 'providers.google.client_id',
+		),
+	);
+
 	public static function client_id( string $provider ): string {
 		$provider = sanitize_key( $provider );
-		$constant = 'google' === $provider ? 'SMART_LOGIN_GOOGLE_CLIENT_ID' : 'SMART_LOGIN_ZALO_APP_ID';
-		$setting  = 'google' === $provider ? 'providers.google.client_id' : 'providers.zalo.app_id';
+		$map      = self::PROVIDERS[ $provider ] ?? null;
 
-		return self::constant_value( $constant ) ?: trim( (string) Settings::get( $setting, '' ) );
+		if ( ! $map ) {
+			return '';
+		}
+
+		return self::constant_value( $map['id'] ) ?: trim( (string) Settings::get( $map['setting'], '' ) );
 	}
 
 	public static function secret( string $provider ): string {
 		$provider = sanitize_key( $provider );
-		$constant = 'google' === $provider ? 'SMART_LOGIN_GOOGLE_CLIENT_SECRET' : 'SMART_LOGIN_ZALO_APP_SECRET';
-		$external = self::constant_value( $constant );
+		$map      = self::PROVIDERS[ $provider ] ?? null;
+
+		if ( ! $map ) {
+			return '';
+		}
+
+		$external = self::constant_value( $map['secret'] );
 		if ( '' !== $external ) {
 			return $external;
 		}
@@ -44,8 +71,9 @@ final class ProviderCredentials {
 
 	public static function redirect_uri( string $provider ): string {
 		$provider = sanitize_key( $provider );
-		$constant = 'google' === $provider ? 'SMART_LOGIN_GOOGLE_REDIRECT_URI' : 'SMART_LOGIN_ZALO_REDIRECT_URI';
-		$external = self::constant_value( $constant );
+		$external = isset( self::PROVIDERS[ $provider ] )
+			? self::constant_value( self::PROVIDERS[ $provider ]['redirect'] )
+			: '';
 		if ( '' !== $external ) {
 			return $external;
 		}
@@ -58,10 +86,9 @@ final class ProviderCredentials {
 	}
 
 	public static function source( string $provider ): string {
-		$provider        = sanitize_key( $provider );
-		$id_constant     = 'google' === $provider ? 'SMART_LOGIN_GOOGLE_CLIENT_ID' : 'SMART_LOGIN_ZALO_APP_ID';
-		$secret_constant = 'google' === $provider ? 'SMART_LOGIN_GOOGLE_CLIENT_SECRET' : 'SMART_LOGIN_ZALO_APP_SECRET';
-		if ( '' !== self::constant_value( $id_constant ) || '' !== self::constant_value( $secret_constant ) ) {
+		$provider = sanitize_key( $provider );
+		$map      = self::PROVIDERS[ $provider ] ?? null;
+		if ( $map && ( '' !== self::constant_value( $map['id'] ) || '' !== self::constant_value( $map['secret'] ) ) ) {
 			return 'environment';
 		}
 		return self::is_configured( $provider ) ? 'settings' : 'missing';
@@ -70,7 +97,7 @@ final class ProviderCredentials {
 	public static function store_secret( string $provider, string $secret ): bool {
 		$provider = sanitize_key( $provider );
 
-		if ( ! in_array( $provider, array( 'google', 'zalo' ), true ) ) {
+		if ( ! isset( self::PROVIDERS[ $provider ] ) ) {
 			return false;
 		}
 

@@ -247,11 +247,11 @@ sl_section( 'A provider secret that is really the provider id' );
  */
 Settings::update(
 	array(
-		'providers.zalo.enabled' => 1,
-		'providers.zalo.app_id'  => '2895898387789399761',
+		'providers.google.enabled'   => 1,
+		'providers.google.client_id' => '2895898387789399761',
 	)
 );
-\SmartLogin\Auth\Providers\ProviderCredentials::store_secret( 'zalo', '2895898387789399761' );
+\SmartLogin\Auth\Providers\ProviderCredentials::store_secret( 'google', '2895898387789399761' );
 
 $provider_check = null;
 
@@ -269,11 +269,11 @@ sl_check(
 
 sl_assert(
 	'and the detail names the provider that holds it',
-	false !== stripos( (string) ( $provider_check['detail'] ?? '' ), 'zalo' ),
+	false !== stripos( (string) ( $provider_check['detail'] ?? '' ), 'google' ),
 	'An administrator with two providers configured needs to know which one to open. Detail was: ' . ( $provider_check['detail'] ?? '' )
 );
 
-\SmartLogin\Auth\Providers\ProviderCredentials::store_secret( 'zalo', 'a-secret-that-is-not-the-app-id' );
+\SmartLogin\Auth\Providers\ProviderCredentials::store_secret( 'google', 'a-secret-that-is-not-the-app-id' );
 
 $provider_check_after = null;
 
@@ -289,8 +289,8 @@ sl_check(
 	$provider_check_after['status'] ?? 'missing'
 );
 
-Settings::update( array( 'providers.zalo.enabled' => 0 ) );
-\SmartLogin\Auth\Providers\ProviderCredentials::clear_secret( 'zalo' );
+Settings::update( array( 'providers.google.enabled' => 0 ) );
+\SmartLogin\Auth\Providers\ProviderCredentials::clear_secret( 'google' );
 
 // ---------------------------------------------------------------------
 sl_section( 'The spend estimate follows the channel, not the transport' );

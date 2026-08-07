@@ -6,6 +6,33 @@
 
 ### Thay đổi hành vi cần biết trước khi cập nhật
 
+- **Zalo Login đã được gỡ khỏi plugin.** Nút "Tiếp tục với Zalo", hàng "Liên kết"
+  trong trang tài khoản, thẻ cấu hình, và kênh định danh `zalo` đều không còn.
+
+  **Lý do:** Zalo v4 không cấp email cho user access token, nên plugin không có
+  gì để đối chiếu với tài khoản sẵn có. Mọi lần đăng nhập Zalo của một người chưa
+  liên kết đều sinh ra một tài khoản **mới** với email tổng hợp — rồi bước bổ sung
+  thông tin từ chối chính số điện thoại của họ vì số ấy đã thuộc tài khoản cũ. Đó
+  là đường mặc định, không phải trường hợp hiếm.
+
+  **Cái giá, nói trước khi cập nhật:** tài khoản nào chỉ có Zalo làm cách đăng
+  nhập sẽ **không còn lối vào**. Đếm trước khi nâng cấp:
+
+  ```sql
+  SELECT user_id, GROUP_CONCAT(channel) c FROM wp_smartlogin_identities
+  GROUP BY user_id HAVING c = 'zalo'
+  ```
+
+  Ra rỗng thì nâng cấp an toàn. Ra dòng nào thì mỗi dòng là một khách hàng cần
+  được gắn số điện thoại hoặc email trước khi cập nhật.
+
+  **Bản nâng cấp tự dọn** khoá cấu hình và app secret đã mã hoá của Zalo, vì sau
+  khi gỡ không còn màn hình nào xoá được chúng. **Bản ghi identity thì không bị
+  đụng tới** — đó là dữ liệu khách hàng, xoá không hoàn tác được, và một tài khoản
+  mất lối vào cần người quyết định chứ không phải một hook chạy lúc không ai nhìn.
+
+  Zalo OA/ZNS là chức năng khác và **không bị ảnh hưởng**.
+
 - **Thẻ "Địa chỉ nhận hàng" nay ghi cả hai sổ địa chỉ của WooCommerce.** Trước
   đây nó ghi `billing_*` và không gì khác, trong khi tiêu đề nói "giao hàng" và
   dòng ghi chú nói "sửa ở đây là sửa cả hai" — cả hai câu đều sai với khách đã

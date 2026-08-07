@@ -78,7 +78,7 @@ $sl_identity = static function ( string $channel, string $label, bool $federated
 	);
 };
 
-$sl_zalo = ( new ProviderRegistry() )->get( 'zalo' );
+$sl_offerable = ( new ProviderRegistry() )->get( 'google' );
 
 $sl_providers = array(
 	'sl_identities'     => array(
@@ -87,7 +87,7 @@ $sl_providers = array(
 	),
 	'sl_can_unlink'     => true,
 	'sl_redirect'       => 'https://example.test/my-account/',
-	'sl_link_providers' => null === $sl_zalo ? array() : array( $sl_zalo ),
+	'sl_link_providers' => null === $sl_offerable ? array() : array( $sl_offerable ),
 );
 
 /*
@@ -599,7 +599,7 @@ sl_section( 'Rule 11 — nothing rendered inside the account form is a form (P9)
  *
  * Every suite passed throughout, for a reason worth naming: the unlink form
  * only renders for an identity that is *federated and removable*, and no
- * fixture anywhere had one. The gate's own account holds a Zalo identity that
+ * fixture anywhere had one. The gate's own account holds a federated identity that
  * is not removable, so even the integration gate rendered a single form.
  *
  * A string rule rather than a DOM one, deliberately: DOMDocument accepts nested

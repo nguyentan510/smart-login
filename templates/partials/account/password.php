@@ -46,7 +46,7 @@ $sl_password_age = isset( $sl_user ) && $sl_user instanceof WP_User
 
 	<?php if ( ! $sl_has_contact ) : ?>
 		<p class="sl-hint">
-			<?php esc_html_e( 'Tài khoản của bạn đang đăng nhập bằng Google hoặc Zalo và chưa có email hoặc số điện thoại nào được xác thực.', 'smart-login' ); ?>
+			<?php esc_html_e( 'Tài khoản của bạn đang đăng nhập bằng Google và chưa có email hoặc số điện thoại nào được xác thực.', 'smart-login' ); ?>
 		</p>
 		<p class="sl-hint">
 			<?php esc_html_e( 'Hãy xác thực email hoặc số điện thoại trước — đó là thông tin bạn sẽ dùng để đăng nhập. Sau đó bạn có thể đặt mật khẩu.', 'smart-login' ); ?>

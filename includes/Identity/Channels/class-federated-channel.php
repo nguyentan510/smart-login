@@ -2,15 +2,15 @@
 /**
  * A federated provider as an identity namespace.
  *
- * Concrete and parameterised rather than abstract, so Google and Zalo cost zero
- * classes between them:
+ * Concrete and parameterised rather than abstract, so a second provider costs
+ * no classes at all:
  *
  *     new FederatedChannel( 'google', 'Google' )
- *     new FederatedChannel( 'zalo',   'Zalo' )
  *
- * Subjects are opaque provider-owned strings — Google's `sub`, Zalo's `id`. They
- * are never transformed, only length-checked, because the provider defines their
- * format and a "helpful" normalisation here would silently break matching.
+ * Subjects are opaque provider-owned strings — Google's `sub`, and whatever the
+ * next provider calls its own. They are never transformed, only length-checked,
+ * because the provider defines their format and a "helpful" normalisation here
+ * would silently break matching.
  *
  * @package SmartLogin
  */

@@ -28,7 +28,6 @@ use SmartLogin\Auth\Providers\ProviderIdentity;
 use SmartLogin\Auth\Providers\ProviderCredentials;
 use SmartLogin\Auth\Providers\ProviderRedirect;
 use SmartLogin\Auth\Providers\ProviderRegistry;
-use SmartLogin\Auth\Providers\ZaloProvider;
 use SmartLogin\Identity\Phone;
 use SmartLogin\Identity\UserManager;
 use SmartLogin\OTP\Transports\TransportRouter;
@@ -203,11 +202,9 @@ section( 'Provider credential storage' );
 Settings::update(
 	array(
 		'providers.google.client_id' => 'google-client-from-settings',
-		'providers.zalo.app_id'      => 'zalo-app-from-settings',
 	)
 );
 check( 'Google client ID falls back to Settings', 'google-client-from-settings', ProviderCredentials::client_id( 'google' ) );
-check( 'Zalo app ID falls back to Settings', 'zalo-app-from-settings', ProviderCredentials::client_id( 'zalo' ) );
 
 $google_secret = 'google-secret-must-not-be-plaintext';
 check( 'Google secret can be encrypted', true, ProviderCredentials::store_secret( 'google', $google_secret ) );
@@ -230,127 +227,48 @@ check( 'explicit secret clear succeeds', true, ProviderCredentials::clear_secret
 check( 'cleared secret is no longer available', '', ProviderCredentials::secret( 'google' ) );
 
 // ---------------------------------------------------------------------
-section( 'Zalo v4 transport shape' );
+section( 'Provider secret entry — the secret is not the public id' );
 
 /*
- * Written from a live failure, not from the source: a real sign-in returned
- * "Zalo không trả về access token." while every suite in this repo was green.
+ * Written from a live failure, and kept after the provider that caused it was
+ * removed, because the mistake was never that provider's.
  *
- * These rules are about *where* two values are carried, which is the one thing
- * the integration gate could not see — it simulated Zalo by matching on the URL
- * and answering, so any placement passed. Zalo v4 wants the app secret in a
- * `secret_key` request header and the access token in an `access_token` header,
- * and answers HTTP 200 with an error body when it does not get them, which is
- * why the failure surfaced as a missing field rather than as a rejection.
- */
-// The callback URL is pinned to a constant rather than left to admin_url(),
-// which lives in template-stubs.php and cannot be copied here — two suites load
-// both files, so a second definition is a redeclare fatal, not a fallback.
-define( 'SMART_LOGIN_ZALO_REDIRECT_URI', 'https://example.test/wp-admin/admin-post.php?action=smart_login_provider_callback&provider=zalo' );
-
-Settings::update(
-	array(
-		'providers.zalo.enabled' => 1,
-		'providers.zalo.app_id'  => 'zalo-app-from-settings',
-	)
-);
-$zalo_secret = 'zalo-secret-belongs-in-a-header';
-ProviderCredentials::store_secret( 'zalo', $zalo_secret );
-
-$zalo_provider    = new ZaloProvider();
-$zalo_transaction = ( new OAuthTransactionStore() )->create( 'zalo', '', false, 0 );
-
-$GLOBALS['sl_http_requests'] = array();
-$GLOBALS['sl_http_response'] = array(
-	'response' => array( 'code' => 200 ),
-	'body'     => wp_json_encode( array( 'access_token' => 'zalo-access-token', 'expires_in' => 3600 ) ),
-);
-$zalo_provider->complete( array( 'code' => 'zalo-code', '_transaction' => $zalo_transaction ) );
-
-$zalo_token_request   = $GLOBALS['sl_http_requests'][0] ?? array();
-$zalo_profile_request = $GLOBALS['sl_http_requests'][1] ?? array();
-
-check( 'Zalo token exchange is the first outbound call', true, false !== strpos( (string) ( $zalo_token_request['url'] ?? '' ), '/v4/access_token' ) );
-check( 'Zalo token exchange sends the app secret as a secret_key header', $zalo_secret, $zalo_token_request['args']['headers']['secret_key'] ?? '' );
-check( 'Zalo token exchange does not carry the secret in the body', false, array_key_exists( 'app_secret', (array) ( $zalo_token_request['args']['body'] ?? array() ) ) );
-check( 'Zalo token exchange still binds the PKCE verifier', $zalo_transaction['pkce_verifier'], $zalo_token_request['args']['body']['code_verifier'] ?? '' );
-
-check( 'Zalo profile call is the second outbound call', true, false !== strpos( (string) ( $zalo_profile_request['url'] ?? '' ), 'graph.zalo.me' ) );
-check( 'Zalo profile call sends the token as an access_token header', 'zalo-access-token', $zalo_profile_request['args']['headers']['access_token'] ?? '' );
-check( 'Zalo profile call keeps the token out of the query string', false, false !== strpos( (string) ( $zalo_profile_request['url'] ?? '' ), 'access_token=' ) );
-
-// Zalo answers a rejected exchange with HTTP 200 and an error body. Read as a
-// success it produces "không trả về access token", which names the symptom and
-// hides the cause; the diagnosis it withheld took a live sign-in to recover.
-$zalo_error_transaction      = ( new OAuthTransactionStore() )->create( 'zalo', '', false, 0 );
-$GLOBALS['sl_http_requests'] = array();
-$GLOBALS['sl_http_response'] = array(
-	'response' => array( 'code' => 200 ),
-	'body'     => wp_json_encode( array( 'error' => -124, 'error_name' => 'Invalid app secret key' ) ),
-);
-$zalo_rejected = $zalo_provider->complete( array( 'code' => 'zalo-code', '_transaction' => $zalo_error_transaction ) );
-
-check( 'a 200-with-error token response fails closed', true, is_wp_error( $zalo_rejected ) );
-check( 'a rejected exchange stops before the profile call', 1, count( $GLOBALS['sl_http_requests'] ) );
-check(
-	'a rejected exchange keeps what Zalo said',
-	array( 'code' => -124, 'name' => 'Invalid app secret key' ),
-	is_wp_error( $zalo_rejected )
-		? array(
-			'code' => $zalo_rejected->get_error_data()['provider_error'] ?? null,
-			'name' => $zalo_rejected->get_error_data()['provider_error_name'] ?? null,
-		)
-		: null
-);
-
-unset( $GLOBALS['sl_http_response'] );
-$GLOBALS['sl_http_requests'] = array();
-
-// ---------------------------------------------------------------------
-section( 'Provider secret entry — the App Secret is not the App ID' );
-
-/*
- * Written from the second half of the same live failure.
- *
- * Once the secret reached Zalo in the right header, Zalo evaluated it and said
- * -14004 "Invalid secret key": the value saved in the App Secret box was the
- * App ID, byte for byte. The two sit next to each other on Zalo's dashboard,
- * are the same shape, and nothing anywhere complained — the first thing that
- * noticed was a customer pressing a button.
+ * A sign-in kept being refused with "invalid secret key": the value saved in the
+ * secret box was the app's public id, byte for byte. The two sit next to each
+ * other on a provider's dashboard, are the same shape, and nothing anywhere
+ * complained — the first thing that noticed was a customer pressing a button.
  *
  * A save is the only place this is cheap to catch, because it is the only place
  * both values are in one hand.
  */
-$zalo_app_id = 'zalo-app-from-settings';
-ProviderCredentials::store_secret( 'zalo', 'a-secret-that-is-not-the-id' );
+Settings::update( array( 'providers.google.client_id' => 'google-client-from-settings' ) );
+ProviderCredentials::store_secret( 'google', 'a-secret-that-is-not-the-id' );
 
-Settings::sanitize( array( 'zalo_app_secret' => $zalo_app_id ) );
-check( 'a secret equal to the stored app id is refused', 'a-secret-that-is-not-the-id', ProviderCredentials::secret( 'zalo' ) );
+Settings::sanitize( array( 'google_client_secret' => 'google-client-from-settings' ) );
+check( 'a secret equal to the stored client id is refused', 'a-secret-that-is-not-the-id', ProviderCredentials::secret( 'google' ) );
 
 // The realistic shape: both boxes filled in one save, so there is no stored id
 // to compare against yet — the submitted one is the answer.
 Settings::sanitize(
 	array(
-		'providers'        => array( 'zalo' => array( 'app_id' => 'a-brand-new-app-id' ) ),
-		'zalo_app_secret'  => 'a-brand-new-app-id',
+		'providers'            => array( 'google' => array( 'client_id' => 'a-brand-new-client-id' ) ),
+		'google_client_secret' => 'a-brand-new-client-id',
 	)
 );
-check( 'a secret equal to the app id in the same save is refused', 'a-secret-that-is-not-the-id', ProviderCredentials::secret( 'zalo' ) );
+check( 'a secret equal to the client id in the same save is refused', 'a-secret-that-is-not-the-id', ProviderCredentials::secret( 'google' ) );
 
 // The same rule must not stand between an administrator and a correct secret.
-Settings::sanitize( array( 'zalo_app_secret' => 'the-real-32-character-app-secret' ) );
-check( 'a secret that differs from the app id is stored', 'the-real-32-character-app-secret', ProviderCredentials::secret( 'zalo' ) );
+Settings::sanitize( array( 'google_client_secret' => 'the-real-client-secret' ) );
+check( 'a secret that differs from the client id is stored', 'the-real-client-secret', ProviderCredentials::secret( 'google' ) );
 
-// Google is the same control with different labels, so it gets the same rule
-// rather than a comment saying it should.
-Settings::update( array( 'providers.google.client_id' => 'google-client-from-settings' ) );
-ProviderCredentials::store_secret( 'google', 'a-google-secret' );
-Settings::sanitize( array( 'google_client_secret' => 'google-client-from-settings' ) );
-check( 'the rule covers Google too', 'a-google-secret', ProviderCredentials::secret( 'google' ) );
+// A provider this plugin does not ship resolves to nothing rather than
+// inheriting the shipped one's constants — the failure the old pair of
+// ternaries in ProviderCredentials was one provider away from.
+check( 'an unshipped provider has no client id', '', ProviderCredentials::client_id( 'zalo' ) );
+check( 'an unshipped provider has no secret', '', ProviderCredentials::secret( 'zalo' ) );
+check( 'an unshipped provider cannot store one', false, ProviderCredentials::store_secret( 'zalo', 'anything' ) );
 
 ProviderCredentials::clear_secret( 'google' );
-ProviderCredentials::clear_secret( 'zalo' );
-Settings::update( array( 'providers.zalo.enabled' => 0 ) );
 
 // ---------------------------------------------------------------------
 section( 'Where a provider failure returns to' );
@@ -1788,9 +1706,9 @@ section( 'Provider settings UI' );
 
 $provider_cards = file_get_contents( dirname( __DIR__ ) . '/includes/Admin/class-provider-cards.php' );
 
-check( 'provider settings render one card per provider', 2, substr_count( $provider_cards, '$this->card(' ) );
+check( 'provider settings render one card per shipped provider', 1, substr_count( $provider_cards, '$this->card(' ) );
 check( 'provider settings expose inline docs tabs', true, false !== strpos( $provider_cards, 'data-provider-tab="docs"' ) );
-check( 'provider settings expose secret inputs without stored values', true, false !== strpos( $provider_cards, "'google_client_secret'" ) && false !== strpos( $provider_cards, "'zalo_app_secret'" ) && false !== strpos( $provider_cards, 'value=""' ) );
+check( 'provider settings expose secret inputs without stored values', true, false !== strpos( $provider_cards, "'google_client_secret'" ) && false !== strpos( $provider_cards, 'value=""' ) );
 check( 'provider settings expose read-only callback URLs', true, false !== strpos( $provider_cards, 'data-provider-callback' ) && false !== strpos( $provider_cards, 'readonly' ) );
 
 // The screen that used to hold all of the above is now routing only. Size is a

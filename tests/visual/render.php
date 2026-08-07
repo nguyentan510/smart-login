@@ -69,8 +69,6 @@ Settings::update(
  * Same values run-template-tests.php uses; nothing here dials anything. */
 define( 'SMART_LOGIN_GOOGLE_CLIENT_ID', 'google-client-for-render' );
 define( 'SMART_LOGIN_GOOGLE_CLIENT_SECRET', 'google-secret-for-render' );
-define( 'SMART_LOGIN_ZALO_APP_ID', 'zalo-app-for-render' );
-define( 'SMART_LOGIN_ZALO_APP_SECRET', 'zalo-secret-for-render' );
 
 $GLOBALS['sl_logged_in']       = true;
 $GLOBALS['sl_current_user_id'] = 7;
@@ -98,7 +96,7 @@ $sl_identity = static function ( string $channel, string $label, bool $federated
 	);
 };
 
-$sl_zalo = ( new ProviderRegistry() )->get( 'zalo' );
+$sl_offerable = ( new ProviderRegistry() )->get( 'google' );
 
 $sl_providers = array(
 	'sl_identities'     => array(
@@ -107,7 +105,7 @@ $sl_providers = array(
 	),
 	'sl_can_unlink'     => true,
 	'sl_redirect'       => 'https://example.test/my-account/',
-	'sl_link_providers' => null === $sl_zalo ? array() : array( $sl_zalo ),
+	'sl_link_providers' => null === $sl_offerable ? array() : array( $sl_offerable ),
 );
 
 /**

@@ -267,7 +267,7 @@ class Settings {
 	/**
 	 * Take any `secret` field out of the settings array and into its own store.
 	 *
-	 * The generic form of what absorb_provider_secrets() does for Google and Zalo:
+	 * The generic form of what absorb_provider_secrets() does for each provider:
 	 * a secret is encrypted at rest and never round-trips through the option
 	 * array, so it can never be echoed back into a page by a field renderer that
 	 * forgot it was special.
@@ -460,11 +460,6 @@ class Settings {
 				'clear'  => 'google_clear_secret',
 				'id'     => 'providers.google.client_id',
 			),
-			'zalo'   => array(
-				'secret' => 'zalo_app_secret',
-				'clear'  => 'zalo_clear_secret',
-				'id'     => 'providers.zalo.app_id',
-			),
 		);
 
 		foreach ( $providers as $provider => $fields ) {
@@ -476,11 +471,11 @@ class Settings {
 				/*
 				 * Refused rather than stored, and the stored one is left alone.
 				 *
-				 * The App ID and the App Secret sit next to each other on Zalo's
-				 * dashboard, are the same shape, and one in the other's box is
-				 * accepted by everything until a visitor presses the button —
-				 * at which point Zalo answers -14004 "Invalid secret key" and
-				 * the site owner has a failing sign-in and no idea why. This is
+				 * A provider's public id and its secret sit next to each other on
+				 * the provider's own dashboard, are the same shape, and one in the
+				 * other's box is accepted by everything until a visitor presses the
+				 * button — at which point the provider answers "invalid secret key"
+				 * and the site owner has a failing sign-in and no idea why. This is
 				 * the only place both values are in one hand.
 				 */
 				if ( function_exists( 'add_settings_error' ) ) {

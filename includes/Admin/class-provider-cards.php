@@ -1,6 +1,6 @@
 <?php
 /**
- * The Google and Zalo setup cards.
+ * The Google setup card.
  *
  * Kept apart from the generic registry renderer because a provider needs more
  * than a list of controls: a readiness badge, a credential that is written but
@@ -42,7 +42,6 @@ final class ProviderCards {
 		<div class="sl-provider-grid">
 			<?php
 			$this->card( 'google', __( 'Google Login', 'smart-login' ), $fields, 'google_client_secret', 'google_clear_secret' );
-			$this->card( 'zalo', __( 'Zalo Login', 'smart-login' ), $fields, 'zalo_app_secret', 'zalo_clear_secret' );
 			?>
 		</div>
 		<?php
@@ -99,9 +98,7 @@ final class ProviderCards {
 			'settings'    => __( 'Settings đã mã hóa', 'smart-login' ),
 			'missing'     => __( 'Chưa cấu hình', 'smart-login' ),
 		);
-		$secret_label  = 'google' === $provider
-			? __( 'Google Client Secret', 'smart-login' )
-			: __( 'Zalo App Secret', 'smart-login' );
+		$secret_label  = __( 'Google Client Secret', 'smart-login' );
 
 		// Whatever the registry declares for this provider, in declared order —
 		// minus the switch, which the header above now draws. Excluded here
@@ -354,8 +351,10 @@ final class ProviderCards {
 	}
 
 	private function docs( string $provider ): void {
-		if ( 'google' === $provider ) {
-			?>
+		if ( 'google' !== $provider ) {
+			return;
+		}
+		?>
 			<h4><?php esc_html_e( 'Tạo OAuth Client trên Google Cloud', 'smart-login' ); ?></h4>
 			<ol>
 				<li>
@@ -384,38 +383,6 @@ final class ProviderCards {
 			<div class="notice notice-warning inline">
 				<p><?php esc_html_e( 'Không dùng JavaScript origin thay cho redirect URI. Google yêu cầu URI callback phải khớp chính xác với URI đã khai báo.', 'smart-login' ); ?></p>
 			</div>
-			<?php
-			return;
-		}
-		?>
-		<h4><?php esc_html_e( 'Tạo ứng dụng Zalo Login', 'smart-login' ); ?></h4>
-		<ol>
-			<li>
-				<?php
-				printf(
-					wp_kses(
-						/* translators: %s: Zalo Developers URL. */
-						__( 'Mở <a href="%s" target="_blank" rel="noopener noreferrer">Zalo Developers</a>, tạo hoặc chọn ứng dụng.', 'smart-login' ),
-						array(
-							'a' => array(
-								'href'   => array(),
-								'target' => array(),
-								'rel'    => array(),
-							),
-						)
-					),
-					esc_url( 'https://developers.zalo.me/' )
-				);
-				?>
-			</li>
-			<li><?php esc_html_e( 'Kích hoạt sản phẩm Zalo Login và khai báo domain website theo yêu cầu của ứng dụng.', 'smart-login' ); ?></li>
-			<li><?php esc_html_e( 'Trong cấu hình callback/redirect URL, dán chính xác Callback URL ở tab Thiết lập.', 'smart-login' ); ?></li>
-			<li><?php esc_html_e( 'Sao chép App ID và App Secret vào các ô tương ứng, bật Kích hoạt rồi Lưu thay đổi.', 'smart-login' ); ?></li>
-			<li><?php esc_html_e( 'Nếu ứng dụng Zalo còn ở chế độ phát triển, chỉ các tài khoản được cấp quyền thử nghiệm có thể đăng nhập.', 'smart-login' ); ?></li>
-		</ol>
-		<div class="notice notice-info inline">
-			<p><?php esc_html_e( 'Zalo Login và Zalo OA/ZNS là hai chức năng khác nhau. Phần này chỉ cấu hình đăng nhập; gửi OTP qua OA/ZNS thuộc kênh OTP riêng.', 'smart-login' ); ?></p>
-		</div>
 		<?php
 	}
 }

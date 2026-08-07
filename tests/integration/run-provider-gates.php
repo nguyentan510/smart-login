@@ -85,9 +85,6 @@ define( 'WP_PLUGIN_URL', 'https://example.test/wp-content/plugins' );
 define( 'SMART_LOGIN_GOOGLE_CLIENT_ID', (string) ( getenv( 'SMART_LOGIN_GOOGLE_CLIENT_ID' ) ?: 'smart-login-staging-client' ) );
 define( 'SMART_LOGIN_GOOGLE_CLIENT_SECRET', (string) ( getenv( 'SMART_LOGIN_GOOGLE_CLIENT_SECRET' ) ?: 'staging-fixture-secret' ) );
 define( 'SMART_LOGIN_GOOGLE_REDIRECT_URI', 'https://example.test/wp-admin/admin-post.php?action=smart_login_provider_callback&provider=google' );
-define( 'SMART_LOGIN_ZALO_APP_ID', (string) ( getenv( 'SMART_LOGIN_ZALO_APP_ID' ) ?: 'smart-login-zalo-staging-app' ) );
-define( 'SMART_LOGIN_ZALO_APP_SECRET', (string) ( getenv( 'SMART_LOGIN_ZALO_APP_SECRET' ) ?: 'zalo-staging-fixture-secret' ) );
-define( 'SMART_LOGIN_ZALO_REDIRECT_URI', 'https://example.test/wp-admin/admin-post.php?action=smart_login_provider_callback&provider=zalo' );
 $table_prefix = $prefix;
 
 try {
@@ -113,15 +110,14 @@ if ( ! isset( $wpdb ) || ! $wpdb instanceof wpdb || '' !== (string) $wpdb->last_
  * and friends) long after class-installer.php's migration map moved them to the
  * dotted namespaces below. A filter whose key never matches costs nothing and
  * says nothing, so the gate silently inherited the site's own settings instead:
- * on an install with `profile.email_optional = 1` it failed with "Zalo
- * provider-only account did not enter required email onboarding", and on an
- * install with 0 it would have passed for the wrong reason.
+ * on an install with `profile.email_optional = 1` it failed with "provider-only
+ * account did not enter required email onboarding", and on an install with 0 it
+ * would have passed for the wrong reason.
  *
  * Asserted below rather than trusted, because that is the failure this had.
  */
 $sl_forced_settings = array(
 	'providers.google.enabled' => 1,
-	'providers.zalo.enabled'   => 1,
 	'providers.auto_link_email' => 1,
 	'profile.email_optional'   => 0,
 	/*
@@ -438,7 +434,7 @@ try {
 	clean_user_cache( (int) $conflict_two );
 	$conflict_identity = new \SmartLogin\Auth\Providers\ProviderIdentity(
 		array(
-			'provider'       => 'zalo',
+			'provider'       => 'google',
 			'subject'        => 'conflict-' . wp_generate_uuid4(),
 			'email'          => 'CONFLICT@example.test',
 			'email_verified' => true,
@@ -450,160 +446,59 @@ try {
 		$failed( 'duplicate verified email did not fail closed with provider conflict' );
 	}
 
-	// P0.4: Zalo Login with PKCE, provider-only provisioning, and no token persistence.
-	$zalo_provider = new \SmartLogin\Auth\Providers\ZaloProvider();
-	if ( ! $zalo_provider->is_available() ) {
-		$failed( 'Zalo provider did not become available with staging configuration' );
+	/*
+	 * Zalo Login was removed. What replaces its half of this gate is the removal
+	 * itself, asserted against a real WordPress rather than believed.
+	 *
+	 * The rule that greps the shipped source lives in `run-fitness-tests.php` and
+	 * answers "is the code gone". These answer the questions it cannot: does the
+	 * runtime still offer the provider, and does an install that *had* it get its
+	 * stored state cleaned up.
+	 */
+	if ( null !== ( new \SmartLogin\Auth\Providers\ProviderRegistry() )->get( 'zalo' ) ) {
+		$failed( 'a removed provider is still resolvable from the registry' );
 	}
-	$zalo_redirect = $zalo_provider->begin( 'https://example.test/account', false );
-	$zalo_query    = array();
-	parse_str( (string) wp_parse_url( $zalo_redirect->url, PHP_URL_QUERY ), $zalo_query );
-	$zalo_state = (string) ( $zalo_query['state'] ?? '' );
-	$zalo_transaction = get_transient( \SmartLogin\Auth\OAuthTransactionStore::PREFIX . $zalo_state );
-	if ( ! is_array( $zalo_transaction ) ) {
-		$failed( 'Zalo OAuth transaction was not persisted' );
-	}
-	$expected_challenge = \SmartLogin\Auth\OAuthTransactionStore::challenge( (string) $zalo_transaction['pkce_verifier'] );
-	if (
-		$expected_challenge !== (string) ( $zalo_query['code_challenge'] ?? '' )
-		|| 'S256' !== (string) ( $zalo_query['code_challenge_method'] ?? '' )
-	) {
-		$failed( 'Zalo authorization redirect did not bind the PKCE challenge' );
-	}
-	$zalo_consumed = ( new \SmartLogin\Auth\OAuthTransactionStore() )->consume( $zalo_state, 'zalo' );
-	if ( is_wp_error( $zalo_consumed ) ) {
-		$failed( 'Zalo OAuth state could not be consumed' );
+	if ( array_keys( ( new \SmartLogin\Auth\Providers\ProviderRegistry() )->available() ) !== array( 'google' ) ) {
+		$failed( 'the registry offers something other than the one shipped provider' );
 	}
 
-	$zalo_mode = 'success';
-	$zalo_pkce_seen = false;
-	add_filter(
-		'pre_http_request',
-		static function ( $preempt, $args, $url ) use ( &$zalo_mode, &$zalo_pkce_seen, $zalo_consumed ) {
-			if ( false !== strpos( $url, 'oauth.zaloapp.com/v4/access_token' ) ) {
-				$zalo_pkce_seen = hash_equals(
-					(string) $zalo_consumed['pkce_verifier'],
-					(string) ( $args['body']['code_verifier'] ?? '' )
-				);
-				/*
-				 * Answer the way Zalo answers, not the way the URL suggests.
-				 *
-				 * This fixture used to reply with a token to anything posted at
-				 * this address, so it was green while production sent the app
-				 * secret as a body field and every real sign-in failed. Zalo v4
-				 * reads the secret from a `secret_key` header and returns
-				 * HTTP 200 with an error body when it is absent — which is why
-				 * the live symptom was a missing field rather than a rejection.
-				 */
-				if ( ! hash_equals( SMART_LOGIN_ZALO_APP_SECRET, (string) ( $args['headers']['secret_key'] ?? '' ) ) ) {
-					return array(
-						'response' => array( 'code' => 200, 'message' => 'OK' ),
-						'headers'  => array(),
-						'body'     => wp_json_encode(
-							array(
-								'error'      => -124,
-								'error_name' => 'Invalid app secret key',
-							)
-						),
-					);
-				}
-				if ( 'token_error' === $zalo_mode ) {
-					return array(
-						'response' => array( 'code' => 401, 'message' => 'Unauthorized' ),
-						'headers'  => array(),
-						'body'     => wp_json_encode( array( 'error' => -14014 ) ),
-					);
-				}
-				return array(
-					'response' => array( 'code' => 200, 'message' => 'OK' ),
-					'headers'  => array(),
-					'body'     => wp_json_encode( array( 'access_token' => 'zalo-fixture-access', 'expires_in' => 3600 ) ),
-				);
-			}
-			if ( false !== strpos( $url, 'graph.zalo.me/v2.0/me' ) ) {
-				// Same correction, one call later: Graph v2.0 reads the token
-				// from an `access_token` header. Accepting it from the query
-				// string is what let the old fixture pass a request Zalo would
-				// have answered with `error` and no `id`.
-				if ( 'zalo-fixture-access' !== (string) ( $args['headers']['access_token'] ?? '' ) ) {
-					return new \WP_Error( 'zalo_fixture_token', 'Missing fixture access token header' );
-				}
-				if ( false !== strpos( $url, 'access_token=' ) ) {
-					return new \WP_Error( 'zalo_fixture_token', 'Access token must not travel in the query string' );
-				}
-				return array(
-					'response' => array( 'code' => 200, 'message' => 'OK' ),
-					'headers'  => array(),
-					'body'     => wp_json_encode(
-						array(
-							'data' => array(
-								'id'      => 'zalo-staging-subject-' . wp_generate_uuid4(),
-								'name'    => 'Zalo Staging User',
-								'picture' => array( 'data' => array( 'url' => 'https://example.test/zalo-avatar.png' ) ),
-							),
-						)
-					),
-				);
-			}
-			return $preempt;
-		},
-		10,
-		3
+	/*
+	 * The upgrade path, which had never run anywhere.
+	 *
+	 * A site that used Zalo holds two things no screen can reach any more: its
+	 * settings block, and its sealed secret. Seeded here exactly as such a site
+	 * would hold them, then `maybe_upgrade()` is made to run by resetting the
+	 * version option — the same trigger a real upgrade uses.
+	 */
+	$sl_removed_settings = get_option( \SmartLogin\Settings::OPTION, array() );
+	$sl_removed_settings['providers']['zalo'] = array(
+		'enabled' => 1,
+		'app_id'  => 'left-over-app-id',
 	);
+	update_option( \SmartLogin\Settings::OPTION, $sl_removed_settings );
+	\SmartLogin\Security\SecretBox::put( \SmartLogin\Auth\Providers\ProviderCredentials::SECRET_OPTION, 'zalo', 'left-over-secret' );
+	\SmartLogin\Settings::flush_cache();
 
-	$zalo_identity = $zalo_provider->complete( array( 'code' => 'zalo-fixture-code', '_transaction' => $zalo_consumed ) );
-	if ( is_wp_error( $zalo_identity ) ) {
-		$failed( 'Zalo callback fixture failed: ' . $zalo_identity->get_error_code() );
-	}
-	if ( ! $zalo_pkce_seen || 'zalo' !== $zalo_identity->provider || '' === $zalo_identity->subject || '' !== $zalo_identity->email ) {
-		$failed( 'Zalo profile mapping or PKCE token request is invalid' );
-	}
-	if ( ! is_wp_error( ( new \SmartLogin\Auth\OAuthTransactionStore() )->consume( $zalo_state, 'zalo' ) ) ) {
-		$failed( 'Zalo OAuth state was reusable after consumption' );
+	if ( '' === \SmartLogin\Security\SecretBox::get( \SmartLogin\Auth\Providers\ProviderCredentials::SECRET_OPTION, 'zalo' ) ) {
+		$failed( 'the leftover fixture did not seal, so the cleanup below would pass for the wrong reason' );
 	}
 
-	$zalo_resolved = ( new \SmartLogin\Auth\AccountProvisioner() )->resolve( $zalo_identity, $zalo_consumed );
-	if ( is_wp_error( $zalo_resolved ) || empty( $zalo_resolved['context']->is_new_user ) ) {
-		$failed( 'Zalo provider-only provisioning did not create a new user' );
+	update_option( \SmartLogin\Installer::DB_VERSION_OPTION, '0' );
+	\SmartLogin\Installer::maybe_upgrade();
+	\SmartLogin\Settings::flush_cache();
+
+	$sl_after = get_option( \SmartLogin\Settings::OPTION, array() );
+
+	if ( isset( $sl_after['providers']['zalo'] ) ) {
+		$failed( 'the removed provider kept its settings block through an upgrade' );
 	}
-	$zalo_user_id = (int) $zalo_resolved['user']->ID;
-	$cleanup_ids[]  = $zalo_user_id;
-	$cleanup_rows[] = array( 'provider' => 'zalo', 'subject' => $zalo_identity->subject, 'user_id' => $zalo_user_id );
-	if (
-		! \SmartLogin\Identity\UserManager::is_synthetic_email( (string) $zalo_resolved['user']->user_email )
-		|| ! get_user_meta( $zalo_user_id, \SmartLogin\Identity\UserManager::META_SYNTHETIC, true )
-	) {
-		$failed( 'Zalo provider-only account was not marked with a synthetic email' );
+	if ( '' !== \SmartLogin\Security\SecretBox::get( \SmartLogin\Auth\Providers\ProviderCredentials::SECRET_OPTION, 'zalo' ) ) {
+		$failed( 'the removed provider kept a sealed secret no screen can clear' );
 	}
-	$zalo_status = ( new \SmartLogin\Auth\ProfileCompletionService() )->status( $zalo_user_id );
-	$required_keys = array_column( $zalo_status['required_missing'], 'key' );
-	if ( ! in_array( 'email', $required_keys, true ) ) {
-		$failed( 'Zalo provider-only account did not enter required email onboarding' );
-	}
-	$zalo_row = ( new \SmartLogin\Identity\IdentityRepository() )->find(
-		\SmartLogin\Identity\Claim::canonical( 'zalo', $zalo_identity->subject )
-	);
-	if ( ! $zalo_row || false !== strpos( (string) wp_json_encode( $zalo_row->meta() ), 'zalo-fixture-access' ) ) {
-		$failed( 'Zalo identity persistence is missing or contains an access token' );
+	if ( ! isset( $sl_after['providers']['google'] ) || ! array_key_exists( 'auto_link_email', $sl_after['providers'] ) ) {
+		$failed( 'the cleanup took the shipped provider or the shared policy with it' );
 	}
 
-	// A rejected token exchange must return an error and consume state once.
-	$zalo_failure_redirect = $zalo_provider->begin( '', false );
-	$zalo_failure_query = array();
-	parse_str( (string) wp_parse_url( $zalo_failure_redirect->url, PHP_URL_QUERY ), $zalo_failure_query );
-	$zalo_failure_state = (string) ( $zalo_failure_query['state'] ?? '' );
-	$zalo_failure_transaction = ( new \SmartLogin\Auth\OAuthTransactionStore() )->consume( $zalo_failure_state, 'zalo' );
-	if ( is_wp_error( $zalo_failure_transaction ) ) {
-		$failed( 'Zalo failure fixture state could not be consumed' );
-	}
-	$zalo_mode = 'token_error';
-	$zalo_failure = $zalo_provider->complete( array( 'code' => 'rejected-code', '_transaction' => $zalo_failure_transaction ) );
-	if ( ! is_wp_error( $zalo_failure ) || 'smart_login_zalo_token' !== $zalo_failure->get_error_code() ) {
-		$failed( 'Zalo rejected token exchange did not fail closed' );
-	}
-	if ( ! is_wp_error( ( new \SmartLogin\Auth\OAuthTransactionStore() )->consume( $zalo_failure_state, 'zalo' ) ) ) {
-		$failed( 'Rejected Zalo callback left a reusable OAuth state' );
-	}
 } catch ( Throwable $exception ) {
 	$failed( 'provider gate raised an exception: ' . $exception->getMessage() );
 }
@@ -611,4 +506,4 @@ try {
 $cleanup();
 echo "SMART_LOGIN_GOOGLE_STAGING_SMOKE_OK\n";
 echo "SMART_LOGIN_PROVIDER_LINKING_OK\n";
-echo "SMART_LOGIN_ZALO_STAGING_SMOKE_OK\n";
+echo "SMART_LOGIN_PROVIDER_REMOVAL_OK\n";

@@ -32,9 +32,9 @@ interface LoginProviderInterface {
 	 * It lives here rather than in the template because the template renders a
 	 * foreach, and the entry screen used to hold
 	 * `'google' === $provider->id() ? 'G' : 'Z'` — a two-provider assumption
-	 * written into markup, where the third provider inherits Zalo's letter and
-	 * nobody finds out until it is on screen. label() and name() already avoid
-	 * that; the mark is the third thing that belongs beside them.
+	 * written into markup, where the next provider inherits the other one's
+	 * letter and nobody finds out until it is on screen. label() and name()
+	 * already avoid that; the mark is the third thing that belongs beside them.
 	 *
 	 * Inline rather than a file URL so the mark survives a theme that overrides
 	 * form-auth.php, and so it costs no extra request on the first screen a

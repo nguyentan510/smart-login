@@ -41,14 +41,11 @@ use SmartLogin\Settings;
  */
 define( 'SMART_LOGIN_GOOGLE_CLIENT_ID', 'google-client-for-render' );
 define( 'SMART_LOGIN_GOOGLE_CLIENT_SECRET', 'google-secret-for-render' );
-define( 'SMART_LOGIN_ZALO_APP_ID', 'zalo-app-for-render' );
-define( 'SMART_LOGIN_ZALO_APP_SECRET', 'zalo-secret-for-render' );
 
 Settings::update(
 	array(
 		'identity.mode'              => 'both',
 		'providers.google.enabled'   => 1,
-		'providers.zalo.enabled'     => 0,
 		'address.enabled'            => 1,
 		'otp.length'                 => 6,
 		'signup.min_password_length' => 8,
@@ -192,9 +189,7 @@ sl_section( 'The entry screen says less, and wears each brand as that brand ship
  *
  *   2. The provider buttons drew a letter in a circle — "G", "Z" — instead of the
  *      brands' own marks. For Google that is not a matter of taste: the Google
- *      Identity branding guidelines require the four-colour G, unrecoloured. And
- *      the two buttons were not even each other's equals, because only Zalo had
- *      a colour, so a row meant to read as two peers read as one recommendation.
+ *      Identity branding guidelines require the four-colour G, unrecoloured.
  *
  * These render the block rather than grepping the template because the mark has
  * to survive being *composed* — it now comes from the provider object, and a
@@ -210,12 +205,7 @@ $sl_render_auth = static function () use ( $fixtures, $root ): string {
 	return (string) ob_get_clean();
 };
 
-// Zalo is off in the suite-wide settings so that the common render exercises the
-// one-provider case. Both brands have to be on screen at once for the rules
-// below, which are about the pair.
-Settings::update( array( 'providers.zalo.enabled' => 1 ) );
 $sl_auth = $sl_render_auth();
-Settings::update( array( 'providers.zalo.enabled' => 0 ) );
 
 preg_match( '/<p class="sl-lead">(.*?)<\/p>/s', $sl_auth, $sl_lead_match );
 $sl_lead = trim( html_entity_decode( wp_strip_all_tags( $sl_lead_match[1] ?? '' ), ENT_QUOTES, 'UTF-8' ) );
@@ -254,8 +244,8 @@ sl_assert(
 	'Divider reads: ' . $sl_divider
 );
 
-// One anchor per provider, sliced out so a rule about Google cannot be satisfied
-// by something Zalo happens to render.
+// One anchor per provider, sliced out so a rule about one brand cannot be
+// satisfied by something another provider happens to render.
 preg_match_all( '/<a\b[^>]*data-sl-provider="([a-z]+)"[^>]*>(.*?)<\/a>/s', $sl_auth, $sl_buttons, PREG_SET_ORDER );
 
 $sl_marks = array();
@@ -265,15 +255,14 @@ foreach ( $sl_buttons as $sl_button ) {
 }
 
 sl_assert(
-	'both provider buttons render',
-	isset( $sl_marks['google'], $sl_marks['zalo'] ),
-	'Rendered: ' . implode( ', ', array_keys( $sl_marks ) ) . ' — the rules below describe the pair.'
+	'every shipped provider button renders',
+	isset( $sl_marks['google'] ),
+	'Rendered: ' . implode( ', ', array_keys( $sl_marks ) ) . ' — the rules below describe what is on screen.'
 );
 
 $sl_google = $sl_marks['google'] ?? '';
-$sl_zalo   = $sl_marks['zalo'] ?? '';
 
-foreach ( array( 'google' => $sl_google, 'zalo' => $sl_zalo ) as $sl_id => $sl_markup ) {
+foreach ( array( 'google' => $sl_google ) as $sl_id => $sl_markup ) {
 	sl_assert(
 		sprintf( 'the %s button carries a real mark, not a letter in a circle', $sl_id ),
 		false !== strpos( $sl_markup, '<svg' ),
@@ -292,26 +281,20 @@ sl_assert(
 	'Google forbids recolouring the G, including flattening it to one colour.'
 );
 
-sl_assert(
-	'the Zalo mark uses the blue Zalo actually ships',
-	false !== stripos( $sl_zalo, '#0068FF' ),
-	'#0b74e5 was this plugin\'s approximation of it, not Zalo\'s value.'
-);
-
-foreach ( array( 'google' => $sl_google, 'zalo' => $sl_zalo ) as $sl_id => $sl_markup ) {
+foreach ( array( 'google' => $sl_google ) as $sl_id => $sl_markup ) {
 	sl_assert(
 		sprintf( 'the %s mark is not repainted by the button it sits in', $sl_id ),
 		false === stripos( $sl_markup, 'currentColor' ),
-		'currentColor makes the mark inherit the button text colour, which is the recolouring both brands prohibit.'
+		'currentColor makes the mark inherit the button text colour, which is the recolouring every brand prohibits.'
 	);
 }
 
 /*
  * Where the mark lives matters as much as what it looks like. The template used
  * to hold `'google' === $sl_provider->id() ? 'G' : 'Z'`, which is a two-provider
- * assumption written into markup: a third provider gets the Zalo letter and
- * nobody finds out until it is on screen. The brand belongs to the provider
- * object, beside label() and name().
+ * assumption written into markup: the next provider inherits the other one's
+ * letter and nobody finds out until it is on screen. The brand belongs to the
+ * provider object, beside label() and name().
  */
 $sl_auth_source = sl_source( 'templates/form-auth.php' );
 
@@ -332,12 +315,6 @@ sl_assert(
 	'the stylesheet no longer draws a circle around the mark',
 	false === strpos( $sl_icon_rule[1] ?? '', 'border-radius: 50%' ),
 	'The circle existed to contain a letter. A brand mark inside it is a logo in a badge nobody designed.'
-);
-
-sl_assert(
-	'the stylesheet holds no invented Zalo blue',
-	false === stripos( $sl_css, '#0b74e5' ) && false === stripos( $sl_css, '#075eb8' ),
-	'Two shades, neither of them Zalo\'s.'
 );
 
 sl_assert(

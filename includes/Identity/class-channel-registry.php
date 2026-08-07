@@ -43,7 +43,6 @@ final class ChannelRegistry {
 			new PhoneChannel(),
 			new MailChannel(),
 			new FederatedChannel( 'google', __( 'Google', 'smart-login' ) ),
-			new FederatedChannel( 'zalo', __( 'Zalo', 'smart-login' ) ),
 		);
 	}
 
@@ -95,9 +94,6 @@ final class ChannelRegistry {
 					break;
 				case 'google':
 					$enabled = Settings::is_on( 'providers.google.enabled' );
-					break;
-				case 'zalo':
-					$enabled = Settings::is_on( 'providers.zalo.enabled' );
 					break;
 				default:
 					// A channel registered by third-party code has no legacy flag

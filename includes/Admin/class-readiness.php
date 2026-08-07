@@ -550,7 +550,7 @@ final class Readiness {
 				'providers',
 				__( 'Đăng nhập nhanh', 'smart-login' ),
 				self::OFF,
-				__( 'Chưa bật Google hoặc Zalo. Không bắt buộc.', 'smart-login' ),
+				__( 'Chưa bật đăng nhập qua Google. Không bắt buộc.', 'smart-login' ),
 				'providers'
 			);
 		}
@@ -560,9 +560,9 @@ final class Readiness {
 		 *
 		 * The save-time rule in Settings::sanitize() refuses this pair, but it
 		 * cannot reach a site that already holds one — and one did, silently,
-		 * for as long as Zalo login had been switched on. Every sign-in came
-		 * back -14004 "Invalid secret key" while this screen, whose whole job is
-		 * to say what is wrong before a visitor finds out, reported OK.
+		 * for as long as that provider had been switched on. Every sign-in came
+		 * back "invalid secret key" while this screen, whose whole job is to say
+		 * what is wrong before a visitor finds out, reported OK.
 		 */
 		$confused = array();
 
