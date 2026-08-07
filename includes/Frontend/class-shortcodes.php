@@ -110,6 +110,21 @@ class Shortcodes {
 	public function render_flow( string $default_step, array $atts = array() ): string {
 		Assets::enqueue();
 
+		return $this->render_step( $default_step, $atts );
+	}
+
+	/**
+	 * The same render, without enqueueing.
+	 *
+	 * Split out in 19.2 for the fragment endpoint. A REST request has no
+	 * `wp_enqueue_scripts`, so calling `Assets::enqueue()` there is a silent
+	 * no-op that looks like it works — the dialog loads its own assets before it
+	 * ever asks for markup.
+	 *
+	 * Everything below this line is shared, which is the point: one set of
+	 * templates serves the page and the dialog, so the two cannot drift.
+	 */
+	public function render_step( string $default_step, array $atts = array() ): string {
 		$step = Flow::step( $default_step );
 
 		// A just-registered member arrives back here by redirect carrying the

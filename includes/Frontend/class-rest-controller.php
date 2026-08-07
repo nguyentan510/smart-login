@@ -86,6 +86,40 @@ class RestController {
 			);
 		}
 
+		/*
+		 * The fragment route, and the only one here that does not require the
+		 * `wp_rest` nonce. That is deliberate and it is the reason the dialog
+		 * works behind a page cache at all.
+		 *
+		 * `wp_localize_script()` writes its nonce into the page's HTML. On a site
+		 * with full-page caching that nonce is cached with everything else, so a
+		 * launcher present on every page cannot be trusted to hold a live one —
+		 * the same argument that stops the dialog carrying its form markup.
+		 *
+		 * What replaces it:
+		 *
+		 *   - GET renders a public form and changes nothing. There is no state to
+		 *     protect, and the response is same-origin only.
+		 *   - POST carries the fields of the rendered form — `smart_login_nonce`,
+		 *     the signed timestamp and the honeypot — all minted when the
+		 *     fragment was fetched, seconds earlier. `RequestGuard::verify()`
+		 *     checks them inside `FlowEngine`, exactly as it does for a page
+		 *     submit.
+		 *
+		 * So this route is guarded by a fresher nonce than the one it declines,
+		 * and the rate limits are what stop bots either way — which
+		 * `check_permission()` says in as many words for the anonymous case.
+		 */
+		register_rest_route(
+			self::REST_NAMESPACE,
+			'/step',
+			array(
+				'methods'             => 'GET, POST',
+				'callback'            => array( $this, 'handle_step' ),
+				'permission_callback' => '__return_true',
+			)
+		);
+
 		$authenticated = array(
 			'contact/start'     => 'handle_contact_start',
 			'contact/verify'    => 'handle_contact_verify',
@@ -157,6 +191,44 @@ class RestController {
 	}
 
 	// -----------------------------------------------------------------
+
+	/**
+	 * Render a step of the flow as HTML, or run one and render what comes next.
+	 *
+	 * GET is a render. POST carries `smart_login_action` and the fields of the
+	 * form that was rendered, and is the dialog's equivalent of submitting a
+	 * page.
+	 */
+	public function handle_step( WP_REST_Request $request ) {
+		$page        = $this->validated_url( (string) $request->get_param( 'page' ) );
+		$redirect_to = $this->validated_url( (string) $request->get_param( 'redirect_to' ) );
+		$renderer    = new FragmentRenderer( $this->otp() );
+
+		if ( 'POST' === strtoupper( $request->get_method() ) ) {
+			$action = sanitize_key( (string) $request->get_param( 'smart_login_action' ) );
+
+			return $this->success( $renderer->submit( $action, $request->get_params(), $page, $redirect_to ) );
+		}
+
+		$step = sanitize_key( (string) $request->get_param( 'step' ) );
+
+		return $this->success(
+			$renderer->render( '' !== $step ? $step : Flow::STEP_IDENTIFY, $page, $redirect_to )
+		);
+	}
+
+	/**
+	 * An on-site URL, or ''.
+	 *
+	 * `page` and `redirect_to` both end up in an `href` or a `Location`, and both
+	 * come straight from a query string. `wp_validate_redirect()` returns '' for
+	 * any host outside the allowed list, so an off-site value cannot survive
+	 * this — which is the same check `ProviderAuthController::start()` applies to
+	 * the return url it is handed.
+	 */
+	private function validated_url( string $url ): string {
+		return '' === $url ? '' : (string) wp_validate_redirect( $url, '' );
+	}
 
 	/**
 	 * Step 1 over JSON: one identifier, and the flow works out the rest.

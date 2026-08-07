@@ -24,7 +24,13 @@
  */
 
 require __DIR__ . '/../stubs.php';
+require __DIR__ . '/../template-stubs.php';
 require __DIR__ . '/../harness.php';
+
+// Rule 7 renders a real fragment, so the suite needs the template stubs and a
+// visitor who is not signed in — the dialog's whole subject is somebody who is
+// not.
+$GLOBALS['sl_logged_in'] = false;
 
 use SmartLogin\Frontend\Flow;
 
@@ -297,6 +303,56 @@ sl_assert(
 	(bool) preg_match( '/function\s+(set_base|base)\s*\(/', $sl_flow ),
 	'19.2 adds a render context. Without it every step link in a fetched fragment points at /wp-json/.'
 );
+
+/*
+ * And then the property itself, by rendering one.
+ *
+ * A structural check that `set_base()` exists says nothing about whether the
+ * templates read it. This renders the identify step for a product page and
+ * looks at what came out — the stubbed `remove_query_arg()` answers
+ * `/my-account/` for "the current request", so a fragment that ignored its base
+ * would say so out loud.
+ */
+if ( class_exists( \SmartLogin\Frontend\FragmentRenderer::class ) ) {
+	$sl_host     = 'https://example.test/san-pham/ao-thun/';
+	$sl_fragment = sl_capture(
+		static function () use ( $sl_host ) {
+			$GLOBALS['sl_rendered'] = ( new \SmartLogin\Frontend\FragmentRenderer() )->render(
+				Flow::STEP_IDENTIFY,
+				$sl_host,
+				$sl_host
+			);
+		}
+	);
+
+	$sl_html = (string) ( $GLOBALS['sl_rendered']['html'] ?? '' );
+
+	sl_assert(
+		'a fragment renders at all',
+		null === $sl_fragment['error'] && '' !== $sl_html,
+		'render failed: ' . (string) $sl_fragment['error']
+	);
+
+	sl_assert(
+		'a fragment carries the host page, not the API',
+		'' !== $sl_html && false === strpos( $sl_html, '/wp-json/' ),
+		'Finding 8: Flow::url() computes links against the current request, which inside REST is the API URL.'
+	);
+
+	sl_assert(
+		'a fragment returns the visitor to the page they were on',
+		false !== strpos( $sl_html, 'value="' . $sl_host . '"' ),
+		'redirect_to must be the host page. form-auth.php read $_GET directly until 19.2.'
+	);
+
+	sl_assert(
+		'a fragment does not offer the current request as a destination',
+		false === strpos( $sl_html, '/my-account/' ),
+		'The stub answers /my-account/ for "the current request". Seeing it means the base was ignored.'
+	);
+} else {
+	sl_pending( 'a fragment carries the host page, not the API', 'includes/Frontend/class-fragment-renderer.php' );
+}
 
 // ---------------------------------------------------------------------------
 sl_section( 'Rule 8 — the trigger degrades (19.4)' );

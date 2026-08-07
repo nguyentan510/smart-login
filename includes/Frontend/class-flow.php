@@ -62,6 +62,28 @@ class Flow {
 	/** @var array<string,string> Values to re-populate a rejected form with. */
 	private static $old = array();
 
+	/**
+	 * The page this render belongs to, when it is not the current request.
+	 *
+	 * `url()` below computes step links against the current URL, which is the
+	 * right answer inside a page render and the wrong one inside a REST request:
+	 * there, the "current URL" is `/wp-json/smart-login/v1/step`. A fragment
+	 * fetched for a product page would emit links into the API, and a
+	 * registration finished through it would redirect the visitor there.
+	 *
+	 * So a fragment render says which page it is for, once, and everything that
+	 * needs to know reads it here rather than reaching for `$_SERVER` — which is
+	 * also why `redirect_to()` exists: `templates/form-auth.php` used to read
+	 * `$_GET['redirect_to']` directly, and in a REST render that is the API
+	 * request's query string.
+	 *
+	 * @var string
+	 */
+	private static $base = '';
+
+	/** @var string Where the visitor should end up, for a render that was told. */
+	private static $redirect_to = '';
+
 	public static function set( string $step, array $data = array() ): void {
 		self::$step = self::canonical( $step );
 		self::$data = $data;
@@ -119,11 +141,50 @@ class Flow {
 	}
 
 	/**
-	 * Link to another step of the flow on the current page.
+	 * Declare which page a render belongs to.
+	 *
+	 * Both values are validated by the caller before they get here — `$page` and
+	 * `$redirect_to` arrive from a query string, and an unvalidated one would end
+	 * up in an `href`.
+	 */
+	public static function set_base( string $page, string $redirect_to = '' ): void {
+		self::$base        = $page;
+		self::$redirect_to = $redirect_to;
+	}
+
+	/**
+	 * The page being rendered for, or '' when that is simply the current request.
+	 */
+	public static function base(): string {
+		return self::$base;
+	}
+
+	/**
+	 * Where the visitor asked to end up.
+	 *
+	 * A fragment render is told; a page render reads the query string, which is
+	 * what `templates/form-auth.php` did inline before 19.2.
+	 */
+	public static function redirect_to(): string {
+		if ( '' !== self::$redirect_to ) {
+			return self::$redirect_to;
+		}
+
+		// phpcs:ignore WordPress.Security.NonceVerification -- read-only, and validated below.
+		$requested = isset( $_GET['redirect_to'] ) ? esc_url_raw( wp_unslash( $_GET['redirect_to'] ) ) : '';
+
+		return (string) wp_validate_redirect( $requested, '' );
+	}
+
+	/**
+	 * Link to another step of the flow on the page this render belongs to.
 	 */
 	public static function url( string $step ): string {
-		$base = remove_query_arg( array( 'smart_login_step', 'smartlogin_welcome' ) );
-		$url  = add_query_arg( 'smart_login_step', $step, $base );
+		$strip = array( 'smart_login_step', 'smartlogin_welcome' );
+		$base  = '' !== self::$base
+			? remove_query_arg( $strip, self::$base )
+			: remove_query_arg( $strip );
+		$url   = add_query_arg( 'smart_login_step', $step, $base );
 
 		/**
 		 * @param string $url

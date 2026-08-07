@@ -27,7 +27,13 @@ use SmartLogin\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
-$sl_redirect  = isset( $_GET['redirect_to'] ) ? esc_url_raw( wp_unslash( $_GET['redirect_to'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+/*
+ * Not `$_GET` directly, since 19.2. This template renders in two places now: a
+ * page, where the query string is the visitor's, and a REST fragment fetched by
+ * the dialog, where the query string belongs to the API request. `Flow` knows
+ * which, and validates either way.
+ */
+$sl_redirect  = Flow::redirect_to();
 $sl_providers = ( new ProviderRegistry() )->available();
 $sl_register  = 'register' === ( $mode ?? 'login' );
 $sl_phone     = Settings::phone_enabled();

@@ -280,7 +280,9 @@ class FlowEngine {
 	 * entirely if the redirect went astray.
 	 */
 	public function welcome_url(): string {
-		$here = remove_query_arg( array( 'smart_login_step', 'smartlogin_welcome' ) );
+		$strip = array( 'smart_login_step', 'smartlogin_welcome' );
+		$base  = Flow::base();
+		$here  = '' !== $base ? remove_query_arg( $strip, $base ) : remove_query_arg( $strip );
 
 		return add_query_arg( 'smartlogin_welcome', '1', $here );
 	}
