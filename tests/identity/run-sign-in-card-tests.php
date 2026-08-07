@@ -409,4 +409,71 @@ foreach ( array( 'partials/account/contact', 'partials/linked-identities' ) as $
 }
 
 // ---------------------------------------------------------------------
+sl_section( 'Rule 6 — a lone provider button is a whole row, not half of one' );
+
+/*
+ * The provider row was a two-column grid with the count written into it. That
+ * was true for exactly as long as two providers shipped; when Zalo was removed
+ * the single Google button kept the left-hand track and rendered at half width
+ * beside an empty space, which reads as a control that failed to load rather
+ * than the only one there is.
+ *
+ * Written so it stays correct in both directions. Adding a second provider must
+ * restore the split without anybody remembering to come back here — so the rule
+ * is about the *odd one out*, not about Google, and an even count is asserted to
+ * be left alone.
+ *
+ * What this can and cannot check: the stylesheet is read, not executed. No suite
+ * in this repo runs a layout engine, so this pins the declaration that produces
+ * the behaviour and the markup it acts on, and stops short of claiming to have
+ * measured a rendered width.
+ */
+$sl_grid_css = (string) preg_replace( '#/\*.*?\*/#s', '', sl_source( 'assets/css/smart-login.css' ) );
+
+preg_match_all( '/([^{}]*\.sl-provider-buttons[^{}]*)\{([^{}]*)\}/s', $sl_grid_css, $sl_grid_rules, PREG_SET_ORDER );
+
+$sl_spanning = '';
+
+foreach ( $sl_grid_rules as $sl_rule ) {
+	if ( false !== strpos( $sl_rule[2], 'grid-column' ) ) {
+		$sl_spanning = trim( preg_replace( '/\s+/', ' ', $sl_rule[1] ) );
+	}
+}
+
+sl_assert(
+	'the odd button out is told to span the whole row',
+	'' !== $sl_spanning && false !== strpos( $sl_spanning, ':last-child' ) && false !== strpos( $sl_spanning, ':nth-child(odd)' ),
+	'Nothing in .sl-provider-buttons sets grid-column for the unpaired button, so one provider draws in a two-column track and occupies half the width. Found: ' . ( '' === $sl_spanning ? 'no such rule' : $sl_spanning )
+);
+
+/*
+ * And the split survives. A rule written as "always one column" would satisfy
+ * the assertion above by accident while quietly undoing the pair layout, which
+ * is the change this repo asked for to be reversible.
+ */
+preg_match( '/\.smart-login--identify \.sl-provider-buttons\s*\{([^{}]*)\}/s', $sl_grid_css, $sl_track_rule );
+
+sl_assert(
+	'two providers still share the row',
+	false !== strpos( $sl_track_rule[1] ?? '', 'repeat(2' ),
+	'The two-column track is what a second provider comes back to. Removing it makes the pair layout a rewrite rather than a return. Found: ' . trim( (string) ( $sl_track_rule[1] ?? 'no rule' ) )
+);
+
+/*
+ * The markup half. `:last-child:nth-child(odd)` only means "the unpaired one"
+ * if the buttons are direct children of the grid — a wrapper around each would
+ * make every button both last and odd within its own parent, and the rule above
+ * would go on passing while every layout it describes was wrong.
+ */
+$sl_auth_markup = sl_source( 'templates/form-auth.php' );
+
+preg_match( '/<div class="sl-provider-buttons">(.*?)<\/div>/s', $sl_auth_markup, $sl_grid_markup );
+
+sl_assert(
+	'the buttons are direct children of the grid',
+	'' !== ( $sl_grid_markup[1] ?? '' ) && false === strpos( (string) ( $sl_grid_markup[1] ?? '' ), '<div' ),
+	'A wrapper element per button makes every one of them :last-child of its own parent, so the spanning rule would apply to all of them and to none of the right ones.'
+);
+
+// ---------------------------------------------------------------------
 sl_summary( 'Sign-in card' );

@@ -612,6 +612,23 @@
 }
 
 /*
+ * The unpaired button takes the whole row.
+ *
+ * The pair layout is the default because two providers is the shape this screen
+ * was designed around. But the count is not fixed, and with one provider the
+ * two-column track left a half-width button beside an empty space — which reads
+ * as a control that failed to load rather than the only one there is.
+ *
+ * `:last-child:nth-child(odd)` is the odd one out in any count, so this needs no
+ * edit when a provider is added or removed: one spans, two split, three go two
+ * plus a full-width third. Nothing here names a provider, so the next one to
+ * arrive or leave gets the right layout without anybody editing this file.
+ */
+.smart-login--identify .sl-provider-buttons > :last-child:nth-child(odd) {
+	grid-column: 1 / -1;
+}
+
+/*
  * Both provider buttons are white and outlined, never filled. The primary call
  * to action directly above them is a solid red block; two more solid blocks
  * under it would give the screen three competing focal points and no hierarchy.
