@@ -31,7 +31,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 15 — The unreleased install**
 - [x] **Phase 16 — The sign-in card**
 - [x] **Phase 17 — The account card**
-- [ ] **Phase 18 — The rendered surface**
+- [x] **Phase 18 — The rendered surface**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -1615,17 +1615,34 @@ else, twice — and `.sl-action` declares a height floor with no width one, so
 
 ### Sub-phases
 
-- [ ] **18.0** [Guard rails](rendered-surface/18.0-guard-rails.md) — five rules
-      before the tool exists, so the tool is built against a statement of what it
-      has to be able to say
-- [ ] **18.1** [The renderer](rendered-surface/18.1-the-renderer.md) —
-      `tests/visual/render.php`, self-contained output, no new toolchain
-- [ ] **18.2** [A name for every control](rendered-surface/18.2-accessible-names.md)
-      — a visible label for the OTP box, not an `aria-label`
-- [ ] **18.3** [A floor under the targets](rendered-surface/18.3-target-size.md)
-      — 24px on the class, not padding on the instance
-- [ ] **18.4** [The measurements nobody took](rendered-surface/18.4-the-measurements.md)
-      — the readings three phases promised, written down as numbers
+- [x] **18.0** [Guard rails](rendered-surface/18.0-guard-rails.md) — landed red
+      at `9 passed, 4 failed`. The rules were the specification 18.1 was built
+      against, which is the point of writing them first. **Two false positives
+      were designed out before the rule landed**: rule 2's first draft reported
+      the three gender radios, which are named by the `<label>` wrapped around
+      them, and a rule with three false positives is a rule people learn to
+      ignore
+- [x] **18.1** [The renderer](rendered-surface/18.1-the-renderer.md) —
+      `php tests/visual/render.php account`, stylesheet inlined so the file opens
+      from anywhere. The fixtures were extracted to `tests/template-fixtures.php`
+      so the picture and the smoke test cannot drift — and **that extraction
+      broke 16.0's rule 5**, which reads the fixture source. Sixth time in this
+      project a rename crossed a boundary no test covers, and the first time a
+      guard rail caught it in the same run
+- [x] **18.2** [A name for every control](rendered-surface/18.2-accessible-names.md)
+      — the OTP box had `placeholder="Mã OTP"` and nothing else, twice. A visible
+      label, and the placeholder removed rather than kept beside it: it said the
+      same thing, and `maxlength` already carries the length
+- [x] **18.3** [A floor under the targets](rendered-surface/18.3-target-size.md)
+      — measured either side: Đổi **20 × 32 → 24 × 32**, `.sl-row` heights
+      unchanged at 36, contact card unchanged at 304px, controls under the floor
+      2 → 0. Suite promoted to `required` here
+- [x] **18.4** [The measurements nobody took](rendered-surface/18.4-the-measurements.md)
+      — the readings taken at 375, 480 and 1400: no overflow at any width, input
+      and button both 47px in all four rows, 31 controls in a keyboard walk whose
+      order matches reading order. **16.3's and 17.3's outstanding items are
+      closed**, and 8.4's original claim finally has a number behind it. Two new
+      findings, neither fixed here
 
 ---
 
@@ -1654,6 +1671,24 @@ three phases deep.
 
 **No production behaviour changes beyond two defects:** one label and one CSS
 floor.
+
+### What 18.4 found, and did not fix
+
+Both are open, and both are the shape of defect this phase exists to surface —
+invisible to every string-matching rule, obvious the moment somebody looks at a
+page.
+
+- **The plugin declares a focus style for its inputs and not for its controls.**
+  Four `:focus` rules in the stylesheet, all of them on `.sl-input`,
+  `.sl-otp-digit` or `.sl-action--danger`. `.sl-btn` and plain `.sl-action` fall
+  back to the browser's ring, which a theme carrying `*:focus { outline: none }`
+  removes. Same shape as 17.3's `.screen-reader-text`: the plugin already
+  declined to trust themes for one property and did not for its neighbour.
+- **With JavaScript off, "Đổi" is a dead control with no explanation.** The
+  contact editor is `hidden` and opened by a listener.
+  `partials/address-fields.php` has a `<noscript>` doing exactly this job for
+  the ward select; the contact card has none. Ten phases old, and found on the
+  first reading of a page that carries no JavaScript.
 
 ---
 
