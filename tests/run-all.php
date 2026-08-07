@@ -159,9 +159,13 @@ $suites = array(
 		// than a template as a string. Both defects Phase 17 found by looking at
 		// a page were invisible to every string-matching rule in this repo, and
 		// two more turned up the moment a parser was pointed at the markup.
+		//
+		// `required` since 18.3, the sub-phase that turned the last one green.
+		// A green suite left non-blocking can only hide the next regression —
+		// 15.4 found this kind being abused for four phases.
 		'name' => 'Rendered surface',
 		'file' => 'identity/run-rendered-surface-tests.php',
-		'kind' => 'spec',
+		'kind' => 'required',
 	),
 );
 

@@ -1156,11 +1156,21 @@
    because it opens a password form and has to work with JavaScript off. What
    stops varying is what it looks like and how much space it takes. */
 
+/* 24px is WCAG 2.2 AA (2.5.8), and the floor goes on the class rather than as
+   padding on the instance: padding makes the number depend on the word, and
+   "Đổi" is the shortest label this card has *today*, not the shortest it can
+   have. Measured at 20 × 32 before 18.3 — under the floor on the row a member
+   touches most often.
+
+   Not 44px. These are text controls in a dense list of rows, and a 44px floor
+   costs more row height than the control gains. */
 .sl-action {
 	display: inline-flex;
 	align-items: center;
+	justify-content: center;
 	gap: var(--sl-space-1);
 	min-height: 32px;
+	min-width: 24px;
 	margin: 0;
 	padding: 0;
 	border: 0;
