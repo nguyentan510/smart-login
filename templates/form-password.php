@@ -21,7 +21,7 @@ $sl_redirect = isset( $_GET['redirect_to'] ) ? esc_url_raw( wp_unslash( $_GET['r
 ?>
 <div class="smart-login smart-login--password">
 
-	<h2 class="sl-title"><?php esc_html_e( 'Nhập mật khẩu', 'smart-login' ); ?></h2>
+	<?php TemplateLoader::output( 'partials/screen-title', array( 'text' => __( 'Nhập mật khẩu', 'smart-login' ) ) ); ?>
 
 	<p class="sl-identity-chip">
 		<span class="sl-identity-chip__value"><?php echo esc_html( $sl_identity ); ?></span>

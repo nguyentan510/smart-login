@@ -102,6 +102,15 @@ return array(
 		'grant'   => 'grant-token',
 	),
 	/*
+	 * The one owner of a step's heading. It draws nothing when something else
+	 * is the outer surface, which is why 19.10 exists: six templates each drew
+	 * their own, and inside the dialog that was the second heading on screen.
+	 */
+	'partials/screen-title'          => array(
+		'text' => 'Đăng nhập hoặc đăng ký',
+	),
+
+	/*
 	 * The dialog shell. One argument, because the shell holds no state — that is
 	 * the property rule 4 asserts and the reason it is safe on a cached page.
 	 * A fixture with more in it would be describing a template this is not.

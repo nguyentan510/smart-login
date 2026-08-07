@@ -661,4 +661,58 @@ sl_assert(
 	'A capture that is off by default is a feature nobody receives, which was the alternative this declined.'
 );
 
+// ---------------------------------------------------------------------------
+sl_section( 'Rule 14 — one heading per screen (19.10)' );
+// ---------------------------------------------------------------------------
+
+/*
+ * The dialog shell draws a title, because that element is the dialog's
+ * accessible name through `aria-labelledby`. A fragment that draws its own puts
+ * the same sentence on screen twice, forty pixels apart — which is what shipped,
+ * and what a screenshot showed in a second.
+ *
+ * Asserted over the *rendered* fragment rather than the template source: the
+ * template's heading is conditional now, and a rule reading the source would
+ * pass while the condition was wrong. Every step gets the same check, because
+ * the one that regresses will be a step somebody adds later.
+ */
+if ( class_exists( \SmartLogin\Frontend\FragmentRenderer::class ) ) {
+	$sl_host  = 'https://example.test/san-pham/ao-thun/';
+	$sl_titles = array();
+
+	foreach ( array( Flow::STEP_IDENTIFY, Flow::STEP_FORGOT ) as $sl_step ) {
+		$sl_capture = sl_capture(
+			static function () use ( $sl_step, $sl_host ) {
+				$GLOBALS['sl_fragment'] = ( new \SmartLogin\Frontend\FragmentRenderer() )->render( $sl_step, $sl_host, $sl_host );
+			}
+		);
+
+		$sl_markup = (string) ( $GLOBALS['sl_fragment']['html'] ?? '' );
+		$sl_name   = (string) ( $GLOBALS['sl_fragment']['title'] ?? '' );
+
+		if ( '' === $sl_markup ) {
+			sl_pending( 'the ' . $sl_step . ' fragment draws no heading of its own', 'render returned nothing' );
+			continue;
+		}
+
+		sl_assert(
+			'the ' . $sl_step . ' fragment draws no <h2> of its own',
+			! preg_match( '/<h2\b/', $sl_markup ),
+			'The shell already drew one, and it is the dialog\'s accessible name. Two is one too many for a screen reader before it is one too many for a designer.'
+		);
+
+		$sl_titles[] = $sl_name;
+	}
+
+	sl_assert(
+		'the dialog title is short enough to be a title',
+		'' !== ( $sl_titles[0] ?? '' ) && mb_strlen( $sl_titles[0] ) <= 20,
+		'Got: "' . ( $sl_titles[0] ?? '' ) . '"'
+	);
+
+	sl_check( 'and it is the one the screen was asked for', 'Đăng nhập', $sl_titles[0] ?? '' );
+} else {
+	sl_pending( 'a fragment draws no heading of its own', 'includes/Frontend/class-fragment-renderer.php' );
+}
+
 sl_summary( 'Sign-in anywhere' );

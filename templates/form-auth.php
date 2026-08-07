@@ -63,28 +63,44 @@ $sl_in_dialog = '' !== Flow::base();
 ?>
 <div class="smart-login smart-login--identify">
 
-	<h2 class="sl-title">
-		<?php
-		echo $sl_register
-			? esc_html__( 'Tạo tài khoản', 'smart-login' )
-			: esc_html__( 'Đăng nhập hoặc đăng ký', 'smart-login' );
-		?>
-	</h2>
+	<?php
+	/*
+	 * The heading belongs to whichever surface is the outer one, and
+	 * `partials/screen-title` is the single place that knows which. Inside the
+	 * dialog the shell has already drawn one — it has to, because that element
+	 * is the dialog's accessible name via `aria-labelledby` — and drawing a
+	 * second put the same four words on screen twice, forty pixels apart.
+	 */
+	TemplateLoader::output(
+		'partials/screen-title',
+		array(
+			'text' => $sl_register
+				? __( 'Tạo tài khoản', 'smart-login' )
+				: __( 'Đăng nhập hoặc đăng ký', 'smart-login' ),
+		)
+	);
+	?>
 
 	<?php
 	/*
-	 * One sentence, and it is an instruction. The second sentence this used to
-	 * carry — "Chúng tôi sẽ tự nhận ra bạn đã có tài khoản hay chưa" — described
-	 * what the server does with the answer, which is not something the visitor
-	 * can act on, and it sat between the heading and the only input on the page.
-	 * The reassurance is not lost: "Đăng nhập hoặc đăng ký" above says the same
-	 * thing in four words, which is the whole reason there is no login/register
-	 * choice on this screen.
+	 * One sentence, and on a page it is an instruction. The second sentence this
+	 * used to carry — "Chúng tôi sẽ tự nhận ra bạn đã có tài khoản hay chưa" —
+	 * described what the server does with the answer, which is not something the
+	 * visitor can act on, and it sat between the heading and the only input on
+	 * the page.
+	 *
+	 * In the dialog it says something else, and that is a decision rather than
+	 * an oversight. The instruction is already carried by the field's own label
+	 * — "Số điện thoại hoặc Email" is directly below it — so repeating it there
+	 * spends the one line under the title restating the next line. A visitor who
+	 * has just been interrupted mid-shopping is owed a reason instead.
 	 */
 	?>
 	<p class="sl-lead">
 		<?php
-		if ( $sl_phone && ! $sl_email ) {
+		if ( $sl_in_dialog ) {
+			esc_html_e( 'Vui lòng đăng nhập để hưởng những đặc quyền dành cho thành viên.', 'smart-login' );
+		} elseif ( $sl_phone && ! $sl_email ) {
 			esc_html_e( 'Nhập số điện thoại để tiếp tục.', 'smart-login' );
 		} elseif ( $sl_email && ! $sl_phone ) {
 			esc_html_e( 'Nhập email để tiếp tục.', 'smart-login' );

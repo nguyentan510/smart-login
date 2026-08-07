@@ -171,6 +171,19 @@ class FragmentRenderer {
 				return __( 'Nhập mật khẩu', 'smart-login' );
 		}
 
-		return __( 'Đăng nhập hoặc đăng ký', 'smart-login' );
+		/*
+		 * "Đăng nhập", not "Đăng nhập hoặc đăng ký".
+		 *
+		 * The page-hosted screen says the longer thing because there it is the
+		 * only heading, and it has to reassure a visitor who does not know which
+		 * branch they need. In the dialog it was the *second* place those four
+		 * words appeared — the shell's bar and the fragment's own `<h2>`, forty
+		 * pixels apart, saying the same sentence twice.
+		 *
+		 * The reassurance is not lost: the identifier-first flow never asks
+		 * anybody to choose, and the lead sentence below the bar now says what
+		 * the visitor gets rather than restating the title.
+		 */
+		return __( 'Đăng nhập', 'smart-login' );
 	}
 }

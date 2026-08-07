@@ -45,7 +45,7 @@ $sl_back = Flow::STEP_IDENTIFY;
 	}
 	?>
 
-	<h2 class="sl-title"><?php esc_html_e( 'Xác thực OTP', 'smart-login' ); ?></h2>
+	<?php TemplateLoader::output( 'partials/screen-title', array( 'text' => __( 'Xác thực OTP', 'smart-login' ) ) ); ?>
 
 	<?php TemplateLoader::output( 'partials/notices', array( 'notices' => $notices ) ); ?>
 

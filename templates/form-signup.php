@@ -43,7 +43,7 @@ $sl_min   = max( 6, (int) ( $min_password ?? 8 ) );
 	);
 	?>
 
-	<h2 class="sl-title"><?php esc_html_e( 'Gần xong rồi!', 'smart-login' ); ?></h2>
+	<?php TemplateLoader::output( 'partials/screen-title', array( 'text' => __( 'Gần xong rồi!', 'smart-login' ) ) ); ?>
 	<p class="sl-lead"><?php esc_html_e( 'Chúng tôi đã xác thực được bạn. Chỉ còn hai thông tin nữa là tài khoản sẵn sàng.', 'smart-login' ); ?></p>
 
 	<?php TemplateLoader::output( 'partials/notices', array( 'notices' => $notices ) ); ?>

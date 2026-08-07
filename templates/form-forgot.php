@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
 ?>
 <div class="smart-login smart-login--forgot">
 
-	<h2 class="sl-title"><?php esc_html_e( 'Quên mật khẩu', 'smart-login' ); ?></h2>
+	<?php TemplateLoader::output( 'partials/screen-title', array( 'text' => __( 'Quên mật khẩu', 'smart-login' ) ) ); ?>
 
 	<?php TemplateLoader::output( 'partials/notices', array( 'notices' => $notices ) ); ?>
 

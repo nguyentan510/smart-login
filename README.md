@@ -37,6 +37,46 @@ Có hai cách, dùng được đồng thời:
 
 Không còn cặp tab Đăng nhập / Đăng ký: người dùng hiếm khi biết mình thuộc nhánh nào, nên server tra định danh và tự quyết định. `[smart_register]` vẫn dùng được và mở cùng màn hình đó, chỉ đổi tiêu đề. Các shortcode khác: `[smart_verify_otp]`, `[smart_forgot_password]`, `[smart_profile]`.
 
+### 4. Hộp đăng nhập ở mọi trang
+
+Không cần đặt gì thêm: plugin nạp một script rất nhỏ trên toàn site, và mở hộp
+đăng nhập có nền mờ ngay tại trang khách đang đứng — trang sản phẩm, bài blog,
+trang danh mục. Toàn bộ luồng chạy trong đó: định danh → OTP → đăng ký → màn
+hình chào mừng. **Không ai bị đá ra khỏi trang đang xem.**
+
+Bốn cách gọi, cùng một bộ từ vựng:
+
+| Cách gọi | Dùng khi |
+|---|---|
+| `?smart_login_step=identify` | **dạng chuẩn.** Server đọc được, nên gửi qua email/SMS và dùng làm đích redirect đều được |
+| `#login` (hoặc `#dang-nhap`, `#dang-ky`, `#quen-mat-khau`) | viết tay trong trình soạn thảo cho nhanh |
+| `data-smart-login="identify"` | gắn lên phần tử bất kỳ, kể cả không phải link |
+| `[smart_login_button]` | site dựng bằng Elementor/Gutenberg, không sửa được template |
+
+Ngoài ra plugin **tự nhận ra link đăng nhập sẵn có** của theme, của
+`wp-login.php` và của WooCommerce, rồi mở hộp thay vì chuyển trang. Nó chỉ chặn
+cú click — **không bao giờ sửa `href`** — nên khi JavaScript bị chặn hay chưa
+tải xong, mọi link vẫn là link bình thường như theme đã viết.
+
+Tại sao query param là dạng chuẩn chứ không phải `#login`: fragment không bao
+giờ được gửi lên server, nên nó không thể render sẵn trước lần vẽ đầu, không
+thể làm đích của một redirect, và không hiển thị gì khi JavaScript hỏng.
+
+Tắt hoàn toàn, hoặc chừa một link ra:
+
+```php
+// tắt hộp đăng nhập trên toàn site
+add_filter( 'smart_login_popup_enabled', '__return_false' );
+
+// giữ hộp, nhưng đừng chiếm quyền link đăng nhập nào của theme
+add_filter( 'smart_login_capture_links', '__return_empty_array' );
+```
+
+```html
+<!-- hoặc chừa đúng một link -->
+<a href="/my-account/" data-no-smart-login>Tài khoản</a>
+```
+
 Form đăng ký thu thập Họ tên và Mật khẩu **sau** bước OTP, mỗi màn một việc. Không có ô "Nhập lại mật khẩu" — nút hiện/ẩn mật khẩu đã làm đúng việc mà ô đó sinh ra để làm. Ngày sinh và Giới tính nằm ở màn hình chào mừng và ở hồ sơ, đều không bắt buộc.
 
 ---
@@ -275,6 +315,14 @@ Namespace `smart-login/v1`. Mọi endpoint dùng `POST` và cần header `X-WP-N
 | `/contact/start` | `type` (`phone` hoặc `email`), `value`; yêu cầu user đã đăng nhập |
 | `/contact/verify` | `type`, `token`, `code`; chỉ cập nhật contact sau OTP đúng |
 | `/contact/resend` | `token`; yêu cầu user đã đăng nhập |
+| `/identify` | `identity` — bước 1 dùng chung; trả về bước kế tiếp (`password` hay `otp`) |
+| `/step` | `step`, `page`, `redirect_to` — trả **HTML** của một bước, cho hộp đăng nhập |
+
+`/step` là ngoại lệ duy nhất về nonce, và có lý do: `wp_localize_script()` ghi
+nonce vào HTML của trang, nên trên site có cache toàn trang, script nằm ở mọi
+trang sẽ cầm một nonce đã cũ. Thay vào đó `GET` chỉ render form công khai và
+không đổi gì, còn `POST` mang theo nonce + timestamp + honeypot của chính form
+vừa được render vài giây trước — tươi hơn cái nó từ chối.
 
 ---
 
