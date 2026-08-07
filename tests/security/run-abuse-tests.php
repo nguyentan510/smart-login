@@ -227,14 +227,31 @@ sl_assert(
 // =====================================================================
 sl_section( 'Rule 4 — the identify step is rate limited before it answers (9.4)' );
 
-$sl_identify = sl_method_body( sl_source( 'includes/Frontend/class-form-controller.php' ), 'handle_identify' );
+/*
+ * Repointed in 19.1, when the state machine moved out of FormController into
+ * FlowEngine so a second transport could drive it. The rule is about the
+ * ordering inside the step, and the step is now `FlowEngine::identify()`;
+ * `FormController::handle_identify()` is one line that delegates.
+ *
+ * The rule did its job on the way past: it went red the moment the body moved,
+ * which is exactly what a rule reading a method body is for. It is repointed
+ * rather than relaxed — the ordering it asserts is the ordering that keeps the
+ * lookup from being a free enumeration oracle.
+ */
+$sl_identify = sl_method_body( sl_source( 'includes/Auth/class-flow-engine.php' ), 'identify' );
+
+sl_assert(
+	'FlowEngine::identify() was found, so the ordering rule has a subject',
+	'' !== $sl_identify,
+	'A body-reading rule with no body reports green for want of anything to inspect.'
+);
 
 // The offset comparison below is only sound while there is exactly one lookup in
 // this method. That is a property of today's tree, not a law — so it is asserted
 // rather than assumed. A second resolve() added later would otherwise make the
 // ordering check meaningless while it kept reporting green.
 sl_check(
-	'handle_identify() performs exactly one directory lookup',
+	'identify() performs exactly one directory lookup',
 	1,
 	substr_count( $sl_identify, 'resolve(' )
 );
@@ -249,8 +266,10 @@ sl_assert(
 );
 
 // Pinning today's call site alone would let the gap reopen through a route added
-// later. There is no /identify REST route now; the rule is what keeps any future
-// one from resolving a subject without spending the same budget.
+// later. 19.1 added the /identify REST route this comment used to say did not
+// exist — and it passes for the right reason rather than by exemption: the route
+// delegates to FlowEngine, which spends the budget before it resolves anything.
+// One state machine, one limiter, both transports.
 $sl_unguarded_lookups = array();
 
 foreach ( sl_plugin_sources() as $sl_relative => $sl_contents ) {

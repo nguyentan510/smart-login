@@ -133,7 +133,15 @@ $sl_validate_callers = array(
 	// serves the welcome screen and the account card. Named here because the
 	// rule is about *this* body — a notice elsewhere in the file would not help
 	// the person whose address was refused.
-	'includes/Frontend/class-form-controller.php' => array( 'save_onboarding', 'Notices::flash' ),
+	//
+	// Repointed in 19.1. The method moved to FlowEngine with the rest of the
+	// state machine, and it now reports the refusal by putting it on the
+	// decision rather than flashing it directly — because the same body serves
+	// two transports, only one of which is a page that can hold a cookie. Both
+	// appliers emit it, which is what the second rule below is for. The rule
+	// went red the moment the body moved, which is what a body-reading rule is
+	// for.
+	'includes/Auth/class-flow-engine.php'         => array( 'save_onboarding', '->notice(' ),
 );
 
 foreach ( $sl_validate_callers as $sl_file => $sl_expect ) {
@@ -157,7 +165,10 @@ foreach ( $sl_validate_callers as $sl_file => $sl_expect ) {
 sl_require_companion(
 	'every file that validates an address also reports a refusal',
 	'/AddressFields::validate\(/',
-	'/wc_add_notice\(|Notices::flash\(/',
+	// `->notice(` joined the two in 19.1: a step that serves both a page and a
+	// fetched fragment cannot flash a cookie itself, so it hands the message to
+	// whoever asked. The three are the same property through three transports.
+	'/wc_add_notice\(|Notices::flash\(|->notice\(/',
 	'The guard for "there was no address on this form" is an early return before validate(). Once validate() has run, its answer belongs to the person who typed.',
 	array( 'includes/Address/class-address-fields.php' )
 );

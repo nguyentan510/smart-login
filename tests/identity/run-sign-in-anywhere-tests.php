@@ -82,10 +82,19 @@ sl_assert(
 	'Finding 3: routes are register/verify/resend/login/forgot/reset. Identifier-first has no JSON path.'
 );
 
+/*
+ * The fragment route, checked by the *callback it registers* rather than by the
+ * string 'step'.
+ *
+ * The first draft matched /'step'\s*=>/ and went green the moment 19.1 added
+ * `array( 'step' => $decision->step )` to a response body — a rule reporting
+ * that a route existed because an array key was spelled the same way. Caught in
+ * the run that landed 19.1, which is what these rules are for.
+ */
 if ( array() !== $sl_steps ) {
 	sl_assert(
 		'the REST controller can render every public step',
-		(bool) preg_match( "/'step'\s*=>/", $sl_rest ),
+		(bool) preg_match( '/function\s+handle_step\s*\(/', $sl_rest ),
 		'19.2 adds the fragment route. Steps needing cover: ' . implode( ', ', $sl_steps )
 	);
 }
@@ -119,10 +128,27 @@ foreach ( array( 'handle_identify', 'handle_login', 'handle_verify_otp', 'handle
 		continue;
 	}
 
+	/*
+	 * Delegation is two properties, not one: the handler asks the engine, *and*
+	 * it decides nothing itself. The first draft looked for the class name
+	 * `FlowEngine` in the body, which a delegating handler has no reason to
+	 * name — it calls `$this->engine()`. Worse, a handler that named the class
+	 * and then set its own step would have passed.
+	 *
+	 * `Flow::set(` is the tell. It is how a controller says "render this step",
+	 * and after 19.1 exactly one method in the class is allowed to say it:
+	 * apply(), which is applying somebody else's decision.
+	 */
 	sl_assert(
-		'FormController::' . $sl_handler . '() delegates to the flow engine',
-		false !== strpos( $sl_body, 'FlowEngine' ),
+		'FormController::' . $sl_handler . '() asks the flow engine',
+		false !== strpos( $sl_body, 'engine()->' ),
 		'19.1 moves the decision into FlowEngine so both controllers ask one implementation.'
+	);
+
+	sl_assert(
+		'FormController::' . $sl_handler . '() decides nothing itself',
+		false === strpos( $sl_body, 'Flow::set(' ) && false === strpos( $sl_body, 'Notices::' ),
+		'A handler that picks its own step is a second copy of the state machine, whatever it delegates alongside.'
 	);
 }
 

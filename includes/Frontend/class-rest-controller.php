@@ -14,6 +14,8 @@ use SmartLogin\Auth\ContactVerificationService;
 use SmartLogin\Auth\IdentityLinkService;
 use SmartLogin\Auth\AuthContext;
 use SmartLogin\Auth\AuthProof;
+use SmartLogin\Auth\FlowDecision;
+use SmartLogin\Auth\FlowEngine;
 use SmartLogin\Auth\PostAuthRedirector;
 use SmartLogin\Auth\SessionIssuer;
 use SmartLogin\Auth\PasswordResetHandler;
@@ -57,6 +59,13 @@ class RestController {
 
 	public function register_routes(): void {
 		$routes = array(
+			// Identifier-first, and it was missing until 19.1. The form flow has
+			// asked one question since Phase 16 — phone or email, and the server
+			// works out whether that is a sign-in or a registration — while this
+			// namespace still offered the two-screen login/register pair the form
+			// flow had already left behind. A JSON client could not start the
+			// flow at all.
+			'identify' => 'handle_identify',
 			'register' => 'handle_register',
 			'verify'   => 'handle_verify',
 			'resend'   => 'handle_resend',
@@ -148,6 +157,45 @@ class RestController {
 	}
 
 	// -----------------------------------------------------------------
+
+	/**
+	 * Step 1 over JSON: one identifier, and the flow works out the rest.
+	 *
+	 * Answers with the step the visitor is being sent to, so a client can render
+	 * it without knowing the rules that chose it. `password` means the subject is
+	 * registered; `otp` means a code is on its way to a new one.
+	 *
+	 * The decision comes from `FlowEngine` — the same object `FormController`
+	 * asks. That is the whole point of 19.1: this route existing as a second
+	 * implementation would be worse than it not existing at all.
+	 */
+	public function handle_identify( WP_REST_Request $request ) {
+		$decision = FlowEngine::for_rest( $this->otp() )->identify( $request->get_params() );
+
+		return $this->from_decision( $decision );
+	}
+
+	/**
+	 * Translate a flow decision into this namespace's response shape.
+	 *
+	 * An error notice becomes the error body clients already handle; anything
+	 * else is a step plus whatever that step needs.
+	 */
+	private function from_decision( FlowDecision $decision ): WP_REST_Response {
+		foreach ( $decision->notices as $notice ) {
+			if ( 'error' === $notice['type'] ) {
+				return $this->error( new WP_Error( 'smart_login_failed', $notice['message'] ) );
+			}
+		}
+
+		if ( $decision->is_redirect() ) {
+			return $this->success( array( 'redirect' => $decision->redirect ) );
+		}
+
+		return $this->success(
+			array( 'step' => $decision->step ) + $decision->data
+		);
+	}
 
 	public function handle_register( WP_REST_Request $request ) {
 		$params = $request->get_params();

@@ -1372,14 +1372,26 @@ check( 'signup step does not collect referral code', false, false !== strpos( $s
  * of the fix: after_registration() hands over to a redirect and does not set a
  * step for the same request to render.
  */
-$form_controller = file_get_contents( dirname( __DIR__ ) . '/includes/Frontend/class-form-controller.php' );
+/*
+ * Repointed in 19.1. `after_registration()` was a one-line wrapper around the
+ * redirect; when the state machine moved into FlowEngine the two callers came
+ * with it and now end in `->go( $this->welcome_url() )` directly.
+ *
+ * The rule is not about that method's name, it is about the two places a
+ * registration can finish, so it now reads both of them. That is stricter than
+ * before: previously one wrapper was inspected and the callers were trusted to
+ * use it.
+ */
+$flow_engine = file_get_contents( dirname( __DIR__ ) . '/includes/Auth/class-flow-engine.php' );
 
-preg_match( '/private function after_registration\(.*?\n\t\}/s', $form_controller, $after_registration );
-$after_registration_src = $after_registration[0] ?? '';
+foreach ( array( 'signup', 'finish_registration' ) as $finisher ) {
+	preg_match( '/function ' . $finisher . '\(.*?\n\t\}/s', $flow_engine, $matched );
+	$finisher_src = $matched[0] ?? '';
 
-check( 'after_registration was located', true, '' !== $after_registration_src );
-check( 'registration redirects rather than rendering in the POST response', true, false !== strpos( $after_registration_src, '$this->redirect(' ) );
-check( 'registration does not render the welcome screen inline', false, false !== strpos( $after_registration_src, 'Flow::set(' ) );
+	check( $finisher . '() was located', true, '' !== $finisher_src );
+	check( $finisher . '() redirects rather than rendering in the POST response', true, false !== strpos( $finisher_src, '->go( $this->welcome_url() )' ) );
+	check( $finisher . '() does not render the welcome screen inline', false, false !== strpos( $finisher_src, 'STEP_ONBOARD' ) );
+}
 
 check( 'onboarding always offers a way out', true, false !== strpos( $onboard_template, 'name="sl_skip"' ) );
 check( 'onboarding never asks for a password', false, false !== strpos( $onboard_template, 'partials/password-field' ) );
