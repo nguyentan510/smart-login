@@ -4,7 +4,7 @@ Tags: otp, login, phone, woocommerce, vietnam
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
-Stable tag: 1.0.4
+Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -22,7 +22,9 @@ Hệ quả thực tế: khi người dùng đổi số điện thoại, số cũ
 
 **Số điện thoại đăng nhập và số nhận hàng là hai thứ khác nhau**
 
-`billing_phone` của WooCommerce là thông tin giao hàng, có thể là số của người thân. Plugin chỉ điền vào khi ô đó đang trống, và không bao giờ ghi đè lựa chọn của khách. Số người nhận có ô riêng `shipping_phone`.
+`billing_phone` của WooCommerce là thông tin giao hàng, có thể là số của người thân. Plugin chỉ điền **số điện thoại** vào khi ô đó đang trống, và không bao giờ ghi đè số khách đã tự nhập. Số người nhận có ô riêng `shipping_phone`.
+
+Địa chỉ thì khác, và khác có chủ đích: thẻ **"Địa chỉ nhận hàng"** trong hồ sơ ghi giá trị sang cả `billing_*` lẫn `shipping_*`, để cái tên trên thẻ đúng với thứ nó thực sự ghi. Khách nào đang cố tình để địa chỉ giao khác địa chỉ thanh toán sẽ bị ghi đè ở lần lưu tiếp theo trên thẻ đó. Nếu shop của bạn cần hai địa chỉ tách bạch, hãy tắt thẻ này ở tab **Hồ sơ & Địa chỉ** và để khách dùng tab Địa chỉ của WooCommerce.
 
 **Địa chỉ hành chính 2 cấp**
 
@@ -59,6 +61,17 @@ Không. WooCommerce chỉ cần khi bạn muốn dùng phần địa chỉ và c
 
 == Changelog ==
 
+= 1.1.0 =
+* **Thẻ "Địa chỉ nhận hàng" nay ghi cả hai sổ địa chỉ của WooCommerce.** Đọc Upgrade Notice trước khi cập nhật — bản này ghi đè địa chỉ giao của khách nào đang để nó khác địa chỉ thanh toán.
+* Mục Bảo mật hiện "đổi lần cuối" khi biết; tài khoản đã tồn tại không có mốc này và thẻ không đoán.
+* Thanh "Hoàn thiện n/m" trên hồ sơ, mẫu số tính theo bộ cài đặt đang bật.
+* Ô báo thiếu thông tin nói **lý do** từng mục đáng điền, thay vì liệt kê tên trường.
+* Logo Google/Zalo hiện trong thẻ tài khoản; mỗi thẻ có icon riêng.
+* Sửa: ô nhập mã xác thực không có nhãn, trình đọc màn hình không đọc được tên của nó.
+* Sửa: trên theme không tự khai `.screen-reader-text`, thẻ hồ sơ hiện chữ "Họ tên * (bắt buộc)" ngay trong nhãn.
+* Sửa: nút "Đổi" nhỏ hơn ngưỡng chạm 24×24 của WCAG 2.2 AA.
+* Sửa: ô nhập và nút bấm cạnh nhau trong khối đổi số/email lệch chiều cao.
+
 = 1.0.4 =
 * **Sửa lỗi nghiêm trọng: màn hình cài đặt không lưu được trên một site vừa cài.** WordPress áp bộ lọc làm sạch nhiều hơn một lần cho một lần lưu: `update_option()` làm sạch, rồi khi giá trị đang lưu trùng với giá trị mặc định đã đăng ký, nó đi qua `add_option()` — và hàm này làm sạch **lần thứ hai**. Lần thứ hai không còn biết tab nào đang được lưu, nên nó trả về đúng giá trị cũ và vứt bỏ kết quả của lần đầu — trong khi WordPress vẫn hiển thị "Đã lưu". Điều kiện kích hoạt là "giá trị đang lưu bằng mặc định", tức đúng trạng thái của site vừa kích hoạt plugin. Bản làm sạch nay idempotent.
 
@@ -85,6 +98,9 @@ Không. WooCommerce chỉ cần khi bạn muốn dùng phần địa chỉ và c
 * Chính sách mật khẩu áp dụng cho cả đặt lại mật khẩu.
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+Thẻ "Địa chỉ nhận hàng" trong hồ sơ nay ghi giá trị sang cả `billing_*` lẫn `shipping_*`. Nếu shop của bạn có khách để địa chỉ giao khác địa chỉ thanh toán, địa chỉ giao của họ sẽ bị ghi đè ở lần họ lưu hồ sơ tiếp theo. Muốn giữ hai địa chỉ tách bạch thì tắt thẻ này ở tab Hồ sơ & Địa chỉ trước khi cập nhật.
 
 = 1.0.4 =
 Nên cập nhật ngay nếu bạn đang dùng 1.0.2 hoặc 1.0.3: trên một site vừa cài, màn hình cài đặt báo đã lưu nhưng không ghi gì.

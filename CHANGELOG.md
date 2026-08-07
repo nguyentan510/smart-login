@@ -2,6 +2,86 @@
 
 Định dạng theo [Keep a Changelog](https://keepachangelog.com/vi/1.1.0/).
 
+## [1.1.0] — chưa phát hành
+
+### Thay đổi hành vi cần biết trước khi cập nhật
+
+- **Thẻ "Địa chỉ nhận hàng" nay ghi cả hai sổ địa chỉ của WooCommerce.** Trước
+  đây nó ghi `billing_*` và không gì khác, trong khi tiêu đề nói "giao hàng" và
+  dòng ghi chú nói "sửa ở đây là sửa cả hai" — cả hai câu đều sai với khách đã
+  từng lưu địa chỉ giao riêng. Nay giá trị được ghi sang `shipping_state`,
+  `shipping_city`, `shipping_address_1` và `smartlogin_shipping_ward_code`.
+
+  **Cái giá:** khách nào đang cố tình để địa chỉ giao khác địa chỉ thanh toán sẽ
+  bị ghi đè ở lần lưu tiếp theo trên thẻ này. Đó là ý nghĩa của "một địa chỉ" và
+  nó được ghi ra chứ không giấu đi. Chỉ phía `billing_*` được **đọc** lại — bên
+  `shipping_*` là bản sao, không phải nguồn thứ hai.
+
+### Đã thêm
+
+- Mục Bảo mật hiện "đổi lần cuối" khi biết. Trước đây không chỗ nào trong plugin
+  ghi lại thời điểm mật khẩu được đặt. Tài khoản đã tồn tại không có mốc này và
+  thẻ hiển thị không có ngày, chứ không đoán.
+- Thanh "Hoàn thiện n/m" trên hồ sơ, với mẫu số tính theo đúng bộ cài đặt đang
+  bật.
+- Ô báo thiếu thông tin nay nói **lý do** từng mục đáng điền, thay vì liệt kê tên
+  trường.
+- Logo Google/Zalo hiện trong thẻ tài khoản, ở cả dòng đã liên kết lẫn lời mời
+  liên kết. Mỗi thẻ có icon riêng thay cho bốn chấm tròn giống nhau.
+- `tests/visual/render.php` — dựng bất kỳ màn hình nào thành một trang HTML độc
+  lập để xem bằng mắt. Không đi kèm bản phát hành.
+
+### Đã sửa
+
+- Ô nhập mã xác thực trong thẻ liên hệ không có nhãn, chỉ có placeholder — trình
+  đọc màn hình không đọc được tên của nó.
+- Trên theme không tự khai `.screen-reader-text`, thẻ hồ sơ hiện chữ
+  "Họ tên * (bắt buộc)" ngay trong nhãn.
+- Nút "Đổi" / "Thêm" nhỏ hơn ngưỡng chạm 24×24 của WCAG 2.2 AA (đo được 20×32).
+- Ô nhập và nút bấm cạnh nhau trong khối đổi số/email lệch chiều cao.
+- Địa chỉ trong hồ sơ mang ba tên khác nhau ở ba chỗ.
+
+### Đã thay đổi
+
+- "Đổi", "Liên kết", "Bỏ liên kết" dùng chung một kiểu control thay vì ba kiểu ở
+  ba trọng lượng thị giác. Lời mời liên kết trở thành một dòng trong danh sách
+  thay vì nút chiếm hết chiều ngang.
+- Khoảng cách và cỡ chữ của thẻ tài khoản đọc từ một thang đo khai báo một lần.
+
+---
+
+## [1.0.4] — chưa phát hành
+
+- **Sửa lỗi nghiêm trọng: màn hình cài đặt không lưu được trên site vừa cài.**
+  `update_option()` làm sạch một lần, rồi khi giá trị trùng mặc định đã đăng ký
+  nó đi qua `add_option()` và làm sạch lần thứ hai — lần thứ hai không biết tab
+  nào đang lưu nên trả về giá trị cũ, trong khi WordPress vẫn báo "Đã lưu". Bản
+  làm sạch nay idempotent.
+
+## [1.0.3] — chưa phát hành
+
+- Hồ sơ OTP chỉ áp dụng khi bị đổi, và tự chuyển sang "Tuỳ chỉnh" khi một giá trị
+  khác đi.
+- Một trường vắng mặt trong lần gửi form nay giữ nguyên giá trị đã lưu.
+- **Đính chính:** hai mục trên không phải nguyên nhân của báo cáo "lưu không
+  được" ở tab Gửi mã. Nguyên nhân thực là một gate kiểm thử chạy trên site đang
+  dùng và xoá cấu hình — không phải mã được phát hành. Gate đó nay tự từ chối một
+  site đã có cấu hình.
+
+## [1.0.2] — chưa phát hành
+
+- Email đã xác thực bởi Google trở thành một cách đăng nhập và khôi phục, bật/tắt
+  theo từng nhà cung cấp.
+- Sửa: nhập email của tài khoản Google ở màn đăng nhập không còn gửi mã đăng ký
+  rồi báo "tài khoản đã tồn tại" ở bước cuối.
+- Sửa: xoá một người dùng nay trả lại số điện thoại và email họ giữ.
+- Màn hình đặt mật khẩu có lối nhận mã cho người chưa từng đặt mật khẩu.
+- Mục Bảo mật không còn hiện ô "mật khẩu hiện tại" cho tài khoản không điền được.
+- Bản này không nâng cấp từ 1.0.1: mọi mã di trú đã gỡ, `SMART_LOGIN_DB_VERSION`
+  đặt lại về 1.
+
+---
+
 ## [1.0.1] — chưa phát hành
 
 Bản này viết lại tầng định danh và dựng ranh giới chống lạm dụng. Chi tiết thiết
