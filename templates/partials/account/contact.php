@@ -173,15 +173,32 @@ $sl_rows = array(
 
 				<div class="sl-contact-confirm" data-sl-contact-confirm hidden>
 					<p class="sl-hint" data-sl-contact-masked></p>
+					<?php
+					/*
+					 * A real label, added in 18.2. This box carried
+					 * `placeholder="Mã OTP"` and nothing else — no id, no label, no
+					 * aria-label — so it was the only control on the account surface
+					 * with no accessible name, twice, once per channel.
+					 *
+					 * A placeholder is the last resort in the name computation and it
+					 * disappears the moment somebody types into the box it was
+					 * explaining, which on a six-digit code is immediately. The
+					 * placeholder is gone rather than kept beside the label: it said
+					 * the same thing, and `maxlength` already carries the length.
+					 */
+					?>
+					<label class="sl-label" for="sl-contact-code-<?php echo esc_attr( $sl_type ); ?>">
+						<?php esc_html_e( 'Mã xác thực', 'smart-login' ); ?>
+					</label>
 					<div class="sl-contact-row">
 						<input
 							type="text"
 							class="sl-input"
+							id="sl-contact-code-<?php echo esc_attr( $sl_type ); ?>"
 							data-sl-contact-code
 							inputmode="numeric"
 							autocomplete="one-time-code"
 							maxlength="<?php echo esc_attr( (string) $sl_otp_length ); ?>"
-							placeholder="<?php esc_attr_e( 'Mã OTP', 'smart-login' ); ?>"
 						/>
 						<button type="button" class="sl-btn sl-btn--primary sl-btn--inline" data-sl-contact-verify><?php esc_html_e( 'Xác thực', 'smart-login' ); ?></button>
 					</div>

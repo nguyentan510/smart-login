@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-06 13:22+0000\n"
+"POT-Creation-Date: 2026-08-07 02:54+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -654,7 +654,7 @@ msgstr ""
 
 #: includes/Admin/class-mail-messages.php:45
 #: includes/Admin/class-readiness.php:162
-#: includes/Auth/class-profile-completion-service.php:128
+#: includes/Auth/class-profile-completion-service.php:129
 #: includes/Auth/class-register-handler.php:505
 #: includes/Identity/Channels/class-mail-channel.php:63
 #: templates/partials/account/contact.php:68
@@ -772,7 +772,7 @@ msgstr ""
 msgid "Giá trị triển khai đang được ưu tiên; các ô trên là cấu hình dự phòng."
 msgstr ""
 
-#: includes/Auth/class-profile-completion-service.php:170
+#: includes/Auth/class-profile-completion-service.php:171
 #: includes/class-field-registry.php:746
 #: templates/partials/account/profile.php:62
 msgid "Giới tính"
@@ -862,7 +862,7 @@ msgstr ""
 msgid "Gửi lại"
 msgstr ""
 
-#: templates/partials/account/contact.php:188
+#: templates/partials/account/contact.php:205
 msgid "Gửi lại mã"
 msgstr ""
 
@@ -1004,7 +1004,7 @@ msgstr ""
 msgid "Hệ thống đang tạm thời không gửi được mã. Vui lòng thử lại sau."
 msgstr ""
 
-#: includes/Auth/class-profile-completion-service.php:118
+#: includes/Auth/class-profile-completion-service.php:119
 #: templates/form-signup.php:67
 #: templates/partials/account/profile.php:28
 #: templates/profile-summary.php:38
@@ -1361,7 +1361,6 @@ msgid "Mã 6 số, hiệu lực 5 phút, tối đa 5 mã mỗi số mỗi giờ.
 msgstr ""
 
 #: includes/OTP/class-placeholders.php:150
-#: templates/partials/account/contact.php:184
 msgid "Mã OTP"
 msgstr ""
 
@@ -1396,6 +1395,7 @@ msgstr ""
 
 #: includes/class-field-registry.php:103
 #: includes/class-field-registry.php:111
+#: templates/partials/account/contact.php:191
 msgid "Mã xác thực"
 msgstr ""
 
@@ -1535,7 +1535,7 @@ msgstr ""
 msgid "Nguồn: %s"
 msgstr ""
 
-#: includes/Auth/class-profile-completion-service.php:160
+#: includes/Auth/class-profile-completion-service.php:161
 #: includes/class-field-registry.php:738
 #: templates/partials/account/profile.php:46
 msgid "Ngày sinh"
@@ -2517,7 +2517,7 @@ msgstr ""
 
 #: templates/form-otp.php:40
 #: templates/form-signup.php:39
-#: templates/partials/account/contact.php:186
+#: templates/partials/account/contact.php:203
 msgid "Xác thực"
 msgstr ""
 
@@ -2958,7 +2958,7 @@ msgstr ""
 msgid "Địa chỉ email không hợp lệ."
 msgstr ""
 
-#: includes/Auth/class-profile-completion-service.php:149
+#: includes/Auth/class-profile-completion-service.php:150
 #: includes/Frontend/class-account-form.php:124
 msgid "Địa chỉ nhận hàng"
 msgstr ""
