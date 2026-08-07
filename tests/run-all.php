@@ -167,6 +167,22 @@ $suites = array(
 		'file' => 'identity/run-rendered-surface-tests.php',
 		'kind' => 'required',
 	),
+	array(
+		// Phase 19, landed red at 19.0 before any production file moved.
+		//
+		// `spec` for the reason 16.0 and 17.0 needed their own suites: rules that
+		// are meant to fail cannot live in a suite that blocks, and every
+		// neighbouring suite here has been `required` for phases.
+		//
+		// Seven of its assertions report PENDING rather than passing, because
+		// their subject does not exist yet. That is the 10.0 precedent — a rule
+		// that passes for want of a subject states the opposite of the truth.
+		//
+		// Promoted to `required` in 19.7, per the working agreement.
+		'name' => 'Sign-in anywhere',
+		'file' => 'identity/run-sign-in-anywhere-tests.php',
+		'kind' => 'spec',
+	),
 );
 
 $results  = array();
