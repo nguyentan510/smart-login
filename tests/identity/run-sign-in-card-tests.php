@@ -371,7 +371,14 @@ sl_section( 'Rule 5 — the shared fixture holds the shape the rules are about (
  * fixture quietly losing the case again — 14.4's "green by default unless it
  * names the thing it just made", one level up.
  */
-$sl_fixtures = sl_source( 'tests/identity/run-template-tests.php' );
+/*
+ * The fixtures lived inside run-template-tests.php until 18.1 extracted them so
+ * the visual renderer could read the same shapes. This rule went red on the
+ * commit that moved them, which is the rule working: it is about a *fixture*,
+ * and a fixture that has moved house is exactly the boundary a rename crosses
+ * without any test noticing. CLAUDE.md records five previous times.
+ */
+$sl_fixtures = sl_source( 'tests/template-fixtures.php' );
 
 foreach ( array( 'partials/account/contact', 'partials/linked-identities' ) as $sl_name ) {
 	$sl_found = preg_match(

@@ -16,6 +16,7 @@
 		"test": "php tests/run-all.php",
 		"test:strict": "php tests/run-all.php --strict",
 		"lint": "php tests/run-lint.php",
+        "visual": "php tests/visual/render.php",
 		"cs": "phpcs",
 		"cs:fix": "phpcbf"
 	},
