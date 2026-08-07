@@ -139,6 +139,16 @@ $sl_surfaces = array(
 	'card-head' => array( 'partials/account/card-head', array( 'sl_section' => 'profile' ) ),
 
 	/*
+	 * The whole standalone surface, wrapper and save bar included.
+	 *
+	 * Added when a report came in that "Cập nhật" was unusable: the save bar is
+	 * markup no *partial* carries, so the `account` composite above — which glues
+	 * the five cards together itself — could not show it. A composite of parts is
+	 * not the page.
+	 */
+	'page'      => array( 'account', $sl_fixtures['account'], null ),
+
+	/*
 	 * The sign-in screens, added in P5. Phase 18's spec left pointing the tool at
 	 * them to "the next reader's call"; P5 is the change that needed to look at
 	 * them, having just converted 51 declarations in the stylesheet they share
@@ -189,7 +199,13 @@ $sl_render = static function ( string $template, array $args ) use ( $sl_root ):
 /**
  * Wrap markup in a standalone document carrying the real stylesheet inline.
  */
-$sl_page = static function ( string $name, string $body, string $modifier = 'account' ) use ( $sl_root ): string {
+/*
+ * $modifier null means the surface already carries its own `.smart-login`
+ * wrapper — account.php does — and nesting a second one would apply the
+ * max-width and the padding twice, which is a picture of a page that does not
+ * exist.
+ */
+$sl_page = static function ( string $name, string $body, ?string $modifier = 'account' ) use ( $sl_root ): string {
 	$css = (string) file_get_contents( $sl_root . 'assets/css/smart-login.css' );
 
 	return "<!doctype html>\n"
@@ -205,9 +221,11 @@ $sl_page = static function ( string $name, string $body, string $modifier = 'acc
 		 */
 		. '<style>body{margin:0;padding:24px;background:#f1f2f4;'
 		. 'font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}</style>'
-				. '</head><body><div class="smart-login smart-login--' . $modifier . '">'
+				. '</head><body>'
+		. ( null === $modifier ? '' : '<div class="smart-login smart-login--' . $modifier . '">' )
 		. $body
-		. '</div></body></html>';
+		. ( null === $modifier ? '' : '</div>' )
+		. '</body></html>';
 };
 
 // ---------------------------------------------------------------------
@@ -246,7 +264,7 @@ foreach ( $sl_names as $sl_name ) {
 		}
 	} elseif ( isset( $sl_surfaces[ $sl_name ] ) ) {
 		$sl_body     = $sl_render( $sl_surfaces[ $sl_name ][0], $sl_surfaces[ $sl_name ][1] );
-		$sl_modifier = $sl_surfaces[ $sl_name ][2] ?? 'account';
+		$sl_modifier = array_key_exists( 2, $sl_surfaces[ $sl_name ] ) ? $sl_surfaces[ $sl_name ][2] : 'account';
 	} else {
 		fwrite( STDERR, "Unknown surface: {$sl_name}\n" );
 		exit( 1 );

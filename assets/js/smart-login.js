@@ -137,32 +137,68 @@
 	function initSaveBar( root ) {
 		root.querySelectorAll( '[data-sl-savebar]' ).forEach( function ( bar ) {
 			var state = bar.querySelector( '[data-sl-savebar-state]' );
+			// The text node inside the warning, so the "!" mark beside it survives
+			// being repainted. Older markup had no inner span; fall back to the
+			// element itself rather than silently painting nothing.
+			var text = bar.querySelector( '[data-sl-savebar-text]' ) || state;
 			var form = bar.closest( 'form' );
 
 			if ( ! form ) {
 				return;
 			}
 
-			function paint() {
-				var dirty = dirtyForms.some( function ( entry ) {
-					return entry.form === form && entry.dirty;
-				} );
-
+			function show( dirty ) {
 				bar.classList.toggle( 'is-dirty', dirty );
 
-				if ( state ) {
-					state.textContent = dirty ? ( i18n.unsaved || '' ) : '';
+				if ( ! state ) {
+					return;
 				}
+
+				// `hidden`, not an empty string. An aria-live region that is present
+				// and empty is a region a screen reader has already announced; one
+				// that appears is an announcement. It also lets CSS give the warning
+				// a shape without it reserving space when there is nothing to warn
+				// about.
+				state.hidden = ! dirty;
+
+				if ( text ) {
+					text.textContent = dirty ? ( i18n.unsaved || '' ) : '';
+				}
+			}
+
+			function paint() {
+				show(
+					dirtyForms.some( function ( entry ) {
+						return entry.form === form && entry.dirty;
+					} )
+				);
 			}
 
 			form.addEventListener( 'input', paint );
 			form.addEventListener( 'change', paint );
 			form.addEventListener( 'submit', function () {
-				bar.classList.remove( 'is-dirty' );
+				show( false );
+			} );
 
-				if ( state ) {
-					state.textContent = '';
-				}
+			/*
+			 * "Huỷ" is a native <button type="reset">, so it works with JavaScript
+			 * off — the browser puts every field back to the value the server
+			 * rendered, which is exactly what cancelling an edit means.
+			 *
+			 * The event fires *before* the fields are restored, so the dirty
+			 * recount has to wait a tick. Without that, cancelling leaves the bar
+			 * warning about changes that no longer exist.
+			 */
+			form.addEventListener( 'reset', function () {
+				window.setTimeout( function () {
+					dirtyForms.forEach( function ( entry ) {
+						if ( entry.form === form ) {
+							entry.dirty = false;
+						}
+					} );
+
+					show( false );
+				}, 0 );
 			} );
 
 			paint();

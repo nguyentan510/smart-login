@@ -1377,6 +1377,11 @@
    The form is long enough that a button at the end of the document means
    scrolling past everything to save anything. */
 
+/* Thinner than a card on purpose. This one is pinned to the bottom of the
+   viewport, so every pixel it takes is a pixel of the form nobody can see —
+   which is the opposite of what a save bar is for. One step down on the
+   padding and the gap, and its buttons are a size smaller than the ones inside
+   the cards. */
 .sl-savebar {
 	position: sticky;
 	bottom: 0;
@@ -1384,21 +1389,71 @@
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: var(--sl-space-3);
+	gap: var(--sl-space-2);
 	margin: 0;
-	padding: var(--sl-space-3) var(--sl-space-4);
+	padding: var(--sl-space-2) var(--sl-space-3);
 	border: 1px solid var(--sl-border);
 	border-radius: var(--sl-radius-card);
 	background: #fff;
 }
 
+/* Scoped to the bar rather than a new global size: `.sl-btn` is the size it is
+   because of the sign-in screens, where it is the only thing on the page and a
+   47px target is right. Here it is a persistent overlay. 8 + 8 + 13 × 1.4 + 2
+   borders ≈ 36px, comfortably over the 24px floor rule 3 pins. */
 .sl-savebar .sl-btn {
-	margin-left: auto;
-	min-width: 160px;
+	padding: var(--sl-space-2) var(--sl-space-3);
+	font-size: var(--sl-fs-sm);
 }
 
+/* The warning takes the room, the buttons take what is left and sit together at
+   the end. `margin-left: auto` on the first button is what pushes the pair
+   right, and it only works because both buttons are `--inline` — 17.3 removed
+   the `width: auto` this rule used to carry and did not add the modifier to the
+   two templates, so the submit went back to `width: 100%`, wrapped onto its own
+   line and squeezed the warning to 0×0. Measured: bar 97px tall, state 0 wide,
+   the "Có thay đổi chưa lưu" text unreachable. */
 .sl-savebar__state {
-	color: var(--sl-muted);
+	flex: 1 1 auto;
+	margin: 0;
+}
+
+.sl-savebar .sl-btn:not(.sl-btn--ghost) {
+	min-width: 132px;
+}
+
+.sl-savebar .sl-btn--ghost {
+	min-width: 72px;
+}
+
+/* The pair sits at the end of the bar; the warning before them takes the rest. */
+.sl-savebar .sl-btn--ghost {
+	margin-left: auto;
+}
+
+/* The unsaved warning: amber rather than the brand red, because nothing has
+   gone wrong — the visitor has typed something and not saved it yet, and a red
+   panel for that is the same overclaim as an error notice for a hint. */
+.sl-savebar__warn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	background: #d98613;
+	color: #fff;
+	font-size: var(--sl-fs-xs);
+	font-weight: 700;
+	line-height: 1;
+}
+
+.sl-savebar__state:not([hidden]) {
+	display: flex;
+	align-items: center;
+	gap: var(--sl-space-2);
+	color: #8a5a0c;
 	font-size: var(--sl-fs-sm);
 }
 

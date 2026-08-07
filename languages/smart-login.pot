@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-07 03:33+0000\n"
+"POT-Creation-Date: 2026-08-07 03:49+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -596,12 +596,6 @@ msgstr ""
 msgid "Cấu hình proxy"
 msgstr ""
 
-#: templates/account.php:48
-#: templates/woocommerce/form-edit-account.php:54
-#: templates/woocommerce/form-edit-account.php:55
-msgid "Cập nhật"
-msgstr ""
-
 #: templates/partials/account/status.php:61
 msgid "Cập nhật ngay"
 msgstr ""
@@ -983,6 +977,11 @@ msgstr ""
 msgid "Hoặc"
 msgstr ""
 
+#: templates/account.php:51
+#: templates/woocommerce/form-edit-account.php:57
+msgid "Huỷ"
+msgstr ""
+
 #: templates/partials/account/password.php:52
 msgid "Hãy xác thực email hoặc số điện thoại trước — đó là thông tin bạn sẽ dùng để đăng nhập. Sau đó bạn có thể đặt mật khẩu."
 msgstr ""
@@ -1346,6 +1345,9 @@ msgid "Lưu lại các sự kiện đăng nhập / xác thực"
 msgstr ""
 
 #: includes/Admin/Screens/class-settings-screen.php:71
+#: templates/account.php:52
+#: templates/woocommerce/form-edit-account.php:58
+#: templates/woocommerce/form-edit-account.php:59
 msgid "Lưu thay đổi"
 msgstr ""
 

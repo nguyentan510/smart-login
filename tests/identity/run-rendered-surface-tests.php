@@ -487,4 +487,68 @@ sl_assert(
 );
 
 // ---------------------------------------------------------------------
+sl_section( 'Rule 10 — the save bar is a bar, not a button (P8)' );
+
+/*
+ * Its own document, because `account.php` renders the same five cards the
+ * composite above already holds and one page cannot carry two of each id.
+ *
+ * That separation is also the finding. The save bar is markup no *partial*
+ * carries, so every rule in this suite — and the visual renderer's `account`
+ * composite, which glues the cards together itself — was blind to it. 17.3
+ * removed `width: auto` from `.sl-savebar .sl-btn` and did not add
+ * `.sl-btn--inline` to the two templates that needed it; the submit went back to
+ * `width: 100%`, wrapped onto its own line and squeezed the unsaved warning to
+ * 0×0, and nothing noticed for two phases.
+ */
+$sl_page_html = $sl_render(
+	'account',
+	array(
+		'sl_form'  => new \SmartLogin\Frontend\AccountForm( 7, \SmartLogin\Frontend\AccountForm::CONTEXT_STANDALONE ),
+		'notices'  => array(),
+	)
+);
+
+$sl_page_doc = new DOMDocument();
+libxml_use_internal_errors( true );
+$sl_page_doc->loadHTML( '<?xml encoding="UTF-8">' . $sl_page_html );
+libxml_clear_errors();
+
+$sl_page_xpath = new DOMXPath( $sl_page_doc );
+
+sl_assert(
+	'the standalone account page renders a save bar',
+	$sl_page_xpath->query( '//*[contains(concat(" ", normalize-space(@class), " "), " sl-savebar ")]' )->length === 1,
+	'Every rule above reads a composite of partials, and the bar belongs to the page. A rule that cannot see it is how 17.3 went unnoticed.'
+);
+
+$sl_wide = array();
+
+foreach ( $sl_page_xpath->query( '//*[contains(concat(" ", normalize-space(@class), " "), " sl-savebar ")]//*[contains(concat(" ", normalize-space(@class), " "), " sl-btn ")]' ) as $sl_el ) {
+	if ( false === strpos( $sl_el->getAttribute( 'class' ), 'sl-btn--inline' ) ) {
+		$sl_wide[] = trim( (string) preg_replace( '/\s+/u', ' ', $sl_el->textContent ) );
+	}
+}
+
+sl_assert(
+	'every button in the bar declares itself inline',
+	array() === $sl_wide,
+	'`.sl-btn` is `width: 100%` by default and the bar has no ancestor rule taking it back — that is 17.3, deliberately. A button in the bar without the modifier fills the bar and pushes the warning to nothing. → ' . implode( ', ', $sl_wide )
+);
+
+sl_assert(
+	'the bar offers a way out as well as a way forward',
+	$sl_page_xpath->query( '//*[contains(concat(" ", normalize-space(@class), " "), " sl-savebar ")]//button[@type="reset"]' )->length >= 1
+		&& $sl_page_xpath->query( '//*[contains(concat(" ", normalize-space(@class), " "), " sl-savebar ")]//button[@type="submit"]' )->length >= 1,
+	'Huỷ is a native <button type="reset">, so cancelling an edit works with JavaScript off — the browser puts every field back to what the server rendered.'
+);
+
+sl_assert(
+	'the unsaved warning exists, and starts hidden',
+	$sl_page_xpath->query( '//*[@data-sl-savebar-state][@hidden]' )->length >= 1
+		&& $sl_page_xpath->query( '//*[@data-sl-savebar-text]' )->length >= 1,
+	'An aria-live region that is present and empty has already been announced; one that appears is an announcement. And the text node is separate so repainting it does not eat the warning mark beside it.'
+);
+
+// ---------------------------------------------------------------------
 sl_summary( 'Rendered surface' );

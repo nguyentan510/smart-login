@@ -41,11 +41,15 @@ if ( ! $sl_form->user() ) {
 		?>
 
 		<div class="sl-savebar" data-sl-savebar>
-			<span class="sl-savebar__state" data-sl-savebar-state aria-live="polite"></span>
+			<p class="sl-savebar__state" data-sl-savebar-state role="status" aria-live="polite" hidden>
+				<span class="sl-savebar__warn" aria-hidden="true">!</span>
+				<span data-sl-savebar-text></span>
+			</p>
 			<?php wp_nonce_field( 'smart_login_save_profile' ); ?>
 			<input type="hidden" name="<?php echo esc_attr( FormController::ACTION_FIELD ); ?>" value="save_profile" />
 			<input type="hidden" name="_redirect" value="<?php echo esc_url( get_permalink() ?: home_url( '/' ) ); ?>" />
-			<button type="submit" class="sl-btn sl-btn--primary"><?php esc_html_e( 'Cập nhật', 'smart-login' ); ?></button>
+			<button type="reset" class="sl-btn sl-btn--ghost sl-btn--inline" data-sl-savebar-cancel><?php esc_html_e( 'Huỷ', 'smart-login' ); ?></button>
+			<button type="submit" class="sl-btn sl-btn--primary sl-btn--inline"><?php esc_html_e( 'Lưu thay đổi', 'smart-login' ); ?></button>
 		</div>
 	</form>
 </div>
