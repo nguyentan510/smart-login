@@ -386,6 +386,78 @@ try {
 	$history_log->forget_user( (int) $release_id );
 
 	/*
+	 * 17.4's shipping mirror, against a real user meta table.
+	 *
+	 * The account card suite exercises save_for_user() against a stubbed meta
+	 * store, which cannot see WordPress's own serialisation, its cache, or
+	 * ProfileSeeder's allowlist meeting a real update_user_meta(). 17.4's brief
+	 * asked for this and recorded that it was not run; this is where it runs.
+	 *
+	 * The cost the spec states is asserted as behaviour, not assumed: an existing
+	 * shipping address different from billing IS overwritten. A gate that only
+	 * checked the mirror on an empty profile would pass while the documented
+	 * consequence quietly stopped happening.
+	 */
+	$address_login = 'sl_addr_' . strtolower( wp_generate_password( 8, false, false ) );
+	$address_id    = wp_insert_user(
+		array(
+			'user_login' => $address_login,
+			'user_pass'  => wp_generate_password( 32, true, true ),
+			'user_email' => $address_login . '@example.test',
+			'role'       => 'subscriber',
+		)
+	);
+	if ( is_wp_error( $address_id ) ) {
+		$failed( 'could not create the address fixture user' );
+	}
+
+	// A customer who deliberately delivers somewhere else.
+	update_user_meta( (int) $address_id, 'shipping_address_1', 'Số 9, ngõ cũ' );
+
+	$province = (string) array_key_first( \SmartLogin\Address\AddressRepository::provinces() );
+	$wards    = \SmartLogin\Address\AddressRepository::wards( $province );
+	$ward     = (string) array_key_first( $wards );
+
+	$clean = \SmartLogin\Address\AddressFields::validate(
+		array(
+			\SmartLogin\Address\AddressFields::FIELD_PROVINCE => $province,
+			\SmartLogin\Address\AddressFields::FIELD_WARD     => $ward,
+			\SmartLogin\Address\AddressFields::FIELD_STREET   => '12 Trần Duy Hưng',
+		)
+	);
+
+	if ( is_wp_error( $clean ) ) {
+		wp_delete_user( (int) $address_id );
+		$failed( 'the address fixture did not validate: ' . $clean->get_error_message() );
+	}
+
+	\SmartLogin\Address\AddressFields::save_for_user( (int) $address_id, $clean );
+
+	foreach ( array( 'state', 'city', 'address_1' ) as $part ) {
+		$billing  = (string) get_user_meta( (int) $address_id, 'billing_' . $part, true );
+		$shipping = (string) get_user_meta( (int) $address_id, 'shipping_' . $part, true );
+
+		if ( '' === $billing || $billing !== $shipping ) {
+			wp_delete_user( (int) $address_id );
+			$failed( sprintf( 'the shipping book does not mirror billing on %s: %s vs %s', $part, $billing, $shipping ) );
+		}
+	}
+
+	if ( \SmartLogin\Address\AddressFields::META_WARD_CODE
+		&& (string) get_user_meta( (int) $address_id, \SmartLogin\Address\AddressFields::META_WARD_CODE, true )
+			!== (string) get_user_meta( (int) $address_id, \SmartLogin\Address\AddressFields::META_SHIPPING_WARD_CODE, true ) ) {
+		wp_delete_user( (int) $address_id );
+		$failed( 'the ward code was not mirrored onto the shipping side' );
+	}
+
+	if ( 'Số 9, ngõ cũ' === (string) get_user_meta( (int) $address_id, 'shipping_address_1', true ) ) {
+		wp_delete_user( (int) $address_id );
+		$failed( 'a separate shipping address survived, so the documented cost of one address is not what the code does' );
+	}
+
+	wp_delete_user( (int) $address_id );
+
+	/*
 	 * 14.5's backfill assertions lived here and went with the code in 15.2.
 	 *
 	 * Kept as a note rather than deleted silently, because their Outcome recorded a real
