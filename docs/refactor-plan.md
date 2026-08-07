@@ -32,6 +32,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 16 — The sign-in card**
 - [x] **Phase 17 — The account card**
 - [x] **Phase 18 — The rendered surface**
+- [x] **P1–P6 — The backlog after Phase 18** *(see below)*
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -1689,6 +1690,58 @@ page.
   `partials/address-fields.php` has a `<noscript>` doing exactly this job for
   the ward select; the contact card has none. Ten phases old, and found on the
   first reading of a page that carries no JavaScript.
+
+---
+
+## P1–P6 — The backlog after Phase 18
+
+Six items rather than a phase, and documented here rather than in a spec plus
+six briefs — a deliberate compression at the owner's request, keeping what
+protects the work (a landed rule where one was cheap, one commit per item with
+its evidence, a green suite) and dropping the paperwork that would have
+outweighed the changes.
+
+- [x] **P1** — **`readme.txt` was promising a control that does not exist**, for
+      the third time in this project's history: it told site owners the plugin
+      "không bao giờ ghi đè lựa chọn của khách" about delivery data, while 17.4
+      overwrites `shipping_*` on every save. And `CHANGELOG.md` was three
+      releases behind `readme.txt` — its top entry was `[1.0.1]` against a
+      shipped 1.0.4. Version to **1.1.0**, 1.0.2–1.0.4 backfilled, and an Upgrade
+      Notice that names the overwrite *and* the way out of it (turn the card off
+      in the `Hồ sơ & Địa chỉ` tab — checked against `FieldRegistry`, not
+      assumed)
+- [x] **P2** — 18.4's two findings, both "the plugin leaves it to somebody
+      else": no focus outline of its own on `.sl-btn` / `.sl-action`, which a
+      theme carrying `*:focus { outline: none }` erases; and no `<noscript>` on
+      the contact card, where "Đổi" is a listener. Rules 6 and 7, landed red
+- [x] **P3** — the oldest open deferral closed. `Flow::login_url()` gives the
+      plugin an addressable URL for its own sign-in screen, so the security
+      card's recovery route is a link. **No new setting**, which the deferral had
+      assumed was needed: a filter, then the page hosting the shortcode, then
+      `''` and the sentence it had before. `SitePage` is `AccountForm`'s cached
+      lookup generalised, so there is one of it
+- [x] **P4** — **the integration gate runs.** The WordPress this environment was
+      missing is Local by Flywheel, MySQL on port 10005 rather than 3306.
+      `SMART_LOGIN_AUTH_INTEGRATION_OK`, WordPress 7.0.2. 17.4's unverified meta
+      writes now have three assertions in the gate, including that a deliberately
+      different shipping address **is** overwritten — proved able to fail by
+      removing the shipping half of the loop and watching it go red
+- [x] **P5** — one scale for the whole stylesheet. 51 declarations converted,
+      **no value changed**: expanding every `var()` back gives a file byte-equal
+      to the previous one, so the screens Phase 16 measured cannot have moved.
+      The 40 genuinely off-scale declarations are pinned as a baseline that may
+      fall and must not rise, with a second half that fails when the baseline
+      goes stale. Six sign-in surfaces added to the renderer
+- [x] **P6** — the two copy answers given at the start of Phase 17 and never
+      applied: "Họ tên" → "Họ và tên" across five call sites, and the street
+      field gets the example WooCommerce's checkout has shown since Phase 5.
+      Rule 9 writes down the placeholder rule this project had been following
+      without stating: format or example, never a repeat of the label
+
+**Not done, and why.** The `Coding standards` suite stays at its baseline —
+18 errors, 22 warnings, 16 files, all documentation sniffs deferred in
+`phpcs.xml` since Phase 7. Driving it to zero would re-litigate a settled
+decision, so it was listed as P7 explicitly in order to be declined.
 
 ---
 
