@@ -110,6 +110,12 @@ function sl_source( string $relative ): string {
  * Excludes tests, tooling and the generated address dataset — fitness rules
  * describe production code, and data/ is machine-written.
  *
+ * build/ and dist/ are skipped for a different reason: they hold *copies* of
+ * the files below. Staging a release archive puts a second smart-login.php on
+ * disk, and a rule phrased "no file outside X does Y" then fails against the
+ * copy rather than against anything a reader could fix. Six suites went red
+ * this way before the two names were added here.
+ *
  * @return array<string,string> Relative path => contents.
  */
 function sl_plugin_sources(): array {
@@ -121,7 +127,7 @@ function sl_plugin_sources(): array {
 
 	$root     = dirname( __DIR__ );
 	$sources  = array();
-	$skip_dir = array( '.git', 'tests', 'scripts', 'docs', 'data', 'vendor', 'node_modules', '.github' );
+	$skip_dir = array( '.git', 'tests', 'scripts', 'docs', 'data', 'vendor', 'node_modules', '.github', 'build', 'dist' );
 
 	$iterator = new RecursiveIteratorIterator(
 		new RecursiveCallbackFilterIterator(

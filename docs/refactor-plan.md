@@ -1745,6 +1745,71 @@ decision, so it was listed as P7 explicitly in order to be declined.
 
 ---
 
+## Housekeeping — packaging the release archive
+
+A clean-up sweep asked for on 2026-08-07. The sweep itself found almost nothing
+to clean, which is the useful result: no `TODO`/`FIXME` markers anywhere, no
+`var_dump`/`error_log`/`console.log` in shipped code, no stray `*.log`, `*.bak`
+or editor droppings, no CRLF and no trailing whitespace in any tracked file, no
+unreferenced class under `includes/`, and no unreferenced template — all 26 are
+reached by slug through `TemplateLoader`. The 34 MB working folder is 17 MB of
+`vendor/`, and everything heavy left on disk was already ignored.
+
+Building the archive is what found the defect:
+
+- [x] **H1** — **`sl_plugin_sources()` scanned the release staging directory.**
+      `tests/harness.php:124` skipped `.git`, `tests`, `scripts`, `docs`,
+      `data`, `vendor`, `node_modules` and `.github` — but not `build` or
+      `dist`. Staging the plugin into `dist/smart-login/` puts a second copy of
+      every shipped file on disk, so a rule phrased "no file **outside**
+      `UserManager` pairs a `user_email` write with `META_EMAIL_VERIFIED`" fails
+      against the copy, naming a path the reader cannot fix. Six required
+      suites went red at once:
+
+          FAIL      Identity contract          ← blocking
+          FAIL      Identity fitness           ← blocking
+          FAIL      Abuse boundary             ← blocking
+          FAIL      Delivery routing           ← blocking
+          FAIL      Mail templates             ← blocking
+          FAIL      Account card               ← blocking
+
+      Fixed by adding the two names, and verified the way that matters: the
+      suite is green **with `dist/` still on disk**, not green because the
+      directory was deleted. `tests/run-lint.php:16` had carried `build` and
+      `dist` in its own skip list all along — the harness had simply never been
+      given the same list, so this is a copied-pattern gap rather than a
+      judgement call.
+
+      Then the same gap a third time, one layer down. `phpcs.xml` scans `.` and
+      excludes `vendor`, `data`, `tests` and `scripts` — not `build` or `dist`,
+      so the staged copy doubled the baseline this project compares against:
+
+          A TOTAL OF 40 ERRORS AND 44 WARNINGS WERE FOUND IN 32 FILES
+
+      against a documented 18 / 22 / 16. A release in progress read as a
+      regression of exactly 100%. Both patterns added; back to 18 / 22 / 16 with
+      `dist/` still present. Three separate walkers, three separate skip lists,
+      one of them right — which is the argument for the shared list this repo
+      would normally reach for, and is written down here rather than built
+      because the three consumers want different shapes (a `phpcs.xml` pattern,
+      a basename array, a second basename array).
+- [x] **H2** — **`CLAUDE.md` and `.gitattributes` were shipping to users.**
+      Neither is in `.distignore`, so the working agreement itself would have
+      landed in the plugin archive. Both excluded. The archive is 173 files,
+      418 KB, one `smart-login/` root.
+- [x] **H3** — the archive is written with forward-slash entry names.
+      PowerShell 5.1's `Compress-Archive` emits `smart-login\includes\…`, which
+      the ZIP spec does not permit and not every extractor tolerates. Built
+      through `ZipArchive.CreateEntry` instead, and the entry names asserted
+      after the fact rather than assumed.
+
+**Not done, and why.** `P8`–`P10` have commits but no rows in this tracker,
+which is the one thing this file exists to prevent. Reconstructing their status
+from commit messages is a separate job with its own reading, and guessing at it
+here would put a second source of truth in the file that forbids one.
+
+---
+
 ## Risks
 
 | Risk | Mitigation |

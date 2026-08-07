@@ -22,6 +22,15 @@
 	-->
 	<exclude-pattern>/tests/*</exclude-pattern>
 	<exclude-pattern>/scripts/*</exclude-pattern>
+	<!--
+		Build output, and copies rather than source: dist/ holds a staged copy of
+		every shipped file while a release archive is being built. Scanning it
+		reports each violation twice and doubles the documented baseline, so a
+		release in progress looks like a regression. Same reason tests/harness.php
+		and tests/run-lint.php skip these two names.
+	-->
+	<exclude-pattern>/build/*</exclude-pattern>
+	<exclude-pattern>/dist/*</exclude-pattern>
 
 	<arg name="extensions" value="php"/>
 	<arg name="basepath" value="."/>
