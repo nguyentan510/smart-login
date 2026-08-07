@@ -53,6 +53,21 @@ class Flow {
 		self::STEP_RESET,
 	);
 
+	/**
+	 * The allowlist, for anything that needs to know it.
+	 *
+	 * The constant stays private — it is the authority, and a caller that could
+	 * edit it would be a second one. Returning a copy means the dialog's script
+	 * can be localized with this list rather than carrying its own, which is
+	 * rule 9: `?smart_login_step=` was already allowlisted here, and a second
+	 * copy in JavaScript is how the two drift.
+	 *
+	 * @return string[]
+	 */
+	public static function public_steps(): array {
+		return self::PUBLIC_STEPS;
+	}
+
 	/** @var string|null */
 	private static $step = null;
 

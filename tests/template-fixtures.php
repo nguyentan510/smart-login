@@ -101,6 +101,14 @@ return array(
 		'notices' => array(),
 		'grant'   => 'grant-token',
 	),
+	/*
+	 * The dialog shell. One argument, because the shell holds no state — that is
+	 * the property rule 4 asserts and the reason it is safe on a cached page.
+	 * A fixture with more in it would be describing a template this is not.
+	 */
+	'login-dialog'                   => array(
+		'title' => 'Đăng nhập hoặc đăng ký',
+	),
 	'logged-in'                      => array(
 		'user'       => new WP_User( 7, 'Nguyễn Như' ),
 		'notices'    => array(),

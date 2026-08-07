@@ -38,6 +38,21 @@ $sl_providers = ( new ProviderRegistry() )->available();
 $sl_register  = 'register' === ( $mode ?? 'login' );
 $sl_phone     = Settings::phone_enabled();
 $sl_email     = Settings::email_enabled();
+
+/*
+ * Scoped, not literal — since 19.3.
+ *
+ * This template used to hard-code `id="sl-identity"`. That is fine on a page
+ * that renders it once and wrong the moment a page renders it twice, which is
+ * exactly what the dialog makes possible: a sign-in page carrying the shortcode
+ * *and* the shell has two elements with one id, and a `<label for>` that
+ * resolves to whichever the parser met first.
+ *
+ * `autofocus` went the same way. Two controls claiming focus is one too many,
+ * and the dialog applies focus on open — which is the only place that knows
+ * whether the visitor is looking at this form or at the page behind it.
+ */
+$sl_identity_id = wp_unique_id( 'sl-identity-' );
 ?>
 <div class="smart-login smart-login--identify">
 
@@ -81,7 +96,7 @@ $sl_email     = Settings::email_enabled();
 		<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $sl_redirect ); ?>" />
 
 		<div class="sl-field">
-			<label class="sl-label" for="sl-identity">
+			<label class="sl-label" for="<?php echo esc_attr( $sl_identity_id ); ?>">
 				<?php echo esc_html( RegisterHandler::identifier_label() ); ?>
 				<span class="sl-required">*</span>
 			</label>
@@ -97,7 +112,7 @@ $sl_email     = Settings::email_enabled();
 					inputmode="text"
 				<?php endif; ?>
 				class="sl-input sl-input--lg"
-				id="sl-identity"
+				id="<?php echo esc_attr( $sl_identity_id ); ?>"
 				name="identity"
 				value="<?php echo esc_attr( Flow::old( 'identity' ) ); ?>"
 				placeholder="<?php echo $sl_phone ? esc_attr__( '0969 789 475', 'smart-login' ) : esc_attr__( 'ban@example.com', 'smart-login' ); ?>"
@@ -106,7 +121,6 @@ $sl_email     = Settings::email_enabled();
 				autocorrect="off"
 				spellcheck="false"
 				required
-				autofocus
 			/>
 		</div>
 

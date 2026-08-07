@@ -63,6 +63,39 @@ $sl_file = static function ( string $relative ) use ( $sl_sources ): string {
 	return $sl_sources[ $relative ] ?? sl_source( $relative );
 };
 
+/**
+ * The same source with its comments removed.
+ *
+ * Rules 5, 6 and 10 all went red against code that satisfied them, because each
+ * one matched the sentence *explaining* the property rather than a violation of
+ * it: the template that stopped hard-coding `id="sl-identity"` says so in a
+ * comment, and the dialog shell's header explains what a nested `<form>` does to
+ * the form around it.
+ *
+ * `sl_method_body()` in the harness already strips comments for exactly this
+ * reason — "a rule that reads prose is a rule that goes green when somebody
+ * rewords a comment", and this is the same defect pointing the other way. There
+ * was no file-level equivalent; this is it.
+ */
+$sl_code = static function ( string $source ): string {
+	if ( '' === $source ) {
+		return '';
+	}
+
+	$out = '';
+
+	foreach ( token_get_all( $source ) as $token ) {
+		if ( is_array( $token ) && in_array( $token[0], array( T_COMMENT, T_DOC_COMMENT ), true ) ) {
+			continue;
+		}
+
+		$out .= is_array( $token ) ? $token[1] : $token;
+	}
+
+	// HTML comments are not PHP tokens; the templates use them too.
+	return (string) preg_replace( '/<!--.*?-->/s', '', $out );
+};
+
 // ---------------------------------------------------------------------------
 sl_section( 'Rule 1 — every public step is reachable over REST (19.1, 19.2)' );
 // ---------------------------------------------------------------------------
@@ -237,7 +270,7 @@ sl_section( 'Rule 5 — no duplicate ids when a page holds two copies (19.3)' );
  * focus. Shipped since the template was written; the dialog only makes it
  * reachable.
  */
-$sl_form_auth = $sl_file( 'templates/form-auth.php' );
+$sl_form_auth = $sl_code( $sl_file( 'templates/form-auth.php' ) );
 
 sl_assert(
 	'templates/form-auth.php was found, so the rule has a subject',
@@ -268,7 +301,7 @@ sl_section( 'Rule 6 — the shell is outside every form (19.3)' );
  * closes the *outer* form and silently disables everything after it — the defect
  * where "Lưu thay đổi" had no form to submit and pressing it did nothing.
  */
-$sl_dialog_template = $sl_file( 'templates/login-dialog.php' );
+$sl_dialog_template = $sl_code( $sl_file( 'templates/login-dialog.php' ) );
 
 if ( '' === $sl_dialog_template ) {
 	sl_pending( 'the dialog shell contains no nested form', 'templates/login-dialog.php' );

@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-07 14:23+0000\n"
+"POT-Creation-Date: 2026-08-07 14:34+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -85,7 +85,7 @@ msgstr ""
 msgid "(bắt buộc)"
 msgstr ""
 
-#: templates/form-auth.php:103
+#: templates/form-auth.php:118
 msgid "0969 789 475"
 msgstr ""
 
@@ -973,7 +973,7 @@ msgstr ""
 msgid "Hoàn tất đăng ký"
 msgstr ""
 
-#: templates/form-auth.php:128
+#: templates/form-auth.php:142
 #: templates/form-forgot.php:51
 msgid "Hoặc"
 msgstr ""
@@ -1073,7 +1073,7 @@ msgid "Khi nào hiện"
 msgstr ""
 
 #. translators: %s: linked terms and conditions label.
-#: templates/form-auth.php:158
+#: templates/form-auth.php:172
 msgid "Khi tiếp tục, bạn đồng ý với %s."
 msgstr ""
 
@@ -1209,6 +1209,10 @@ msgstr ""
 
 #: includes/OTP/class-otp-service.php:127
 msgid "Không tạo được mã xác thực. Vui lòng thử lại."
+msgstr ""
+
+#: includes/Frontend/class-login-dialog.php:132
+msgid "Không tải được biểu mẫu. Vui lòng thử lại."
 msgstr ""
 
 #: includes/Admin/class-provider-cards.php:139
@@ -1563,7 +1567,7 @@ msgstr ""
 msgid "Nhà cung cấp không trả về định danh hợp lệ."
 msgstr ""
 
-#: templates/form-auth.php:68
+#: templates/form-auth.php:83
 msgid "Nhập email để tiếp tục."
 msgstr ""
 
@@ -1597,11 +1601,11 @@ msgstr ""
 msgid "Nhập số điện thoại hoặc email để gửi thử."
 msgstr ""
 
-#: templates/form-auth.php:70
+#: templates/form-auth.php:85
 msgid "Nhập số điện thoại hoặc email để tiếp tục."
 msgstr ""
 
-#: templates/form-auth.php:66
+#: templates/form-auth.php:81
 msgid "Nhập số điện thoại để tiếp tục."
 msgstr ""
 
@@ -2131,7 +2135,7 @@ msgstr ""
 msgid "Tiến độ đăng ký"
 msgstr ""
 
-#: templates/form-auth.php:114
+#: templates/form-auth.php:128
 #: templates/form-otp.php:128
 #: templates/registered-success.php:36
 msgid "Tiếp tục"
@@ -2249,7 +2253,7 @@ msgid "Tạo OAuth Client trên Google Cloud"
 msgstr ""
 
 #: includes/Frontend/class-fragment-renderer.php:146
-#: templates/form-auth.php:47
+#: templates/form-auth.php:62
 msgid "Tạo tài khoản"
 msgstr ""
 
@@ -2540,7 +2544,7 @@ msgid "Yêu cầu nhập OTP khi đăng nhập từ thiết bị chưa từng th
 msgstr ""
 
 #: includes/Admin/Screens/class-settings-screen.php:364
-#: templates/form-auth.php:103
+#: templates/form-auth.php:118
 msgid "ban@example.com"
 msgstr ""
 
@@ -2549,7 +2553,7 @@ msgid "chưa liên kết"
 msgstr ""
 
 #. translators: %s: linked terms and conditions label.
-#: templates/form-auth.php:159
+#: templates/form-auth.php:173
 #: templates/form-signup.php:113
 msgid "các điều khoản áp dụng"
 msgstr ""
@@ -2670,6 +2674,7 @@ msgid_plural "Đang theo dõi %d sự kiện."
 msgstr[0] ""
 
 #: includes/Frontend/class-assets.php:94
+#: templates/login-dialog.php:56
 msgid "Đang tải…"
 msgstr ""
 
@@ -2764,6 +2769,10 @@ msgstr ""
 msgid "Đã đặt shortcode trên một trang."
 msgstr ""
 
+#: templates/login-dialog.php:41
+msgid "Đóng"
+msgstr ""
+
 #: templates/onboarding.php:49
 msgid "ĐĂNG KÝ THÀNH CÔNG"
 msgstr ""
@@ -2784,12 +2793,16 @@ msgstr ""
 msgid "Đăng nhập & Đăng ký"
 msgstr ""
 
+#: includes/Frontend/class-shortcodes.php:60
+msgid "Đăng nhập / Đăng ký"
+msgstr ""
+
 #: includes/class-field-registry.php:186
 msgid "Đăng nhập bằng"
 msgstr ""
 
 #: includes/Frontend/class-fragment-renderer.php:155
-#: templates/form-auth.php:48
+#: templates/form-auth.php:63
 msgid "Đăng nhập hoặc đăng ký"
 msgstr ""
 

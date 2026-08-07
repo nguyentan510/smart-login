@@ -26,6 +26,47 @@ class Shortcodes {
 		add_shortcode( 'smart_profile', array( $this, 'render_profile' ) );
 		add_shortcode( 'smart_account', array( $this, 'render_account' ) );
 		add_shortcode( 'smart_address', array( $this, 'render_address' ) );
+		add_shortcode( 'smart_login_button', array( $this, 'render_button' ) );
+	}
+
+	/**
+	 * A trigger for the dialog, for a site nobody can edit templates on.
+	 *
+	 * Every other trigger in the contract requires markup: a `data-` attribute,
+	 * a hand-written `#login`, a call into `window.SmartLogin`. Somebody building
+	 * a page in an editor has none of those, and telling them to ask a developer
+	 * for a button is how a feature goes unused.
+	 *
+	 * It renders an **anchor**, not a button, and its `href` is the real sign-in
+	 * page. With the script blocked the visitor gets a link that works; the
+	 * launcher intercepts the click and never touches the href. When no page
+	 * hosts the shortcode `Flow::login_url()` is '' and the fragment stands in —
+	 * the same "there is no third answer" case that method already documents.
+	 */
+	public function render_button( $atts = array() ): string {
+		$atts = shortcode_atts(
+			array(
+				'step'  => Flow::STEP_IDENTIFY,
+				'label' => '',
+				'class' => '',
+			),
+			(array) $atts,
+			'smart_login_button'
+		);
+
+		$step  = in_array( $atts['step'], Flow::public_steps(), true ) ? (string) $atts['step'] : Flow::STEP_IDENTIFY;
+		$label = '' !== trim( (string) $atts['label'] )
+			? (string) $atts['label']
+			: __( 'Đăng nhập / Đăng ký', 'smart-login' );
+		$href  = Flow::login_url();
+
+		return sprintf(
+			'<a class="sl-btn sl-btn--primary %1$s" href="%2$s" data-smart-login="%3$s">%4$s</a>',
+			esc_attr( trim( (string) $atts['class'] ) ),
+			esc_url( '' !== $href ? add_query_arg( 'smart_login_step', $step, $href ) : '#login' ),
+			esc_attr( $step ),
+			esc_html( $label )
+		);
 	}
 
 	/**

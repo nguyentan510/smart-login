@@ -648,8 +648,18 @@
 
 	// ---------------------------------------------------------------
 
-	ready( function () {
-		document.querySelectorAll( '.smart-login' ).forEach( function ( root ) {
+	/**
+	 * Bind every enhancement inside a container.
+	 *
+	 * Extracted in 19.3 and exposed, because the dialog's markup arrives long
+	 * after DOMContentLoaded. Without this the fetched fragment would render an
+	 * OTP screen with no digit boxes, no countdown and no password toggle — the
+	 * same templates, silently missing everything this file adds.
+	 *
+	 * @param {ParentNode} scope
+	 */
+	function enhance( scope ) {
+		( scope || document ).querySelectorAll( '.smart-login' ).forEach( function ( root ) {
 			initPasswordToggles( root );
 			initSubmitGuard( root );
 			initDirtyGuard( root );
@@ -660,5 +670,11 @@
 			initContactVerification( root );
 			initSaveBar( root );
 		} );
+	}
+
+	ready( function () {
+		enhance( document );
 	} );
+
+	window.SmartLoginEnhance = enhance;
 } )();

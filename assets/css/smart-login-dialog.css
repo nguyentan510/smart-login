@@ -1,0 +1,145 @@
+/**
+ * Smart Login — the dialog shell.
+ *
+ * Separate from smart-login.css on purpose: this file styles the container, and
+ * the container is the only part that has to exist before the fragment arrives.
+ * The form inside it is styled by the main stylesheet, which loads alongside.
+ *
+ * Everything here is scoped to .sl-dialog. Phase 17 tokenised the account
+ * surface and left the rest of the stylesheet alone as a written deferral; this
+ * file does not widen that.
+ */
+
+.sl-dialog {
+	border: 0;
+	padding: 0;
+	max-width: min(28rem, calc(100vw - 2rem));
+	width: 100%;
+	max-height: calc(100vh - 2rem);
+	background: transparent;
+	overflow: visible;
+}
+
+/*
+ * `::backdrop` rather than a sibling element. The top layer puts it above every
+ * stacking context on the page without a z-index race against a theme header.
+ */
+.sl-dialog::backdrop {
+	background: rgba(15, 23, 42, 0.55);
+}
+
+.sl-dialog__panel {
+	background: #fff;
+	border-radius: 12px;
+	box-shadow: 0 20px 45px rgba(15, 23, 42, 0.22);
+	/*
+	 * The panel scrolls, not the page. A long step — onboarding with the address
+	 * picker open — has to be reachable on a short viewport, and the document
+	 * behind is locked while the dialog is open.
+	 */
+	max-height: calc(100vh - 2rem);
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+
+.sl-dialog__bar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 16px 20px 0;
+}
+
+.sl-dialog__title {
+	margin: 0;
+	font-size: 1.05rem;
+	line-height: 1.4;
+}
+
+/*
+ * 32 x 32, not the 24 x 24 floor. 18.3 measured the account card's row actions
+ * at 20 x 32 against WCAG 2.2 AA's minimum and had to widen them; a control
+ * shipped after that measurement starts above it rather than being corrected
+ * later.
+ */
+.sl-dialog__close {
+	flex: 0 0 auto;
+	min-width: 32px;
+	min-height: 32px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border: 0;
+	border-radius: 8px;
+	background: transparent;
+	font-size: 1.5rem;
+	line-height: 1;
+	cursor: pointer;
+	color: inherit;
+}
+
+.sl-dialog__close:hover,
+.sl-dialog__close:focus-visible {
+	background: rgba(15, 23, 42, 0.06);
+}
+
+.sl-dialog__body {
+	padding: 4px 20px 20px;
+}
+
+/*
+ * The plugin's own box already carries the card padding, and the dialog has
+ * just supplied it. Without this the fragment sits in twice the padding and the
+ * panel is a third taller than it needs to be.
+ */
+.sl-dialog__body .smart-login {
+	margin: 0;
+	padding: 0;
+	border: 0;
+	box-shadow: none;
+	max-width: none;
+}
+
+.sl-dialog__loading {
+	margin: 0;
+	padding: 24px 0;
+	text-align: center;
+	opacity: 0.7;
+}
+
+/*
+ * A request is in flight: the form stays readable but stops accepting input, so
+ * a second submit cannot send a second SMS. `close()` and Esc are refused for
+ * the same window, in the script.
+ */
+.sl-dialog.is-busy .sl-dialog__body {
+	opacity: 0.6;
+	pointer-events: none;
+}
+
+@media (max-width: 480px) {
+	.sl-dialog {
+		max-width: 100vw;
+		max-height: 100vh;
+		margin: auto auto 0;
+	}
+
+	/* A sheet, not a card: the keyboard takes half the viewport on a phone. */
+	.sl-dialog__panel {
+		border-radius: 16px 16px 0 0;
+		max-height: 92vh;
+	}
+}
+
+@media (prefers-reduced-motion: no-preference) {
+	.sl-dialog[open] .sl-dialog__panel {
+		animation: sl-dialog-in 160ms ease-out;
+	}
+}
+
+@keyframes sl-dialog-in {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+}
