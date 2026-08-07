@@ -102,4 +102,65 @@ sl_assert(
 );
 
 // ---------------------------------------------------------------------
+sl_section( 'A refused address says why (P10)' );
+
+/*
+ * Written after a false alarm, and worth keeping for that reason.
+ *
+ * A probe posting `smartlogin_address_1` with no `smartlogin_province_code`
+ * key at all saved nothing and reported nothing, which looked like a silent
+ * failure. It is not: both save paths guard with
+ *
+ *     if ( ! isset( $_POST[ AddressFields::FIELD_PROVINCE ] ) ) return;
+ *
+ * and that guard is correct — "the address card was not on this form" is a real
+ * case and must not raise an error. The real form always renders the select, so
+ * the key is always posted, and re-run that way the answer arrives:
+ *
+ *     [error] Vui lòng chọn Tỉnh/Thành phố.
+ *
+ * with the rest of the profile saved, which is what the comment on
+ * save_account_address() promises.
+ *
+ * So there was nothing to fix, and the near-miss is a rule instead: whoever
+ * calls validate() must report what it refuses. A caller that swallows the
+ * WP_Error would produce exactly the silence this went looking for.
+ */
+$sl_validate_callers = array(
+	'includes/Frontend/class-woo-integration.php' => array( 'save_account_address', 'wc_add_notice' ),
+	// save_onboarding(), not handle_save_profile(): the standalone page's own
+	// save delegates the profile fields and the address to it, so one method
+	// serves the welcome screen and the account card. Named here because the
+	// rule is about *this* body — a notice elsewhere in the file would not help
+	// the person whose address was refused.
+	'includes/Frontend/class-form-controller.php' => array( 'save_onboarding', 'Notices::flash' ),
+);
+
+foreach ( $sl_validate_callers as $sl_file => $sl_expect ) {
+	$sl_body = sl_method_body( sl_source( $sl_file ), $sl_expect[0] );
+
+	sl_assert(
+		sprintf( '%s reports what the address validator refuses', basename( $sl_file ) ),
+		'' !== $sl_body
+			&& false !== strpos( $sl_body, 'AddressFields::validate' )
+			&& false !== strpos( $sl_body, 'is_wp_error' )
+			&& false !== strpos( $sl_body, $sl_expect[1] ),
+		'A validator whose refusal nobody prints is a form that discards what somebody typed and says nothing. Expected ' . $sl_expect[1] . ' in ' . $sl_expect[0] . '().'
+	);
+}
+
+/*
+ * And no third caller may appear without one. The two above are named because
+ * the notice API differs between them — Woo owns its own — and a rule that only
+ * knew the two would not notice a third.
+ */
+sl_require_companion(
+	'every file that validates an address also reports a refusal',
+	'/AddressFields::validate\(/',
+	'/wc_add_notice\(|Notices::flash\(/',
+	'The guard for "there was no address on this form" is an early return before validate(). Once validate() has run, its answer belongs to the person who typed.',
+	array( 'includes/Address/class-address-fields.php' )
+);
+
+// ---------------------------------------------------------------------
 sl_summary( 'Account surface' );
