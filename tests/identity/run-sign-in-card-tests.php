@@ -125,7 +125,16 @@ sl_assert(
 sl_section( 'Rule 2 — Đổi for what you own, Bỏ liên kết for what you borrowed (16.1)' );
 
 $sl_list = static function ( array $identities ) use ( $sl_render ): string {
-	return $sl_render(
+	/*
+	 * Rendered the way a page renders it: the unlink form is deferred out of the
+	 * partial since P9, because a <form> inside the account form ends that form.
+	 * A test that reads only the partial reads half the markup.
+	 */
+	// Reset first: the buffer is static and a previous render in this process
+	// would otherwise leak its form into this one.
+	\SmartLogin\Frontend\DeferredForms::reset();
+
+	$sl_markup = $sl_render(
 		'partials/linked-identities',
 		array(
 			'sl_identities' => $identities,
@@ -133,6 +142,11 @@ $sl_list = static function ( array $identities ) use ( $sl_render ): string {
 			'sl_redirect'   => 'https://example.test/my-account/',
 		)
 	);
+
+	ob_start();
+	\SmartLogin\Frontend\DeferredForms::flush();
+
+	return $sl_markup . (string) ob_get_clean();
 };
 
 $sl_self_only = $sl_list( array( $sl_identity( 'email', $sl_email, 'us•••' . $sl_domain, 'Email', false, true ) ) );

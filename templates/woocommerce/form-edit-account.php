@@ -20,6 +20,7 @@
  */
 
 use SmartLogin\Frontend\AccountForm;
+use SmartLogin\Frontend\DeferredForms;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -63,6 +64,16 @@ do_action( 'woocommerce_before_edit_account_form' );
 
 		<?php do_action( 'woocommerce_edit_account_form_end' ); ?>
 	</form>
+	<?php
+	/*
+	 * Forms that could not be emitted where they are used, because HTML forbids
+	 * a form inside a form. Their controls carry `form="…"` and live inside the
+	 * cards above; the elements themselves land here, after the account form has
+	 * closed. See DeferredForms for the measurement that made this necessary.
+	 */
+	DeferredForms::flush();
+	?>
+
 </div>
 
 <?php do_action( 'woocommerce_after_edit_account_form' ); ?>

@@ -25,6 +25,7 @@
  * @package SmartLogin
  */
 
+use SmartLogin\Frontend\DeferredForms;
 use SmartLogin\Frontend\FormController;
 use SmartLogin\Frontend\ProviderMark;
 
@@ -103,31 +104,62 @@ if ( empty( $sl_identities ) ) {
 							?>
 							<summary class="sl-action sl-action--summary sl-action--danger"><?php esc_html_e( 'Bỏ liên kết', 'smart-login' ); ?></summary>
 
-							<form method="post" class="sl-identity-unlink-form">
+							<?php
+							/*
+							 * The controls are here; the <form> they belong to is not.
+							 *
+							 * This card renders *inside* the account form, and HTML forbids
+							 * a form inside a form — the parser drops the inner start tag,
+							 * so the inner close tag ends the OUTER form and everything
+							 * after it stops being part of any form. Measured on a real
+							 * account holding a removable Google identity: the account form
+							 * opened at offset 401, this one at 8171 and closed at 9273, and
+							 * the save bar landed at 28359 — outside. "Lưu thay đổi" had
+							 * nothing to submit, and pressing it did nothing at all: no
+							 * error, no notice, no request.
+							 *
+							 * The `form` attribute is HTML's own answer: a control may sit
+							 * anywhere in the document and belong to a form by id. So the
+							 * password box and the confirm button stay exactly where they
+							 * make sense, and the form element is registered with
+							 * DeferredForms and emitted once the surrounding form has
+							 * closed. Nothing about this control's position or its
+							 * no-JavaScript behaviour changes.
+							 */
+							$sl_unlink_form = 'sl-unlink-form-' . md5( $sl_identity['channel'] . $sl_identity['subject'] );
+
+							ob_start();
+							?>
+							<form method="post" class="sl-identity-unlink-form" id="<?php echo esc_attr( $sl_unlink_form ); ?>">
 								<?php wp_nonce_field( 'smart_login_unlink_identity' ); ?>
 								<input type="hidden" name="<?php echo esc_attr( FormController::ACTION_FIELD ); ?>" value="unlink_identity" />
 								<input type="hidden" name="channel" value="<?php echo esc_attr( $sl_identity['channel'] ); ?>" />
 								<input type="hidden" name="subject" value="<?php echo esc_attr( $sl_identity['subject'] ); ?>" />
 								<input type="hidden" name="_redirect" value="<?php echo esc_url( $sl_redirect ); ?>" />
-
-								<div class="sl-field">
-									<label class="sl-label" for="<?php echo esc_attr( $sl_field_id ); ?>">
-										<?php esc_html_e( 'Nhập mật khẩu để xác nhận', 'smart-login' ); ?>
-									</label>
-									<input
-										type="password"
-										class="sl-input"
-										id="<?php echo esc_attr( $sl_field_id ); ?>"
-										name="password"
-										autocomplete="current-password"
-										required
-									/>
-								</div>
-
-								<button type="submit" class="sl-btn sl-btn--outline sl-btn--danger sl-btn--inline">
-									<?php esc_html_e( 'Xác nhận bỏ liên kết', 'smart-login' ); ?>
-								</button>
 							</form>
+							<?php
+							DeferredForms::add( $sl_unlink_form, (string) ob_get_clean() );
+							?>
+
+							<div class="sl-field">
+								<label class="sl-label" for="<?php echo esc_attr( $sl_field_id ); ?>">
+									<?php esc_html_e( 'Nhập mật khẩu để xác nhận', 'smart-login' ); ?>
+								</label>
+								<input
+									type="password"
+									class="sl-input"
+									id="<?php echo esc_attr( $sl_field_id ); ?>"
+									name="password"
+									autocomplete="current-password"
+									form="<?php echo esc_attr( $sl_unlink_form ); ?>"
+									required
+								/>
+							</div>
+
+							<button type="submit" class="sl-btn sl-btn--outline sl-btn--danger sl-btn--inline" form="<?php echo esc_attr( $sl_unlink_form ); ?>">
+								<?php esc_html_e( 'Xác nhận bỏ liên kết', 'smart-login' ); ?>
+							</button>
+
 						</details>
 					<?php endif; ?>
 				</div>

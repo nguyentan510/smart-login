@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-07 03:49+0000\n"
+"POT-Creation-Date: 2026-08-07 04:12+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -250,7 +250,7 @@ msgstr ""
 msgid "Bỏ bắt buộc nhập email ở trang thanh toán"
 msgstr ""
 
-#: templates/partials/linked-identities.php:104
+#: templates/partials/linked-identities.php:105
 msgid "Bỏ liên kết"
 msgstr ""
 
@@ -322,7 +322,7 @@ msgid "Chép mẫu để sửa"
 msgstr ""
 
 #: templates/partials/account/contact.php:135
-#: templates/partials/linked-identities.php:86
+#: templates/partials/linked-identities.php:87
 msgid "Chính"
 msgstr ""
 
@@ -977,8 +977,8 @@ msgstr ""
 msgid "Hoặc"
 msgstr ""
 
-#: templates/account.php:51
-#: templates/woocommerce/form-edit-account.php:57
+#: templates/account.php:52
+#: templates/woocommerce/form-edit-account.php:58
 msgid "Huỷ"
 msgstr ""
 
@@ -1143,7 +1143,7 @@ msgstr ""
 msgid "Không thể bỏ liên kết. Vui lòng thử lại."
 msgstr ""
 
-#: templates/partials/linked-identities.php:91
+#: templates/partials/linked-identities.php:92
 msgid "Không thể bỏ — đây là cách đăng nhập duy nhất"
 msgstr ""
 
@@ -1345,9 +1345,9 @@ msgid "Lưu lại các sự kiện đăng nhập / xác thực"
 msgstr ""
 
 #: includes/Admin/Screens/class-settings-screen.php:71
-#: templates/account.php:52
-#: templates/woocommerce/form-edit-account.php:58
+#: templates/account.php:53
 #: templates/woocommerce/form-edit-account.php:59
+#: templates/woocommerce/form-edit-account.php:60
 msgid "Lưu thay đổi"
 msgstr ""
 
@@ -1592,7 +1592,7 @@ msgstr ""
 msgid "Nhập mật khẩu"
 msgstr ""
 
-#: templates/partials/linked-identities.php:115
+#: templates/partials/linked-identities.php:146
 msgid "Nhập mật khẩu để xác nhận"
 msgstr ""
 
@@ -2528,7 +2528,7 @@ msgstr ""
 msgid "Xác nhận"
 msgstr ""
 
-#: templates/partials/linked-identities.php:128
+#: templates/partials/linked-identities.php:160
 msgid "Xác nhận bỏ liên kết"
 msgstr ""
 

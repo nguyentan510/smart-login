@@ -144,6 +144,16 @@ foreach ( $sl_surfaces as $sl_name => $sl_args ) {
 }
 
 /*
+ * What account.php and form-edit-account.php do after their form closes. The
+ * unlink form is deferred out of the card that uses it — HTML forbids a form
+ * inside a form — so a composite that never flushes is a page missing markup
+ * the real one has.
+ */
+ob_start();
+\SmartLogin\Frontend\DeferredForms::flush();
+$sl_html .= (string) ob_get_clean();
+
+/*
  * DOMDocument, not a regex. Every rule below asks a question about structure —
  * "does this id exist", "is this control named", "is there a real form in
  * here" — and a regex answering those is a second, worse HTML parser.
@@ -321,12 +331,33 @@ sl_section( 'Rule 5 — the destructive control works without JavaScript (18.0, 
  * was chosen as the mechanism for exactly this property and nothing has ever
  * checked it — which is the shape of every defect this project keeps finding.
  */
-$sl_unlink_forms = $sl_xpath->query( '//details[contains(@class,"sl-identity-unlink")]//form[@method="post"]' );
+/*
+ * The form is no longer *inside* the `<details>`, and that is the fix for
+ * "Lưu thay đổi does nothing": a `<form>` inside the account form is invalid
+ * HTML, the parser drops the inner start tag, and the inner close tag ends the
+ * outer form — taking the save bar with it. The controls stay in the
+ * `<details>` and reach their form through the `form` attribute.
+ *
+ * So the property this rule is about — it works with JavaScript off — is now
+ * "there is a real POST form, and the controls point at it", not "the form is
+ * nested here".
+ */
+$sl_unlink_forms = $sl_xpath->query( '//form[@method="post"][contains(@class,"sl-identity-unlink-form")]' );
 
 sl_assert(
-	'the unlink confirmation is a real POST form inside a <details>',
+	'the unlink confirmation is a real POST form',
 	$sl_unlink_forms->length >= 1,
-	'A control that needs a listener to work is a control that does nothing on a page whose JavaScript failed to load. The <details> element was chosen so this holds.'
+	'A control that needs a listener to work is a control that does nothing on a page whose JavaScript failed to load.'
+);
+
+$sl_form_id = $sl_unlink_forms->length ? $sl_unlink_forms->item( 0 )->getAttribute( 'id' ) : '';
+
+sl_assert(
+	'and the controls inside the disclosure point at it',
+	'' !== $sl_form_id
+		&& $sl_xpath->query( '//details[contains(@class,"sl-identity-unlink")]//input[@type="password"][@form="' . $sl_form_id . '"]' )->length >= 1
+		&& $sl_xpath->query( '//details[contains(@class,"sl-identity-unlink")]//button[@type="submit"][@form="' . $sl_form_id . '"]' )->length >= 1,
+	'The `form` attribute is what keeps the password box and the confirm button where they belong while the form element itself lives outside the account form.'
 );
 
 $sl_summary = $sl_xpath->query( '//details[contains(@class,"sl-identity-unlink")]/summary' );
@@ -340,7 +371,7 @@ sl_assert(
 foreach ( array( '_wpnonce', 'channel', 'subject' ) as $sl_field ) {
 	sl_assert(
 		sprintf( 'the form carries its %s', $sl_field ),
-		$sl_xpath->query( '//details[contains(@class,"sl-identity-unlink")]//input[@name="' . $sl_field . '"]' )->length >= 1,
+		$sl_xpath->query( '//form[@id="' . $sl_form_id . '"]//input[@name="' . $sl_field . '"]' )->length >= 1,
 		'A form that submits without JavaScript still has to carry everything the handler needs, and each of these has been added by a different phase.'
 	);
 }
@@ -548,6 +579,72 @@ sl_assert(
 	$sl_page_xpath->query( '//*[@data-sl-savebar-state][@hidden]' )->length >= 1
 		&& $sl_page_xpath->query( '//*[@data-sl-savebar-text]' )->length >= 1,
 	'An aria-live region that is present and empty has already been announced; one that appears is an announcement. And the text node is separate so repainting it does not eat the warning mark beside it.'
+);
+
+// ---------------------------------------------------------------------
+sl_section( 'Rule 11 — nothing rendered inside the account form is a form (P9)' );
+
+/*
+ * The rule for the defect that made "Lưu thay đổi" do nothing.
+ *
+ * HTML forbids a `<form>` inside a `<form>`. Browsers do not merely ignore the
+ * inner one — the parser drops its start tag, so the inner close tag ends the
+ * OUTER form. Measured on a real account holding a removable Google identity,
+ * on the live site:
+ *
+ *     <form class="woocommerce-EditAccountForm …">   offset    401
+ *       <form class="sl-identity-unlink-form">       offset   8171
+ *       </form>                                      offset   9273  ← ends the outer
+ *     save bar, nonce, submit                        offset  28359  ← outside
+ *
+ * Every suite passed throughout, for a reason worth naming: the unlink form
+ * only renders for an identity that is *federated and removable*, and no
+ * fixture anywhere had one. The gate's own account holds a Zalo identity that
+ * is not removable, so even the integration gate rendered a single form.
+ *
+ * A string rule rather than a DOM one, deliberately: DOMDocument accepts nested
+ * forms and reports two, which is exactly the tolerance that let this through a
+ * suite full of DOM assertions.
+ */
+$sl_nested = array();
+
+foreach ( sl_plugin_sources() as $sl_relative => $sl_contents ) {
+	if ( 0 !== strpos( $sl_relative, 'templates/partials/' ) ) {
+		continue;
+	}
+
+	if ( preg_match( '/<form\b/i', $sl_contents ) && false === strpos( $sl_contents, 'DeferredForms' ) ) {
+		$sl_nested[] = $sl_relative;
+	}
+}
+
+sl_assert(
+	'no partial emits a form where it stands',
+	array() === $sl_nested,
+	'A partial is rendered inside the account form. A <form> it emits there ends that form, and everything below — the address card, the password card, the save bar and its submit button — stops being part of anything. → ' . implode( ', ', $sl_nested )
+);
+
+/*
+ * And the pages that hold the account form flush what the partials deferred.
+ * A registered form nobody emits is a `form="…"` attribute pointing at nothing,
+ * which is the same dead button by a different route.
+ */
+$sl_unflushed = array();
+
+foreach ( array( 'templates/account.php', 'templates/woocommerce/form-edit-account.php' ) as $sl_page ) {
+	$sl_body  = sl_source( $sl_page );
+	$sl_close = strrpos( $sl_body, '</form>' );
+	$sl_call  = strpos( $sl_body, 'DeferredForms::flush()' );
+
+	if ( false === $sl_call || false === $sl_close || $sl_call < $sl_close ) {
+		$sl_unflushed[] = $sl_page;
+	}
+}
+
+sl_assert(
+	'and every page holding the account form flushes them after it closes',
+	array() === $sl_unflushed,
+	'Flushed before the closing tag and the deferred form is nested again, which is the defect this rule exists for. → ' . implode( ', ', $sl_unflushed )
 );
 
 // ---------------------------------------------------------------------

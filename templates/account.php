@@ -17,6 +17,7 @@
  * @package SmartLogin
  */
 
+use SmartLogin\Frontend\DeferredForms;
 use SmartLogin\Frontend\FormController;
 use SmartLogin\Frontend\TemplateLoader;
 
@@ -52,4 +53,14 @@ if ( ! $sl_form->user() ) {
 			<button type="submit" class="sl-btn sl-btn--primary sl-btn--inline"><?php esc_html_e( 'Lưu thay đổi', 'smart-login' ); ?></button>
 		</div>
 	</form>
+	<?php
+	/*
+	 * Forms that could not be emitted where they are used, because HTML forbids
+	 * a form inside a form. Their controls carry `form="…"` and live inside the
+	 * cards above; the elements themselves land here, after the account form has
+	 * closed. See DeferredForms for the measurement that made this necessary.
+	 */
+	DeferredForms::flush();
+	?>
+
 </div>
