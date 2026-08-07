@@ -31,6 +31,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 15 — The unreleased install**
 - [x] **Phase 16 — The sign-in card**
 - [x] **Phase 17 — The account card**
+- [ ] **Phase 18 — The rendered surface**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -1587,6 +1588,75 @@ already exist.
 
 ---
 
+## Phase 18 — The rendered surface
+
+Normative spec: [`rendered-surface.md`](rendered-surface.md) — the three
+findings, the five decisions and the three deferrals live there.
+
+Execution briefs: [`rendered-surface/`](rendered-surface/), one file per
+sub-phase. **Status lives here and only here.**
+
+Short version: three phases in a row have written an acceptance item that says
+*measured* and then not measured it — 8.4 claimed it, 16.3 and 17.4 wrote down
+that they could not, 17.3 simply did not. The project keeps promising a reading
+it has no tool to take.
+
+And when somebody does look, it pays. Phase 17 needed a throwaway renderer in a
+scratch directory to see the card at all, and that renderer found two defects in
+one afternoon that no suite could have found: `.screen-reader-text` had been a
+theme dependency since 8.4, and the input/button height read out of the source
+was wrong in magnitude *and* direction. The tool was deleted with the session.
+That is the actual finding.
+
+A probe written for this plan found two more, both invisible to every existing
+rule: the OTP code box has **no accessible name** — a placeholder and nothing
+else, twice — and `.sl-action` declares a height floor with no width one, so
+"Đổi" measures **20 × 32** against WCAG 2.2 AA's 24 × 24.
+
+### Sub-phases
+
+- [ ] **18.0** [Guard rails](rendered-surface/18.0-guard-rails.md) — five rules
+      before the tool exists, so the tool is built against a statement of what it
+      has to be able to say
+- [ ] **18.1** [The renderer](rendered-surface/18.1-the-renderer.md) —
+      `tests/visual/render.php`, self-contained output, no new toolchain
+- [ ] **18.2** [A name for every control](rendered-surface/18.2-accessible-names.md)
+      — a visible label for the OTP box, not an `aria-label`
+- [ ] **18.3** [A floor under the targets](rendered-surface/18.3-target-size.md)
+      — 24px on the class, not padding on the instance
+- [ ] **18.4** [The measurements nobody took](rendered-surface/18.4-the-measurements.md)
+      — the readings three phases promised, written down as numbers
+
+---
+
+**Ordering rationale.** 18.0 first, for the reason the Postscript gives — and
+here it does double duty: the rules are the specification the renderer is built
+against, so writing them first is design rather than only discipline.
+
+**18.1 must precede 18.3 and 18.4.** Both have acceptance items that are
+readings, and there is nothing to read from until the renderer exists. This is
+the first phase in the project where that dependency is stated instead of
+quietly skipped.
+
+**18.2 and 18.3 are independent of each other** and either may be dropped. 18.2
+is a defect with a known fix; 18.3 is a defect with a known fix and a number.
+
+**18.4 is last and produces no code.** If a measurement finds something, it
+becomes the next phase's material — fixing a defect in the commit that found it
+is how a measurement stops being trustworthy.
+
+**No new toolchain, decided rather than defaulted.** Playwright would make 18.4
+an automated gate and would put a `package.json` and a node install into a repo
+that has stayed PHP-only, CI included. The renderer produces the page; the
+browser readings are taken by opening it and recorded as numbers. Worse than an
+assertion, enormously better than the standing alternative, which is "not run"
+three phases deep.
+
+**No production behaviour changes beyond two defects:** one label and one CSS
+floor.
+
+---
+
 ## Risks
 
 | Risk | Mitigation |
@@ -1628,3 +1698,7 @@ already exist.
 | 17.6 records the date at three call sites and a fourth writer is added later | A companion rule over the writers, not an assertion about a hook. `apply_password_hash()` writes through `$wpdb` and fires nothing, which is why a listener would have been the wrong answer |
 | 17.7 ships a denominator that is secretly a constant and passes every test | Acceptance asserts `total` **moves** with `profile.dob` off and on, not merely that it is returned |
 | 17.8 renames `headings()`, which four templates call | Same grep condition as 17.4. The rename is the point — one array carries the label and the mark, so the two cannot drift |
+| 18.1 ships a renderer that drifts from what the plugin actually serves, so a green picture proves nothing | Real templates, real stubs, real stylesheet, and fixtures taken from the shapes `run-template-tests.php` already declares. Rule 1 fails the moment a partial exists that the renderer cannot build |
+| 18.4's readings are manual, so they rot the moment somebody stops taking them | Recorded as numbers in the brief rather than as ticks, and the protocol is a committed file with commands in it. The alternative was a second toolchain, declined in writing |
+| A rendered page is not a WordPress page, and 18.1 makes it easy to believe otherwise | Stated in the spec: the renderer does not substitute for `tests/integration/`, and 17.4's meta writes stay unverified against a live database rather than being quietly closed by a picture |
+| 18.3's floor changes row height across the account card | Acceptance is a measurement of `.sl-row` before and after, not a reading of the CSS. 17.2 is the precedent — the prediction from the source was wrong in both magnitude and direction |
