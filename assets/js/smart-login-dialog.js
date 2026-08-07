@@ -167,7 +167,14 @@
 		}
 
 		payload.append( 'page', here() );
-		payload.append( 'redirect_to', here() );
+
+		// Only when the form does not carry one. Several steps render their own
+		// `redirect_to` — onboarding's is where "Hoàn tất" and "Để sau" both
+		// lead — and appending a second entry would silently win, because PHP
+		// keeps the last value for a repeated key.
+		if ( ! payload.get( 'redirect_to' ) ) {
+			payload.append( 'redirect_to', here() );
+		}
 
 		request( {
 			url: data.endpoint,

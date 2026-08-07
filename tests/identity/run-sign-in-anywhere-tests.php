@@ -225,6 +225,53 @@ if ( ! $sl_has_in_place ) {
 		'' !== $sl_redirect_body && false !== strpos( $sl_redirect_body, 'in_place' ),
 		'The new-user branch must not reach profile_url() when the flow renders its own surface.'
 	);
+
+	/*
+	 * And then the behaviour, driven rather than read.
+	 *
+	 * This is the defect the whole phase is named after, so it is asserted
+	 * against the object rather than against its source: a new member of a
+	 * page-hosted flow still gets today's destination, and a new member of an
+	 * in-place flow gets none at all.
+	 *
+	 * `wc_get_page_permalink()` is undefined in this process, which is exactly
+	 * the site the finding is about — WooCommerce deactivated, `profile_url()`
+	 * falling back to wp-admin. So the second assertion below is the literal
+	 * finding: registering from a blog post landed people in wp-admin.
+	 */
+	$sl_new_user = static function ( bool $in_place ): \SmartLogin\Auth\AuthResult {
+		$GLOBALS['sl_user_meta'] = array();
+
+		return new \SmartLogin\Auth\AuthResult(
+			7,
+			new \SmartLogin\Auth\AuthContext(
+				array(
+					'auth_method' => 'otp',
+					'user_id'     => 7,
+					'is_new_user' => true,
+					'in_place'    => $in_place,
+				)
+			),
+			array( 'required_missing' => array() )
+		);
+	};
+
+	$sl_page_url  = ( new \SmartLogin\Auth\PostAuthRedirector() )->redirect( $sl_new_user( false ), 'https://example.test/san-pham/ao-thun/' );
+	$sl_place_url = ( new \SmartLogin\Auth\PostAuthRedirector() )->redirect( $sl_new_user( true ), 'https://example.test/san-pham/ao-thun/' );
+
+	sl_assert(
+		'a page-hosted registration still goes where it always did',
+		false !== strpos( $sl_page_url, 'smartlogin_welcome=1' ),
+		'19.5 must not change the shortcode path. Got: ' . $sl_page_url
+	);
+
+	sl_check( 'an in-place registration is given no destination at all', '', $sl_place_url );
+
+	sl_assert(
+		'and never one inside wp-admin',
+		false === strpos( $sl_place_url, 'wp-admin' ),
+		'Finding 1: profile_url() falls back to admin_url( profile.php ) without WooCommerce, and the page path proves it by returning ' . $sl_page_url
+	);
 }
 
 // ---------------------------------------------------------------------------

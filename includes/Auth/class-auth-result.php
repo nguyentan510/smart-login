@@ -21,6 +21,9 @@ final class AuthResult {
 	public bool $needs_profile_gate;
 	public string $redirect_url = '';
 
+	/** Carried through from the context; see AuthContext::$in_place. */
+	public bool $in_place;
+
 	public function __construct( int $user_id, AuthContext $context, array $profile_status ) {
 		$this->user_id            = $user_id;
 		$this->is_new_user        = $context->is_new_user;
@@ -30,5 +33,6 @@ final class AuthResult {
 		$this->profile_status     = $profile_status;
 		$this->needs_profile_gate = ! empty( $profile_status['required_missing'] );
 		$this->needs_onboarding   = $context->is_new_user;
+		$this->in_place           = $context->in_place;
 	}
 }

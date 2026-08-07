@@ -77,7 +77,10 @@ class FragmentRenderer {
 	public function submit( string $action, array $input, string $page, string $redirect_to = '' ): array {
 		Flow::set_base( $page, $redirect_to );
 
-		$decision = ( new FlowEngine( $this->otp ) )->handle( $action, $input );
+		// in_place(): this flow draws its own screens, so a new member gets the
+		// welcome step rendered here rather than a redirect to the account page —
+		// or to wp-admin, on a site without WooCommerce. See AuthContext.
+		$decision = ( new FlowEngine( $this->otp ) )->in_place()->handle( $action, $input );
 
 		if ( null === $decision ) {
 			return array(

@@ -68,6 +68,23 @@ class FlowEngine {
 	}
 
 	/**
+	 * Whether this flow draws its own screens and must not navigate away.
+	 *
+	 * See `AuthContext::$in_place`. Default false, so a page-hosted flow behaves
+	 * exactly as it always has.
+	 */
+	private bool $in_place = false;
+
+	/**
+	 * Mark this flow as one that owns its own surface.
+	 */
+	public function in_place( bool $yes = true ): self {
+		$this->in_place = $yes;
+
+		return $this;
+	}
+
+	/**
 	 * An engine for a JSON caller that `check_permission()` has already guarded.
 	 */
 	public static function for_rest( ?OtpService $otp = null ): self {
@@ -237,7 +254,34 @@ class FlowEngine {
 			return $this->fail_signup( $decision, $user_id, '' );
 		}
 
-		return $decision->go( $this->welcome_url() );
+		return $this->after_registration( $decision, (int) $user_id );
+	}
+
+	/**
+	 * A registration finished. Where the new member goes next.
+	 *
+	 * The page-hosted flow redirects, and the reason is not style — see
+	 * `welcome_url()`. A dialog has somewhere to put the welcome screen without
+	 * navigating, which is the whole of the request this phase answers: register
+	 * from a product page and finish on the product page.
+	 *
+	 * The nonce hazard `welcome_url()` documents does not apply to the in-place
+	 * branch. The fragment is fetched by a *fresh request* carrying the auth
+	 * cookie the browser has by then accepted, so its nonce is bound to a real
+	 * session token rather than to an empty one.
+	 */
+	private function after_registration( FlowDecision $decision, int $user_id = 0 ): FlowDecision {
+		if ( ! $this->in_place ) {
+			return $decision->go( $this->welcome_url() );
+		}
+
+		return $decision->render(
+			Flow::STEP_ONBOARD,
+			array(
+				'user_id'  => $user_id,
+				'redirect' => Flow::base(),
+			)
+		);
 	}
 
 	/**
@@ -465,7 +509,10 @@ class FlowEngine {
 			return $decision->render( Flow::STEP_SIGNUP, array( 'grant' => (string) $result['grant'] ) );
 		}
 
-		return $decision->go( $this->welcome_url() );
+		// No user id to hand over: the account was created inside verify(), which
+		// issued the session too. `onboarding_args()` falls back to the current
+		// user, which is that account.
+		return $this->after_registration( $decision );
 	}
 
 	private function finish_reset_verification( FlowDecision $decision, string $token, string $code ): FlowDecision {
@@ -501,6 +548,7 @@ class FlowEngine {
 				'auth_method'  => 'otp',
 				'user_id'      => $user_id,
 				'intended_url' => (string) ( $row['payload']['redirect_to'] ?? '' ),
+				'in_place'     => $this->in_place,
 			)
 		);
 		$proof   = AuthProof::from_otp( $this->otp()->verified_claim( $row ), $user_id );
@@ -508,11 +556,31 @@ class FlowEngine {
 
 		PendingSession::clear();
 
-		return $decision->go(
-			is_wp_error( $result )
-				? LoginHandler::post_login_redirect( $context->intended_url )
-				: ( new PostAuthRedirector() )->redirect( $result, $context->intended_url )
-		);
+		return $this->after_session( $decision, $result, $context->intended_url );
+	}
+
+	/**
+	 * Turn an issued session into the next thing the visitor sees.
+	 *
+	 * `PostAuthRedirector::redirect()` answers '' for a new member of an
+	 * in-place flow — there is nowhere to send them, because the welcome screen
+	 * goes where they already are. Any other answer is a destination, including
+	 * for a failed issue, which falls back to the ordinary login redirect.
+	 *
+	 * @param AuthResult|\WP_Error $result
+	 */
+	private function after_session( FlowDecision $decision, $result, string $intended_url ): FlowDecision {
+		if ( is_wp_error( $result ) ) {
+			return $decision->go( LoginHandler::post_login_redirect( $intended_url ) );
+		}
+
+		$url = ( new PostAuthRedirector() )->redirect( $result, $intended_url );
+
+		if ( '' === $url ) {
+			return $this->after_registration( $decision, (int) $result->user_id );
+		}
+
+		return $decision->go( $url );
 	}
 
 	public function resend_otp( array $input ): FlowDecision {
@@ -652,15 +720,12 @@ class FlowEngine {
 				'auth_method'  => 'password',
 				'user_id'      => $user->ID,
 				'intended_url' => $redirect_to,
+				'in_place'     => $this->in_place,
 			)
 		);
 		$result  = ( new SessionIssuer() )->issue( AuthProof::from_password( $user ), $user, $context, $remember );
 
-		return $decision->go(
-			is_wp_error( $result )
-				? LoginHandler::post_login_redirect( $redirect_to )
-				: ( new PostAuthRedirector() )->redirect( $result, $redirect_to )
-		);
+		return $this->after_session( $decision, $result, $redirect_to );
 	}
 
 	public function forgot( array $input ): FlowDecision {

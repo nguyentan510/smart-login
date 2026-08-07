@@ -25,6 +25,26 @@ final class PostAuthRedirector {
 	public function redirect( AuthResult $result, string $requested = '' ): string {
 		$profiles = new ProfileCompletionService();
 
+		/*
+		 * A flow that draws its own screens gets no destination at all.
+		 *
+		 * Returning '' is the whole of 19.5 on this side of the boundary: the
+		 * caller reads it as "there is nowhere to send them, render the welcome
+		 * where you are". Every other caller passes `in_place = false` and takes
+		 * the branch below unchanged, so the page-hosted flow behaves exactly as
+		 * it did.
+		 *
+		 * `mark_seen()` is deliberately *not* called here. It moves to whoever
+		 * actually renders the screen — marking a welcome delivered before it is
+		 * on screen is how a welcome gets lost, which is the argument
+		 * `Shortcodes::onboarding_args()` already makes for the page path.
+		 */
+		if ( $result->in_place && $result->is_new_user && ! $profiles->has_seen( $result->user_id ) ) {
+			$result->redirect_url = '';
+
+			return '';
+		}
+
 		if ( $result->is_new_user && ! $profiles->has_seen( $result->user_id ) ) {
 			$profiles->mark_seen( $result->user_id, $result->auth_method );
 			$url                  = add_query_arg( 'smartlogin_welcome', '1', self::profile_url() );
