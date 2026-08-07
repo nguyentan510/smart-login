@@ -122,6 +122,7 @@ class LoginDialog {
 			'steps'     => Flow::public_steps(),
 			'aliases'   => self::aliases(),
 			'loginUrl'  => Flow::login_url(),
+			'captured'  => self::captured_urls(),
 			// The one step the launcher may open that is not on the public list,
 			// and the URL flag that authorises it. Both named here rather than
 			// spelled in JavaScript — rule 9.
@@ -144,6 +145,53 @@ class LoginDialog {
 				'failed' => __( 'Không tải được biểu mẫu. Vui lòng thử lại.', 'smart-login' ),
 			),
 		);
+	}
+
+	/**
+	 * Login links the site already has, which the dialog may intercept.
+	 *
+	 * Every other trigger in the contract requires somebody to edit markup. This
+	 * one does not, and that is what decides whether the feature reaches most
+	 * installs or only the ones with a developer: the theme's header button,
+	 * `wp-login.php` and WooCommerce's my-account link are already on the page.
+	 *
+	 * **Clicks are intercepted; `href` is never rewritten.** That distinction is
+	 * the entire safety argument, and it is why this may default on: with the
+	 * script blocked, removed, or merely not loaded yet, every captured link is
+	 * the ordinary link its author wrote. A plugin that rewrote them would own a
+	 * failure mode where its own script is the only thing keeping the site's
+	 * sign-in working.
+	 *
+	 * Named URLs only. A heuristic over link *text* would fire on an article
+	 * about signing in, and "no guessing" is a property worth more than the
+	 * links a guess would catch.
+	 *
+	 * @return string[]
+	 */
+	public static function captured_urls(): array {
+		$urls = array( Flow::login_url() );
+
+		if ( function_exists( 'wp_login_url' ) ) {
+			$urls[] = wp_login_url();
+		}
+
+		if ( function_exists( 'wc_get_page_permalink' ) ) {
+			// The surface this plugin already replaces — see
+			// WooIntegration's template map.
+			$urls[] = (string) wc_get_page_permalink( 'myaccount' );
+		}
+
+		/**
+		 * Add or remove a login URL the dialog intercepts.
+		 *
+		 * Returning an empty array switches capture off entirely, which is the
+		 * documented way to decline it.
+		 *
+		 * @param string[] $urls
+		 */
+		$urls = (array) apply_filters( 'smart_login_capture_links', $urls );
+
+		return array_values( array_unique( array_filter( array_map( 'strval', $urls ) ) ) );
 	}
 
 	/**

@@ -168,7 +168,93 @@
 				event.preventDefault();
 				open( step );
 			}
+
+			return;
 		}
+
+		if ( isCapturedLogin( link ) ) {
+			event.preventDefault();
+			openFor( link );
+		}
+	}
+
+	/**
+	 * Compare two URLs by origin and path, ignoring the query and the fragment.
+	 *
+	 * A string match on the `href` attribute would miss a relative link and
+	 * would fire on any URL that merely mentions the path. `link.href` is
+	 * already resolved to absolute by the DOM, which is the only reason this is
+	 * cheap.
+	 */
+	function samePage( a, b ) {
+		try {
+			var left = new URL( a, window.location.href );
+			var right = new URL( b, window.location.href );
+
+			return left.origin === right.origin
+				&& left.pathname.replace( /\/+$/, '' ) === right.pathname.replace( /\/+$/, '' );
+		} catch ( error ) {
+			return false;
+		}
+	}
+
+	/**
+	 * Whether this anchor is one of the site's own sign-in links.
+	 *
+	 * Four refusals, all structural rather than heuristic. The `action` one
+	 * matters most: `wp-login.php?action=logout` is not a sign-in, and capturing
+	 * it would trap somebody trying to leave.
+	 */
+	function isCapturedLogin( link ) {
+		var captured = data.captured || [];
+
+		if ( ! captured.length || link.closest( '[data-no-smart-login]' ) ) {
+			return false;
+		}
+
+		var href = link.href;
+
+		if ( ! href ) {
+			return false;
+		}
+
+		try {
+			if ( new URL( href, window.location.href ).searchParams.get( 'action' ) ) {
+				return false;
+			}
+		} catch ( error ) {
+			return false;
+		}
+
+		return captured.some( function ( candidate ) {
+			return candidate && samePage( href, candidate );
+		} );
+	}
+
+	/**
+	 * Open the dialog for a captured link, keeping whatever it asked for.
+	 *
+	 * A link that says "sign in and come back to the cart" carries a
+	 * `redirect_to`, and that has to keep meaning what it said.
+	 */
+	function openFor( link ) {
+		var step = '';
+		var redirect = '';
+
+		try {
+			var url = new URL( link.href, window.location.href );
+
+			step = resolve( url.searchParams.get( data.param || 'smart_login_step' ) );
+			redirect = url.searchParams.get( 'redirect_to' ) || '';
+		} catch ( error ) {
+			step = '';
+		}
+
+		return loadDialog().then( function () {
+			if ( window.SmartLoginDialogApi ) {
+				window.SmartLoginDialogApi.open( step || resolve( 'login' ), redirect );
+			}
+		} );
 	}
 
 	function onHashChange() {

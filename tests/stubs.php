@@ -276,6 +276,18 @@ function get_bloginfo( $key ) {
 	return 'Cửa hàng Demo';
 }
 
+/*
+ * Added in 19.8. The dialog's captured-link list names WordPress's own sign-in
+ * URL, and without this the list came out empty in-process — which reads as
+ * "capture is off" rather than "the stub is missing". A rule that cannot tell
+ * those apart is the kind that gets believed.
+ */
+function wp_login_url( $redirect = '' ) {
+	$url = 'https://example.test/wp-login.php';
+
+	return '' === $redirect ? $url : $url . '?redirect_to=' . rawurlencode( $redirect );
+}
+
 function home_url( $path = '/' ) {
 	return 'https://example.test' . $path;
 }

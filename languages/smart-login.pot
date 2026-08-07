@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-07 14:34+0000\n"
+"POT-Creation-Date: 2026-08-07 14:48+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -51,7 +51,7 @@ msgid "%s hoặc mật khẩu không đúng."
 msgstr ""
 
 #. translators: %s: identifier label, e.g. "Số điện thoại".
-#: includes/Auth/class-flow-engine.php:194
+#: includes/Auth/class-flow-engine.php:211
 #: includes/Auth/class-register-handler.php:420
 msgid "%s không hợp lệ."
 msgstr ""
@@ -137,7 +137,7 @@ msgstr ""
 msgid "Bạn có thể cấu hình trực tiếp tại đây. Client secret được <strong>mã hóa trước khi lưu</strong> và không bao giờ hiển thị lại. Nếu website đã khai báo credentials trong <code>wp-config.php</code> hoặc biến môi trường, cấu hình triển khai đó sẽ được ưu tiên."
 msgstr ""
 
-#: templates/onboarding.php:167
+#: templates/onboarding.php:175
 msgid "Bạn có thể thêm email trong trang hồ sơ bất cứ lúc nào — việc này cần một mã xác thực riêng nên không nằm ở đây."
 msgstr ""
 
@@ -177,7 +177,7 @@ msgid "Bạn đã nhập sai quá số lần cho phép. Vui lòng yêu cầu mã
 msgstr ""
 
 #. translators: %s: site name.
-#: templates/onboarding.php:54
+#: templates/onboarding.php:62
 #: templates/registered-success.php:29
 msgid "Bạn đã trở thành hội viên của %s!"
 msgstr ""
@@ -243,7 +243,7 @@ msgstr ""
 msgid "Bắt kiểu tấn công rải mật khẩu: thử một mật khẩu phổ biến trên hàng nghìn tài khoản. Khoá theo tài khoản không thấy được kiểu này vì mỗi tài khoản chỉ sai một lần. Để rộng rãi — văn phòng, trường học và mạng di động dồn nhiều người thật vào một IP. Đặt 0 để bỏ giới hạn."
 msgstr ""
 
-#: templates/onboarding.php:65
+#: templates/onboarding.php:73
 msgid "Bắt đầu khám phá"
 msgstr ""
 
@@ -310,11 +310,11 @@ msgid "Chi tiết"
 msgstr ""
 
 #. translators: %s: the member's first name.
-#: templates/onboarding.php:74
+#: templates/onboarding.php:82
 msgid "Chào %s! Thêm chút thông tin nữa để nhận đầy đủ ưu đãi hội viên — hoặc để sau cũng được."
 msgstr ""
 
-#: includes/Frontend/class-fragment-renderer.php:149
+#: includes/Frontend/class-fragment-renderer.php:168
 msgid "Chào mừng bạn"
 msgstr ""
 
@@ -965,7 +965,7 @@ msgstr ""
 msgid "Hoàn thiện %1$d/%2$d"
 msgstr ""
 
-#: templates/onboarding.php:155
+#: templates/onboarding.php:163
 msgid "Hoàn tất"
 msgstr ""
 
@@ -1028,7 +1028,7 @@ msgstr ""
 msgid "Hồ sơ của bạn đã đầy đủ. Bạn có thể tiếp tục sử dụng hệ thống."
 msgstr ""
 
-#: templates/onboarding.php:63
+#: templates/onboarding.php:71
 msgid "Hồ sơ của bạn đã đầy đủ. Không còn gì phải điền cả."
 msgstr ""
 
@@ -1073,7 +1073,7 @@ msgid "Khi nào hiện"
 msgstr ""
 
 #. translators: %s: linked terms and conditions label.
-#: templates/form-auth.php:172
+#: templates/form-auth.php:180
 msgid "Khi tiếp tục, bạn đồng ý với %s."
 msgstr ""
 
@@ -1089,7 +1089,7 @@ msgstr ""
 msgid "Khoảng thời gian của trần: giờ hoặc ngày"
 msgstr ""
 
-#: templates/onboarding.php:141
+#: templates/onboarding.php:149
 #: templates/partials/account/profile.php:67
 msgid "Khác"
 msgstr ""
@@ -1098,7 +1098,7 @@ msgstr ""
 msgid "Khóa xác thực của Google không hợp lệ."
 msgstr ""
 
-#: includes/Frontend/class-fragment-renderer.php:143
+#: includes/Frontend/class-fragment-renderer.php:162
 msgid "Khôi phục mật khẩu"
 msgstr ""
 
@@ -1195,8 +1195,8 @@ msgstr ""
 
 #: includes/Auth/class-account-provisioner.php:97
 #: includes/Auth/class-contact-verification-service.php:50
-#: includes/Auth/class-flow-engine.php:495
-#: includes/Auth/class-flow-engine.php:614
+#: includes/Auth/class-flow-engine.php:542
+#: includes/Auth/class-flow-engine.php:682
 #: includes/Auth/class-identity-link-service.php:174
 #: includes/Auth/class-password-reset-handler.php:104
 #: includes/Auth/class-password-reset-handler.php:142
@@ -1211,7 +1211,7 @@ msgstr ""
 msgid "Không tạo được mã xác thực. Vui lòng thử lại."
 msgstr ""
 
-#: includes/Frontend/class-login-dialog.php:132
+#: includes/Frontend/class-login-dialog.php:145
 msgid "Không tải được biểu mẫu. Vui lòng thử lại."
 msgstr ""
 
@@ -1529,7 +1529,7 @@ msgstr ""
 msgid "Mức hoàn thiện hồ sơ"
 msgstr ""
 
-#: templates/onboarding.php:140
+#: templates/onboarding.php:148
 #: templates/partials/account/profile.php:66
 msgid "Nam"
 msgstr ""
@@ -1580,11 +1580,11 @@ msgstr ""
 msgid "Nhập lại mật khẩu mới"
 msgstr ""
 
-#: includes/Frontend/class-fragment-renderer.php:139
+#: includes/Frontend/class-fragment-renderer.php:158
 msgid "Nhập mã xác thực"
 msgstr ""
 
-#: includes/Frontend/class-fragment-renderer.php:152
+#: includes/Frontend/class-fragment-renderer.php:171
 #: templates/form-password.php:24
 msgid "Nhập mật khẩu"
 msgstr ""
@@ -1651,7 +1651,7 @@ msgstr ""
 msgid "Nội dung email"
 msgstr ""
 
-#: templates/onboarding.php:139
+#: templates/onboarding.php:147
 #: templates/partials/account/profile.php:65
 msgid "Nữ"
 msgstr ""
@@ -1682,7 +1682,7 @@ msgstr ""
 msgid "Phiên làm việc đã hết hạn. Vui lòng tải lại trang."
 msgstr ""
 
-#: includes/Auth/class-flow-engine.php:449
+#: includes/Auth/class-flow-engine.php:493
 #: includes/Auth/class-password-reset-handler.php:136
 #: includes/Auth/class-register-handler.php:167
 #: includes/Auth/class-session-issuer.php:37
@@ -1700,8 +1700,8 @@ msgstr ""
 msgid "Phiên xác thực thông tin liên hệ không hợp lệ."
 msgstr ""
 
-#: includes/Auth/class-flow-engine.php:431
-#: includes/Auth/class-flow-engine.php:530
+#: includes/Auth/class-flow-engine.php:475
+#: includes/Auth/class-flow-engine.php:598
 #: includes/Frontend/class-rest-controller.php:585
 msgid "Phiên xác thực đã hết hạn. Vui lòng thực hiện lại."
 msgstr ""
@@ -1723,7 +1723,7 @@ msgstr ""
 msgid "Phiên đăng nhập nhà cung cấp đã hết hạn hoặc đã được sử dụng."
 msgstr ""
 
-#: includes/Auth/class-provider-auth-controller.php:75
+#: includes/Auth/class-provider-auth-controller.php:96
 msgid "Phiên đăng nhập đã hết hạn. Vui lòng thử lại."
 msgstr ""
 
@@ -1743,9 +1743,9 @@ msgstr ""
 msgid "Phương thức"
 msgstr ""
 
-#: includes/Auth/class-provider-auth-controller.php:91
-#: includes/Auth/class-provider-auth-controller.php:131
-#: includes/Auth/class-provider-auth-controller.php:186
+#: includes/Auth/class-provider-auth-controller.php:112
+#: includes/Auth/class-provider-auth-controller.php:152
+#: includes/Auth/class-provider-auth-controller.php:207
 msgid "Phương thức đăng nhập chưa sẵn sàng."
 msgstr ""
 
@@ -2005,7 +2005,7 @@ msgstr ""
 msgid "Thay thế form đăng nhập/đăng ký mặc định của WooCommerce"
 msgstr ""
 
-#: includes/Auth/class-flow-engine.php:644
+#: includes/Auth/class-flow-engine.php:712
 msgid "Thiết bị mới được phát hiện. Vui lòng nhập mã xác thực vừa gửi cho bạn."
 msgstr ""
 
@@ -2252,7 +2252,7 @@ msgstr ""
 msgid "Tạo OAuth Client trên Google Cloud"
 msgstr ""
 
-#: includes/Frontend/class-fragment-renderer.php:146
+#: includes/Frontend/class-fragment-renderer.php:165
 #: templates/form-auth.php:62
 msgid "Tạo tài khoản"
 msgstr ""
@@ -2331,7 +2331,7 @@ msgid "Vui lòng hoàn tất bước xác minh chống robot."
 msgstr ""
 
 #. translators: %s: identifier label, e.g. "số điện thoại".
-#: includes/Auth/class-flow-engine.php:166
+#: includes/Auth/class-flow-engine.php:183
 #: includes/Auth/class-password-reset-handler.php:47
 msgid "Vui lòng nhập %s."
 msgstr ""
@@ -2371,7 +2371,7 @@ msgstr ""
 msgid "Vui lòng nhập vào mã OTP đã được gửi đến số điện thoại %s"
 msgstr ""
 
-#: includes/Auth/class-flow-engine.php:583
+#: includes/Auth/class-flow-engine.php:651
 #: includes/Frontend/class-rest-controller.php:393
 msgid "Vui lòng nhập đầy đủ thông tin đăng nhập."
 msgstr ""
@@ -2553,7 +2553,7 @@ msgid "chưa liên kết"
 msgstr ""
 
 #. translators: %s: linked terms and conditions label.
-#: templates/form-auth.php:173
+#: templates/form-auth.php:181
 #: templates/form-signup.php:113
 msgid "các điều khoản áp dụng"
 msgstr ""
@@ -2562,7 +2562,7 @@ msgstr ""
 msgid "có hiệu lực ngay"
 msgstr ""
 
-#: templates/onboarding.php:126
+#: templates/onboarding.php:134
 #: templates/partials/account/profile.php:53
 msgid "dd/mm/yyyy"
 msgstr ""
@@ -2731,7 +2731,7 @@ msgstr ""
 msgid "Đã cấu hình · chưa bật"
 msgstr ""
 
-#: includes/Auth/class-flow-engine.php:549
+#: includes/Auth/class-flow-engine.php:617
 msgid "Đã gửi lại mã xác thực."
 msgstr ""
 
@@ -2773,7 +2773,7 @@ msgstr ""
 msgid "Đóng"
 msgstr ""
 
-#: templates/onboarding.php:49
+#: templates/onboarding.php:57
 msgid "ĐĂNG KÝ THÀNH CÔNG"
 msgstr ""
 
@@ -2801,12 +2801,12 @@ msgstr ""
 msgid "Đăng nhập bằng"
 msgstr ""
 
-#: includes/Frontend/class-fragment-renderer.php:155
+#: includes/Frontend/class-fragment-renderer.php:174
 #: templates/form-auth.php:63
 msgid "Đăng nhập hoặc đăng ký"
 msgstr ""
 
-#: includes/Auth/class-flow-engine.php:600
+#: includes/Auth/class-flow-engine.php:668
 #: includes/Frontend/class-rest-controller.php:451
 msgid "Đăng nhập không thành công."
 msgstr ""
@@ -2818,7 +2818,7 @@ msgstr ""
 msgid "Đăng nhập nhanh"
 msgstr ""
 
-#: includes/Auth/class-provider-auth-controller.php:142
+#: includes/Auth/class-provider-auth-controller.php:163
 msgid "Đăng nhập qua nhà cung cấp đã bị hủy."
 msgstr ""
 
@@ -2856,7 +2856,7 @@ msgstr ""
 msgid "Đặt lại mật khẩu"
 msgstr ""
 
-#: includes/Auth/class-flow-engine.php:713
+#: includes/Auth/class-flow-engine.php:778
 msgid "Đặt lại mật khẩu thành công. Vui lòng đăng nhập bằng mật khẩu mới."
 msgstr ""
 
@@ -2876,7 +2876,7 @@ msgstr ""
 msgid "Để nhận ưu đãi vào dịp sinh nhật"
 msgstr ""
 
-#: templates/onboarding.php:158
+#: templates/onboarding.php:166
 msgid "Để sau"
 msgstr ""
 

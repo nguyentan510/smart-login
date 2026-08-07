@@ -594,4 +594,71 @@ sl_assert(
 	'PostAuthRedirector and Shortcodes::is_welcome_request() already use it.'
 );
 
+// ---------------------------------------------------------------------------
+sl_section( 'Rule 13 — capture is bounded, and reversible (19.8)' );
+// ---------------------------------------------------------------------------
+
+/*
+ * Capture defaults on, which is only defensible because it cannot strand
+ * anybody: clicks are intercepted and `href` is never touched, so a blocked
+ * script leaves every captured link exactly as its author wrote it. Rule 10
+ * asserts that half.
+ *
+ * This rule asserts the other half — that the list is *named*, not guessed, and
+ * that switching it off restores today's behaviour exactly.
+ */
+$sl_dialog_php = $sl_file( 'includes/Frontend/class-login-dialog.php' );
+$sl_launcher_js = $sl_file( 'assets/js/smart-login-launcher.js' );
+
+sl_assert(
+	'the captured list is resolved in PHP, not guessed in JavaScript',
+	false !== strpos( $sl_dialog_php, 'captured_urls' )
+		&& false !== strpos( $sl_launcher_js, 'data.captured' ),
+	'A URL the plugin cannot name is a URL it must not claim.'
+);
+
+sl_assert(
+	'nothing matches on link text',
+	! preg_match( '/textContent|innerText/', $sl_launcher_js ),
+	'A heuristic over link text fires on an article about signing in. Named URLs only — that is the sub-phase\'s Not-in-scope line.'
+);
+
+sl_assert(
+	'a wp-login.php action is refused',
+	false !== strpos( $sl_launcher_js, "searchParams.get( 'action' )" ),
+	'wp-login.php?action=logout is not a sign-in, and capturing it traps somebody trying to leave.'
+);
+
+sl_assert(
+	'an opt-out attribute is honoured',
+	false !== strpos( $sl_launcher_js, 'data-no-smart-login' ),
+	'One attribute has to be enough for a site that wants one link left alone.'
+);
+
+/*
+ * And the off switch, driven rather than read. `smart_login_capture_links`
+ * returning an empty array must leave the launcher with nothing to match, which
+ * is what "restores today's behaviour exactly" means.
+ */
+add_filter(
+	'smart_login_capture_links',
+	static function (): array {
+		return array();
+	}
+);
+
+sl_check(
+	'the filter switches capture off entirely',
+	array(),
+	\SmartLogin\Frontend\LoginDialog::captured_urls()
+);
+
+remove_all_filters( 'smart_login_capture_links' );
+
+sl_assert(
+	'and the list is non-empty by default',
+	array() !== \SmartLogin\Frontend\LoginDialog::captured_urls(),
+	'A capture that is off by default is a feature nobody receives, which was the alternative this declined.'
+);
+
 sl_summary( 'Sign-in anywhere' );

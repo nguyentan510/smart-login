@@ -128,12 +128,22 @@
 			} );
 	}
 
+	/**
+	 * Where the visitor should end up once they are signed in.
+	 *
+	 * Defaults to the page they are on, which is the whole point of the dialog.
+	 * A captured link may override it — "sign in and come back to the cart" has
+	 * to keep meaning that — and the server validates either way, so an off-site
+	 * value cannot survive.
+	 */
+	var destination = '';
+
 	function load( step ) {
 		var url = new URL( data.endpoint );
 
 		url.searchParams.set( 'step', step );
 		url.searchParams.set( 'page', here() );
-		url.searchParams.set( 'redirect_to', here() );
+		url.searchParams.set( 'redirect_to', destination || here() );
 
 		return request( { url: url.toString(), init: { credentials: 'same-origin' } } );
 	}
@@ -173,7 +183,7 @@
 		// lead — and appending a second entry would silently win, because PHP
 		// keeps the last value for a repeated key.
 		if ( ! payload.get( 'redirect_to' ) ) {
-			payload.append( 'redirect_to', here() );
+			payload.append( 'redirect_to', destination || here() );
 		}
 
 		request( {
@@ -182,10 +192,12 @@
 		} );
 	}
 
-	function open( step ) {
+	function open( step, redirectTo ) {
 		if ( dialog.open ) {
 			return;
 		}
+
+		destination = redirectTo || '';
 
 		opener = document.activeElement;
 		document.documentElement.style.overflow = 'hidden';
