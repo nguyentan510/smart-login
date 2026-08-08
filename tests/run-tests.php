@@ -1373,14 +1373,29 @@ check( 'signup step does not collect referral code', false, false !== strpos( $s
  * step for the same request to render.
  */
 /*
- * Repointed in 19.1. `after_registration()` was a one-line wrapper around the
- * redirect; when the state machine moved into FlowEngine the two callers came
- * with it and now end in `->go( $this->welcome_url() )` directly.
+ * Repointed in 19.1, and again after 19.5.
  *
- * The rule is not about that method's name, it is about the two places a
- * registration can finish, so it now reads both of them. That is stricter than
- * before: previously one wrapper was inspected and the callers were trusted to
- * use it.
+ * 19.1 read the two finishers directly, because `after_registration()` had been
+ * a one-line wrapper and the state machine had just absorbed it. 19.5 gave the
+ * wrapper a reason to exist again: a dialog has somewhere to put the welcome
+ * screen without navigating, so the ending is now a decision — redirect when the
+ * flow is page-hosted, render when it is in place — and a decision belongs in one
+ * method. Reading the callers for a literal `->go()` then failed two required
+ * checks against code that had moved to a better shape, which is the failure mode
+ * `tests/delivery/run-routing-tests.php:190-196` writes down at length.
+ *
+ * So the rule follows the ownership instead of the text. Three properties, and
+ * between them they still forbid exactly what the hazard above describes:
+ *
+ *   1. neither finisher decides the ending itself — both hand it to one method
+ *   2. neither finisher renders the welcome screen inline
+ *   3. that one method still redirects on the page-hosted path
+ *
+ * The in-place branch is allowed to render, and only because the fragment is
+ * fetched by a *fresh request* that already carries the auth cookie — the
+ * argument is in `after_registration()`'s own docblock, next to the code it
+ * excuses. Deleting the `! $this->in_place` guard fails property 3, which is how
+ * this rule was shown to still bite.
  */
 $flow_engine = file_get_contents( dirname( __DIR__ ) . '/includes/Auth/class-flow-engine.php' );
 
@@ -1389,9 +1404,17 @@ foreach ( array( 'signup', 'finish_registration' ) as $finisher ) {
 	$finisher_src = $matched[0] ?? '';
 
 	check( $finisher . '() was located', true, '' !== $finisher_src );
-	check( $finisher . '() redirects rather than rendering in the POST response', true, false !== strpos( $finisher_src, '->go( $this->welcome_url() )' ) );
+	check( $finisher . '() hands the ending to after_registration()', true, false !== strpos( $finisher_src, 'after_registration(' ) );
+	check( $finisher . '() does not decide the ending itself', false, false !== strpos( $finisher_src, 'welcome_url()' ) );
 	check( $finisher . '() does not render the welcome screen inline', false, false !== strpos( $finisher_src, 'STEP_ONBOARD' ) );
 }
+
+preg_match( '/function after_registration\(.*?\n\t\}/s', $flow_engine, $matched );
+$after_registration_src = $matched[0] ?? '';
+
+check( 'after_registration() was located', true, '' !== $after_registration_src );
+check( 'the page-hosted ending is still a redirect', true, false !== strpos( $after_registration_src, '->go( $this->welcome_url() )' ) );
+check( 'the redirect is skipped only for an in-place flow', true, 1 === preg_match( '/if \(\s*!\s*\$this->in_place\s*\)/', $after_registration_src ) );
 
 check( 'onboarding always offers a way out', true, false !== strpos( $onboard_template, 'name="sl_skip"' ) );
 check( 'onboarding never asks for a password', false, false !== strpos( $onboard_template, 'partials/password-field' ) );
