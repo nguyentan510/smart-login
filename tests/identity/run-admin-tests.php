@@ -206,26 +206,28 @@ sl_check(
 );
 
 /*
- * 10.5. The two cases above stay exactly as they were — they still describe
- * valid configurations — and these extend them to the one 10.1 made possible:
- * a channel whose route points somewhere other than its built-in transport.
+ * 10.5, repointed by 20.1. The scenario was "a channel whose route points
+ * somewhere other than its built-in transport", which the routing table made
+ * possible and 20.1 made unrepresentable. The property underneath it did not go
+ * anywhere: a channel whose transport cannot send must be reported as blocking,
+ * and the report must name what is actually wrong.
  *
- * Before 10.5 this check constructed WebhookTransport and MailTransport
- * directly, so it answered about transports the site might not be using. Here
- * the SMS gateway is configured and healthy, and the site is still broken.
+ * The modern spelling of the same broken site is a provider the channel cannot
+ * use. The SMS channel is on, a gateway URL is saved and healthy, and the signed
+ * provider is selected with no endpoint — so the saved gateway is irrelevant and
+ * nothing can be delivered.
  */
 Settings::update(
 	array(
-		'identity.mode'        => 'both',
-		'sms.enabled'          => 1,
-		'sms.url'              => 'https://gateway.example.test/send',
-		'email.enabled'        => 1,
-		'delivery.route_phone' => 'automation',
-		'delivery.route_email' => 'email',
-		'automation.url'       => '',
+		'identity.mode'  => 'both',
+		'sms.enabled'    => 1,
+		'sms.url'        => 'https://gateway.example.test/send',
+		'sms.preset'     => 'signed',
+		'sms.signed_url' => '',
+		'email.enabled'  => 1,
 	)
 );
-Settings::store_secret( 'automation.secret', '' );
+Settings::store_secret( 'sms.signed_secret', '' );
 
 $routed = null;
 
@@ -242,13 +244,13 @@ sl_check(
 );
 
 sl_assert(
-	'and the detail names the routed transport, not the built-in one',
-	false !== strpos( (string) ( $routed['detail'] ?? '' ), 'automation' ),
-	'"Chưa cấu hình: SMS" would send the administrator to gateway settings that are already correct. Detail was: ' . ( $routed['detail'] ?? '' )
+	'and the detail names the channel that cannot deliver',
+	false !== strpos( (string) ( $routed['detail'] ?? '' ), 'sms' ),
+	'A report that does not name the failing channel sends the administrator hunting. Detail was: ' . ( $routed['detail'] ?? '' )
 );
 
-Settings::update( array( 'automation.url' => 'https://hooks.example.test/otp' ) );
-Settings::store_secret( 'automation.secret', 'admin-suite-signing-secret' );
+Settings::update( array( 'sms.signed_url' => 'https://hooks.example.test/otp' ) );
+Settings::store_secret( 'sms.signed_secret', 'admin-suite-signing-secret' );
 
 $routed_after = null;
 
@@ -259,7 +261,7 @@ foreach ( ( new \SmartLogin\Admin\Readiness() )->checks() as $check ) {
 }
 
 sl_assert(
-	'configuring the routed transport clears it',
+	'configuring the provider clears it',
 	\SmartLogin\Admin\Readiness::FAIL !== ( $routed_after['status'] ?? 'missing' ),
 	'Still blocking after the endpoint was configured: ' . ( $routed_after['detail'] ?? '' )
 );

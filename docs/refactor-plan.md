@@ -2391,10 +2391,15 @@ halves were reasonable readings. Together they delivered nothing.
       `security.captcha_provider`, which the spec had missed and 20.5 now owns.
       Rule 15's intersection is exactly `AutomationEndpoint`'s four settings, so
       20.2 removes it in one move and only two of them travel in 20.3
-- [ ] **20.1** The routing table goes away. `delivery.route_phone` and
-      `delivery.route_email` deleted; the identity channel decides the transport.
-      `channel_for()` untouched — it answers a property of the identifier and was
-      never what 10.1 changed
+- [x] **20.1** [The routing table goes
+      away](sending-a-code/20.1-the-routing-table-goes-away.md) — both settings
+      deleted, `ROUTES` becomes the `CHANNEL_TRANSPORT` constant,
+      `AutomationTransport` deleted outright because Rule 15's companion would
+      otherwise hold that rule red for ever. `channel_for()` untouched. Three
+      **rules** turned out to be consumers too and none was removed quietly:
+      10.1's own two assertions and Rule 5 retired with their reasons, 10.5's
+      readiness scenario repointed at the modern spelling of the same broken
+      site. **Rules 14 and 15 green; Delivery routing 72/0/0**
 - [x] **20.2** [The signed envelope becomes a
       provider](sending-a-code/20.2-the-signed-provider.md), **not a preset** —
       D2 was rewritten before any code moved. Reading `EnvelopeSigner` first

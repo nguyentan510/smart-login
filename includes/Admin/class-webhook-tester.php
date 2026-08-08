@@ -13,7 +13,7 @@ namespace SmartLogin\Admin;
 
 use SmartLogin\Identity\Channels\MailChannel;
 use SmartLogin\Identity\Phone;
-use SmartLogin\OTP\Transports\AutomationTransport;
+use SmartLogin\OTP\Transports\AutomationEndpoint;
 use SmartLogin\OTP\Transports\MailTransport;
 use SmartLogin\OTP\Transports\TransportRouter;
 use SmartLogin\OTP\Transports\WebhookTransport;
@@ -63,52 +63,60 @@ class WebhookTester {
 		}
 
 		if ( 'automation' === $transport ) {
-			$this->test_automation( $destination, $code, $ctx );
+			$this->test_automation();
 		}
 
 		$this->test_webhook( $destination, $code, $ctx );
 	}
 
 	/**
-	 * Post a signed envelope, whatever the routing table currently says.
+	 * Post one signed ping so an operator can see the endpoint answer.
 	 *
-	 * Deliberately independent of the route: an operator checking whether an
-	 * endpoint has come back should not have to point a live channel at it first.
-	 * Like the other two testers this calls the transport directly, so the
-	 * circuit breaker in TransportRouter does not stand in the way — which is the
-	 * whole reason the button is usable while the breaker is open.
+	 * Until 20.1 this sent an OTP envelope, because the endpoint could be a
+	 * transport. It cannot any more — a code that leaves the site now leaves it
+	 * through the SMS channel's signed provider, and *that* is what the SMS
+	 * screen's own test button exercises. What is left here is the bus, so this
+	 * sends what the bus sends: an event, carrying no code.
+	 *
+	 * Blocking, unlike a real bus dispatch. A fire-and-forget test tells the
+	 * operator nothing, which is the one thing a test button may not do.
+	 *
+	 * Takes no destination and no code, and that is the visible shape of the
+	 * change: this endpoint has nothing to deliver to anybody any more.
 	 */
-	private function test_automation( string $destination, string $code, array $ctx ): void {
-		$transport = new AutomationTransport();
+	private function test_automation(): void {
+		$endpoint = new AutomationEndpoint();
 
-		if ( ! $transport->is_available() ) {
+		if ( ! $endpoint->is_configured() ) {
 			wp_send_json_error(
-				array( 'message' => __( 'Endpoint automation chưa có URL hoặc chưa có khoá ký. Hãy lưu cấu hình trước.', 'smart-login' ) )
+				array( 'message' => __( 'Endpoint chưa có URL hoặc chưa có khoá ký. Hãy lưu cấu hình trước.', 'smart-login' ) )
 			);
 		}
 
-		// A phone number is normalised so the envelope carries the same shape a
-		// real send would; an email address is passed through untouched. Which
-		// one this is comes from the routing authority, not from a seventh copy
-		// of the `@` test — the guard rail caught that on the first run.
-		$canonical = MailChannel::ID === TransportRouter::channel_for( $destination )
-			? $destination
-			: Phone::normalize( $destination );
+		$response = $endpoint->post(
+			AutomationEndpoint::base_envelope( 'test.ping', bin2hex( random_bytes( 16 ) ) ),
+			true
+		);
 
-		if ( '' === $canonical ) {
-			wp_send_json_error( array( 'message' => __( 'Số điện thoại không hợp lệ.', 'smart-login' ) ) );
-		}
-
-		$result = $transport->send( $canonical, $code, $ctx );
-
-		if ( is_wp_error( $result ) ) {
-			$data = (array) $result->get_error_data();
-
+		if ( is_wp_error( $response ) ) {
 			wp_send_json_error(
 				array(
-					'message'  => $result->get_error_message(),
-					'status'   => $data['status'] ?? 0,
-					'response' => $data['detail'] ?? '',
+					'message'  => $response->get_error_message(),
+					'status'   => 0,
+					'response' => '',
+				)
+			);
+		}
+
+		$status = (int) wp_remote_retrieve_response_code( $response );
+
+		if ( $status < 200 || $status >= 300 ) {
+			wp_send_json_error(
+				array(
+					/* translators: %d: HTTP status code. */
+					'message'  => sprintf( __( 'Endpoint trả về HTTP %d.', 'smart-login' ), $status ),
+					'status'   => $status,
+					'response' => substr( (string) wp_remote_retrieve_body( $response ), 0, 500 ),
 				)
 			);
 		}
@@ -116,7 +124,7 @@ class WebhookTester {
 		wp_send_json_success(
 			array(
 				'ok'      => true,
-				'message' => __( 'Endpoint đã nhận gói tin đã ký. Kiểm tra phía automation để xác nhận chữ ký khớp.', 'smart-login' ),
+				'message' => __( 'Endpoint đã nhận gói tin đã ký. Kiểm tra phía nhận để xác nhận chữ ký khớp.', 'smart-login' ),
 			)
 		);
 	}

@@ -26,7 +26,7 @@ require __DIR__ . '/../harness.php';
 use SmartLogin\FieldRegistry;
 use SmartLogin\OTP\OtpRepository;
 use SmartLogin\OTP\OtpService;
-use SmartLogin\OTP\Transports\AutomationTransport;
+use SmartLogin\OTP\Transports\AutomationEndpoint;
 use SmartLogin\OTP\Transports\EnvelopeSigner;
 use SmartLogin\OTP\Transports\EventBus;
 use SmartLogin\OTP\Transports\TransportInterface;
@@ -233,33 +233,16 @@ $sl_routing_router = new TransportRouter(
 	)
 );
 
-sl_check(
-	'a phone destination follows the routing table',
-	'automation',
-	( static function () use ( $sl_routing_router ): string {
-		Settings::update( array( 'delivery.route_phone' => 'automation' ) );
-		$answer = $sl_routing_router->transport_for( '84969789475' );
-		Settings::update( array( 'delivery.route_phone' => 'sms' ) );
-
-		return $answer;
-	} )()
-);
-
-sl_check(
-	'an email destination follows the routing table',
-	'automation',
-	( static function () use ( $sl_routing_router ): string {
-		Settings::update( array( 'delivery.route_email' => 'automation' ) );
-		$answer = $sl_routing_router->transport_for( 'ban@example.com' );
-		Settings::update( array( 'delivery.route_email' => 'email' ) );
-
-		return $answer;
-	} )()
-);
-
-// The defaults must reproduce what the '@' test used to answer, byte for byte.
-// This is the whole no-migration argument, so it is asserted directly rather
-// than inferred from the suites staying green.
+/*
+ * 10.1's two assertions here required a stored setting to move the answer. 20.1
+ * reversed that decision — the argument is D1 in docs/sending-a-code.md — and
+ * Rule 14 below now asserts the opposite property, behaviourally: no stored
+ * value may move it. They are not both keepable, and the newer one is the one an
+ * administrator walked into.
+ *
+ * What survives unchanged is the pair underneath, which never depended on the
+ * table: the channel decides, and it decides the same way it did before 10.1.
+ */
 sl_check( 'a phone number defaults to the SMS gateway', 'sms', $sl_routing_router->transport_for( '84969789475' ) );
 sl_check( 'an email address defaults to wp_mail()', 'email', $sl_routing_router->transport_for( 'ban@example.com' ) );
 
@@ -439,32 +422,31 @@ sl_forbid_pattern(
 	'An unsigned request carrying an OTP is the failure mode HMAC exists to prevent.'
 );
 
-Settings::update(
-	array(
-		'automation.url'     => 'https://hooks.example.com/otp',
-		'delivery.route_phone' => 'automation',
-	)
-);
+Settings::update( array( 'automation.url' => 'https://hooks.example.com/otp' ) );
 Settings::store_secret( 'automation.secret', 'shared-signing-secret' );
 
-$sl_automation                 = new SmartLogin\OTP\Transports\AutomationTransport();
+/*
+ * Driven through the endpoint rather than through a transport since 20.1. The
+ * OTP half of this endpoint retired into the signed SMS provider, where Rule 18
+ * asserts the same property over the bytes that provider transmits. What is left
+ * here is the bus, and the bus signs through exactly this call.
+ */
+$sl_endpoint                   = new AutomationEndpoint();
 $GLOBALS['sl_http_requests']   = array();
 $GLOBALS['sl_http_response']   = array(
 	'response' => array( 'code' => 200 ),
 	'body'     => '{"ok":true}',
 );
 
-$sl_sent = $sl_automation->send(
-	'84969789475',
-	'482913',
-	array(
-		'intent'      => 'login',
-		'ttl_seconds' => 300,
-		'expires_ts'  => 1754136300,
-	)
+$sl_sent = $sl_endpoint->post(
+	AutomationEndpoint::base_envelope( 'otp.send', 'fixed-delivery-id' ) + array(
+		'channel' => 'phone',
+		'code'    => '482913',
+	),
+	true
 );
 
-sl_assert( 'the automation transport delivers on a 2xx', true === $sl_sent, 'Expected true, got a WP_Error.' );
+sl_assert( 'the endpoint delivers on a 2xx', ! is_wp_error( $sl_sent ), 'Expected a response, got a WP_Error.' );
 
 $sl_request = $GLOBALS['sl_http_requests'][0] ?? array();
 $sl_body    = (string) ( $sl_request['args']['body'] ?? '' );
@@ -499,46 +481,31 @@ sl_check(
 // Without a secret there is no signature, so the endpoint would receive live
 // codes it cannot authenticate. That configuration is not offered.
 Settings::store_secret( 'automation.secret', '' );
-sl_check( 'no secret means the transport is not available', false, $sl_automation->is_available() );
+sl_check( 'no secret means the endpoint is not configured', false, $sl_endpoint->is_configured() );
 Settings::store_secret( 'automation.secret', 'shared-signing-secret' );
 
 unset( $GLOBALS['sl_http_response'] );
 
 // =====================================================================
-sl_section( 'Rule 5 — the routing table cannot dangle (10.1)' );
+sl_section( 'Rule 5 — retired by 20.1' );
 
-$sl_route_fields = array_filter(
-	FieldRegistry::all(),
-	static fn( string $path ): bool => 0 === strpos( $path, 'delivery.route_' ),
-	ARRAY_FILTER_USE_KEY
-);
-
-if ( array() === $sl_route_fields ) {
-	// Deliberately not a pass. With no route fields declared the loop below has
-	// nothing to iterate, and a rule that passes because its subject is absent
-	// reports the opposite of the truth.
-	sl_pending(
-		'every routing choice names a transport the router can resolve',
-		'delivery.route_phone / delivery.route_email — 10.1'
-	);
-} else {
-	$sl_router  = new TransportRouter();
-	$sl_dangled = array();
-
-	foreach ( $sl_route_fields as $sl_path => $sl_field ) {
-		foreach ( array_keys( (array) ( $sl_field['choices'] ?? array() ) ) as $sl_choice ) {
-			if ( ! $sl_router->get( (string) $sl_choice ) ) {
-				$sl_dangled[] = $sl_path . ' → ' . $sl_choice;
-			}
-		}
-	}
-
-	sl_assert(
-		'every routing choice names a transport the router can resolve',
-		array() === $sl_dangled,
-		'A choice the router cannot resolve fails closed at send time with nothing on screen to explain it: ' . implode( ', ', $sl_dangled )
-	);
-}
+/*
+ * 10.1 asked whether every choice in `delivery.route_phone` and
+ * `delivery.route_email` named a transport the router could resolve, and it
+ * reported PENDING rather than passing when the fields were absent — because a
+ * rule that passes for want of a subject reports the opposite of the truth.
+ *
+ * 20.1 removed the subject deliberately. The successor is Rule 14, and it holds
+ * a strictly stronger property: not "every routing choice resolves" but "no
+ * setting names a transport at all", which makes a dangling choice
+ * unrepresentable instead of merely absent. Leaving this rule here would report
+ * PENDING for ever against a table that is never coming back.
+ *
+ * Retired rather than deleted silently, because a rule that vanishes from a
+ * suite with no note is indistinguishable from one somebody quietly removed to
+ * get a green run.
+ */
+sl_note( 'superseded by Rule 14 — no setting names a transport (20.1)' );
 
 // =====================================================================
 sl_section( 'Rule 6 — a failing bus never reaches the OTP path (10.4)' );
@@ -577,7 +544,7 @@ sl_check( 'and the OTP row survives', 1, count( $sl_bus_repo->live_rows() ) );
 // because the behaviour only diverges on the day it matters.
 sl_assert(
 	'the bus breaker and the transport breaker are separate keys',
-	EventBus::BREAKER_ID !== ( new AutomationTransport() )->id(),
+	EventBus::BREAKER_ID !== ( new WebhookTransport() )->id(),
 	'Sharing a breaker would let a dead bus endpoint open the circuit that OTP delivery consults.'
 );
 
@@ -698,13 +665,14 @@ $sl_unconfigured = new TransportRouter(
 	array(
 		'sms'        => new SL_Fake_Transport( true ),
 		'email'      => new SL_Fake_Transport( true ),
-		'automation' => new SmartLogin\OTP\Transports\AutomationTransport(),
+		'automation' => new SL_Unconfigured_Transport( 'automation' ),
 	)
 );
 
-Settings::update( array( 'delivery.route_phone' => 'automation' ) );
-
-$sl_closed = $sl_unconfigured->send( '84969789475', '482913', array( 'intent' => 'login' ) );
+// Named on the context, because 20.1 removed the setting that used to name it.
+// The property under test never was the routing table — it is that a transport
+// which cannot send refuses, and says which one it was.
+$sl_closed = $sl_unconfigured->send( '84969789475', '482913', array( 'intent' => 'login', 'transport' => 'automation' ) );
 
 sl_assert(
 	'an unconfigured automation endpoint refuses rather than falling through',
@@ -742,9 +710,7 @@ $sl_third_party = new TransportRouter(
 	)
 );
 
-Settings::update( array( 'delivery.route_phone' => 'zns' ) );
-
-$sl_third_party_refusal = $sl_third_party->send( '84969789475', '482913', array( 'intent' => 'login' ) );
+$sl_third_party_refusal = $sl_third_party->send( '84969789475', '482913', array( 'intent' => 'login', 'transport' => 'zns' ) );
 
 sl_assert(
 	'a transport registered by a filter is not described as one of the built-ins',
@@ -825,10 +791,9 @@ sl_section( 'Rule 15 — the bus and the OTP path share no setting (20.2)' );
 $sl_otp_path_files = array(
 	'includes/OTP/Transports/class-webhook-transport.php',
 	'includes/OTP/Transports/class-mail-transport.php',
-	'includes/OTP/Transports/class-automation-transport.php',
-	// Reached by AutomationTransport, and the reason the two sets intersect.
-	// It leaves this list when the transport role retires in 20.2.
-	'includes/OTP/Transports/class-automation-endpoint.php',
+	// AutomationTransport and AutomationEndpoint left this list in 20.1, when
+	// the transport role retired into the signed provider. That is what empties
+	// the intersection; nothing about the bus's own settings changed.
 );
 
 $sl_bus_files = array(

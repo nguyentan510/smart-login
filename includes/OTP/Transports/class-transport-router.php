@@ -19,9 +19,8 @@ class TransportRouter {
 
 	public function __construct( ?array $transports = null ) {
 		$this->transports = $transports ?? array(
-			'sms'        => new WebhookTransport(),
-			'email'      => new MailTransport(),
-			'automation' => new AutomationTransport(),
+			'sms'   => new WebhookTransport(),
+			'email' => new MailTransport(),
 		);
 
 		/**
@@ -37,21 +36,23 @@ class TransportRouter {
 	}
 
 	/**
-	 * Which transport serves each identity channel, and what to fall back to.
+	 * Which transport serves each identity channel.
 	 *
-	 * The fallback is not redundant with the field defaults. A stored option can
-	 * name a transport that a filter used to register and no longer does, and
-	 * resolving to the built-in beats resolving to nothing at all.
+	 * A constant since 20.1, and the whole point of Phase 20. Between 10.1 and
+	 * here this was a pair of settings, so a site could point a channel at a
+	 * transport it had not configured — and the screen that offered the choice
+	 * said nothing about the cell where nothing gets delivered. An administrator
+	 * landed in it; see docs/sending-a-code.md.
+	 *
+	 * What replaced the flexibility is not less of it. The SMS transport speaks
+	 * four wire formats now, chosen by provider, one of them the signed envelope
+	 * the routing table used to exist to reach. The choice moved inside the
+	 * channel, where it is one question on one screen instead of two questions on
+	 * two.
 	 */
-	const ROUTES = array(
-		'phone' => array(
-			'setting'  => 'delivery.route_phone',
-			'fallback' => 'sms',
-		),
-		'email' => array(
-			'setting'  => 'delivery.route_email',
-			'fallback' => 'email',
-		),
+	const CHANNEL_TRANSPORT = array(
+		'phone' => 'sms',
+		'email' => 'email',
 	);
 
 	/**
@@ -69,18 +70,18 @@ class TransportRouter {
 	/**
 	 * Which transport carries a code to this destination.
 	 *
-	 * Until 10.1 this answered from the shape of the destination alone, so no
-	 * site could point a channel anywhere but the one built-in transport for it —
-	 * and `smart_login_otp_transports` could register transports that nothing
-	 * would ever route to. See docs/delivery-routing.md D1.
+	 * Reads no setting. 10.1 made this answer configurable and 20.1 took that
+	 * back, for the reason `CHANNEL_TRANSPORT` records — the configurability was
+	 * reachable through the provider list, and as a routing table it was mostly a
+	 * way to get it wrong.
+	 *
+	 * `smart_login_otp_transports` still works and still matters: a filter that
+	 * replaces `sms` or `email` is serving that channel, which is a substitution
+	 * rather than a route. What it can no longer do is register a transport that
+	 * nothing reaches.
 	 */
 	public function transport_for( string $destination ): string {
-		$route = self::ROUTES[ self::channel_for( $destination ) ];
-
-		// Read by variable, not by literal: the path is chosen by the channel.
-		$routed = (string) Settings::get( $route['setting'], '' );
-
-		return $this->get( $routed ) ? $routed : $route['fallback'];
+		return self::CHANNEL_TRANSPORT[ self::channel_for( $destination ) ];
 	}
 
 	/**

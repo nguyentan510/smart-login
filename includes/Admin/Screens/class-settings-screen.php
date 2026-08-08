@@ -232,30 +232,17 @@ final class SettingsScreen {
 	 * not enabled OTP delivery, and nothing else on the page would say so.
 	 */
 	private function automation_role(): void {
-		$routes = array();
-
-		foreach ( TransportRouter::ROUTES as $channel => $route ) {
-			if ( 'automation' === (string) Settings::get( $route['setting'], '' ) ) {
-				$routes[] = PhoneChannel::ID === $channel
-					? __( 'số điện thoại', 'smart-login' )
-					: __( 'email', 'smart-login' );
-			}
-		}
-
 		$events = count( EventBus::subscribed() );
 
-		if ( $routes ) {
+		if ( $events > 0 ) {
 			$message = sprintf(
-				/* translators: %s: comma-separated identity channels. */
-				__( 'Đang gửi mã xác thực cho: %s.', 'smart-login' ),
-				implode( ', ', $routes )
+				/* translators: %d: number of subscribed events. */
+				_n( 'Đang gửi %d loại sự kiện ra ngoài.', 'Đang gửi %d loại sự kiện ra ngoài.', $events, 'smart-login' ),
+				$events
 			);
 			$class = 'notice-success';
-		} elseif ( $events > 0 ) {
-			$message = __( 'Chỉ gửi sự kiện, không gửi mã xác thực. Để dùng làm kênh gửi mã, đổi Định tuyến ở tab Chính sách mã.', 'smart-login' );
-			$class   = 'notice-info';
 		} else {
-			$message = __( 'Chưa được dùng. Chọn sự kiện bên dưới, hoặc đổi Định tuyến ở tab Chính sách mã để kênh này gửi mã xác thực.', 'smart-login' );
+			$message = __( 'Chưa được dùng. Chọn sự kiện bên dưới để website gửi thông báo ra ngoài. Endpoint này không gửi mã xác thực — mã xác thực đi qua tab Kênh SMS và Kênh Email.', 'smart-login' );
 			$class   = 'notice-info';
 		}
 

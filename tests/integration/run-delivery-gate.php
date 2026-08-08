@@ -103,7 +103,6 @@ require_once ABSPATH . 'wp-admin/includes/template.php';
 \SmartLogin\Installer::maybe_upgrade();
 
 use SmartLogin\FieldRegistry;
-use SmartLogin\OTP\Transports\AutomationTransport;
 use SmartLogin\OTP\Transports\EnvelopeSigner;
 use SmartLogin\OTP\Transports\TransportRouter;
 use SmartLogin\OTP\Transports\WebhookTransport;
@@ -217,7 +216,7 @@ add_filter(
 	3
 );
 
-$sent = ( new AutomationTransport() )->send(
+$sent = ( new WebhookTransport() )->send(
 	'84969789475',
 	'482913',
 	array(
