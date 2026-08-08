@@ -2298,7 +2298,10 @@ is what landing them red is for.
 
 **The coding-standards baseline was stale.** Documented as `18 ERRORS AND 20
 WARNINGS ... IN 16 FILES`; `main` re-measured with a cleared `.phpcs-cache`
-gives **23 / 25 / 19**, and this branch gives **21 / 20 / 16**. The first
+gives **23 / 25 / 19**, and this branch gave **21 / 20 / 16** — and **21 / 17 /
+15** from 20.4 onward, where `phpcbf` cleared three long-standing alignment
+warnings in `class-field-registry.php` while fixing alignment 20.4 had disturbed,
+taking that file off the report entirely. The first
 attempt at that comparison was wrong because the cache was serving the previous
 tree — *two runs are not a comparison*, and this is the phase that had to prove
 it on itself.
@@ -2419,10 +2422,15 @@ halves were reasonable readings. Together they delivered nothing.
       reporting install is in, which the brief missed and which the first
       implementation would have "migrated" straight over a configured gateway.
       Idempotence asserted, not assumed. **Delivery routing 72/3**
-- [ ] **20.4** The bus becomes the top-level tab **Thông báo & Tích hợp**, off by
-      default. Not under Gửi mã because it delivers nothing to a visitor; not
-      called Automation because that named a platform rather than a behaviour,
-      and the behaviour is one-directional
+- [x] **20.4** [The bus gets its own
+      tab](sending-a-code/20.4-the-bus-gets-its-own-tab.md) — top-level **Thông
+      báo & Tích hợp**, and the slug goes with it: `delivery-automation` asserted
+      the association 20.1 removed and was visible in the address bar. Aliased so
+      a bookmark still lands right. No `automation.enabled` flag — a fresh
+      install subscribes to nothing and configures nothing, so a toggle would be
+      a fourth way for the screen to disagree with itself. A **test fixture**
+      turned out to depend on the hierarchy and was repointed.
+      **phpcs baseline moves to 21 / 17 / 15** — see below
 - [ ] **20.5** One word, one meaning — the D4 table applied across labels, help
       text and the README. "Webhook" reserved for the event tab; "API" only
       inside the custom gateway's advanced fields

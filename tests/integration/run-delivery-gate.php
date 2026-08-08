@@ -299,7 +299,7 @@ if ( ! class_exists( 'SmartLogin\\Admin\\Screens\\SettingsScreen' ) ) {
 		$missing = array();
 		$secret_leaked = false;
 
-		foreach ( array( 'delivery', 'delivery-sms', 'delivery-email', 'delivery-mail', 'delivery-automation' ) as $slug ) {
+		foreach ( array( 'delivery', 'delivery-sms', 'delivery-email', 'delivery-mail' ) as $slug ) {
 			ob_start();
 
 			try {
@@ -345,12 +345,12 @@ if ( ! class_exists( 'SmartLogin\\Admin\\Screens\\SettingsScreen' ) ) {
 		// A second-level tab reachable from nowhere is a tab whose settings can
 		// only be saved by typing the URL.
 		ob_start();
-		\SmartLogin\Admin\SettingsPage::nav( 'delivery-automation' );
+		\SmartLogin\Admin\SettingsPage::nav( 'delivery-sms' );
 		$nav_html = (string) ob_get_clean();
 
 		$unreachable = array();
 
-		foreach ( array( 'delivery', 'delivery-sms', 'delivery-email', 'delivery-mail', 'delivery-automation' ) as $slug ) {
+		foreach ( array( 'delivery', 'delivery-sms', 'delivery-email', 'delivery-mail' ) as $slug ) {
 			if ( false === strpos( $nav_html, 'tab=' . $slug . '"' ) ) {
 				$unreachable[] = $slug;
 			}

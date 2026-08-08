@@ -193,6 +193,19 @@ class SettingsPage {
 	// -----------------------------------------------------------------
 
 	/**
+	 * Slugs that used to name a screen, and where they now point.
+	 *
+	 * `delivery-automation` asserted an association 20.1 removed, and the prefix
+	 * was visible — it is the `?tab=` value an administrator copies into a support
+	 * message. Renamed in 20.4, aliased here so a bookmark lands on the screen it
+	 * meant rather than on Overview, which would be a soft landing and a support
+	 * question.
+	 *
+	 * @var array<string,string>
+	 */
+	const RENAMED_TABS = array( 'delivery-automation' => 'integrations' );
+
+	/**
 	 * Overview is the default and the fallback. An unrecognised tab lands on the
 	 * screen that says what is wrong rather than on an arbitrary settings page.
 	 */
@@ -201,6 +214,7 @@ class SettingsPage {
 
 		// phpcs:ignore WordPress.Security.NonceVerification -- read-only tab switch.
 		$requested = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : '';
+		$requested = self::RENAMED_TABS[ $requested ] ?? $requested;
 
 		if ( isset( FieldRegistry::tabs()[ $requested ] ) ) {
 			( new SettingsScreen() )->render( $requested );

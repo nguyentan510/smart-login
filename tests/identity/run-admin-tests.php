@@ -610,13 +610,16 @@ sl_check( 'every tab is reachable from the navigation', array(), $unlinked );
 // produced four screens with no way between them.
 $sub = sl_capture(
 	static function (): void {
-		SettingsPage::nav( 'delivery-automation' );
+		// Any surviving child of the delivery family. 20.4 moved the automation
+		// screen out of it, so the fixture that used to stand here is now a
+		// top-level tab and would have proved the opposite of the rule.
+		SettingsPage::nav( 'delivery-sms' );
 	}
 );
 
 $siblings_missing = array();
 
-foreach ( array( 'delivery', 'delivery-sms', 'delivery-email' ) as $sibling ) {
+foreach ( array( 'delivery', 'delivery-email', 'delivery-mail' ) as $sibling ) {
 	if ( false === strpos( $sub['html'], 'tab=' . $sibling . '"' ) ) {
 		$siblings_missing[] = $sibling;
 	}

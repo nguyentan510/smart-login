@@ -42,16 +42,16 @@ final class FieldRegistry {
 	 */
 	public static function tabs(): array {
 		return array(
-			'auth'                => __( 'Đăng nhập & Đăng ký', 'smart-login' ),
-			'providers'           => __( 'Đăng nhập nhanh', 'smart-login' ),
-			'delivery'            => __( 'Gửi mã', 'smart-login' ),
-			'delivery-sms'        => __( 'Kênh SMS', 'smart-login' ),
-			'delivery-email'      => __( 'Kênh Email', 'smart-login' ),
-			'delivery-mail'       => __( 'Nội dung email', 'smart-login' ),
-			'delivery-automation' => __( 'Automation', 'smart-login' ),
-			'profile'             => __( 'Hồ sơ & Địa chỉ', 'smart-login' ),
-			'security'            => __( 'Chống lạm dụng', 'smart-login' ),
-			'advanced'            => __( 'Nâng cao', 'smart-login' ),
+			'auth'           => __( 'Đăng nhập & Đăng ký', 'smart-login' ),
+			'providers'      => __( 'Đăng nhập nhanh', 'smart-login' ),
+			'delivery'       => __( 'Gửi mã', 'smart-login' ),
+			'delivery-sms'   => __( 'Kênh SMS', 'smart-login' ),
+			'delivery-email' => __( 'Kênh Email', 'smart-login' ),
+			'delivery-mail'  => __( 'Nội dung email', 'smart-login' ),
+			'integrations'   => __( 'Thông báo & Tích hợp', 'smart-login' ),
+			'profile'        => __( 'Hồ sơ & Địa chỉ', 'smart-login' ),
+			'security'       => __( 'Chống lạm dụng', 'smart-login' ),
+			'advanced'       => __( 'Nâng cao', 'smart-login' ),
 		);
 	}
 
@@ -66,10 +66,9 @@ final class FieldRegistry {
 	 */
 	public static function tab_parents(): array {
 		return array(
-			'delivery-sms'        => 'delivery',
-			'delivery-email'      => 'delivery',
-			'delivery-mail'       => 'delivery',
-			'delivery-automation' => 'delivery',
+			'delivery-sms'   => 'delivery',
+			'delivery-email' => 'delivery',
+			'delivery-mail'  => 'delivery',
 		);
 	}
 
@@ -295,14 +294,14 @@ final class FieldRegistry {
 
 	private static function provider_fields(): array {
 		return array(
-			'providers.google.enabled'   => array(
+			'providers.google.enabled'        => array(
 				'type'    => 'checkbox',
 				'default' => 0,
 				'tab'     => 'providers',
 				'section' => 'provider',
 				'label'   => __( 'Kích hoạt Google', 'smart-login' ),
 			),
-			'providers.google.client_id' => array(
+			'providers.google.client_id'      => array(
 				'type'    => 'text',
 				'default' => '',
 				'tab'     => 'providers',
@@ -321,7 +320,7 @@ final class FieldRegistry {
 				'label'   => __( 'Email Google là một cách đăng nhập', 'smart-login' ),
 				'help'    => __( 'Khi Google xác nhận email đã verified, địa chỉ đó trở thành một cách đăng nhập và khôi phục tài khoản. Tắt trước khi cập nhật nếu không muốn áp dụng cho tài khoản đã có.', 'smart-login' ),
 			),
-			'providers.auto_link_email'  => array(
+			'providers.auto_link_email'       => array(
 				'type'    => 'checkbox',
 				'default' => 1,
 				'tab'     => 'providers',
@@ -621,7 +620,7 @@ final class FieldRegistry {
 			'automation.url'               => array(
 				'type'     => 'url',
 				'default'  => '',
-				'tab'      => 'delivery-automation',
+				'tab'      => 'integrations',
 				'section'  => 'automation',
 				'label'    => __( 'Endpoint', 'smart-login' ),
 				'sanitize' => 'https_url',
@@ -630,7 +629,7 @@ final class FieldRegistry {
 			'automation.secret'            => array(
 				'type'    => 'secret',
 				'default' => '',
-				'tab'     => 'delivery-automation',
+				'tab'     => 'integrations',
 				'section' => 'automation',
 				'label'   => __( 'Khoá ký (HMAC)', 'smart-login' ),
 				'help'    => __( 'Dùng để ký từng gói tin bằng SHA-256. Chưa có khoá thì kênh này không được dùng, vì endpoint sẽ nhận mã thật mà không xác thực được nguồn.', 'smart-login' ),
@@ -638,7 +637,7 @@ final class FieldRegistry {
 			'automation.headers'           => array(
 				'type'     => 'headers',
 				'default'  => array(),
-				'tab'      => 'delivery-automation',
+				'tab'      => 'integrations',
 				'section'  => 'automation',
 				'label'    => __( 'Headers bổ sung', 'smart-login' ),
 				'sanitize' => 'headers',
@@ -649,7 +648,7 @@ final class FieldRegistry {
 				'default' => 5,
 				'min'     => 2,
 				'max'     => WebhookTransport::MAX_TIMEOUT,
-				'tab'     => 'delivery-automation',
+				'tab'     => 'integrations',
 				'section' => 'automation',
 				'label'   => __( 'Timeout (giây)', 'smart-login' ),
 				'help'    => __( 'Cùng trần cứng với kênh SMS, và vì cùng một lý do: mỗi lần gửi giữ một tiến trình PHP trong đúng khoảng này.', 'smart-login' ),
@@ -657,7 +656,7 @@ final class FieldRegistry {
 			'automation.events'            => array(
 				'type'     => 'checkboxes',
 				'default'  => array(),
-				'tab'      => 'delivery-automation',
+				'tab'      => 'integrations',
 				'section'  => 'automation',
 				'label'    => __( 'Sự kiện gửi kèm', 'smart-login' ),
 				'choices'  => 'audit_events',
@@ -667,7 +666,7 @@ final class FieldRegistry {
 			'automation.success_path'      => array(
 				'type'    => 'text',
 				'default' => '',
-				'tab'     => 'delivery-automation',
+				'tab'     => 'integrations',
 				'section' => 'automation',
 				'label'   => __( 'Đường dẫn JSON báo thành công', 'smart-login' ),
 				'help'    => __( 'Để trống thì chỉ cần HTTP 2xx là coi như thành công.', 'smart-login' ),
@@ -675,7 +674,7 @@ final class FieldRegistry {
 			'automation.success_value'     => array(
 				'type'    => 'text',
 				'default' => '',
-				'tab'     => 'delivery-automation',
+				'tab'     => 'integrations',
 				'section' => 'automation',
 				'label'   => __( 'Giá trị mong đợi', 'smart-login' ),
 			),

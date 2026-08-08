@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-08 06:55+0000\n"
+"POT-Creation-Date: 2026-08-08 07:40+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -97,11 +97,7 @@ msgstr ""
 msgid "0969789475 hoặc ban@example.com"
 msgstr ""
 
-#: includes/class-field-registry.php:51
-msgid "Automation"
-msgstr ""
-
-#: includes/class-field-registry.php:106
+#: includes/class-field-registry.php:105
 msgid "Automation / Webhook"
 msgstr ""
 
@@ -110,7 +106,7 @@ msgstr ""
 msgid "Biểu mẫu đã hết hạn. Vui lòng tải lại trang."
 msgstr ""
 
-#: includes/class-field-registry.php:507
+#: includes/class-field-registry.php:506
 msgid "Body"
 msgstr ""
 
@@ -155,7 +151,7 @@ msgstr ""
 msgid "Bạn không có quyền thực hiện việc này."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:289
+#: includes/Admin/class-settings-page.php:303
 msgid "Bạn không có quyền truy cập trang này."
 msgstr ""
 
@@ -201,7 +197,7 @@ msgstr ""
 msgid "Bảo mật"
 msgstr ""
 
-#: includes/class-field-registry.php:99
+#: includes/class-field-registry.php:98
 msgid "Bảo mật đăng nhập"
 msgstr ""
 
@@ -209,19 +205,19 @@ msgstr ""
 msgid "Bật"
 msgstr ""
 
-#: includes/class-field-registry.php:728
+#: includes/class-field-registry.php:727
 msgid "Bật bộ chọn Tỉnh/Thành phố → Phường/Xã"
 msgstr ""
 
-#: includes/class-field-registry.php:919
+#: includes/class-field-registry.php:918
 msgid "Bật khi site thực sự nằm sau Cloudflare hoặc một load balancer của bạn. Nếu không điền dải IP bên dưới thì bật cái này <strong>không có tác dụng gì</strong> — và đó là chủ ý: tin header từ một máy chưa xác minh còn tệ hơn không tin gì cả."
 msgstr ""
 
-#: includes/class-field-registry.php:408
+#: includes/class-field-registry.php:407
 msgid "Bật kênh gửi SMS qua webhook"
 msgstr ""
 
-#: includes/class-field-registry.php:561
+#: includes/class-field-registry.php:560
 msgid "Bật kênh gửi email"
 msgstr ""
 
@@ -229,16 +225,16 @@ msgstr ""
 msgid "Bật tích hợp WooCommerce"
 msgstr ""
 
-#: includes/class-field-registry.php:437
-#: includes/class-field-registry.php:628
+#: includes/class-field-registry.php:436
+#: includes/class-field-registry.php:627
 msgid "Bắt buộc <code>https://</code>. Mã xác thực rời khỏi website tới địa chỉ này, nên chữ ký HMAC chỉ chứng minh <em>ai gửi</em> — nó không làm cho một endpoint đáng ngờ trở nên an toàn."
 msgstr ""
 
-#: includes/class-field-registry.php:735
+#: includes/class-field-registry.php:734
 msgid "Bắt buộc ở hồ sơ"
 msgstr ""
 
-#: includes/class-field-registry.php:836
+#: includes/class-field-registry.php:835
 msgid "Bắt kiểu tấn công rải mật khẩu: thử một mật khẩu phổ biến trên hàng nghìn tài khoản. Khoá theo tài khoản không thấy được kiểu này vì mỗi tài khoản chỉ sai một lần. Để rộng rãi — văn phòng, trường học và mạng di động dồn nhiều người thật vào một IP. Đặt 0 để bỏ giới hạn."
 msgstr ""
 
@@ -250,7 +246,7 @@ msgstr ""
 msgid "Bắt đầu lại"
 msgstr ""
 
-#: includes/class-field-registry.php:769
+#: includes/class-field-registry.php:768
 msgid "Bỏ bắt buộc nhập email ở trang thanh toán"
 msgstr ""
 
@@ -258,7 +254,7 @@ msgstr ""
 msgid "Bỏ liên kết"
 msgstr ""
 
-#: includes/class-field-registry.php:744
+#: includes/class-field-registry.php:743
 msgid "Bỏ trường Mã bưu điện khỏi form địa chỉ và thanh toán"
 msgstr ""
 
@@ -300,7 +296,7 @@ msgstr ""
 msgid "Callback URL"
 msgstr ""
 
-#: includes/class-field-registry.php:202
+#: includes/class-field-registry.php:201
 msgid "Campuchia (+855)"
 msgstr ""
 
@@ -321,7 +317,7 @@ msgstr ""
 msgid "Chào mừng bạn! Hãy bổ sung thông tin để nhận đầy đủ ưu đãi hội viên."
 msgstr ""
 
-#: includes/class-field-registry.php:616
+#: includes/class-field-registry.php:615
 msgid "Chân email"
 msgstr ""
 
@@ -334,11 +330,11 @@ msgstr ""
 msgid "Chính"
 msgstr ""
 
-#: includes/class-field-registry.php:101
+#: includes/class-field-registry.php:100
 msgid "Chính sách liên kết tài khoản"
 msgstr ""
 
-#: includes/class-field-registry.php:90
+#: includes/class-field-registry.php:89
 msgid "Chính sách mã"
 msgstr ""
 
@@ -429,7 +425,7 @@ msgstr ""
 msgid "Chưa đủ thông tin để tạo tài khoản."
 msgstr ""
 
-#: includes/class-field-registry.php:799
+#: includes/class-field-registry.php:798
 msgid "Chạm trần thì việc gửi mã bị tạm dừng và admin nhận email. Đặt 0 để bỏ giới hạn — <strong>không khuyến nghị nếu bạn trả tiền cho mỗi tin nhắn</strong>."
 msgstr ""
 
@@ -437,7 +433,7 @@ msgstr ""
 msgid "Chạy kiểm tra"
 msgstr ""
 
-#: includes/class-field-registry.php:776
+#: includes/class-field-registry.php:775
 msgid "Chặn email ảo"
 msgstr ""
 
@@ -447,7 +443,7 @@ msgstr ""
 
 #: includes/Admin/class-readiness.php:636
 #: includes/Admin/class-readiness.php:641
-#: includes/class-field-registry.php:987
+#: includes/class-field-registry.php:986
 msgid "Chế độ DEV"
 msgstr ""
 
@@ -455,24 +451,24 @@ msgstr ""
 msgid "Chế độ DEV đang bật — mã OTP được hiển thị trực tiếp trên màn hình. Hãy tắt trước khi đưa lên môi trường thật."
 msgstr ""
 
-#: includes/class-field-registry.php:896
+#: includes/class-field-registry.php:895
 msgid "Chế độ thích ứng chỉ hiện thử thách khi ngân sách đã tiêu quá nửa, kill switch vừa nổ, kênh gửi đang bị ngắt mạch, hoặc IP đó đã dùng quá nửa hạn mức tra cứu. Ngày thường khách không thấy gì — một captcha hiện lên vào thứ Ba yên ả là lỗi chuyển đổi, không phải biện pháp bảo mật."
 msgstr ""
 
-#: includes/class-field-registry.php:600
+#: includes/class-field-registry.php:599
 msgid "Chỉ dùng khi gửi dạng HTML. Để trống thì hiện tên website. Nhiều ứng dụng email chặn ảnh cho tới khi người nhận bấm hiển thị, nên đừng đặt thông tin quan trọng trong ảnh."
 msgstr ""
 
-#: includes/class-field-registry.php:872
+#: includes/class-field-registry.php:871
 msgid "Chỉ dùng để ước tính chi phí trên màn hình Tổng quan, và tính cho mọi mã gửi tới số điện thoại — kể cả khi kênh đó đang định tuyến qua automation. Đặt 0 để ẩn."
 msgstr ""
 
 #: includes/Admin/class-readiness.php:104
-#: includes/class-field-registry.php:189
+#: includes/class-field-registry.php:188
 msgid "Chỉ email"
 msgstr ""
 
-#: includes/class-field-registry.php:893
+#: includes/class-field-registry.php:892
 msgid "Chỉ khi site đang bị ép"
 msgstr ""
 
@@ -481,15 +477,15 @@ msgid "Chỉ làm việc này khi bạn đã xem nhật ký và tin rằng lưu 
 msgstr ""
 
 #: includes/Admin/class-readiness.php:103
-#: includes/class-field-registry.php:188
+#: includes/class-field-registry.php:187
 msgid "Chỉ số điện thoại"
 msgstr ""
 
-#: includes/class-field-registry.php:330
+#: includes/class-field-registry.php:329
 msgid "Chỉ tự liên kết khi provider xác nhận email đã verified, email trùng chính xác với một tài khoản duy nhất và tài khoản đó không dùng email giả lập."
 msgstr ""
 
-#: includes/class-field-registry.php:552
+#: includes/class-field-registry.php:551
 msgid "Chỉ điền khi gateway cam kết chống gửi trùng, ví dụ <code>Idempotency-Key</code>. Plugin gửi cùng một <code>{{delivery_id}}</code> cho cả hai lần thử."
 msgstr ""
 
@@ -509,11 +505,11 @@ msgstr ""
 msgid "Chọn Tỉnh/Thành phố trước để hiện danh sách Phường/Xã."
 msgstr ""
 
-#: includes/class-field-registry.php:344
+#: includes/class-field-registry.php:343
 msgid "Chọn một mức và sáu giá trị bên dưới được đặt theo. Chọn <em>Tuỳ chỉnh</em> để tự điều chỉnh."
 msgstr ""
 
-#: includes/class-field-registry.php:423
+#: includes/class-field-registry.php:422
 msgid "Chọn nhà cung cấp và chỉ cần điền thông tin xác thực; URL, Body và điều kiện thành công được sinh tự động."
 msgstr ""
 
@@ -521,11 +517,11 @@ msgstr ""
 msgid "Chống lạm dụng"
 msgstr ""
 
-#: includes/class-field-registry.php:382
+#: includes/class-field-registry.php:381
 msgid "Chờ giữa 2 lần gửi (giây)"
 msgstr ""
 
-#: includes/class-field-registry.php:882
+#: includes/class-field-registry.php:881
 msgid "Cloudflare Turnstile"
 msgstr ""
 
@@ -539,7 +535,7 @@ msgstr ""
 msgid "Các giá trị này do lựa chọn ở trên sinh ra. Chọn “Tuỳ chỉnh” nếu bạn cần tự đặt."
 msgstr ""
 
-#: includes/class-field-registry.php:645
+#: includes/class-field-registry.php:644
 msgid "Các header do plugin sinh ra không thể bị ghi đè ở đây."
 msgstr ""
 
@@ -555,15 +551,15 @@ msgstr ""
 msgid "Có thay đổi chưa lưu"
 msgstr ""
 
-#: includes/class-field-registry.php:468
+#: includes/class-field-registry.php:467
 msgid "Có thể chứa placeholder, ví dụ <code>https://api.gateway.vn/send?to={{phone_local}}</code>."
 msgstr ""
 
-#: includes/class-field-registry.php:655
+#: includes/class-field-registry.php:654
 msgid "Cùng trần cứng với kênh SMS, và vì cùng một lý do: mỗi lần gửi giữ một tiến trình PHP trong đúng khoảng này."
 msgstr ""
 
-#: includes/class-field-registry.php:190
+#: includes/class-field-registry.php:189
 msgid "Cả hai"
 msgstr ""
 
@@ -579,7 +575,7 @@ msgstr ""
 msgid "Cảnh báo ngắt mạch kênh gửi"
 msgstr ""
 
-#: includes/class-field-registry.php:112
+#: includes/class-field-registry.php:111
 msgid "Cảnh báo quản trị"
 msgstr ""
 
@@ -600,27 +596,27 @@ msgstr ""
 msgid "Cập nhật ngay"
 msgstr ""
 
-#: includes/class-field-registry.php:223
+#: includes/class-field-registry.php:222
 msgid "Danh sách cách nhau bằng dấu phẩy, ví dụ <code>84,65,1</code>. <strong>Để trống nghĩa là chỉ chấp nhận mã quốc gia mặc định ở trên</strong> — không phải chấp nhận mọi quốc gia. Mở rộng danh sách này làm tăng rủi ro bị đốt tin nhắn qua các đầu số quốc tế."
 msgstr ""
 
-#: includes/class-field-registry.php:230
+#: includes/class-field-registry.php:229
 msgid "Domain email ảo"
 msgstr ""
 
-#: includes/class-field-registry.php:232
+#: includes/class-field-registry.php:231
 msgid "Dùng cho tài khoản chỉ có số điện thoại. Nên giữ đuôi <code>.invalid</code> — theo RFC 2606 domain này không bao giờ phân giải được, nên không thể phát sinh email bounce."
 msgstr ""
 
-#: includes/class-field-registry.php:691
+#: includes/class-field-registry.php:690
 msgid "Dùng chung bộ placeholder với phần Gửi qua SMS."
 msgstr ""
 
-#: includes/class-field-registry.php:636
+#: includes/class-field-registry.php:635
 msgid "Dùng để ký từng gói tin bằng SHA-256. Chưa có khoá thì kênh này không được dùng, vì endpoint sẽ nhận mã thật mà không xác thực được nguồn."
 msgstr ""
 
-#: includes/class-field-registry.php:446
+#: includes/class-field-registry.php:445
 msgid "Dùng để ký từng gói tin bằng SHA-256. Chưa có khoá thì nhà cung cấp này không được dùng, vì endpoint sẽ nhận mã thật mà không xác thực được nguồn."
 msgstr ""
 
@@ -628,11 +624,11 @@ msgstr ""
 msgid "Dùng địa chỉ kết nối trực tiếp. Đúng khi site không đứng sau proxy nào."
 msgstr ""
 
-#: includes/class-field-registry.php:608
+#: includes/class-field-registry.php:607
 msgid "Dạng <code>#2271b1</code>. Giá trị không hợp lệ sẽ dùng màu mặc định."
 msgstr ""
 
-#: includes/class-field-registry.php:928
+#: includes/class-field-registry.php:927
 msgid "Dạng CIDR, mỗi dòng một dải — ví dụ <code>173.245.48.0/20</code>. Cloudflare công bố danh sách tại <code>https://www.cloudflare.com/ips/</code>. Plugin <strong>không kèm sẵn</strong> danh sách này: một danh sách cứng sẽ lạc hậu âm thầm, và lúc đó nó thành lỗ hổng chứ không còn là biện pháp bảo vệ."
 msgstr ""
 
@@ -641,7 +637,7 @@ msgstr ""
 msgid "Dải %s nhận mọi địa chỉ, nên bất kỳ ai cũng tự khai được IP của mình. Hãy khai đúng dải của proxy."
 msgstr ""
 
-#: includes/class-field-registry.php:927
+#: includes/class-field-registry.php:926
 msgid "Dải IP của proxy"
 msgstr ""
 
@@ -665,7 +661,7 @@ msgstr ""
 msgid "Email"
 msgstr ""
 
-#: includes/class-field-registry.php:321
+#: includes/class-field-registry.php:320
 msgid "Email Google là một cách đăng nhập"
 msgstr ""
 
@@ -673,11 +669,11 @@ msgstr ""
 msgid "Email của nhà cung cấp đã thuộc về tài khoản khác."
 msgstr ""
 
-#: includes/class-field-registry.php:768
+#: includes/class-field-registry.php:767
 msgid "Email khi thanh toán"
 msgstr ""
 
-#: includes/class-field-registry.php:703
+#: includes/class-field-registry.php:702
 msgid "Email không bắt buộc"
 msgstr ""
 
@@ -685,7 +681,7 @@ msgstr ""
 msgid "Email mới phải được xác thực bằng mã OTP trước khi lưu."
 msgstr ""
 
-#: includes/class-field-registry.php:576
+#: includes/class-field-registry.php:575
 msgid "Email người gửi"
 msgstr ""
 
@@ -702,7 +698,7 @@ msgstr ""
 msgid "Email đang thuộc về nhiều tài khoản. Không thể tự động liên kết."
 msgstr ""
 
-#: includes/class-field-registry.php:626
+#: includes/class-field-registry.php:625
 msgid "Endpoint"
 msgstr ""
 
@@ -710,7 +706,7 @@ msgstr ""
 msgid "Endpoint chưa có URL hoặc chưa có khoá ký. Hãy lưu cấu hình trước."
 msgstr ""
 
-#: includes/class-field-registry.php:434
+#: includes/class-field-registry.php:433
 msgid "Endpoint nhận envelope"
 msgstr ""
 
@@ -742,7 +738,7 @@ msgstr ""
 msgid "Gateway trả về HTTP %d."
 msgstr ""
 
-#: includes/class-field-registry.php:960
+#: includes/class-field-registry.php:959
 msgid "Ghi nhật ký"
 msgstr ""
 
@@ -754,11 +750,11 @@ msgstr ""
 msgid "Ghi nhớ đăng nhập"
 msgstr ""
 
-#: includes/class-field-registry.php:113
+#: includes/class-field-registry.php:112
 msgid "Giao diện email HTML"
 msgstr ""
 
-#: includes/class-field-registry.php:871
+#: includes/class-field-registry.php:870
 msgid "Giá mỗi mã gửi tới số điện thoại (VNĐ)"
 msgstr ""
 
@@ -766,8 +762,8 @@ msgstr ""
 msgid "Giá trị"
 msgstr ""
 
-#: includes/class-field-registry.php:534
-#: includes/class-field-registry.php:680
+#: includes/class-field-registry.php:533
+#: includes/class-field-registry.php:679
 msgid "Giá trị mong đợi"
 msgstr ""
 
@@ -776,7 +772,7 @@ msgid "Giá trị triển khai đang được ưu tiên; các ô trên là cấu
 msgstr ""
 
 #: includes/Auth/class-profile-completion-service.php:171
-#: includes/class-field-registry.php:719
+#: includes/class-field-registry.php:718
 #: templates/partials/account/profile.php:62
 msgid "Giới tính"
 msgstr ""
@@ -786,11 +782,11 @@ msgstr ""
 msgid "Giờ này đã gửi %1$d. Trần %2$s mã/giờ, %3$s mã/ngày."
 msgstr ""
 
-#: includes/class-field-registry.php:979
+#: includes/class-field-registry.php:978
 msgid "Giữ bản ghi OTP (ngày)"
 msgstr ""
 
-#: includes/class-field-registry.php:970
+#: includes/class-field-registry.php:969
 msgid "Giữ nhật ký (ngày)"
 msgstr ""
 
@@ -798,7 +794,7 @@ msgstr ""
 msgid "Google"
 msgstr ""
 
-#: includes/class-field-registry.php:310
+#: includes/class-field-registry.php:309
 msgid "Google Client ID"
 msgstr ""
 
@@ -839,11 +835,11 @@ msgstr ""
 msgid "Gần xong rồi!"
 msgstr ""
 
-#: includes/class-field-registry.php:543
+#: includes/class-field-registry.php:542
 msgid "Gọi lại 1 lần sau 2 giây. Chỉ hoạt động khi đã cấu hình header idempotency bên dưới."
 msgstr ""
 
-#: includes/class-field-registry.php:592
+#: includes/class-field-registry.php:591
 msgid "Gửi dưới dạng HTML"
 msgstr ""
 
@@ -856,7 +852,7 @@ msgstr ""
 msgid "Gửi khi nào"
 msgstr ""
 
-#: includes/class-field-registry.php:665
+#: includes/class-field-registry.php:664
 msgid "Gửi không chờ phản hồi, <strong>không bao giờ kèm mã OTP</strong>, và dùng chung trần đếm mỗi giờ với nhật ký — nên tắt nhật ký là tắt luôn phần này."
 msgstr ""
 
@@ -888,11 +884,11 @@ msgstr ""
 msgid "Gửi một lần khi một kênh gửi bị tạm ngắt sau nhiều lần thất bại liên tiếp."
 msgstr ""
 
-#: includes/class-field-registry.php:104
+#: includes/class-field-registry.php:103
 msgid "Gửi qua SMS"
 msgstr ""
 
-#: includes/class-field-registry.php:105
+#: includes/class-field-registry.php:104
 msgid "Gửi qua email"
 msgstr ""
 
@@ -921,24 +917,24 @@ msgstr ""
 msgid "Hai mật khẩu mới không khớp."
 msgstr ""
 
-#: includes/class-field-registry.php:550
+#: includes/class-field-registry.php:549
 msgid "Header idempotency"
 msgstr ""
 
-#: includes/class-field-registry.php:498
+#: includes/class-field-registry.php:497
 msgid "Headers"
 msgstr ""
 
-#: includes/class-field-registry.php:643
+#: includes/class-field-registry.php:642
 msgid "Headers bổ sung"
 msgstr ""
 
-#: includes/class-field-registry.php:988
+#: includes/class-field-registry.php:987
 msgid "Hiển thị mã OTP ngay trên màn hình. Chỉ có tác dụng khi <code>WP_DEBUG</code> bật <strong>và</strong> môi trường không phải <code>production</code>."
 msgstr ""
 
-#: includes/class-field-registry.php:712
-#: includes/class-field-registry.php:720
+#: includes/class-field-registry.php:711
+#: includes/class-field-registry.php:719
 msgid "Hiển thị ở màn hình chào mừng và trong hồ sơ; không hiển thị khi đăng ký."
 msgstr ""
 
@@ -947,11 +943,11 @@ msgstr ""
 msgid "Hiện mật khẩu"
 msgstr ""
 
-#: includes/class-field-registry.php:362
+#: includes/class-field-registry.php:361
 msgid "Hiệu lực (giây)"
 msgstr ""
 
-#: includes/class-field-registry.php:209
+#: includes/class-field-registry.php:208
 msgid "Hoa Kỳ / Canada (+1)"
 msgstr ""
 
@@ -991,7 +987,7 @@ msgstr ""
 msgid "Hướng dẫn"
 msgstr ""
 
-#: includes/class-field-registry.php:948
+#: includes/class-field-registry.php:947
 msgid "Hết khoảng này, một lần gửi được cho đi thử. Thất bại thì ngắt lại ngay, không cần lỗi đủ số lần lần nữa."
 msgstr ""
 
@@ -1031,7 +1027,7 @@ msgstr ""
 msgid "IP"
 msgstr ""
 
-#: includes/class-field-registry.php:208
+#: includes/class-field-registry.php:207
 msgid "Indonesia (+62)"
 msgstr ""
 
@@ -1039,11 +1035,11 @@ msgstr ""
 msgid "Khai dải IP"
 msgstr ""
 
-#: includes/class-field-registry.php:322
+#: includes/class-field-registry.php:321
 msgid "Khi Google xác nhận email đã verified, địa chỉ đó trở thành một cách đăng nhập và khôi phục tài khoản. Tắt trước khi cập nhật nếu không muốn áp dụng cho tài khoản đã có."
 msgstr ""
 
-#: includes/class-field-registry.php:938
+#: includes/class-field-registry.php:937
 msgid "Khi kênh gửi lỗi liên tiếp đủ số lần này, plugin ngừng gọi nó và trả lỗi ngay — không giữ tiến trình PHP để chờ một gateway đã chết. Đặt 0 để tắt."
 msgstr ""
 
@@ -1063,7 +1059,7 @@ msgstr ""
 msgid "Khi người dùng đăng nhập bằng mã thay cho mật khẩu, hoặc từ thiết bị lạ."
 msgstr ""
 
-#: includes/class-field-registry.php:891
+#: includes/class-field-registry.php:890
 msgid "Khi nào hiện"
 msgstr ""
 
@@ -1072,12 +1068,12 @@ msgstr ""
 msgid "Khi tiếp tục, bạn đồng ý với %s."
 msgstr ""
 
-#: includes/class-field-registry.php:845
+#: includes/class-field-registry.php:844
 msgid "Khoá IP trong (phút)"
 msgstr ""
 
-#: includes/class-field-registry.php:444
-#: includes/class-field-registry.php:635
+#: includes/class-field-registry.php:443
+#: includes/class-field-registry.php:634
 msgid "Khoá ký (HMAC)"
 msgstr ""
 
@@ -1122,7 +1118,7 @@ msgstr ""
 msgid "Không dùng JavaScript origin thay cho redirect URI. Google yêu cầu URI callback phải khớp chính xác với URI đã khai báo."
 msgstr ""
 
-#: includes/class-field-registry.php:777
+#: includes/class-field-registry.php:776
 msgid "Không gửi bất kỳ email nào tới địa chỉ ảo (khuyến nghị bật)"
 msgstr ""
 
@@ -1214,7 +1210,7 @@ msgstr ""
 msgid "Kiểm tra"
 msgstr ""
 
-#: includes/class-field-registry.php:486
+#: includes/class-field-registry.php:485
 msgid "Kiểu dữ liệu"
 msgstr ""
 
@@ -1265,13 +1261,13 @@ msgstr ""
 msgid "Kênh không phải email."
 msgstr ""
 
-#: includes/class-field-registry.php:174
+#: includes/class-field-registry.php:173
 msgid "Kênh định danh được bật"
 msgstr ""
 
-#: includes/class-field-registry.php:407
-#: includes/class-field-registry.php:560
-#: includes/class-field-registry.php:727
+#: includes/class-field-registry.php:406
+#: includes/class-field-registry.php:559
+#: includes/class-field-registry.php:726
 msgid "Kích hoạt"
 msgstr ""
 
@@ -1280,7 +1276,7 @@ msgstr ""
 msgid "Kích hoạt %s"
 msgstr ""
 
-#: includes/class-field-registry.php:303
+#: includes/class-field-registry.php:302
 msgid "Kích hoạt Google"
 msgstr ""
 
@@ -1289,7 +1285,7 @@ msgstr ""
 msgid "Ký tự thứ %d của mã OTP"
 msgstr ""
 
-#: includes/class-field-registry.php:248
+#: includes/class-field-registry.php:247
 msgid "Link điều kiện áp dụng"
 msgstr ""
 
@@ -1305,15 +1301,15 @@ msgstr ""
 msgid "Liên kết tài khoản không còn hợp lệ."
 msgstr ""
 
-#: includes/class-field-registry.php:599
+#: includes/class-field-registry.php:598
 msgid "Logo trong email"
 msgstr ""
 
-#: includes/class-field-registry.php:894
+#: includes/class-field-registry.php:893
 msgid "Luôn luôn"
 msgstr ""
 
-#: includes/class-field-registry.php:203
+#: includes/class-field-registry.php:202
 msgid "Lào (+856)"
 msgstr ""
 
@@ -1329,7 +1325,7 @@ msgstr ""
 msgid "Lưu cấu hình trước. Nút này gửi một gói tin đã ký tới endpoint bất kể Định tuyến đang trỏ đâu, và không bị ngắt mạch chặn — nên nó là cách kiểm tra xem endpoint đã sống lại chưa."
 msgstr ""
 
-#: includes/class-field-registry.php:961
+#: includes/class-field-registry.php:960
 msgid "Lưu lại các sự kiện đăng nhập / xác thực"
 msgstr ""
 
@@ -1340,15 +1336,15 @@ msgstr ""
 msgid "Lưu thay đổi"
 msgstr ""
 
-#: includes/class-field-registry.php:206
+#: includes/class-field-registry.php:205
 msgid "Malaysia (+60)"
 msgstr ""
 
-#: includes/class-field-registry.php:827
+#: includes/class-field-registry.php:826
 msgid "Màn hình đăng nhập tra xem một số điện thoại đã có tài khoản chưa. Không giới hạn thì danh sách khách hàng của bạn có thể bị dò sạch mà không tốn gì. Đặt 0 để bỏ giới hạn."
 msgstr ""
 
-#: includes/class-field-registry.php:607
+#: includes/class-field-registry.php:606
 msgid "Màu nhấn"
 msgstr ""
 
@@ -1377,11 +1373,11 @@ msgstr ""
 msgid "Mã hết hạn sau 2 phút và giới hạn gửi thấp hơn. Giảm chi phí SMS, nhưng người dùng chậm tay sẽ phải xin mã mới."
 msgstr ""
 
-#: includes/class-field-registry.php:199
+#: includes/class-field-registry.php:198
 msgid "Mã quốc gia mặc định"
 msgstr ""
 
-#: includes/class-field-registry.php:222
+#: includes/class-field-registry.php:221
 msgid "Mã quốc gia được phép"
 msgstr ""
 
@@ -1389,8 +1385,8 @@ msgstr ""
 msgid "Mã sống 10 phút và cho gửi lại nhiều hơn. Dễ dùng hơn ở nơi sóng yếu, đổi lại hoá đơn SMS cao hơn."
 msgstr ""
 
-#: includes/class-field-registry.php:103
-#: includes/class-field-registry.php:111
+#: includes/class-field-registry.php:102
+#: includes/class-field-registry.php:110
 #: templates/partials/account/contact.php:191
 msgid "Mã xác thực"
 msgstr ""
@@ -1414,7 +1410,7 @@ msgstr ""
 msgid "Mã xác thực đã được sử dụng. Vui lòng yêu cầu mã mới."
 msgstr ""
 
-#: includes/class-field-registry.php:980
+#: includes/class-field-registry.php:979
 msgid "Mã đã dùng hoặc hết hạn sẽ bị xoá sau khoảng thời gian này."
 msgstr ""
 
@@ -1435,7 +1431,7 @@ msgstr ""
 msgid "Môi trường"
 msgstr ""
 
-#: includes/class-field-registry.php:110
+#: includes/class-field-registry.php:109
 msgid "Mẫu mặc định"
 msgstr ""
 
@@ -1475,11 +1471,11 @@ msgstr ""
 msgid "Mật khẩu phải có ít nhất %d ký tự."
 msgstr ""
 
-#: includes/class-field-registry.php:363
+#: includes/class-field-registry.php:362
 msgid "Mặc định 300 giây (5 phút)."
 msgstr ""
 
-#: includes/class-field-registry.php:519
+#: includes/class-field-registry.php:518
 msgid "Mỗi lần gửi giữ một tiến trình PHP trong đúng khoảng này. Đặt cao là cách nhanh nhất để một gateway chậm làm sập cả website, nên trần cứng là 15 giây kể cả khi giá trị cũ lớn hơn."
 msgstr ""
 
@@ -1509,7 +1505,7 @@ msgstr ""
 msgid "Mục đích: register / login / recover / add_identity"
 msgstr ""
 
-#: includes/class-field-registry.php:342
+#: includes/class-field-registry.php:341
 msgid "Mức bảo mật"
 msgstr ""
 
@@ -1528,7 +1524,7 @@ msgid "Nguồn: %s"
 msgstr ""
 
 #: includes/Auth/class-profile-completion-service.php:161
-#: includes/class-field-registry.php:711
+#: includes/class-field-registry.php:710
 #: templates/partials/account/profile.php:46
 msgid "Ngày sinh"
 msgstr ""
@@ -1537,17 +1533,17 @@ msgstr ""
 msgid "Người dùng có thể đăng ký và đăng nhập ngay bây giờ."
 msgstr ""
 
-#: includes/class-field-registry.php:118
+#: includes/class-field-registry.php:117
 msgid "Ngắt mạch kênh gửi"
 msgstr ""
 
-#: includes/class-field-registry.php:947
+#: includes/class-field-registry.php:946
 msgid "Ngắt trong (giây)"
 msgstr ""
 
-#: includes/class-field-registry.php:100
-#: includes/class-field-registry.php:421
-#: includes/class-field-registry.php:879
+#: includes/class-field-registry.php:99
+#: includes/class-field-registry.php:420
+#: includes/class-field-registry.php:878
 msgid "Nhà cung cấp"
 msgstr ""
 
@@ -1611,7 +1607,7 @@ msgstr ""
 msgid "Nhật ký"
 msgstr ""
 
-#: includes/class-field-registry.php:121
+#: includes/class-field-registry.php:120
 msgid "Nhật ký & dọn dẹp"
 msgstr ""
 
@@ -1636,7 +1632,7 @@ msgid "Nếu thông tin hợp lệ, mã xác thực sẽ được gửi tới b�
 msgstr ""
 
 #: includes/Admin/class-mail-messages.php:47
-#: includes/class-field-registry.php:689
+#: includes/class-field-registry.php:688
 msgid "Nội dung"
 msgstr ""
 
@@ -1649,11 +1645,11 @@ msgstr ""
 msgid "Nữ"
 msgstr ""
 
-#: includes/class-field-registry.php:290
+#: includes/class-field-registry.php:289
 msgid "OTP cho thiết bị lạ"
 msgstr ""
 
-#: includes/class-field-registry.php:207
+#: includes/class-field-registry.php:206
 msgid "Philippines (+63)"
 msgstr ""
 
@@ -1728,11 +1724,11 @@ msgstr ""
 msgid "Phiên đặt lại mật khẩu đã hết hạn. Vui lòng thực hiện lại."
 msgstr ""
 
-#: includes/class-field-registry.php:122
+#: includes/class-field-registry.php:121
 msgid "Phát triển"
 msgstr ""
 
-#: includes/class-field-registry.php:475
+#: includes/class-field-registry.php:474
 msgid "Phương thức"
 msgstr ""
 
@@ -1758,7 +1754,7 @@ msgstr ""
 #: includes/Admin/class-readiness.php:415
 #: includes/Admin/class-readiness.php:428
 #: includes/Admin/class-readiness.php:441
-#: includes/class-field-registry.php:120
+#: includes/class-field-registry.php:119
 msgid "Proxy và địa chỉ IP"
 msgstr ""
 
@@ -1771,7 +1767,7 @@ msgstr ""
 msgid "Quay lại đăng nhập"
 msgstr ""
 
-#: includes/class-field-registry.php:192
+#: includes/class-field-registry.php:191
 msgid "Quyết định trường định danh trên màn hình đăng nhập/đăng ký."
 msgstr ""
 
@@ -1799,15 +1795,15 @@ msgstr ""
 msgid "Sau"
 msgstr ""
 
-#: includes/class-field-registry.php:256
+#: includes/class-field-registry.php:255
 msgid "Sau khi đăng ký"
 msgstr ""
 
-#: includes/class-field-registry.php:264
+#: includes/class-field-registry.php:263
 msgid "Sau khi đăng nhập"
 msgstr ""
 
-#: includes/class-field-registry.php:818
+#: includes/class-field-registry.php:817
 msgid "Sau khoảng thời gian này việc gửi mã tự mở lại."
 msgstr ""
 
@@ -1815,7 +1811,7 @@ msgstr ""
 msgid "Secret chỉ dùng khi lưu; plugin không đưa secret hiện có trở lại HTML."
 msgstr ""
 
-#: includes/class-field-registry.php:910
+#: includes/class-field-registry.php:909
 msgid "Secret key"
 msgstr ""
 
@@ -1827,15 +1823,15 @@ msgstr ""
 msgid "Settings đã mã hóa"
 msgstr ""
 
-#: includes/class-field-registry.php:204
+#: includes/class-field-registry.php:203
 msgid "Singapore (+65)"
 msgstr ""
 
-#: includes/class-field-registry.php:903
+#: includes/class-field-registry.php:902
 msgid "Site key"
 msgstr ""
 
-#: includes/class-field-registry.php:918
+#: includes/class-field-registry.php:917
 msgid "Site đứng sau proxy tin cậy"
 msgstr ""
 
@@ -1883,7 +1879,7 @@ msgstr ""
 msgid "Số %s không khớp đầu số hợp lệ. Kiểm tra lại mã quốc gia trong tab Chung."
 msgstr ""
 
-#: includes/class-field-registry.php:853
+#: includes/class-field-registry.php:852
 msgid "Số dòng nhật ký tối đa / loại sự kiện / giờ"
 msgstr ""
 
@@ -1891,43 +1887,43 @@ msgstr ""
 msgid "Số giây trước khi thử lại kênh gửi"
 msgstr ""
 
-#: includes/class-field-registry.php:353
+#: includes/class-field-registry.php:352
 msgid "Số ký tự"
 msgstr ""
 
-#: includes/class-field-registry.php:937
+#: includes/class-field-registry.php:936
 msgid "Số lần lỗi liên tiếp trước khi ngắt"
 msgstr ""
 
-#: includes/class-field-registry.php:372
+#: includes/class-field-registry.php:371
 msgid "Số lần nhập sai tối đa"
 msgstr ""
 
-#: includes/class-field-registry.php:274
+#: includes/class-field-registry.php:273
 msgid "Số lần sai trước khi khoá"
 msgstr ""
 
-#: includes/class-field-registry.php:826
+#: includes/class-field-registry.php:825
 msgid "Số lần tra định danh / IP / giờ"
 msgstr ""
 
-#: includes/class-field-registry.php:835
+#: includes/class-field-registry.php:834
 msgid "Số lần đăng nhập sai / IP / giờ"
 msgstr ""
 
-#: includes/class-field-registry.php:399
+#: includes/class-field-registry.php:398
 msgid "Số mã tối đa / IP / giờ"
 msgstr ""
 
-#: includes/class-field-registry.php:390
+#: includes/class-field-registry.php:389
 msgid "Số mã tối đa / số ĐT / giờ"
 msgstr ""
 
-#: includes/class-field-registry.php:798
+#: includes/class-field-registry.php:797
 msgid "Số mã tối đa / toàn site / giờ"
 msgstr ""
 
-#: includes/class-field-registry.php:807
+#: includes/class-field-registry.php:806
 msgid "Số mã tối đa / toàn site / ngày"
 msgstr ""
 
@@ -1936,7 +1932,7 @@ msgstr ""
 msgid "Số nhà, tên đường"
 msgstr ""
 
-#: includes/class-field-registry.php:215
+#: includes/class-field-registry.php:214
 msgid "Số nhập dạng <code>0969789475</code> sẽ được chuẩn hoá thành <code>84969789475</code>."
 msgstr ""
 
@@ -1989,15 +1985,15 @@ msgstr ""
 msgid "Sự kiện"
 msgstr ""
 
-#: includes/class-field-registry.php:662
+#: includes/class-field-registry.php:661
 msgid "Sự kiện gửi kèm"
 msgstr ""
 
-#: includes/class-field-registry.php:752
+#: includes/class-field-registry.php:751
 msgid "Thay form My Account"
 msgstr ""
 
-#: includes/class-field-registry.php:753
+#: includes/class-field-registry.php:752
 msgid "Thay thế form đăng nhập/đăng ký mặc định của WooCommerce"
 msgstr ""
 
@@ -2026,13 +2022,17 @@ msgstr ""
 msgid "Thoáng — ưu tiên thuận tiện"
 msgstr ""
 
-#: includes/class-field-registry.php:205
+#: includes/class-field-registry.php:204
 msgid "Thái Lan (+66)"
 msgstr ""
 
 #: templates/partials/account/contact.php:64
 #: templates/partials/account/contact.php:74
 msgid "Thêm"
+msgstr ""
+
+#: includes/class-field-registry.php:51
+msgid "Thông báo & Tích hợp"
 msgstr ""
 
 #: templates/form-otp.php:41
@@ -2073,7 +2073,7 @@ msgstr ""
 msgid "Thông tin này đã được đăng ký. Vui lòng đăng nhập."
 msgstr ""
 
-#: includes/class-field-registry.php:453
+#: includes/class-field-registry.php:452
 msgid "Thông tin xác thực"
 msgstr ""
 
@@ -2099,7 +2099,7 @@ msgstr ""
 msgid "Thời gian hiệu lực tính bằng phút"
 msgstr ""
 
-#: includes/class-field-registry.php:283
+#: includes/class-field-registry.php:282
 msgid "Thời gian khoá (phút)"
 msgstr ""
 
@@ -2107,13 +2107,13 @@ msgstr ""
 msgid "Thời điểm hết hạn"
 msgstr ""
 
-#: includes/class-field-registry.php:542
+#: includes/class-field-registry.php:541
 #: templates/form-reset.php:29
 msgid "Thử lại"
 msgstr ""
 
-#: includes/class-field-registry.php:518
-#: includes/class-field-registry.php:654
+#: includes/class-field-registry.php:517
+#: includes/class-field-registry.php:653
 msgid "Timeout (giây)"
 msgstr ""
 
@@ -2123,7 +2123,7 @@ msgid "Tin header proxy từ %d dải đã khai."
 msgid_plural "Tin header proxy từ %d dải đã khai."
 msgstr[0] ""
 
-#: includes/class-field-registry.php:584
+#: includes/class-field-registry.php:583
 msgid "Tiêu đề"
 msgstr ""
 
@@ -2157,7 +2157,7 @@ msgstr ""
 msgid "Trước"
 msgstr ""
 
-#: includes/class-field-registry.php:114
+#: includes/class-field-registry.php:113
 msgid "Trường hồ sơ"
 msgstr ""
 
@@ -2165,7 +2165,7 @@ msgstr ""
 #: includes/Admin/class-readiness.php:303
 #: includes/Admin/class-readiness.php:343
 #: includes/Admin/class-readiness.php:353
-#: includes/class-field-registry.php:117
+#: includes/class-field-registry.php:116
 msgid "Trần gửi toàn site"
 msgstr ""
 
@@ -2207,7 +2207,7 @@ msgstr ""
 msgid "Tài khoản đã tồn tại."
 msgstr ""
 
-#: includes/class-field-registry.php:704
+#: includes/class-field-registry.php:703
 msgid "Tài khoản đăng ký bằng số điện thoại không bị coi là thiếu thông tin khi chưa có email. <strong>Tắt sẽ khiến mọi tài khoản chỉ có số điện thoại bị nhắc bổ sung email.</strong>"
 msgstr ""
 
@@ -2215,7 +2215,7 @@ msgstr ""
 msgid "Tên"
 msgstr ""
 
-#: includes/class-field-registry.php:568
+#: includes/class-field-registry.php:567
 msgid "Tên người gửi"
 msgstr ""
 
@@ -2240,7 +2240,7 @@ msgstr ""
 msgid "Tôi đồng ý với các điều khoản áp dụng."
 msgstr ""
 
-#: includes/class-field-registry.php:817
+#: includes/class-field-registry.php:816
 msgid "Tạm dừng trong (phút)"
 msgstr ""
 
@@ -2258,7 +2258,7 @@ msgid "Tạo tài khoản"
 msgstr ""
 
 #: includes/Admin/Screens/class-settings-screen.php:385
-#: includes/class-field-registry.php:881
+#: includes/class-field-registry.php:880
 msgid "Tắt"
 msgstr ""
 
@@ -2281,7 +2281,7 @@ msgstr ""
 msgid "Tỉnh/Thành phố không hợp lệ."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:219
+#: includes/Admin/class-settings-page.php:233
 msgid "Tổng quan"
 msgstr ""
 
@@ -2289,7 +2289,7 @@ msgstr ""
 msgid "Tới mục Liên hệ"
 msgstr ""
 
-#: includes/class-field-registry.php:329
+#: includes/class-field-registry.php:328
 msgid "Tự liên kết bằng email"
 msgstr ""
 
@@ -2297,7 +2297,7 @@ msgstr ""
 msgid "Tự đặt từng giá trị bên dưới."
 msgstr ""
 
-#: includes/class-field-registry.php:467
+#: includes/class-field-registry.php:466
 msgid "URL"
 msgstr ""
 
@@ -2310,7 +2310,7 @@ msgstr ""
 msgid "Việc gửi mã đang tạm dừng vì chạm trần toàn site. Tự mở lại sau %d phút."
 msgstr ""
 
-#: includes/class-field-registry.php:201
+#: includes/class-field-registry.php:200
 msgid "Việt Nam (+84)"
 msgstr ""
 
@@ -2398,15 +2398,15 @@ msgstr ""
 msgid "Vào tài khoản"
 msgstr ""
 
-#: includes/class-field-registry.php:535
+#: includes/class-field-registry.php:534
 msgid "Ví dụ <code>100</code>."
 msgstr ""
 
-#: includes/class-field-registry.php:527
+#: includes/class-field-registry.php:526
 msgid "Ví dụ <code>CodeResult</code> hoặc <code>data.status</code>. Để trống thì chỉ cần HTTP 2xx là coi như thành công."
 msgstr ""
 
-#: includes/class-field-registry.php:618
+#: includes/class-field-registry.php:617
 msgid "Ví dụ địa chỉ cửa hàng hoặc câu nhắc không trả lời email này. Để trống để bỏ hẳn phần chân."
 msgstr ""
 
@@ -2419,19 +2419,19 @@ msgstr ""
 msgid "Vòng đăng nhập chạy được. Không có tài khoản nào được tạo và không ai được đăng nhập — đây chỉ là phép thử."
 msgstr ""
 
-#: includes/class-field-registry.php:854
+#: includes/class-field-registry.php:853
 msgid "Vượt quá thì loại sự kiện đó chỉ ghi một dòng tổng hợp cho cả giờ. Không có trần này, một cuộc tấn công khiến chính nhật ký trở thành thứ khuếch đại nó. Các sự kiện quan trọng — khoá tài khoản, đăng ký, đặt lại mật khẩu, chạm trần, ngắt mạch, liên kết provider — không bao giờ bị bỏ. Đặt 0 để ghi tất cả."
 msgstr ""
 
-#: includes/class-field-registry.php:373
+#: includes/class-field-registry.php:372
 msgid "Vượt quá thì mã bị huỷ và người dùng phải yêu cầu mã mới."
 msgstr ""
 
-#: includes/class-field-registry.php:491
+#: includes/class-field-registry.php:490
 msgid "Với GET, phần Body bên dưới được dùng làm query string."
 msgstr ""
 
-#: includes/class-field-registry.php:509
+#: includes/class-field-registry.php:508
 msgid "Với JSON, các giá trị thay thế được escape tự động nên nội dung luôn hợp lệ."
 msgstr ""
 
@@ -2452,7 +2452,7 @@ msgid "Webhook chưa được bật hoặc chưa có URL."
 msgstr ""
 
 #: includes/Admin/Screens/class-settings-screen.php:383
-#: includes/class-field-registry.php:116
+#: includes/class-field-registry.php:115
 msgid "WooCommerce"
 msgstr ""
 
@@ -2482,11 +2482,11 @@ msgstr ""
 msgid "Xem trần"
 msgstr ""
 
-#: includes/class-field-registry.php:996
+#: includes/class-field-registry.php:995
 msgid "Xoá bảng, tuỳ chọn và user meta khi gỡ plugin. <strong>Không thể hoàn tác.</strong>"
 msgstr ""
 
-#: includes/class-field-registry.php:995
+#: includes/class-field-registry.php:994
 msgid "Xoá dữ liệu khi gỡ"
 msgstr ""
 
@@ -2498,7 +2498,7 @@ msgstr ""
 msgid "Xoá, dùng lại mẫu chung"
 msgstr ""
 
-#: includes/class-field-registry.php:119
+#: includes/class-field-registry.php:118
 msgid "Xác minh chống robot"
 msgstr ""
 
@@ -2532,7 +2532,7 @@ msgstr ""
 msgid "Xóa secret đã lưu khi bấm Lưu thay đổi"
 msgstr ""
 
-#: includes/class-field-registry.php:736
+#: includes/class-field-registry.php:735
 msgid "Yêu cầu chọn địa chỉ khi cập nhật hồ sơ"
 msgstr ""
 
@@ -2543,7 +2543,7 @@ msgstr ""
 msgid "Yêu cầu không hợp lệ."
 msgstr ""
 
-#: includes/class-field-registry.php:291
+#: includes/class-field-registry.php:290
 msgid "Yêu cầu nhập OTP khi đăng nhập từ thiết bị chưa từng thấy. <strong>Lưu ý chi phí SMS.</strong>"
 msgstr ""
 
@@ -2584,7 +2584,7 @@ msgstr ""
 msgid "giờ"
 msgstr ""
 
-#: includes/class-field-registry.php:883
+#: includes/class-field-registry.php:882
 msgid "hCaptcha"
 msgstr ""
 
@@ -2695,7 +2695,7 @@ msgstr ""
 msgid "Điền Client ID và Secret rồi Lưu thay đổi trước khi kiểm tra."
 msgstr ""
 
-#: includes/class-field-registry.php:761
+#: includes/class-field-registry.php:760
 msgid "Điền sẵn <code>billing_phone</code> từ số điện thoại đã xác thực khi ô đó còn trống"
 msgstr ""
 
@@ -2781,7 +2781,7 @@ msgstr ""
 msgid "ĐĂNG KÝ THÀNH CÔNG"
 msgstr ""
 
-#: includes/class-field-registry.php:98
+#: includes/class-field-registry.php:97
 msgid "Đăng ký và điều hướng"
 msgstr ""
 
@@ -2802,7 +2802,7 @@ msgstr ""
 msgid "Đăng nhập / Đăng ký"
 msgstr ""
 
-#: includes/class-field-registry.php:186
+#: includes/class-field-registry.php:185
 msgid "Đăng nhập bằng"
 msgstr ""
 
@@ -2830,12 +2830,12 @@ msgstr ""
 msgid "Đăng xuất"
 msgstr ""
 
-#: includes/class-field-registry.php:526
-#: includes/class-field-registry.php:672
+#: includes/class-field-registry.php:525
+#: includes/class-field-registry.php:671
 msgid "Đường dẫn JSON báo thành công"
 msgstr ""
 
-#: includes/class-field-registry.php:911
+#: includes/class-field-registry.php:910
 msgid "Được mã hoá trước khi lưu và không bao giờ hiển thị lại. Để trống khi lưu nghĩa là giữ nguyên giá trị cũ."
 msgstr ""
 
@@ -2847,11 +2847,11 @@ msgstr ""
 msgid "Đầy đủ."
 msgstr ""
 
-#: includes/class-field-registry.php:391
+#: includes/class-field-registry.php:390
 msgid "Đặt 0 để bỏ giới hạn (không khuyến nghị)."
 msgstr ""
 
-#: includes/class-field-registry.php:808
+#: includes/class-field-registry.php:807
 msgid "Đặt 0 để bỏ giới hạn."
 msgstr ""
 
@@ -2884,7 +2884,7 @@ msgstr ""
 msgid "Để sau"
 msgstr ""
 
-#: includes/class-field-registry.php:249
+#: includes/class-field-registry.php:248
 msgid "Để trống nếu không có trang điều khoản riêng."
 msgstr ""
 
@@ -2893,7 +2893,7 @@ msgstr ""
 msgid "Để trống nếu không muốn thay đổi"
 msgstr ""
 
-#: includes/class-field-registry.php:673
+#: includes/class-field-registry.php:672
 msgid "Để trống thì chỉ cần HTTP 2xx là coi như thành công."
 msgstr ""
 
@@ -2901,7 +2901,7 @@ msgstr ""
 msgid "Để trống ô này"
 msgstr ""
 
-#: includes/class-field-registry.php:577
+#: includes/class-field-registry.php:576
 msgid "Để trống để dùng cấu hình mặc định của WordPress."
 msgstr ""
 
@@ -2910,12 +2910,12 @@ msgstr ""
 msgid "Để trống để dùng mẫu đang hiển thị mờ bên trong ô."
 msgstr ""
 
-#: includes/class-field-registry.php:257
-#: includes/class-field-registry.php:265
+#: includes/class-field-registry.php:256
+#: includes/class-field-registry.php:264
 msgid "Để trống để dùng trang Tài khoản của WooCommerce."
 msgstr ""
 
-#: includes/class-field-registry.php:569
+#: includes/class-field-registry.php:568
 msgid "Để trống để dùng tên website."
 msgstr ""
 
@@ -2923,7 +2923,7 @@ msgstr ""
 msgid "Để đơn hàng được giao đúng nơi, không phải nhập lại mỗi lần"
 msgstr ""
 
-#: includes/class-field-registry.php:115
+#: includes/class-field-registry.php:114
 msgid "Địa chỉ 2 cấp"
 msgstr ""
 
@@ -2948,7 +2948,7 @@ msgstr ""
 #: includes/Admin/Screens/class-audit-screen.php:43
 #: includes/Admin/class-readiness.php:115
 #: includes/Admin/class-readiness.php:130
-#: includes/class-field-registry.php:97
+#: includes/class-field-registry.php:96
 msgid "Định danh"
 msgstr ""
 
@@ -2956,15 +2956,15 @@ msgstr ""
 msgid "Định danh chính"
 msgstr ""
 
-#: includes/class-field-registry.php:591
+#: includes/class-field-registry.php:590
 msgid "Định dạng"
 msgstr ""
 
-#: includes/class-field-registry.php:102
+#: includes/class-field-registry.php:101
 msgid "Định tuyến"
 msgstr ""
 
-#: includes/class-field-registry.php:760
+#: includes/class-field-registry.php:759
 msgid "Đồng bộ SĐT"
 msgstr ""
 
@@ -2983,11 +2983,11 @@ msgstr ""
 msgid "Đổi mật khẩu"
 msgstr ""
 
-#: includes/class-field-registry.php:241
+#: includes/class-field-registry.php:240
 msgid "Độ dài mật khẩu tối thiểu"
 msgstr ""
 
-#: includes/class-field-registry.php:743
+#: includes/class-field-registry.php:742
 msgid "Ẩn Mã bưu điện"
 msgstr ""
 
