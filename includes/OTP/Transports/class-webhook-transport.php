@@ -13,7 +13,7 @@ use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
 
-class WebhookTransport implements TransportInterface {
+class WebhookTransport implements TransportInterface, ReportsUnavailability {
 
 	/**
 	 * Hard ceiling on how long one send may hold a PHP worker.
@@ -30,6 +30,10 @@ class WebhookTransport implements TransportInterface {
 
 	public function is_available(): bool {
 		return Settings::is_on( 'sms.enabled' ) && '' !== trim( (string) Settings::get( 'sms.url', '' ) );
+	}
+
+	public function unavailable_message(): string {
+		return __( 'Kênh SMS chưa được cấu hình. Liên hệ quản trị viên.', 'smart-login' );
 	}
 
 	/**

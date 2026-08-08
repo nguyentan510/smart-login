@@ -119,6 +119,36 @@ class SL_Fake_Transport implements TransportInterface {
 	}
 }
 
+/**
+ * A transport that is registered but not configured — the shape a site adds
+ * through `smart_login_otp_transports` and then forgets to fill in.
+ *
+ * Deliberately implements nothing beyond TransportInterface: whatever lets the
+ * router describe this refusal must be optional, or every transport written
+ * against the published contract fatals on upgrade.
+ */
+class SL_Unconfigured_Transport implements TransportInterface {
+
+	/** @var string */
+	private $id;
+
+	public function __construct( string $id ) {
+		$this->id = $id;
+	}
+
+	public function id(): string {
+		return $this->id;
+	}
+
+	public function is_available(): bool {
+		return false;
+	}
+
+	public function send( string $destination, string $code, array $ctx ) {
+		return new WP_Error( 'sl_test_send_reached', 'send() must not be reached on an unavailable transport' );
+	}
+}
+
 /** Limits are 9's subject, not this suite's. */
 class SL_Allow_Limiter extends RateLimiter {
 
@@ -679,6 +709,54 @@ sl_assert(
 	'an unconfigured automation endpoint refuses rather than falling through',
 	is_wp_error( $sl_closed ),
 	'A routed transport that cannot send must say so. Silently using the built-in would mean the routing table is advisory, and an administrator who pointed a channel somewhere would never learn it did not go there.'
+);
+
+/*
+ * Failing closed is half the rule; saying which door closed is the other half.
+ *
+ * The refusal above used to be worded by a two-branch ternary — 'sms' or, for
+ * everything else, email — so a phone number routed at the automation endpoint
+ * came back as "Kênh email chưa được cấu hình". The user had typed a phone
+ * number, the router had routed it correctly, and the screen still named a
+ * channel nothing had touched. A message that misnames the failure sends the
+ * administrator to the wrong settings tab, which is worse than no message.
+ */
+sl_assert(
+	'the refusal names the transport that actually failed',
+	is_wp_error( $sl_closed ) && false !== stripos( $sl_closed->get_error_message(), 'automation' ),
+	'A phone routed at the automation endpoint must be refused in the automation endpoint\'s name. Got: ' . ( is_wp_error( $sl_closed ) ? $sl_closed->get_error_message() : 'no error at all' )
+);
+
+/*
+ * The general case, which is the one a ternary can never satisfy. The transport
+ * map is open — `smart_login_otp_transports` exists so a site can add ZNS or an
+ * in-app push — and a message chosen by a fixed list of ids describes the
+ * transports somebody thought of at the time. This one is not on any list.
+ */
+$sl_third_party = new TransportRouter(
+	array(
+		'sms'   => new SL_Fake_Transport( true ),
+		'email' => new SL_Fake_Transport( true ),
+		'zns'   => new SL_Unconfigured_Transport( 'zns' ),
+	)
+);
+
+Settings::update( array( 'delivery.route_phone' => 'zns' ) );
+
+$sl_third_party_refusal = $sl_third_party->send( '84969789475', '482913', array( 'intent' => 'login' ) );
+
+sl_assert(
+	'a transport registered by a filter is not described as one of the built-ins',
+	is_wp_error( $sl_third_party_refusal )
+		&& false === stripos( $sl_third_party_refusal->get_error_message(), 'email' )
+		&& false === stripos( $sl_third_party_refusal->get_error_message(), 'SMS' ),
+	'An unavailable transport must be described as itself. Borrowing the wording of a built-in tells the user a channel failed that was never asked to do anything. Got: ' . ( is_wp_error( $sl_third_party_refusal ) ? $sl_third_party_refusal->get_error_message() : 'no error at all' )
+);
+
+sl_assert(
+	'an unavailable transport is refused before its own send() runs',
+	is_wp_error( $sl_third_party_refusal ) && 'sl_test_send_reached' !== $sl_third_party_refusal->get_error_code(),
+	'The router checks availability so a transport that cannot work is never called. Reaching send() would also feed the circuit breaker a failure that says nothing about the gateway.'
 );
 
 Settings::update(

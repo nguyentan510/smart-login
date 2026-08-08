@@ -175,6 +175,37 @@ configured. That failure is otherwise invisible until the first visitor presses
 Đăng ký, which is the exact scenario this class was written for
 (`class-readiness.php:5-9`).
 
+### D8 — A transport is described by itself, not by a list
+
+*Added in 19.x, after D1's routing shipped and its refusal message did not
+follow.*
+
+D1 made the transport a variable. The message shown when that transport cannot
+send stayed a constant — a two-branch ternary reading `'sms' === $transport_id`
+and otherwise naming email. So a phone number correctly routed at `automation`
+with no endpoint configured was refused as *"Kênh email chưa được cấu hình"*:
+routing right, sentence wrong, and the administrator sent to a settings tab
+where nothing was broken. D7 had already got this right on the admin side by
+printing the transport it asked about; the user-facing path had not.
+
+A third branch would fix the instance. The bug class is that a fixed list of ids
+describes an open registry — `smart_login_otp_transports` exists precisely so a
+site can add ZNS or in-app push, and those were being described as email too. So
+the transport answers instead, through an **optional** interface:
+
+```php
+interface ReportsUnavailability {
+	public function unavailable_message(): string;
+}
+```
+
+Optional, not a fourth method on `TransportInterface`, because that interface is
+published API and this repository's own docblock promises adding a transport
+means implementing it "and nothing else". A required method would fatal every
+transport written against that promise on upgrade. A transport that does not
+implement `ReportsUnavailability` is named by its id — plainer than the built-ins
+manage, still the truth about which channel failed.
+
 ## Security position, stated plainly
 
 This phase deliberately weakens a property the plugin currently holds: the
@@ -200,6 +231,7 @@ must say so rather than implying the signature makes the destination safe.
 | --- | --- |
 | Which transport serves a channel | `TransportRouter` — the single routing authority |
 | Whether a transport can work at all | the transport's own `is_available()` |
+| How an unusable transport is described | the transport's own `unavailable_message()` (D8) |
 | Whether a failing transport is called | `CircuitBreaker`, one instance per transport id |
 | Whether the site may send at all | `RateLimiter` — unchanged by this phase |
 | Signing and shipping an envelope | the automation sender, used by both roles |

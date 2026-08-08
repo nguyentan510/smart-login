@@ -83,6 +83,34 @@ class TransportRouter {
 		return $this->get( $routed ) ? $routed : $route['fallback'];
 	}
 
+	/**
+	 * Why a transport cannot carry anything right now, in its own words.
+	 *
+	 * This used to be a ternary: `sms`, or else email. Two branches describing a
+	 * registry that has three built-ins and takes more through a filter, so every
+	 * transport that was not the SMS gateway was refused as though it were the
+	 * mail one. The visible symptom was a phone number routed at the automation
+	 * endpoint coming back as "Kênh email chưa được cấu hình" — the routing was
+	 * right, the sentence was not, and it pointed the administrator at a tab
+	 * where nothing was wrong.
+	 *
+	 * Asking the transport makes the mismatch unrepresentable rather than fixed
+	 * once: there is no list here to forget to extend. A transport that does not
+	 * implement ReportsUnavailability is named by its id, which is plainer than
+	 * the built-ins manage but is still the truth about which channel failed.
+	 */
+	private function unavailable_message( TransportInterface $transport, string $id ): string {
+		if ( $transport instanceof ReportsUnavailability ) {
+			return $transport->unavailable_message();
+		}
+
+		return sprintf(
+			/* translators: %s: transport id, e.g. "zns". */
+			__( 'Kênh "%s" chưa được cấu hình. Liên hệ quản trị viên.', 'smart-login' ),
+			$id
+		);
+	}
+
 	public function get( string $id ): ?TransportInterface {
 		$transport = $this->transports[ $id ] ?? null;
 
@@ -130,9 +158,7 @@ class TransportRouter {
 		if ( ! $transport->is_available() ) {
 			return new WP_Error(
 				'smart_login_transport_unavailable',
-				'sms' === $transport_id
-					? __( 'Kênh SMS chưa được cấu hình. Liên hệ quản trị viên.', 'smart-login' )
-					: __( 'Kênh email chưa được cấu hình. Liên hệ quản trị viên.', 'smart-login' )
+				$this->unavailable_message( $transport, $transport_id )
 			);
 		}
 

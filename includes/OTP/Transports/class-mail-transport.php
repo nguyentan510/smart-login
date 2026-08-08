@@ -18,7 +18,7 @@ use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
 
-class MailTransport implements TransportInterface {
+class MailTransport implements TransportInterface, ReportsUnavailability {
 
 	public function id(): string {
 		return 'email';
@@ -26,6 +26,10 @@ class MailTransport implements TransportInterface {
 
 	public function is_available(): bool {
 		return Settings::is_on( 'email.enabled' );
+	}
+
+	public function unavailable_message(): string {
+		return __( 'Kênh email chưa được cấu hình. Liên hệ quản trị viên.', 'smart-login' );
 	}
 
 	/**

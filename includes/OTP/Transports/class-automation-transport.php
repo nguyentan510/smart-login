@@ -29,7 +29,7 @@ use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
 
-class AutomationTransport implements TransportInterface {
+class AutomationTransport implements TransportInterface, ReportsUnavailability {
 
 	const EVENT_OTP_SEND = 'otp.send';
 
@@ -48,15 +48,18 @@ class AutomationTransport implements TransportInterface {
 		return $this->endpoint->is_configured();
 	}
 
+	public function unavailable_message(): string {
+		return __( 'Kênh automation chưa được cấu hình. Liên hệ quản trị viên.', 'smart-login' );
+	}
+
 	/**
 	 * @return true|WP_Error
 	 */
 	public function send( string $destination, string $code, array $ctx ) {
 		if ( ! $this->is_available() ) {
-			return new WP_Error(
-				'smart_login_automation_unconfigured',
-				__( 'Kênh automation chưa được cấu hình. Liên hệ quản trị viên.', 'smart-login' )
-			);
+			// Reached only by a caller that skipped the router — the admin's
+			// "Gửi thử" button does exactly that. One wording either way.
+			return new WP_Error( 'smart_login_automation_unconfigured', $this->unavailable_message() );
 		}
 
 		$delivery_id = bin2hex( random_bytes( 16 ) );
