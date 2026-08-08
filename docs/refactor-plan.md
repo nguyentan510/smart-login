@@ -2368,6 +2368,69 @@ told its email was misconfigured.
 
 ---
 
+## Phase 20 — Sending a code
+
+Spec: [`sending-a-code.md`](sending-a-code.md). Revises Phase 10 — D1, D2, D8.
+
+**Not a feature. A vocabulary removal.** Reported 2026-08-08 by the administrator
+who had just hit *The transport that answered in another's name*: the message was
+fixed and the configuration was still wrong, because the screen that produced it
+offers one word for three concepts and three words for one concept. The report is
+the spec — *"Việc cấu trúc sai, nên tôi hiểu sai nên cấu hình sai."*
+
+The install had a working gateway URL in `sms.url`, `sms.enabled` on, and
+`delivery.route_phone` pointed at `automation` with an empty endpoint. Both
+halves were reasonable readings. Together they delivered nothing.
+
+- [ ] **20.0** Guard rails, landed red —
+      [brief](sending-a-code/20.0-guard-rails.md). Four rules: no setting names a
+      transport, one label per concept, the bus cannot reach the OTP path, and an
+      enabled channel that serves nothing says so
+- [ ] **20.1** The routing table goes away. `delivery.route_phone` and
+      `delivery.route_email` deleted; the identity channel decides the transport.
+      `channel_for()` untouched — it answers a property of the identifier and was
+      never what 10.1 changed
+- [ ] **20.2** The signed envelope becomes the `signed` gateway preset. D3's
+      payload and D4's HTTPS-at-save move with it. `AutomationTransport`'s
+      **transport** role retires; its **bus** role does not
+- [ ] **20.3** Migration, and it refuses to be silent. `automation.url` +
+      `automation.secret` → `signed` credentials. `route_email = automation` has
+      no equivalent and raises an admin notice naming the setting rather than
+      choosing for the site
+- [ ] **20.4** The bus becomes the top-level tab **Thông báo & Tích hợp**, off by
+      default. Not under Gửi mã because it delivers nothing to a visitor; not
+      called Automation because that named a platform rather than a behaviour,
+      and the behaviour is one-directional
+- [ ] **20.5** One word, one meaning — the D4 table applied across labels, help
+      text and the README. "Webhook" reserved for the event tab; "API" only
+      inside the custom gateway's advanced fields
+- [ ] **20.6** Each channel screen states whether it is serving anything. This is
+      `delivery-routing.md` D2's unmet requirement, cheap only after 20.1 — the
+      answer stops being a routing lookup and becomes "is this channel enabled"
+
+---
+
+**Ordering rationale.** 20.2 before 20.1, and that is the only counter-intuitive
+edge. The preset has to be able to carry a site's configuration *before* the
+routing table that currently carries it is deleted, or 20.1 lands a window in
+which an automation-routed install has nowhere to be. 20.3 then moves the data
+across and 20.1 removes the empty shell.
+
+20.4 after 20.3 for the same reason in the other direction: the tab cannot be
+re-parented while a migration is still reading `automation.*` as a transport.
+
+20.5 and 20.6 are last because they are the visible half, and the same argument
+Phase 19 records applies — a screen relabelled around a structure that is still
+moving gets relabelled twice.
+
+**Risk this phase carries and Phase 10 did not.** 10.1 shipped with defaults that
+reproduced existing behaviour byte for byte, so no site changed on upgrade. This
+one deletes two settings that sites have deliberately set. There is no
+no-migration path; 20.3 is load-bearing, and the acceptance for it is written
+before 20.2 starts.
+
+---
+
 ## Risks
 
 | Risk | Mitigation |
