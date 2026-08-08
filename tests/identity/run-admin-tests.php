@@ -1451,24 +1451,55 @@ sl_section( 'Rule 17 — an enabled channel says whether it is serving anything 
  * the state the administrator was looking at while nothing was being delivered.
  */
 $sl_status_restore = array(
-	'sms.enabled'          => Settings::get( 'sms.enabled' ),
-	'sms.url'              => Settings::get( 'sms.url' ),
-	'delivery.route_phone' => Settings::get( 'delivery.route_phone' ),
+	'identity.mode' => Settings::get( 'identity.mode' ),
+	'sms.enabled'   => Settings::get( 'sms.enabled' ),
+	'sms.url'       => Settings::get( 'sms.url' ),
+	'sms.preset'    => Settings::get( 'sms.preset' ),
 );
 
+/**
+ * Render one channel tab and return its markup.
+ */
+function sl_channel_html( SettingsScreen $screen, string $tab ): string {
+	return sl_capture(
+		static function () use ( $screen, $tab ): void {
+			$screen->render( $tab );
+		}
+	)['html'];
+}
+
+/*
+ * Repointed by 20.6, and the reason is written here because the original
+ * fixture is the more interesting of the two.
+ *
+ * 20.0 wrote this against `delivery.route_phone = automation` — a channel
+ * enabled and configured while the routing table pointed elsewhere. 20.1 deleted
+ * that setting, and `Settings::update()` drops paths the registry does not
+ * declare, so the old fixture now describes a channel that *is* serving.
+ * Asserting `idle` against it would assert something false.
+ *
+ * The property is unchanged; its only remaining spelling is different. A channel
+ * is idle when it is enabled but its identity channel is not — a site on
+ * `email_only` with the SMS gateway switched on and configured is paying for a
+ * gateway nothing can reach, and until now no screen said so.
+ *
+ * Both states are asserted, where 20.0 asserted one. A status line hard-coded to
+ * either value fails this.
+ */
 Settings::update(
 	array(
-		'sms.enabled'          => 1,
-		'sms.url'              => 'https://gateway.example/send',
-		'delivery.route_phone' => 'automation',
+		'identity.mode' => 'email_only',
+		'sms.enabled'   => 1,
+		'sms.preset'    => 'generic',
+		'sms.url'       => 'https://gateway.example/send',
 	)
 );
 
-$sl_idle_html = sl_capture(
-	static function () use ( $screen ): void {
-		$screen->render( 'delivery-sms' );
-	}
-)['html'];
+$sl_idle_html = sl_channel_html( $screen, 'delivery-sms' );
+
+Settings::update( array( 'identity.mode' => 'both' ) );
+
+$sl_serving_html = sl_channel_html( $screen, 'delivery-sms' );
 
 Settings::update( $sl_status_restore );
 
@@ -1479,9 +1510,15 @@ sl_assert(
 );
 
 sl_assert(
-	'the reported configuration renders as not serving',
+	'an enabled channel nothing can reach renders as idle',
 	false !== strpos( $sl_idle_html, 'data-sl-channel-status="idle"' ),
-	'Enabled, a real URL saved, and nothing routed to it — the screen must say so. This is the exact state that produced the report.'
+	'Enabled, a real gateway saved, and no phone identity accepted — the screen must say so. "Configured but not delivering" and "broken" look identical otherwise.'
+);
+
+sl_assert(
+	'and the same channel renders as serving once it is reachable',
+	false !== strpos( $sl_serving_html, 'data-sl-channel-status="serving"' ),
+	'Without this the rule is satisfied by a status line hard-coded to "idle", which would be worse than no status at all.'
 );
 
 // ---------------------------------------------------------------------

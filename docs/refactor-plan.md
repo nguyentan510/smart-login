@@ -2439,9 +2439,15 @@ halves were reasonable readings. Together they delivered nothing.
       had missed. Two help strings still described the routing table three
       sub-phases after it was deleted — no rule could see those, only reading
       could. **Admin screens 144/2**, and the last two reds are 20.6's
-- [ ] **20.6** Each channel screen states whether it is serving anything. This is
-      `delivery-routing.md` D2's unmet requirement, cheap only after 20.1 — the
-      answer stops being a routing lookup and becomes "is this channel enabled"
+- [x] **20.6** [A channel that says what it is
+      doing](sending-a-code/20.6-a-channel-that-says-what-it-is-doing.md) —
+      `data-sl-channel-status` on both channel screens, and **Rule 17 green**.
+      Rule 17's own fixture was stale: it described a channel routed elsewhere,
+      which 20.1 made unrepresentable, so it was repointed to the remaining
+      spelling — enabled but its identity channel is not — and **strengthened**
+      to assert both states. The **integration gate** then failed on four counts
+      that `run-all.php` cannot see; see the phase outcome. **Admin screens
+      147/0**
 
 ---
 
@@ -2463,6 +2469,47 @@ reproduced existing behaviour byte for byte, so no site changed on upgrade. This
 one deletes two settings that sites have deliberately set. There is no
 no-migration path; 20.3 is load-bearing, and the acceptance for it is written
 before 20.2 starts.
+
+---
+
+**Outcome.** Every sub-phase landed. Final state:
+
+```text
+Delivery routing  72 passed, 0 failed, 0 pending
+Admin screens    147 passed, 0 failed, 0 pending
+Every required suite PASS.
+Integration gate  SMART_LOGIN_DELIVERY_GATE_OK   wordpress=7.0.3
+phpcs 21 / 17 / 15   (was 21 / 20 / 16; 20.4 cleared three, see above)
+```
+
+**The plan was wrong five times out of seven, and the corrections are the phase.**
+
+- **D2, the central decision, was a category error** — caught by reading
+  `EnvelopeSigner` before writing code rather than after. A preset is data; a wire
+  format is code. Both end as "POST JSON to a URL", which is why they looked
+  alike, and four security controls do not survive the confusion.
+- **20.3's migration would have eaten a working gateway** on exactly the install
+  that filed the report — routed at automation with an empty endpoint, a shape the
+  brief had not listed.
+- **Three rules, not code, turned out to be the consumers** of the structure being
+  removed (20.1), and a fourth was a test fixture (20.4). Each was retired or
+  repointed with its reason written down.
+- **Rule 16 corrected the spec that commissioned it**, finding a third owner of
+  "Nhà cung cấp" that the findings had missed.
+- **20.5 surprised nobody**, and that is the control: its guard rail asked the
+  registry instead of counting by eye, so its list was exact before the work began.
+
+**The reported configuration is a test case, not an anecdote.** Twice the install
+in the original report was the case the plan forgot. It is now a fixture in two
+suites.
+
+**`run-all.php` is not the gate this file's own working agreement describes.**
+The integration gate sat red for five sub-phases on four checks — a deleted
+transport, a moved envelope, a `show_if` field, a hard-coded summary line — and
+none of them appeared in the summary that was green after every commit. The
+agreement already says anything touching a real WordPress goes through
+`tests/integration/`; what was missing was running it per sub-phase rather than
+per phase.
 
 ---
 

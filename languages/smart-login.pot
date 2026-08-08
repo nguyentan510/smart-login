@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-08 07:48+0000\n"
+"POT-Creation-Date: 2026-08-08 08:01+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -89,11 +89,11 @@ msgstr ""
 msgid "0969 789 475"
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:363
+#: includes/Admin/Screens/class-settings-screen.php:429
 msgid "0969789475"
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:368
+#: includes/Admin/Screens/class-settings-screen.php:434
 msgid "0969789475 hoặc ban@example.com"
 msgstr ""
 
@@ -176,7 +176,7 @@ msgstr ""
 msgid "Bạn đã yêu cầu quá nhiều mã xác thực. Vui lòng thử lại sau 1 giờ."
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:386
+#: includes/Admin/Screens/class-settings-screen.php:452
 msgid "Bảng OTP"
 msgstr ""
 
@@ -185,7 +185,7 @@ msgstr ""
 msgid "Bảng dữ liệu"
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:387
+#: includes/Admin/Screens/class-settings-screen.php:453
 msgid "Bảng nhật ký"
 msgstr ""
 
@@ -197,7 +197,7 @@ msgstr ""
 msgid "Bảo mật đăng nhập"
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:385
+#: includes/Admin/Screens/class-settings-screen.php:451
 msgid "Bật"
 msgstr ""
 
@@ -262,7 +262,7 @@ msgstr ""
 msgid "Bổ sung thông tin"
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:308
+#: includes/Admin/Screens/class-settings-screen.php:374
 msgid "Bộ chọn địa chỉ sẽ không hiển thị gì cho tới khi bạn sinh dữ liệu bằng lệnh sau:"
 msgstr ""
 
@@ -278,8 +278,8 @@ msgstr ""
 msgid "CHÚC MỪNG"
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:386
-#: includes/Admin/Screens/class-settings-screen.php:387
+#: includes/Admin/Screens/class-settings-screen.php:452
+#: includes/Admin/Screens/class-settings-screen.php:453
 msgid "CHƯA TẠO"
 msgstr ""
 
@@ -362,7 +362,7 @@ msgstr ""
 msgid "Chưa có bản ghi nào."
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:307
+#: includes/Admin/Screens/class-settings-screen.php:373
 msgid "Chưa có dữ liệu hành chính."
 msgstr ""
 
@@ -405,7 +405,7 @@ msgstr ""
 msgid "Chưa cấu hình: %s. Người dùng sẽ không nhận được mã xác thực."
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:390
+#: includes/Admin/Screens/class-settings-screen.php:456
 msgid "Chưa lên lịch"
 msgstr ""
 
@@ -413,7 +413,7 @@ msgstr ""
 msgid "Chưa nhận được mã."
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:245
+#: includes/Admin/Screens/class-settings-screen.php:311
 msgid "Chưa được dùng. Chọn sự kiện bên dưới để website gửi thông báo ra ngoài. Endpoint này không gửi mã xác thực — mã xác thực đi qua tab Kênh SMS và Kênh Email."
 msgstr ""
 
@@ -527,7 +527,7 @@ msgstr ""
 msgid "Cài đặt"
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:202
+#: includes/Admin/Screens/class-settings-screen.php:203
 msgid "Các giá trị này do lựa chọn ở trên sinh ra. Chọn “Tuỳ chỉnh” nếu bạn cần tự đặt."
 msgstr ""
 
@@ -641,7 +641,7 @@ msgstr ""
 msgid "Dịch vụ chống robot"
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:388
+#: includes/Admin/Screens/class-settings-screen.php:454
 msgid "Dọn dẹp tiếp theo"
 msgstr ""
 
@@ -905,8 +905,8 @@ msgstr ""
 msgid "Gửi thành công tới %1$s (%2$dms). Kiểm tra điện thoại của bạn."
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:329
-#: includes/Admin/Screens/class-settings-screen.php:353
+#: includes/Admin/Screens/class-settings-screen.php:395
+#: includes/Admin/Screens/class-settings-screen.php:419
 #: includes/Admin/class-readiness.php:193
 #: includes/Admin/class-settings-page.php:109
 msgid "Gửi thử"
@@ -1110,7 +1110,7 @@ msgstr ""
 msgid "Không còn mã nào đang chờ xác thực. Hãy gửi mã mới."
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:383
+#: includes/Admin/Screens/class-settings-screen.php:449
 msgid "Không có"
 msgstr ""
 
@@ -1277,6 +1277,16 @@ msgstr ""
 msgid "Kênh không phải email."
 msgstr ""
 
+#. translators: %s: identity channel, e.g. "số điện thoại".
+#: includes/Admin/Screens/class-settings-screen.php:271
+msgid "Kênh này đang bật nhưng chưa có gì đi qua: website hiện không nhận %s làm cách định danh. Đổi ở tab Đăng nhập & Đăng ký, mục Định danh."
+msgstr ""
+
+#. translators: %s: identity channel, e.g. "số điện thoại".
+#: includes/Admin/Screens/class-settings-screen.php:261
+msgid "Kênh này đang tắt. Không mã xác thực nào được gửi tới %s."
+msgstr ""
+
 #: includes/class-field-registry.php:173
 msgid "Kênh định danh được bật"
 msgstr ""
@@ -1329,15 +1339,15 @@ msgstr ""
 msgid "Lào (+856)"
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:343
+#: includes/Admin/Screens/class-settings-screen.php:409
 msgid "Lưu cấu hình trước, sau đó gửi một mã thật tới email của bạn để kiểm tra."
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:335
+#: includes/Admin/Screens/class-settings-screen.php:401
 msgid "Lưu cấu hình trước, sau đó gửi một mã thật tới số điện thoại của bạn để kiểm tra."
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:339
+#: includes/Admin/Screens/class-settings-screen.php:405
 msgid "Lưu cấu hình trước. Nút này gửi một gói tin đã ký tới endpoint bất kể Định tuyến đang trỏ đâu, và không bị ngắt mạch chặn — nên nó là cách kiểm tra xem endpoint đã sống lại chưa."
 msgstr ""
 
@@ -1345,7 +1355,7 @@ msgstr ""
 msgid "Lưu lại các sự kiện đăng nhập / xác thực"
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:71
+#: includes/Admin/Screens/class-settings-screen.php:72
 #: templates/account.php:53
 #: templates/woocommerce/form-edit-account.php:59
 #: templates/woocommerce/form-edit-account.php:60
@@ -1443,7 +1453,7 @@ msgstr ""
 msgid "Mã đăng nhập"
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:384
+#: includes/Admin/Screens/class-settings-screen.php:450
 msgid "Môi trường"
 msgstr ""
 
@@ -1671,7 +1681,7 @@ msgstr ""
 msgid "Philippines (+63)"
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:382
+#: includes/Admin/Screens/class-settings-screen.php:448
 msgid "Phiên bản plugin"
 msgstr ""
 
@@ -1854,7 +1864,7 @@ msgid "Site đứng sau proxy tin cậy"
 msgstr ""
 
 #: includes/Admin/Screens/class-overview-screen.php:63
-#: includes/Admin/Screens/class-settings-screen.php:45
+#: includes/Admin/Screens/class-settings-screen.php:46
 #: includes/Admin/class-settings-page.php:53
 #: includes/Admin/class-settings-page.php:54
 msgid "Smart Login"
@@ -2241,7 +2251,7 @@ msgstr ""
 msgid "Tên website"
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:276
+#: includes/Admin/Screens/class-settings-screen.php:342
 msgid "Tình trạng hệ thống"
 msgstr ""
 
@@ -2275,7 +2285,7 @@ msgstr ""
 msgid "Tạo tài khoản"
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:385
+#: includes/Admin/Screens/class-settings-screen.php:451
 #: includes/class-field-registry.php:880
 msgid "Tắt"
 msgstr ""
@@ -2453,11 +2463,11 @@ msgstr ""
 msgid "Với JSON, các giá trị thay thế được escape tự động nên nội dung luôn hợp lệ."
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:385
+#: includes/Admin/Screens/class-settings-screen.php:451
 msgid "WP_DEBUG"
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:383
+#: includes/Admin/Screens/class-settings-screen.php:449
 #: includes/class-field-registry.php:115
 msgid "WooCommerce"
 msgstr ""
@@ -2471,7 +2481,7 @@ msgstr ""
 msgid "Xem danh sách"
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:196
+#: includes/Admin/Screens/class-settings-screen.php:197
 msgid "Xem giá trị đang áp dụng"
 msgstr ""
 
@@ -2479,7 +2489,7 @@ msgstr ""
 msgid "Xem hướng dẫn"
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:197
+#: includes/Admin/Screens/class-settings-screen.php:198
 msgid "Xem request sẽ được gửi"
 msgstr ""
 
@@ -2553,7 +2563,7 @@ msgstr ""
 msgid "Yêu cầu nhập OTP khi đăng nhập từ thiết bị chưa từng thấy. <strong>Lưu ý chi phí SMS.</strong>"
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:371
+#: includes/Admin/Screens/class-settings-screen.php:437
 #: templates/form-auth.php:163
 msgid "ban@example.com"
 msgstr ""
@@ -2581,6 +2591,7 @@ msgstr ""
 msgid "dùng để đăng nhập"
 msgstr ""
 
+#: includes/Admin/Screens/class-settings-screen.php:254
 #: templates/partials/account/status.php:152
 #: templates/partials/account/status.php:159
 msgid "email"
@@ -2608,7 +2619,7 @@ msgstr ""
 msgid "ngày"
 msgstr ""
 
-#. translators: 1: contact type, 2: masked destination.
+#: includes/Admin/Screens/class-settings-screen.php:254
 #: templates/partials/account/status.php:152
 #: templates/partials/account/status.php:159
 msgid "số điện thoại"
@@ -2654,17 +2665,22 @@ msgid "Đang dùng mẫu chung"
 msgstr ""
 
 #. translators: %d: number of subscribed events.
-#: includes/Admin/Screens/class-settings-screen.php:240
+#: includes/Admin/Screens/class-settings-screen.php:306
 msgid "Đang gửi %d loại sự kiện ra ngoài."
 msgid_plural "Đang gửi %d loại sự kiện ra ngoài."
 msgstr[0] ""
+
+#. translators: %s: identity channel, e.g. "số điện thoại".
+#: includes/Admin/Screens/class-settings-screen.php:279
+msgid "Đang gửi mã xác thực tới %s."
+msgstr ""
 
 #: includes/Admin/class-settings-page.php:108
 #: includes/Frontend/class-assets.php:104
 msgid "Đang gửi…"
 msgstr ""
 
-#: includes/Admin/Screens/class-settings-screen.php:383
+#: includes/Admin/Screens/class-settings-screen.php:449
 #: includes/Admin/class-provider-cards.php:272
 msgid "Đang hoạt động"
 msgstr ""
@@ -2678,7 +2694,7 @@ msgid "Đang thay form My Account của WooCommerce."
 msgstr ""
 
 #. translators: %d: number of subscribed events.
-#: includes/Admin/Screens/class-settings-screen.php:252
+#: includes/Admin/Screens/class-settings-screen.php:318
 msgid "Đang theo dõi %d sự kiện."
 msgid_plural "Đang theo dõi %d sự kiện."
 msgstr[0] ""
@@ -2733,7 +2749,7 @@ msgid "Đã cài %d tỉnh/thành."
 msgstr ""
 
 #. translators: 1: province count, 2: ward count.
-#: includes/Admin/Screens/class-settings-screen.php:295
+#: includes/Admin/Screens/class-settings-screen.php:361
 msgid "Đã cài dữ liệu hành chính: %1$d tỉnh/thành, %2$d phường/xã."
 msgstr ""
 

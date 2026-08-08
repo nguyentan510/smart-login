@@ -114,29 +114,26 @@ $settings_before = get_option( Settings::OPTION );
 $secrets_before  = get_option( Settings::SECRET_OPTION );
 
 // ---------------------------------------------------------------------
-echo "10.1 — routing\n";
+echo "20.1 — the channel decides, on a real option row\n";
 
-Settings::update(
-	array(
-		'delivery.route_phone' => 'sms',
-		'delivery.route_email' => 'email',
-	)
-);
+// 10.1 stored a route here and asserted the router followed it. 20.1 deleted the
+// table, so what this gate can still say — and a pure suite cannot — is that the
+// answer survives a real WordPress option round trip with a contradictory value
+// actually stored on the row.
+Settings::update( array( 'delivery.route_phone' => 'automation' ) );
 
 $router = new TransportRouter();
 
 if ( 'sms' !== $router->transport_for( '84969789475' ) || 'email' !== $router->transport_for( 'ban@example.com' ) ) {
-	$fail( 'the shipped defaults do not reproduce the pre-10.1 routing' );
+	$fail( 'the channel no longer decides the transport' );
 } else {
-	$ok( 'defaults route phone to sms and email to wp_mail()' );
+	$ok( 'phone goes to sms and email to wp_mail(), whatever is stored' );
 }
 
-Settings::update( array( 'delivery.route_phone' => 'automation' ) );
-
-if ( 'automation' !== $router->transport_for( '84969789475' ) ) {
-	$fail( 'a stored route is ignored by the default router' );
+if ( 'sms' !== $router->transport_for( '84969789475' ) ) {
+	$fail( 'a stored route still moves the answer' );
 } else {
-	$ok( 'a stored route reaches the transport registered under that id' );
+	$ok( 'a stored route is inert, on a real option row' );
 }
 
 // ---------------------------------------------------------------------
@@ -216,6 +213,16 @@ add_filter(
 	3
 );
 
+// Through the signed provider, which is where the envelope lives since 20.2.
+Settings::update(
+	array(
+		'sms.enabled'    => 1,
+		'sms.preset'     => 'signed',
+		'sms.signed_url' => 'https://hooks.example.test/otp',
+	)
+);
+Settings::store_secret( 'sms.signed_secret', 'integration-signing-secret' );
+
 $sent = ( new WebhookTransport() )->send(
 	'84969789475',
 	'482913',
@@ -227,7 +234,7 @@ $sent = ( new WebhookTransport() )->send(
 );
 
 if ( true !== $sent ) {
-	$fail( 'the automation transport rejected a 200: ' . ( is_wp_error( $sent ) ? $sent->get_error_message() : 'unknown' ) );
+	$fail( 'the signed provider rejected a 200: ' . ( is_wp_error( $sent ) ? $sent->get_error_message() : 'unknown' ) );
 } elseif ( null === $captured ) {
 	$fail( 'no request reached the HTTP layer' );
 } else {
@@ -318,6 +325,22 @@ if ( ! class_exists( 'SmartLogin\\Admin\\Screens\\SettingsScreen' ) ) {
 					continue;
 				}
 
+				// A `show_if` field is drawn only while its condition holds. The
+				// pure admin suite asserts both halves of that; here it would only
+				// ever report whichever half is false for what this gate last
+				// stored.
+				$applies = true;
+
+				foreach ( (array) ( $field['show_if'] ?? array() ) as $dep => $expected ) {
+					if ( (string) Settings::get( $dep, '' ) !== (string) $expected ) {
+						$applies = false;
+					}
+				}
+
+				if ( ! $applies ) {
+					continue;
+				}
+
 				if ( false === strpos( $screen_html, 'name="' . \SmartLogin\Admin\FieldRenderer::name( $path ) ) ) {
 					$missing[] = $slug . ':' . $path;
 				}
@@ -398,4 +421,13 @@ if ( $failures ) {
 echo "SMART_LOGIN_DELIVERY_GATE_OK\n";
 echo 'wordpress=' . get_bloginfo( 'version' ) . "\n";
 echo 'php=' . PHP_VERSION . "\n";
-echo 'transports=' . implode( ',', array( 'sms', 'email', 'automation' ) ) . "\n";
+// Hard-coded, and it had gone stale: it still listed `automation` after 20.1
+// retired that transport. Asked of the router instead, so the line reports what
+// the tree actually registers rather than what somebody typed once.
+$reported = array();
+
+foreach ( array( '84969789475', 'ban@example.com' ) as $probe ) {
+	$reported[] = ( new TransportRouter() )->transport_for( $probe );
+}
+
+echo 'transports=' . implode( ',', array_unique( $reported ) ) . "\n";

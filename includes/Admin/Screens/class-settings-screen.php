@@ -25,6 +25,7 @@ use SmartLogin\Admin\ProviderCards;
 use SmartLogin\Admin\SettingsPage;
 use SmartLogin\FieldRegistry;
 use SmartLogin\GatewayPresets;
+use SmartLogin\Identity\Channels\MailChannel;
 use SmartLogin\Identity\Channels\PhoneChannel;
 use SmartLogin\Installer;
 use SmartLogin\OTP\Placeholders;
@@ -221,6 +222,71 @@ final class SettingsScreen {
 		if ( 'automation' === $section ) {
 			$this->automation_role();
 		}
+
+		if ( 'sms' === $section ) {
+			$this->channel_status( PhoneChannel::ID, 'sms.enabled', Settings::phone_enabled() );
+		}
+
+		if ( 'email' === $section ) {
+			$this->channel_status( MailChannel::ID, 'email.enabled', Settings::email_enabled() );
+		}
+	}
+
+	/**
+	 * Whether this channel is carrying anything, said rather than implied.
+	 *
+	 * `delivery-routing.md` D2 asked for this two phases before anybody hit it:
+	 * "configured but not delivering" and "broken" look identical otherwise. An
+	 * administrator did hit it, and the screen they were reading said nothing at
+	 * all while their phone numbers went nowhere.
+	 *
+	 * Cheap only because 20.1 removed the routing table. While the answer was a
+	 * lookup through two settings this would have been a fourth place that could
+	 * disagree with the other three; now it is two booleans, and both of them are
+	 * on screens the reader can get to from here.
+	 *
+	 * @param string $channel          Identity channel id, for the wording.
+	 * @param string $enabled_path     The channel's own on/off setting.
+	 * @param bool   $identity_enabled Whether that identity is accepted at all.
+	 */
+	private function channel_status( string $channel, string $enabled_path, bool $identity_enabled ): void {
+		$is_phone = PhoneChannel::ID === $channel;
+		$label    = $is_phone ? __( 'số điện thoại', 'smart-login' ) : __( 'email', 'smart-login' );
+
+		if ( ! Settings::is_on( $enabled_path ) ) {
+			$state   = 'off';
+			$class   = 'notice-info';
+			$message = sprintf(
+				/* translators: %s: identity channel, e.g. "số điện thoại". */
+				__( 'Kênh này đang tắt. Không mã xác thực nào được gửi tới %s.', 'smart-login' ),
+				$label
+			);
+		} elseif ( ! $identity_enabled ) {
+			// The state this whole sub-phase exists for: switched on, configured,
+			// and unreachable — because the identity it carries is not accepted.
+			$state   = 'idle';
+			$class   = 'notice-warning';
+			$message = sprintf(
+				/* translators: %s: identity channel, e.g. "số điện thoại". */
+				__( 'Kênh này đang bật nhưng chưa có gì đi qua: website hiện không nhận %s làm cách định danh. Đổi ở tab Đăng nhập & Đăng ký, mục Định danh.', 'smart-login' ),
+				$label
+			);
+		} else {
+			$state   = 'serving';
+			$class   = 'notice-success';
+			$message = sprintf(
+				/* translators: %s: identity channel, e.g. "số điện thoại". */
+				__( 'Đang gửi mã xác thực tới %s.', 'smart-login' ),
+				$label
+			);
+		}
+
+		printf(
+			'<div class="notice %1$s inline" data-sl-channel-status="%2$s"><p>%3$s</p></div>',
+			esc_attr( $class ),
+			esc_attr( $state ),
+			esc_html( $message )
+		);
 	}
 
 	/**
