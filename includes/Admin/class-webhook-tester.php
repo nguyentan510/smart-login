@@ -151,7 +151,7 @@ class WebhookTester {
 		$channel = new WebhookTransport();
 
 		if ( ! $channel->is_available() ) {
-			wp_send_json_error( array( 'message' => __( 'Webhook chưa bật hoặc chưa có URL. Hãy lưu cấu hình trước.', 'smart-login' ) ) );
+			wp_send_json_error( array( 'message' => __( 'Kênh SMS chưa bật hoặc chưa chọn nhà cung cấp. Hãy lưu cấu hình trước.', 'smart-login' ) ) );
 		}
 
 		$result = $channel->dispatch( $canonical, $code, $ctx );

@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-08 07:40+0000\n"
+"POT-Creation-Date: 2026-08-08 07:48+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -95,10 +95,6 @@ msgstr ""
 
 #: includes/Admin/Screens/class-settings-screen.php:368
 msgid "0969789475 hoặc ban@example.com"
-msgstr ""
-
-#: includes/class-field-registry.php:105
-msgid "Automation / Webhook"
 msgstr ""
 
 #: includes/Security/class-request-guard.php:126
@@ -213,12 +209,12 @@ msgstr ""
 msgid "Bật khi site thực sự nằm sau Cloudflare hoặc một load balancer của bạn. Nếu không điền dải IP bên dưới thì bật cái này <strong>không có tác dụng gì</strong> — và đó là chủ ý: tin header từ một máy chưa xác minh còn tệ hơn không tin gì cả."
 msgstr ""
 
-#: includes/class-field-registry.php:407
-msgid "Bật kênh gửi SMS qua webhook"
-msgstr ""
-
 #: includes/class-field-registry.php:560
 msgid "Bật kênh gửi email"
+msgstr ""
+
+#: includes/class-field-registry.php:407
+msgid "Bật kênh gửi mã tới số điện thoại"
 msgstr ""
 
 #: includes/Admin/class-readiness.php:475
@@ -460,7 +456,7 @@ msgid "Chỉ dùng khi gửi dạng HTML. Để trống thì hiện tên website
 msgstr ""
 
 #: includes/class-field-registry.php:871
-msgid "Chỉ dùng để ước tính chi phí trên màn hình Tổng quan, và tính cho mọi mã gửi tới số điện thoại — kể cả khi kênh đó đang định tuyến qua automation. Đặt 0 để ẩn."
+msgid "Chỉ dùng để ước tính chi phí trên màn hình Tổng quan, và tính cho mọi mã gửi tới số điện thoại. Đặt 0 để ẩn."
 msgstr ""
 
 #: includes/Admin/class-readiness.php:104
@@ -641,6 +637,10 @@ msgstr ""
 msgid "Dải IP của proxy"
 msgstr ""
 
+#: includes/class-field-registry.php:878
+msgid "Dịch vụ chống robot"
+msgstr ""
+
 #: includes/Admin/Screens/class-settings-screen.php:388
 msgid "Dọn dẹp tiếp theo"
 msgstr ""
@@ -708,6 +708,10 @@ msgstr ""
 
 #: includes/class-field-registry.php:433
 msgid "Endpoint nhận envelope"
+msgstr ""
+
+#: includes/class-field-registry.php:105
+msgid "Endpoint nhận sự kiện"
 msgstr ""
 
 #: includes/class-settings.php:659
@@ -837,6 +841,10 @@ msgstr ""
 
 #: includes/class-field-registry.php:542
 msgid "Gọi lại 1 lần sau 2 giây. Chỉ hoạt động khi đã cấu hình header idempotency bên dưới."
+msgstr ""
+
+#: includes/class-gateway-presets.php:92
+msgid "Gửi JSON tới endpoint của bạn (n8n / Make / Zapier)"
 msgstr ""
 
 #: includes/class-field-registry.php:591
@@ -1227,6 +1235,14 @@ msgstr ""
 msgid "Kênh SMS"
 msgstr ""
 
+#: includes/Admin/class-webhook-tester.php:154
+msgid "Kênh SMS chưa bật hoặc chưa chọn nhà cung cấp. Hãy lưu cấu hình trước."
+msgstr ""
+
+#: includes/OTP/Transports/class-webhook-transport.php:88
+msgid "Kênh SMS chưa được bật hoặc chưa cấu hình nhà cung cấp."
+msgstr ""
+
 #: includes/OTP/Transports/class-webhook-transport.php:58
 msgid "Kênh SMS chưa được cấu hình. Liên hệ quản trị viên."
 msgstr ""
@@ -1541,14 +1557,16 @@ msgstr ""
 msgid "Ngắt trong (giây)"
 msgstr ""
 
-#: includes/class-field-registry.php:99
 #: includes/class-field-registry.php:420
-#: includes/class-field-registry.php:878
-msgid "Nhà cung cấp"
+msgid "Nhà cung cấp SMS"
+msgstr ""
+
+#: includes/class-field-registry.php:99
+msgid "Nhà cung cấp đăng nhập"
 msgstr ""
 
 #: includes/Auth/class-account-provisioner.php:71
-msgid "Nhà cung cấp không trả về định danh hợp lệ."
+msgid "Nhà cung cấp đăng nhập không trả về định danh hợp lệ."
 msgstr ""
 
 #. translators: %s: identifier label, e.g. "Số điện thoại hoặc Email".
@@ -2178,7 +2196,7 @@ msgid "Tuỳ chỉnh"
 msgstr ""
 
 #: includes/class-gateway-presets.php:54
-msgid "Tuỳ chỉnh — tự khai báo mọi thứ"
+msgid "Tuỳ chỉnh — tự khai báo API"
 msgstr ""
 
 #: templates/partials/account/password.php:49
@@ -2268,7 +2286,7 @@ msgstr ""
 
 #. translators: %s: message name.
 #: includes/Mail/class-mail-registry.php:236
-msgid "Tắt nếu bạn đã nhận sự kiện này qua Automation. Nhật ký và sự kiện vẫn được ghi như cũ — đây chỉ là email."
+msgid "Tắt nếu bạn đã nhận sự kiện này qua tab Thông báo & Tích hợp. Nhật ký và sự kiện vẫn được ghi như cũ — đây chỉ là email."
 msgstr ""
 
 #: includes/Address/class-woo-address.php:102
@@ -2302,7 +2320,7 @@ msgid "URL"
 msgstr ""
 
 #: includes/class-gateway-presets.php:99
-msgid "URL nhận webhook"
+msgid "URL nhận yêu cầu"
 msgstr ""
 
 #. translators: %d: minutes remaining.
@@ -2437,18 +2455,6 @@ msgstr ""
 
 #: includes/Admin/Screens/class-settings-screen.php:385
 msgid "WP_DEBUG"
-msgstr ""
-
-#: includes/class-gateway-presets.php:92
-msgid "Webhook JSON (n8n / Make / Zapier)"
-msgstr ""
-
-#: includes/Admin/class-webhook-tester.php:154
-msgid "Webhook chưa bật hoặc chưa có URL. Hãy lưu cấu hình trước."
-msgstr ""
-
-#: includes/OTP/Transports/class-webhook-transport.php:88
-msgid "Webhook chưa được bật hoặc chưa có URL."
 msgstr ""
 
 #: includes/Admin/Screens/class-settings-screen.php:383

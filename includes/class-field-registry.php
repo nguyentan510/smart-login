@@ -96,13 +96,13 @@ final class FieldRegistry {
 			'identity'     => __( 'Định danh', 'smart-login' ),
 			'signup'       => __( 'Đăng ký và điều hướng', 'smart-login' ),
 			'login'        => __( 'Bảo mật đăng nhập', 'smart-login' ),
-			'provider'     => __( 'Nhà cung cấp', 'smart-login' ),
+			'provider'     => __( 'Nhà cung cấp đăng nhập', 'smart-login' ),
 			'linking'      => __( 'Chính sách liên kết tài khoản', 'smart-login' ),
 			'routing'      => __( 'Định tuyến', 'smart-login' ),
 			'otp'          => __( 'Mã xác thực', 'smart-login' ),
 			'sms'          => __( 'Gửi qua SMS', 'smart-login' ),
 			'email'        => __( 'Gửi qua email', 'smart-login' ),
-			'automation'   => __( 'Automation / Webhook', 'smart-login' ),
+			'automation'   => __( 'Endpoint nhận sự kiện', 'smart-login' ),
 			// The mail screen, in the order an administrator reads it: what every
 			// message falls back to, the messages themselves, the operational
 			// alerts, then how an HTML one is dressed.
@@ -404,7 +404,7 @@ final class FieldRegistry {
 				'tab'     => 'delivery-sms',
 				'section' => 'sms',
 				'label'   => __( 'Kích hoạt', 'smart-login' ),
-				'help'    => __( 'Bật kênh gửi SMS qua webhook', 'smart-login' ),
+				'help'    => __( 'Bật kênh gửi mã tới số điện thoại', 'smart-login' ),
 			),
 			'sms.preset'                   => array(
 				'type'    => 'select',
@@ -417,7 +417,7 @@ final class FieldRegistry {
 				'default' => 'generic',
 				'tab'     => 'delivery-sms',
 				'section' => 'sms',
-				'label'   => __( 'Nhà cung cấp', 'smart-login' ),
+				'label'   => __( 'Nhà cung cấp SMS', 'smart-login' ),
 				'choices' => GatewayPresets::choices(),
 				'help'    => __( 'Chọn nhà cung cấp và chỉ cần điền thông tin xác thực; URL, Body và điều kiện thành công được sinh tự động.', 'smart-login' ),
 			),
@@ -868,14 +868,14 @@ final class FieldRegistry {
 				// for no behavioural gain, and this project has been bitten five
 				// times by exactly that. The label carries the meaning instead.
 				'label'   => __( 'Giá mỗi mã gửi tới số điện thoại (VNĐ)', 'smart-login' ),
-				'help'    => __( 'Chỉ dùng để ước tính chi phí trên màn hình Tổng quan, và tính cho mọi mã gửi tới số điện thoại — kể cả khi kênh đó đang định tuyến qua automation. Đặt 0 để ẩn.', 'smart-login' ),
+				'help'    => __( 'Chỉ dùng để ước tính chi phí trên màn hình Tổng quan, và tính cho mọi mã gửi tới số điện thoại. Đặt 0 để ẩn.', 'smart-login' ),
 			),
 			'security.captcha_provider'               => array(
 				'type'    => 'select',
 				'default' => 'off',
 				'tab'     => 'security',
 				'section' => 'captcha',
-				'label'   => __( 'Nhà cung cấp', 'smart-login' ),
+				'label'   => __( 'Dịch vụ chống robot', 'smart-login' ),
 				'choices' => array(
 					'off'       => __( 'Tắt', 'smart-login' ),
 					'turnstile' => __( 'Cloudflare Turnstile', 'smart-login' ),

@@ -85,7 +85,7 @@ class WebhookTransport implements TransportInterface, ReportsUnavailability {
 	 */
 	public function dispatch( string $destination, string $code, array $ctx ): array {
 		if ( ! $this->is_available() ) {
-			return $this->failure( __( 'Webhook chưa được bật hoặc chưa có URL.', 'smart-login' ) );
+			return $this->failure( __( 'Kênh SMS chưa được bật hoặc chưa cấu hình nhà cung cấp.', 'smart-login' ) );
 		}
 
 		$delivery_id        = bin2hex( random_bytes( 16 ) );

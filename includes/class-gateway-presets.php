@@ -51,7 +51,7 @@ final class GatewayPresets {
 	public static function all(): array {
 		$presets = array(
 			self::CUSTOM => array(
-				'label'       => __( 'Tuỳ chỉnh — tự khai báo mọi thứ', 'smart-login' ),
+				'label'       => __( 'Tuỳ chỉnh — tự khai báo API', 'smart-login' ),
 				'credentials' => array(),
 			),
 			'esms'       => array(
@@ -89,14 +89,14 @@ final class GatewayPresets {
 				'credentials' => array(),
 			),
 			'generic'    => array(
-				'label'        => __( 'Webhook JSON (n8n / Make / Zapier)', 'smart-login' ),
+				'label'        => __( 'Gửi JSON tới endpoint của bạn (n8n / Make / Zapier)', 'smart-login' ),
 				'url'          => '{{cred:endpoint}}',
 				'method'       => 'POST',
 				'content_type' => 'application/json',
 				'body'         => '{"phone":"{{phone_local}}","code":"{{code}}","minutes":"{{ttl_minutes}}","site":"{{site_name}}"}',
 				'credentials'  => array(
 					'endpoint' => array(
-						'label'  => __( 'URL nhận webhook', 'smart-login' ),
+						'label'  => __( 'URL nhận yêu cầu', 'smart-login' ),
 						'secret' => false,
 					),
 				),

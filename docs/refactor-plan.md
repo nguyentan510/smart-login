@@ -2431,9 +2431,14 @@ halves were reasonable readings. Together they delivered nothing.
       a fourth way for the screen to disagree with itself. A **test fixture**
       turned out to depend on the hierarchy and was repointed.
       **phpcs baseline moves to 21 / 17 / 15** — see below
-- [ ] **20.5** One word, one meaning — the D4 table applied across labels, help
-      text and the README. "Webhook" reserved for the event tab; "API" only
-      inside the custom gateway's advanced fields
+- [x] **20.5** [One word, one
+      meaning](sending-a-code/20.5-one-word-one-meaning.md) — **Rule 16 green.**
+      "Nhà cung cấp" split three ways (đăng nhập / SMS / Dịch vụ chống robot);
+      "Webhook" removed from all six SMS-side labels and left to the event tab.
+      The captcha field was in scope only because 20.0's rule found what the spec
+      had missed. Two help strings still described the routing table three
+      sub-phases after it was deleted — no rule could see those, only reading
+      could. **Admin screens 144/2**, and the last two reds are 20.6's
 - [ ] **20.6** Each channel screen states whether it is serving anything. This is
       `delivery-routing.md` D2's unmet requirement, cheap only after 20.1 — the
       answer stops being a routing lookup and becomes "is this channel enabled"
