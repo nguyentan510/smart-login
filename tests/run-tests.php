@@ -1538,6 +1538,20 @@ function sl_sample_value( string $path, array $field ) {
 		case 'headers':
 			return array( array( 'key' => 'X-Test', 'value' => 'sample' ) );
 
+		case 'menu_items':
+			// The key is derived, not posted: sanitize_title( 'Đơn hàng' ) gives
+			// 'don-hang', so the sample carries the key the sanitiser will
+			// produce. A sample that invented its own key would round-trip only
+			// because the assertion was comparing two copies of one guess.
+			return array(
+				array(
+					'key'   => 'don-hang',
+					'label' => 'Đơn hàng',
+					'icon'  => 'box',
+					'url'   => 'https://example.com/don-hang/',
+				),
+			);
+
 		case 'https_url':
 			return 'https://hooks.example.com/sample';
 

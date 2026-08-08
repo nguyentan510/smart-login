@@ -2587,9 +2587,19 @@ existed, not by an argument at the end.
       it fails if `normalise()` goes. The nonce-per-user half of rule 8 is
       **deferred to the integration gate** and written into 21.5 — the pure
       suite stubs `wp_logout_url()`, so asserting it there would measure the stub
-- [ ] **21.4** [The settings
+- [x] **21.4** [The settings
       section](account-menu/21.4-the-settings-section.md) — the icon+text+link
-      repeater, modelled on the `headers` field, and the signed-in label choice
+      repeater, modelled on the `headers` field, and the signed-in label choice.
+      **Account menu 22/5/1 → 31/4/0**; only the four button rules remain red.
+      The **regression suite caught the sanitiser before it ever ran** — the
+      round-trip sample had no `menu_items` case — and chasing that found
+      `sanitize_title()` and `remove_accents()` were **never stubbed**, so no
+      suite could reach this sanitiser at all. The stub had to fold Vietnamese
+      accents or the fixture would produce different keys than production
+      (`Đơn hàng` → `don-hang`). Writing it made a brief decision wrong: a row is
+      now **never dropped for an underivable key**, it falls back to `item-N`,
+      because losing a menu item over the alphabet of its label is not a
+      defensible refusal
 - [ ] **21.5** [The button, two
       states](account-menu/21.5-the-button-two-states.md) — the finding-1 fix, a
       separate stylesheet, `<details>` with no script

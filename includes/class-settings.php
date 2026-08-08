@@ -616,6 +616,9 @@ class Settings {
 			case 'headers':
 				return self::sanitize_headers( $raw );
 
+			case 'menu_items':
+				return self::sanitize_menu_items( $raw );
+
 			case 'credentials':
 				return self::sanitize_credentials( $raw );
 
@@ -747,6 +750,94 @@ class Settings {
 			$out[] = array(
 				'key'   => $key,
 				'value' => str_replace( array( "\r", "\n" ), '', $value ),
+			);
+		}
+
+		return $out;
+	}
+
+	/**
+	 * The repeatable account-menu rows from the settings form.
+	 *
+	 * Shaped like sanitize_headers() above, which is the point: the repeater is
+	 * a proven control with three columns instead of two, and this phase does
+	 * not invent settings machinery.
+	 *
+	 * A row is dropped when it has no label or no URL, silently, the way a blank
+	 * header row is — an administrator leaving a spare row empty is the normal
+	 * case, not an error.
+	 *
+	 * **The key is derived, never typed.** Nobody should have to invent a slug to
+	 * add a menu item, but every entry still needs a stable identifier: later
+	 * surfaces compare keys to decide which item is active, and a filter has to
+	 * be able to name an item whose label an administrator has since rewritten.
+	 * So it comes from the label, and then three things have to be true of it:
+	 *
+	 *   - it matches [a-z0-9_-]+, and when nothing derivable is left it falls
+	 *     back to the row's position. **A row is never dropped for an
+	 *     underivable key.** `sanitize_title()` folds Vietnamese accents to
+	 *     ASCII, so "Đơn hàng" gives `don-hang` — but a label written in a script
+	 *     it cannot transliterate would reduce to nothing, and losing a menu item
+	 *     because of the alphabet its label is in is not a defensible refusal
+	 *   - it is not `account` or `logout` — those belong to the pinned ends, and
+	 *     a row labelled "Đăng xuất" taking the tail's key would make two entries
+	 *     answer to the same name
+	 *   - it is unique within the table, by numeric suffix
+	 *
+	 * @param mixed $raw
+	 * @return array<int,array{key:string,label:string,icon:string,url:string}>
+	 */
+	private static function sanitize_menu_items( $raw ): array {
+		if ( ! is_array( $raw ) ) {
+			return array();
+		}
+
+		$reserved = array(
+			\SmartLogin\Frontend\AccountMenu::KEY_ACCOUNT,
+			\SmartLogin\Frontend\AccountMenu::KEY_LOGOUT,
+		);
+
+		$out  = array();
+		$seen = array();
+
+		foreach ( $raw as $row ) {
+			if ( ! is_array( $row ) ) {
+				continue;
+			}
+
+			$label = sanitize_text_field( (string) ( $row['label'] ?? '' ) );
+			$url   = esc_url_raw( trim( (string) ( $row['url'] ?? '' ) ) );
+
+			if ( '' === $label || '' === $url ) {
+				continue;
+			}
+
+			$key = sanitize_title( $label );
+			$key = (string) preg_replace( '/[^a-z0-9_-]/', '', strtolower( $key ) );
+
+			if ( '' === $key ) {
+				$key = 'item-' . ( count( $out ) + 1 );
+			}
+
+			if ( in_array( $key, $reserved, true ) ) {
+				$key .= '-2';
+			}
+
+			if ( isset( $seen[ $key ] ) ) {
+				++$seen[ $key ];
+				$key .= '-' . $seen[ $key ];
+			} else {
+				$seen[ $key ] = 1;
+			}
+
+			$out[] = array(
+				'key'   => $key,
+				'label' => $label,
+				// Through IconSet, so a name outside the set becomes the
+				// fallback here rather than being stored and folded on every
+				// render. An icon that is not in the set cannot be written down.
+				'icon'  => \SmartLogin\Frontend\IconSet::sanitize( (string) ( $row['icon'] ?? '' ) ),
+				'url'   => $url,
 			);
 		}
 

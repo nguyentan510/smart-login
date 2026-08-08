@@ -112,6 +112,7 @@ final class FieldRegistry {
 			'mail_design'  => __( 'Giao diện email HTML', 'smart-login' ),
 			'fields'       => __( 'Trường hồ sơ', 'smart-login' ),
 			'address'      => __( 'Địa chỉ 2 cấp', 'smart-login' ),
+			'account_menu' => __( 'Menu tài khoản', 'smart-login' ),
 			'woo'          => __( 'WooCommerce', 'smart-login' ),
 			'budget'       => __( 'Trần gửi toàn site', 'smart-login' ),
 			'breaker'      => __( 'Ngắt mạch kênh gửi', 'smart-login' ),
@@ -774,6 +775,38 @@ final class FieldRegistry {
 				'section' => 'woo',
 				'label'   => __( 'Chặn email ảo', 'smart-login' ),
 				'help'    => __( 'Không gửi bất kỳ email nào tới địa chỉ ảo (khuyến nghị bật)', 'smart-login' ),
+			),
+
+			/*
+			 * The middle of the account menu. The two ends are the plugin's —
+			 * "Thông tin cá nhân" resolves itself and "Đăng xuất" needs a nonce —
+			 * so an empty table still yields a working two-item menu rather than
+			 * an empty box. See docs/account-menu.md decision 3.
+			 */
+			'account_menu.items'          => array(
+				'type'     => 'menu_items',
+				'sanitize' => 'menu_items',
+				'default'  => array(),
+				'tab'      => 'profile',
+				'section'  => 'account_menu',
+				'label'    => __( 'Mục menu', 'smart-login' ),
+				'help'     => __( 'Các mục hiển thị giữa <strong>Thông tin cá nhân</strong> và <strong>Đăng xuất</strong>. Bỏ trống dòng không dùng. Thứ tự dòng chính là thứ tự menu.', 'smart-login' ),
+			),
+			'account_menu.label_source'   => array(
+				'type'    => 'select',
+				'default' => 'auto',
+				'tab'     => 'profile',
+				'section' => 'account_menu',
+				'label'   => __( 'Tên hiển thị trên nút', 'smart-login' ),
+				'choices' => array(
+					'auto'  => __( 'Tự động — số điện thoại, nếu chưa có thì tên', 'smart-login' ),
+					'phone' => __( 'Số điện thoại', 'smart-login' ),
+					'name'  => __( 'Tên hiển thị', 'smart-login' ),
+				),
+				// No email option, deliberately: an OTP registration mints an
+				// address nobody chose, so the worst case of that setting is a
+				// machine-generated string in the site header.
+				'help'    => __( 'Chữ hiển thị cạnh biểu tượng khi khách đã đăng nhập.', 'smart-login' ),
 			),
 		);
 	}

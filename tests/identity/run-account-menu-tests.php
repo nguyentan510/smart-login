@@ -480,6 +480,111 @@ if ( ! $sl_has_menu ) {
 }
 
 // ---------------------------------------------------------------------------
+sl_section( '21.4 — what a settings save may write (decision 3, 6)' );
+// ---------------------------------------------------------------------------
+
+/**
+ * Put rows through the real save path and read back what was stored.
+ *
+ * `Settings::sanitize()` rather than the private sanitiser, because the thing
+ * worth asserting is what an administrator pressing Save actually produces —
+ * the dot-path nesting and the tab gate included.
+ *
+ * @return array<int,array<string,string>>
+ */
+$sl_save_rows = static function ( array $rows ): array {
+	$clean = \SmartLogin\Settings::sanitize(
+		array(
+			\SmartLogin\Settings::TAB_FIELD => 'profile',
+			'account_menu'                  => array( 'items' => $rows ),
+		)
+	);
+
+	return (array) ( $clean['account_menu']['items'] ?? array() );
+};
+
+$sl_saved = $sl_save_rows(
+	array(
+		// A complete row.
+		array(
+			'icon'  => 'box',
+			'label' => 'Đơn hàng',
+			'url'   => 'https://example.test/don-hang/',
+		),
+		// A label with no destination: the blank-row case, dropped silently.
+		array(
+			'icon'  => 'box',
+			'label' => 'Chưa có đích',
+			'url'   => '',
+		),
+		// The same label twice must not become the same key.
+		array(
+			'icon'  => 'box',
+			'label' => 'Đơn hàng',
+			'url'   => 'https://example.test/don-hang-2/',
+		),
+		// A row that tries to take the pinned tail's name.
+		array(
+			'icon'  => 'log-out',
+			'label' => 'Đăng xuất',
+			'url'   => 'https://example.test/thoat/',
+		),
+		// An icon that never came from the picker.
+		array(
+			'icon'  => '<script>alert(1)</script>',
+			'label' => 'Lạ',
+			'url'   => 'https://example.test/la/',
+		),
+	)
+);
+
+$sl_saved_keys = array_column( $sl_saved, 'key' );
+
+sl_assert(
+	'a row with a label and no URL is dropped, silently',
+	4 === count( $sl_saved ),
+	'stored ' . count( $sl_saved ) . ' row(s): ' . implode( ', ', $sl_saved_keys )
+);
+
+sl_assert(
+	'the key is derived from the label, with Vietnamese folded',
+	in_array( 'don-hang', $sl_saved_keys, true ),
+	'sanitize_title( "Đơn hàng" ) is don-hang — keys: ' . implode( ', ', $sl_saved_keys )
+);
+
+sl_assert(
+	'two rows with the same label get two distinct keys',
+	count( $sl_saved_keys ) === count( array_unique( $sl_saved_keys ) ),
+	'a duplicate key makes "which item is active" ambiguous — keys: ' . implode( ', ', $sl_saved_keys )
+);
+
+sl_assert(
+	'a row cannot take a pinned end\'s key',
+	! in_array( \SmartLogin\Frontend\AccountMenu::KEY_LOGOUT, $sl_saved_keys, true )
+		&& ! in_array( \SmartLogin\Frontend\AccountMenu::KEY_ACCOUNT, $sl_saved_keys, true ),
+	'keys: ' . implode( ', ', $sl_saved_keys )
+);
+
+sl_assert(
+	'an icon outside the set is stored as the fallback, not as itself',
+	! in_array( '<script>alert(1)</script>', array_column( $sl_saved, 'icon' ), true )
+		&& in_array( \SmartLogin\Frontend\IconSet::FALLBACK, array_column( $sl_saved, 'icon' ), true ),
+	'icons: ' . implode( ', ', array_column( $sl_saved, 'icon' ) )
+);
+
+sl_assert(
+	'a row whose label yields no slug still gets a key rather than vanishing',
+	1 === count( $sl_save_rows( array( array( 'label' => '★★★', 'url' => 'https://example.test/x/', 'icon' => 'user' ) ) ) ),
+	'losing a menu item because of the alphabet its label is written in is not a defensible refusal'
+);
+
+sl_assert(
+	'clearing every row leaves the two pinned entries',
+	array( 'account', 'logout' ) === array_column( (array) \SmartLogin\Frontend\AccountMenu::items(), 'key' ),
+	'decision 3: a fresh install has a working account menu before anybody opens Settings'
+);
+
+// ---------------------------------------------------------------------------
 sl_section( 'Rule 9 — one source for every surface (decision 2)' );
 // ---------------------------------------------------------------------------
 
