@@ -129,25 +129,56 @@ nothing.
 `TransportRouter::channel_for()` stays exactly as it is — it answers a property
 of the identifier, which was always correct and is not what 10.1 changed.
 
-### D2 — The signed envelope becomes an SMS gateway preset
+### D2 — One transport per channel; the provider selects the *wire format*
 
-`AutomationTransport`'s transport role retires. Its envelope, HMAC signature and
-HTTPS-at-save rule move into a fourth entry in `GatewayPresets`:
+**Revised during 20.2, before any code moved. The first draft of this decision
+was wrong and the code said so.**
 
-| Slug | Label |
-| --- | --- |
-| `esms` | eSMS.vn |
-| `generic` | Webhook JSON (n8n / Make / Zapier) |
-| `signed` | **Envelope ký HMAC (chuẩn SmartLogin)** |
-| `custom` | Tuỳ chỉnh — tự khai API |
+That draft made the signed envelope a fourth `GatewayPresets` entry and claimed
+"nothing is lost". Reading `EnvelopeSigner` before implementing showed four
+controls that a preset cannot carry:
 
-Nothing is lost. D3's payload and D4's HTTPS enforcement are properties of the
-preset from here, and the security position stated in `delivery-routing.md` is
-unchanged in substance — the plaintext code still leaves the site, still under
-HMAC, still only when an administrator configures it.
+| Control | Where it lives | Why a preset cannot hold it |
+| --- | --- | --- |
+| Signature over **code-built bytes**, encoded once | `class-envelope-signer.php:3-14` | `GatewayPresets::resolve()` writes `sms.body` as a *template*; `WebhookTransport` renders it at send time. Signing a rendered template is the exact hazard that file was written to prevent |
+| Administrator headers **may add, never replace** | `class-automation-endpoint.php:64-73` | `WebhookTransport`'s header loop sets whatever is configured, including over a signature header |
+| HTTPS enforced at save | `'sanitize' => 'https_url'` on `automation.url` | a sanitizer is a property of a *field*, not of a value a preset happens to hold. `sms.url` is plain `url` |
+| Secret encrypted at rest | `'type' => 'secret'` | gateway credentials marked `'secret' => true` travel a different path |
 
-The **bus role does not retire.** It keeps `AutomationEndpoint`, its own breaker
-id, and its own screen.
+The mistake was a category error. **A preset is a body template plus a credential
+list. The signed envelope is a wire format implemented in code.** They are not
+the same kind of thing, and the first draft only looked right because both end up
+as "POST JSON somewhere".
+
+So the layering changes instead, and it lands closer to the mental model the
+report described than the first draft did:
+
+```
+identity channel  →  one transport      (phone → the SMS transport)
+                        └─ provider     →  wire format
+                                           esms     template
+                                           generic  template
+                                           signed   code-built envelope, HMAC
+                                           custom   template, admin-authored
+```
+
+`AutomationTransport`'s **transport role** retires; `WebhookTransport` remains the
+single transport for the SMS channel and gains a branch on the provider's declared
+envelope. `EnvelopeSigner` is reused unchanged — the whole point is that the
+envelope keeps being built where it is signed.
+
+The `signed` provider's endpoint and key become `sms.signed_url` (`https_url`) and
+`sms.signed_secret` (`secret`), so all four controls above survive as field
+properties rather than as prose. They are not credentials in the `sms.credentials`
+array, and the reason is that array has neither guarantee.
+
+The **bus role does not retire.** It keeps `AutomationEndpoint`, `automation.*`,
+its own breaker id, and its own screen.
+
+**What this costs.** `WebhookTransport` gains a conditional it did not have, which
+is a real complexity increase in the one class that already carries the most. The
+alternative was losing a security control to make a settings screen tidier, which
+is not a trade this project makes.
 
 ### D3 — The bus becomes a top-level tab, named for what it does
 

@@ -2395,9 +2395,15 @@ halves were reasonable readings. Together they delivered nothing.
       `delivery.route_email` deleted; the identity channel decides the transport.
       `channel_for()` untouched — it answers a property of the identifier and was
       never what 10.1 changed
-- [ ] **20.2** The signed envelope becomes the `signed` gateway preset. D3's
-      payload and D4's HTTPS-at-save move with it. `AutomationTransport`'s
-      **transport** role retires; its **bus** role does not
+- [x] **20.2** [The signed envelope becomes a
+      provider](sending-a-code/20.2-the-signed-provider.md), **not a preset** —
+      D2 was rewritten before any code moved. Reading `EnvelopeSigner` first
+      found four controls a body template cannot carry, so the layering changed
+      instead: one transport per channel, and the *provider* selects the wire
+      format. `WebhookTransport` gains a signed branch; `EnvelopeSigner` is
+      reused unchanged, which is the whole point. **Delivery routing 57/3, Admin
+      screens 141/5** — two more passing than before, because `show_if` was made
+      checkable rather than exempt from the tab-coverage gate
 - [ ] **20.3** Migration, and it refuses to be silent. `automation.url` +
       `automation.secret` → `signed` credentials. `route_email = automation` has
       no equivalent and raises an admin notice naming the setting rather than

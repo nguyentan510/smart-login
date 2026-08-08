@@ -27,6 +27,7 @@ use SmartLogin\FieldRegistry;
 use SmartLogin\OTP\OtpRepository;
 use SmartLogin\OTP\OtpService;
 use SmartLogin\OTP\Transports\AutomationTransport;
+use SmartLogin\OTP\Transports\EnvelopeSigner;
 use SmartLogin\OTP\Transports\EventBus;
 use SmartLogin\OTP\Transports\TransportInterface;
 use SmartLogin\Security\AuditLog;
@@ -890,6 +891,101 @@ foreach ( sl_plugin_sources() as $relative => $contents ) {
 }
 
 sl_check( 'every transport in the tree is on the declared OTP path', array(), $sl_unaccounted );
+
+// =====================================================================
+sl_section( 'Rule 18 — a signed provider signs what it sends (20.2)' );
+
+/*
+ * The control this sub-phase exists to preserve. D2's first draft would have
+ * signed a rendered body template; `class-envelope-signer.php:3-14` explains at
+ * length why that makes a signature decorative. So the assertion is deliberately
+ * not "a signature header is present" — it recomputes the HMAC over the bytes the
+ * transport actually produced, which is the only version of this test that would
+ * have failed the design it replaced.
+ */
+Settings::update(
+	array(
+		'sms.enabled'       => 1,
+		'sms.preset'        => 'signed',
+		'sms.signed_url'    => 'https://automation.example/hook',
+		'sms.headers'       => array(
+			// An administrator trying to take the signature over, deliberately.
+			array(
+				'key'   => EnvelopeSigner::SIGNATURE_HEADER,
+				'value' => 'sha256=forged',
+			),
+			array(
+				'key'   => 'X-Tenant',
+				'value' => 'acme',
+			),
+		),
+	)
+);
+
+// Secrets travel through the path-keyed store, not the option array.
+Settings::store_secret( 'sms.signed_secret', 'test-signing-key' );
+
+$GLOBALS['sl_http_requests'] = array();
+$GLOBALS['sl_http_response'] = array(
+	'response' => array( 'code' => 200 ),
+	'body'     => '{"ok":true}',
+);
+
+( new WebhookTransport() )->send( '84969789475', '482913', array( 'intent' => 'register' ) );
+
+$sl_signed_request = $GLOBALS['sl_http_requests'][0] ?? null;
+
+$sl_sent_body    = (string) ( $sl_signed_request['args']['body'] ?? '' );
+$sl_sent_headers = (array) ( $sl_signed_request['args']['headers'] ?? array() );
+$sl_sent_sig     = (string) ( $sl_sent_headers[ EnvelopeSigner::SIGNATURE_HEADER ] ?? '' );
+
+sl_assert(
+	'a signed provider produces a request at all',
+	null !== $sl_signed_request,
+	'Nothing was sent, so everything below is vacuous.'
+);
+
+sl_check(
+	'the signature verifies against the transmitted bytes',
+	'sha256=' . hash_hmac( 'sha256', $sl_sent_body, 'test-signing-key' ),
+	$sl_sent_sig
+);
+
+sl_assert(
+	'the body is the envelope, not a rendered template',
+	is_array( json_decode( $sl_sent_body, true ) )
+		&& '482913' === (string) ( json_decode( $sl_sent_body, true )['code'] ?? '' ),
+	'A signed provider must build its payload in code. Got: ' . substr( $sl_sent_body, 0, 120 )
+);
+
+sl_assert(
+	'an administrator header cannot replace the signature',
+	'sha256=forged' !== $sl_sent_sig,
+	'Configured headers may add, never replace — otherwise the one control that makes this endpoint safe is switchable from the settings screen.'
+);
+
+sl_check(
+	'an administrator header that collides with nothing still travels',
+	'acme',
+	(string) ( $sl_sent_headers['X-Tenant'] ?? '' )
+);
+
+sl_assert(
+	'the signed endpoint is where the request went',
+	'https://automation.example/hook' === (string) ( $sl_signed_request['url'] ?? '' ),
+	'Got: ' . (string) ( $sl_signed_request['url'] ?? '(none)' )
+);
+
+Settings::update(
+	array(
+		'sms.enabled'       => 0,
+		'sms.preset'        => 'generic',
+		'sms.signed_url'    => '',
+		'sms.headers'       => array(),
+	)
+);
+
+Settings::store_secret( 'sms.signed_secret', '' );
 
 // =====================================================================
 sl_section( 'Rule 8 — a failed send leaves the code already delivered usable (10.7)' );

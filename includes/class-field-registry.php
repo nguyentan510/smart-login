@@ -446,6 +446,29 @@ final class FieldRegistry {
 				'choices' => GatewayPresets::choices(),
 				'help'    => __( 'Chọn nhà cung cấp và chỉ cần điền thông tin xác thực; URL, Body và điều kiện thành công được sinh tự động.', 'smart-login' ),
 			),
+			// The signed provider's two inputs. Ordinary fields rather than
+			// entries in `sms.credentials`, because that array can carry neither
+			// `https_url` nor `secret` — which are two of the four controls D2
+			// found a preset could not hold.
+			'sms.signed_url'               => array(
+				'type'     => 'url',
+				'default'  => '',
+				'tab'      => 'delivery-sms',
+				'section'  => 'sms',
+				'label'    => __( 'Endpoint nhận envelope', 'smart-login' ),
+				'sanitize' => 'https_url',
+				'show_if'  => array( 'sms.preset' => GatewayPresets::ENVELOPE_SIGNED ),
+				'help'     => __( 'Bắt buộc <code>https://</code>. Mã xác thực rời khỏi website tới địa chỉ này, nên chữ ký HMAC chỉ chứng minh <em>ai gửi</em> — nó không làm cho một endpoint đáng ngờ trở nên an toàn.', 'smart-login' ),
+			),
+			'sms.signed_secret'            => array(
+				'type'    => 'secret',
+				'default' => '',
+				'tab'     => 'delivery-sms',
+				'section' => 'sms',
+				'label'   => __( 'Khoá ký (HMAC)', 'smart-login' ),
+				'show_if' => array( 'sms.preset' => GatewayPresets::ENVELOPE_SIGNED ),
+				'help'    => __( 'Dùng để ký từng gói tin bằng SHA-256. Chưa có khoá thì nhà cung cấp này không được dùng, vì endpoint sẽ nhận mã thật mà không xác thực được nguồn.', 'smart-login' ),
+			),
 			'sms.credentials'              => array(
 				'type'        => 'credentials',
 				'default'     => array(),

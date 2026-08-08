@@ -122,7 +122,7 @@ final class SettingsScreen {
 		echo '<table class="form-table" role="presentation">';
 
 		foreach ( $fields as $path => $field ) {
-			if ( isset( $derived[ $path ] ) ) {
+			if ( isset( $derived[ $path ] ) || ! self::field_applies( $field ) ) {
 				continue;
 			}
 
@@ -136,6 +136,26 @@ final class SettingsScreen {
 		}
 
 		$this->after_section( $section );
+	}
+
+	/**
+	 * Whether a field's `show_if` condition holds against the stored settings.
+	 *
+	 * Declared in the registry beside the field rather than as a branch here, for
+	 * the reason the registry exists at all: one array decides the default, the
+	 * type, the tab, the control — and now whether the control is relevant.
+	 * A field with no condition always applies.
+	 *
+	 * @param array $field Field spec.
+	 */
+	private static function field_applies( array $field ): bool {
+		foreach ( (array) ( $field['show_if'] ?? array() ) as $path => $expected ) {
+			if ( (string) Settings::get( $path, '' ) !== (string) $expected ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**

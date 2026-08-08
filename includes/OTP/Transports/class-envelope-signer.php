@@ -54,6 +54,51 @@ final class EnvelopeSigner {
 	}
 
 	/**
+	 * The fields every envelope carries, whichever role built it.
+	 *
+	 * Lives here rather than on `AutomationEndpoint`, where it used to, because
+	 * 20.2 gives the OTP path its own signed provider and Rule 15 requires that
+	 * path to touch nothing the event bus configures. This function reads no
+	 * setting at all, so it is the half that can be shared; the endpoint keeps
+	 * the half that reads `automation.*` and delegates here.
+	 *
+	 * @param string $event       Event name.
+	 * @param string $delivery_id Stable id for deduplication on the far end.
+	 */
+	public static function base_envelope( string $event, string $delivery_id ): array {
+		return array(
+			'event'       => $event,
+			'delivery_id' => $delivery_id,
+			'site'        => home_url( '/' ),
+			'timestamp'   => time(),
+		);
+	}
+
+	/**
+	 * Apply administrator headers to a signed request, add-only.
+	 *
+	 * The rule this enforces was written on `AutomationEndpoint::post()` and is
+	 * shared verbatim rather than reimplemented: a configured
+	 * `X-Smart-Login-Signature` would otherwise silently disable the only control
+	 * that makes a signed endpoint safe to point anywhere.
+	 *
+	 * @param array<string,string> $signed_headers Headers the signature produced.
+	 * @param array                $configured     Rows of key/value from settings.
+	 * @return array<string,string>
+	 */
+	public static function merge_headers( array $signed_headers, array $configured ): array {
+		foreach ( $configured as $row ) {
+			if ( empty( $row['key'] ) || isset( $signed_headers[ $row['key'] ] ) ) {
+				continue;
+			}
+
+			$signed_headers[ $row['key'] ] = (string) ( $row['value'] ?? '' );
+		}
+
+		return $signed_headers;
+	}
+
+	/**
 	 * The verification snippet shown in the admin help text.
 	 *
 	 * A signature nobody verifies is decoration, and "compute an HMAC" is the

@@ -28,6 +28,25 @@ use SmartLogin\FieldRegistry;
 use SmartLogin\Settings;
 
 // ---------------------------------------------------------------------
+/**
+ * Mirrors SettingsScreen::field_applies(), deliberately.
+ *
+ * A second copy of a rule is normally the defect this project hunts, but a gate
+ * that asked the screen whether the screen was right would assert nothing. The
+ * duplication is the test.
+ *
+ * @param array $field Field spec.
+ */
+function sl_show_if_holds( array $field ): bool {
+	foreach ( (array) ( $field['show_if'] ?? array() ) as $path => $expected ) {
+		if ( (string) Settings::get( $path, '' ) !== (string) $expected ) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 sl_section( 'Every settings tab renders' );
 
 $screen = new SettingsScreen();
@@ -68,6 +87,16 @@ foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
 		// Those are covered by their own assertions below, where the condition
 		// is set up deliberately.
 		if ( ! empty( $field['conditional'] ) ) {
+			continue;
+		}
+
+		// A `show_if` field is drawn only while its condition holds, so the
+		// invariant applies *under* the condition rather than unconditionally.
+		// This is not an exemption like `conditional` above: the field says which
+		// setting decides it, so the deliberate pass further down sets that
+		// setting and requires the field to appear. A field that is never drawn
+		// under any value of its own condition still fails.
+		if ( ! sl_show_if_holds( $field ) ) {
 			continue;
 		}
 
@@ -618,7 +647,9 @@ foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
 	)['html'];
 
 	foreach ( FieldRegistry::all() as $path => $field ) {
-		if ( '' === (string) ( $field['tab'] ?? '' ) || ! empty( $field['conditional'] ) ) {
+		// `show_if` fields answer this question in their own pass, where the
+		// condition is set. Here they would read as "drawn nowhere".
+		if ( '' === (string) ( $field['tab'] ?? '' ) || ! empty( $field['conditional'] ) || ! sl_show_if_holds( $field ) ) {
 			continue;
 		}
 
@@ -631,7 +662,7 @@ foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
 $wrong_home = array();
 
 foreach ( FieldRegistry::all() as $path => $field ) {
-	if ( '' === (string) ( $field['tab'] ?? '' ) || ! empty( $field['conditional'] ) ) {
+	if ( '' === (string) ( $field['tab'] ?? '' ) || ! empty( $field['conditional'] ) || ! sl_show_if_holds( $field ) ) {
 		continue;
 	}
 
@@ -1273,6 +1304,51 @@ $sl_scoped = Settings::sanitize(
 
 sl_check( 'a tab-scoped save writes its own tab', 'both', (string) ( $sl_scoped['identity']['mode'] ?? '' ) );
 sl_check( 'and does not write another tab field', 300, (int) ( $sl_scoped['otp']['ttl'] ?? 0 ) );
+
+// ---------------------------------------------------------------------
+sl_section( 'A conditional field is drawn when its condition holds (20.2)' );
+
+/*
+ * The other half of the `show_if` invariant. The coverage loop above skips a
+ * field whose condition is false; without this, declaring `show_if` would be a
+ * way to make a field disappear from the gate entirely — which is exactly the
+ * failure that gate exists to catch, wearing a new hat.
+ */
+$sl_conditional_fields = array_filter(
+	FieldRegistry::all(),
+	static fn( array $field ): bool => ! empty( $field['show_if'] )
+);
+
+sl_assert(
+	'at least one field declares a condition',
+	array() !== $sl_conditional_fields,
+	'Nothing to check, so the assertions below would pass vacuously.'
+);
+
+$sl_undrawn_when_shown = array();
+
+foreach ( $sl_conditional_fields as $sl_path => $sl_field ) {
+	$sl_restore = array();
+
+	foreach ( (array) $sl_field['show_if'] as $sl_dep => $sl_value ) {
+		$sl_restore[ $sl_dep ] = Settings::get( $sl_dep );
+		Settings::update( array( $sl_dep => $sl_value ) );
+	}
+
+	$sl_shown_html = sl_capture(
+		static function () use ( $screen, $sl_field ): void {
+			$screen->render( (string) $sl_field['tab'] );
+		}
+	)['html'];
+
+	if ( false === strpos( $sl_shown_html, 'name="' . \SmartLogin\Admin\FieldRenderer::name( $sl_path ) ) ) {
+		$sl_undrawn_when_shown[] = $sl_path;
+	}
+
+	Settings::update( $sl_restore );
+}
+
+sl_check( 'every conditional field is drawn once its condition holds', array(), $sl_undrawn_when_shown );
 
 // ---------------------------------------------------------------------
 sl_section( 'Rule 16 — one label per concept (20.5)' );
