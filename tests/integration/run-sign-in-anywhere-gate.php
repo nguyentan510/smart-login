@@ -95,6 +95,58 @@ $check(
 	implode( ' ', $contract['captured'] )
 );
 
+/*
+ * 19.12. The welcome screen's address picker is inert markup until `address.js`
+ * upgrades it, and the enqueue the template asks for happens inside a REST
+ * request where there is no `wp_enqueue_scripts` to answer — so the contract is
+ * the only way that file reaches the dialog.
+ *
+ * Checked here as well as in rule 16 because the two know different things: the
+ * rule reads a stubbed URL, and this one resolves it against the install's real
+ * plugin directory and asks whether a file is actually there.
+ */
+$address_js = (string) ( $contract['addressJs'] ?? '' );
+
+$check(
+	'the dialog can fetch the address picker script',
+	'' !== $address_js && false !== strpos( $address_js, 'address.js' ),
+	$address_js
+);
+
+$check(
+	'and that url is a file on disk',
+	'' !== $address_js && is_file( $plugin_root . '/assets/js/' . basename( $address_js ) ),
+	$plugin_root . '/assets/js/' . basename( $address_js )
+);
+
+$check(
+	'the picker config travels with it',
+	false !== strpos( (string) ( $contract['address']['restUrl'] ?? '' ), 'smart-login/v1' )
+		&& '' !== (string) ( $contract['address']['i18n']['chooseWard'] ?? '' ),
+	(string) ( $contract['address']['restUrl'] ?? '' )
+);
+
+/*
+ * And the ward route the picker calls, over a real REST request.
+ *
+ * The province is taken from the dataset rather than written here. The first
+ * draft asked for `79` — the official code for Hồ Chí Minh, and not a code this
+ * dataset uses — so the route answered `200` with an empty list and the check
+ * read as a broken endpoint. A rule carrying its own copy of the data stops
+ * testing the data.
+ */
+$province_codes = array_keys( \SmartLogin\Address\AddressRepository::provinces() );
+$first_province = (string) ( $province_codes[0] ?? '' );
+
+$wards     = rest_do_request( new WP_REST_Request( 'GET', '/smart-login/v1/address/wards/' . $first_province ) );
+$ward_list = (array) $wards->get_data();
+
+$check(
+	'the ward route answers with a list',
+	'' !== $first_province && 200 === $wards->get_status() && array() !== $ward_list,
+	'province ' . $first_province . ' → ' . $wards->get_status() . ', ' . count( $ward_list ) . ' wards'
+);
+
 // ---------------------------------------------------------------------
 // 2. The fragment, over a real REST request
 // ---------------------------------------------------------------------

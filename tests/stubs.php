@@ -12,6 +12,7 @@
 define( 'ABSPATH', __DIR__ . '/' );
 define( 'SMART_LOGIN_VERSION', '1.0.1' );
 define( 'SMART_LOGIN_DIR', dirname( __DIR__ ) . '/' );
+define( 'SMART_LOGIN_URL', 'https://example.test/wp-content/plugins/smart-login/' );
 define( 'SMART_LOGIN_BASENAME', 'smart-login/smart-login.php' );
 define( 'HOUR_IN_SECONDS', 3600 );
 define( 'ARRAY_A', 'ARRAY_A' );
@@ -237,6 +238,17 @@ function wp_kses_post( $text ) {
 
 function esc_url_raw( $url ) {
 	return filter_var( (string) $url, FILTER_SANITIZE_URL );
+}
+
+/*
+ * Added in 19.12, so a rule can read `LoginDialog::contract()` as an array
+ * instead of as a string. The contract is what the launcher is localized with —
+ * asserting over the values it actually carries is the difference between
+ * checking a filename appears somewhere in a file and checking the dialog can
+ * reach the script.
+ */
+function rest_url( $path = '', $scheme = 'rest' ) {
+	return 'https://example.test/wp-json/' . ltrim( (string) $path, '/' );
 }
 
 function wp_validate_redirect( $location, $fallback = '' ) {

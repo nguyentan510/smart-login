@@ -765,4 +765,136 @@ sl_assert(
 	'A slot nobody can fill is a slot that should not exist.'
 );
 
+// ---------------------------------------------------------------------------
+sl_section( 'Rule 16 — a fragment never needs a script the dialog cannot load (19.12)' );
+// ---------------------------------------------------------------------------
+
+/*
+ * Reported from the running site: on the welcome screen inside the dialog,
+ * choosing a province leaves Phường/Xã empty and disabled. `address.js` never
+ * runs there — the template reaches `Assets::enqueue_address()` inside a REST
+ * request, which is the no-op `Shortcodes::render_step()` already warns about
+ * for `Assets::enqueue()`, and the dialog's own asset list never named the file.
+ *
+ * Two properties, because fixing either one alone leaves the picker dead:
+ * the dialog has to be able to *fetch* the script, and it has to *call* it —
+ * `address.js` binds on DOMContentLoaded, and a fragment arrives long after.
+ *
+ * The second half is written over every enhancement hook the plugin exposes
+ * rather than over this one, so a hook added later and left unwired fails here
+ * instead of being found on a screenshot, which is how all three of 19.10, 19.11
+ * and this one were found.
+ */
+$sl_welcome_page = 'https://example.test/san-pham/ao-thun/';
+
+// The welcome screen is the one authenticated step the dialog draws, so the
+// visitor rule 7 needs (signed out) is the wrong one here. Restored below.
+$sl_signed_out                 = $GLOBALS['sl_logged_in'];
+$GLOBALS['sl_logged_in']       = true;
+$GLOBALS['sl_current_user_id'] = 7;
+
+$sl_welcome = sl_capture(
+	static function () use ( $sl_welcome_page ): void {
+		$GLOBALS['sl_welcome_fragment'] = ( new \SmartLogin\Frontend\FragmentRenderer() )->render(
+			Flow::STEP_ONBOARD,
+			$sl_welcome_page,
+			$sl_welcome_page,
+			array(
+				'user_id'  => 7,
+				'redirect' => $sl_welcome_page,
+				// Supplied rather than derived, so the rule describes the picker
+				// and not ProfileCompletionService's idea of what is missing.
+				'fields'   => array(
+					array(
+						'key'    => 'address',
+						'label'  => 'Địa chỉ nhận hàng',
+						'reason' => 'Để đơn hàng được giao đúng nơi',
+					),
+				),
+			)
+		);
+	}
+);
+
+$GLOBALS['sl_logged_in'] = $sl_signed_out;
+
+$sl_welcome_html = (string) ( $GLOBALS['sl_welcome_fragment']['html'] ?? '' );
+
+sl_assert(
+	'the welcome fragment renders the address picker',
+	null === $sl_welcome['error'] && false !== strpos( $sl_welcome_html, 'data-sl-address' ),
+	'render failed: ' . (string) $sl_welcome['error']
+);
+
+/*
+ * And it arrives inert. The ward select ships `disabled` with one empty option,
+ * because on the server there is nothing to choose from until a province is
+ * picked — which is precisely why the script is not optional here.
+ */
+sl_assert(
+	'and the picker arrives inert, so its script is not optional',
+	(bool) preg_match( '/data-sl-ward[^>]*\bdisabled\b/s', $sl_welcome_html ),
+	'If the ward select were usable without JavaScript this rule would be about nothing.'
+);
+
+$sl_contract  = \SmartLogin\Frontend\LoginDialog::contract();
+$sl_dialog_js = $sl_file( 'assets/js/smart-login-dialog.js' );
+$sl_address_js = $sl_file( 'assets/js/address.js' );
+
+sl_assert(
+	'the dialog can fetch the address picker script',
+	false !== strpos( (string) wp_json_encode( $sl_contract ), 'address.js' ),
+	'The contract names four assets and none of them is address.js, so nothing on the dialog path ever loads it.'
+);
+
+sl_assert(
+	'one array owns the picker configuration',
+	method_exists( \SmartLogin\Frontend\Assets::class, 'address_config' ),
+	'`SmartLoginAddress` is localized onto a handle the dialog never enqueues. Two builders for one config is how the two drift.'
+);
+
+if ( method_exists( \SmartLogin\Frontend\Assets::class, 'address_config' ) ) {
+	sl_check(
+		'and the dialog carries exactly that array',
+		\SmartLogin\Frontend\Assets::address_config(),
+		(array) ( $sl_contract['address'] ?? array() )
+	);
+}
+
+sl_assert(
+	'the address picker can enhance markup that arrives late',
+	(bool) preg_match( '/window\.SmartLogin\w*Enhance\s*=/', $sl_address_js ),
+	'address.js initialises on DOMContentLoaded and exports nothing. The dialog paints long after it.'
+);
+
+/*
+ * Every hook, not this one. `SmartLoginEnhance` was created in 19.3 for markup
+ * that arrives late and `address.js` simply never joined it; a rule that names
+ * only the file we just fixed would not have caught that, and will not catch the
+ * next one.
+ */
+$sl_enhancers = array();
+
+foreach ( (array) glob( SMART_LOGIN_DIR . 'assets/js/*.js' ) as $sl_script ) {
+	if ( preg_match_all( '/window\.(SmartLogin\w*Enhance)\s*=/', (string) file_get_contents( $sl_script ), $sl_found ) ) {
+		$sl_enhancers = array_merge( $sl_enhancers, $sl_found[1] );
+	}
+}
+
+$sl_enhancers = array_unique( $sl_enhancers );
+
+sl_assert(
+	'the plugin exposes at least one enhancement hook, so the loop has a subject',
+	array() !== $sl_enhancers,
+	'Without one, the check below would pass for want of anything to walk.'
+);
+
+foreach ( $sl_enhancers as $sl_hook ) {
+	sl_assert(
+		'the dialog calls ' . $sl_hook . '() when it paints',
+		false !== strpos( $sl_dialog_js, $sl_hook ),
+		'A hook nothing calls is a fragment rendered with the enhancement silently missing — the defect 19.12 is.'
+	);
+}
+
 sl_summary( 'Sign-in anywhere' );

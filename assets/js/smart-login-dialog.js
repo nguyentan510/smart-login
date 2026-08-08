@@ -60,8 +60,71 @@
 			window.SmartLoginEnhance( body );
 		}
 
+		enhanceAddress();
 		holdSubmit();
 		focusFirst();
+	}
+
+	/**
+	 * The address picker: a third stage, fetched by the fragment that needs one.
+	 *
+	 * `address.js` is not in the dialog's bundle, and until 19.12 it was not
+	 * anywhere else on this path either — the template asks for it through
+	 * `Assets::enqueue_address()`, and inside the REST request that renders a
+	 * fragment there is no `wp_enqueue_scripts` listening. The welcome screen drew
+	 * two selects that did nothing.
+	 *
+	 * Loading it with the dialog would put the whole picker on every identify and
+	 * OTP open, none of which contains an address field. So it is fetched here,
+	 * once, and only when a painted fragment actually has one.
+	 */
+	var addressLoading = null;
+
+	function loadAddressPicker() {
+		if ( addressLoading ) {
+			return addressLoading;
+		}
+
+		// Already on the page: a dialog opened over `[smart_profile]` has it
+		// enqueued the ordinary way, and a second copy would rebind nothing.
+		if ( window.SmartLoginAddressEnhance || ! data.addressJs ) {
+			return Promise.resolve();
+		}
+
+		// Before the script, which reads this global as it runs. It comes from
+		// PHP the same way everything else here does — `wp_localize_script()`
+		// cannot reach a script the page injects itself.
+		window.SmartLoginAddress = window.SmartLoginAddress || data.address || {};
+
+		addressLoading = new Promise( function ( resolve ) {
+			var node = document.createElement( 'script' );
+
+			node.src = data.addressJs;
+			node.async = false;
+
+			// Resolved either way. A picker that failed to load is the plain
+			// pair of selects the server already rendered, which is the state
+			// this whole file degrades to; rejecting would add an unhandled
+			// rejection on top of it and change nothing on screen.
+			node.onload = resolve;
+			node.onerror = resolve;
+
+			document.head.appendChild( node );
+		} );
+
+		return addressLoading;
+	}
+
+	function enhanceAddress() {
+		if ( ! body.querySelector( '[data-sl-address]' ) ) {
+			return;
+		}
+
+		loadAddressPicker().then( function () {
+			if ( window.SmartLoginAddressEnhance ) {
+				window.SmartLoginAddressEnhance( body );
+			}
+		} );
 	}
 
 	/**

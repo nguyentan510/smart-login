@@ -484,20 +484,48 @@
 		} );
 	}
 
-	function initAll() {
-		document.querySelectorAll( '[data-sl-address]' ).forEach( initPluginForm );
-		initWooForm();
+	/**
+	 * Upgrade every picker inside a container.
+	 *
+	 * Scoped, and exposed below, because the dialog's markup arrives long after
+	 * DOMContentLoaded — the same reason `smart-login.js` exposes
+	 * `SmartLoginEnhance`, which this file simply never joined. Without it the
+	 * welcome screen rendered two dead selects: a province list that changed
+	 * nothing and a ward list that stayed disabled.
+	 *
+	 * Every caller passes no argument or a container; none passes an event.
+	 * `initPluginForm()` marks what it has done, so calling this twice over the
+	 * same markup is free.
+	 *
+	 * @param {ParentNode} [scope]
+	 */
+	function initAll( scope ) {
+		( scope || document ).querySelectorAll( '[data-sl-address]' ).forEach( initPluginForm );
+
+		// WooCommerce owns its own markup and it is never inside a fragment, so
+		// the checkout half only runs against the document.
+		if ( ! scope || scope === document ) {
+			initWooForm();
+		}
 	}
 
 	if ( document.readyState !== 'loading' ) {
 		initAll();
 	} else {
-		document.addEventListener( 'DOMContentLoaded', initAll );
+		// Wrapped: a listener receives the event as its first argument, and this
+		// function now reads its first argument as a container.
+		document.addEventListener( 'DOMContentLoaded', function () {
+			initAll();
+		} );
 	}
 
 	// Woo rebuilds the checkout markup after every AJAX refresh. Same jQuery-only
-	// event caveat as country_to_state_changed above.
+	// event caveat as country_to_state_changed above, and the same wrapping.
 	if ( window.jQuery ) {
-		window.jQuery( document.body ).on( 'updated_checkout', initAll );
+		window.jQuery( document.body ).on( 'updated_checkout', function () {
+			initAll();
+		} );
 	}
+
+	window.SmartLoginAddressEnhance = initAll;
 } )();

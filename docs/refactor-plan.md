@@ -2209,6 +2209,21 @@ instead of carrying it.
       one pharmacy's claims, and the provider row adapts rather than always
       being circles. Measuring found the lead at three lines and a mobile sheet
       that two rules had already killed between them
+- [x] **19.12** [The picker the dialog never
+      loaded](sign-in-anywhere/19.12-the-picker-the-dialog-never-loaded.md) —
+      reported from the running site: choosing a Tỉnh/Thành phố on the welcome
+      screen left Phường/Xã empty and disabled. `address.js` was never loaded on
+      the dialog path at all — the template asks through
+      `Assets::enqueue_address()`, and inside the REST request that renders a
+      fragment there is no `wp_enqueue_scripts` to answer, which is the no-op
+      `Shortcodes::render_step()` already documents for `Assets::enqueue()`. It
+      now arrives as a **third stage**, fetched by a fragment that actually
+      contains a picker, with its config coming from `Assets::address_config()`
+      so the contract and the localize call cannot drift. Second defect behind
+      the first: `address.js` bound on DOMContentLoaded and exposed nothing, so
+      loading it would not have been enough — rule 16 walks every
+      `window.SmartLogin*Enhance` the plugin exposes and requires the dialog to
+      call each
 - [x] **19.7** [The measurements](sign-in-anywhere/19.7-the-measurements.md) —
       375/480/1400, the keyboard walk, the integration gate, suite promoted to
       `required`, baseline restated. Numbered before 19.8 and 19.9, **runs after
@@ -2239,16 +2254,16 @@ visitor stays where they were — is the thing 19.5 builds.
 **Outcome.** Every sub-phase landed. Final state:
 
 ```text
-Sign-in anywhere: 51 passed, 0 failed, 0 pending   (required since 19.7)
-Integration gate: 15 checks, 0 failed              SMART_LOGIN_DIALOG_INTEGRATION_OK
+Sign-in anywhere: 60 passed, 0 failed, 0 pending   (required since 19.7)
+Integration gate: 19 checks, 0 failed              SMART_LOGIN_DIALOG_INTEGRATION_OK
 Every required suite PASS.
 ```
 
-19.10 and 19.11 were not in the plan. Both came from looking at the rendered
-dialog — one from a screenshot showing the same sentence twice, one from a
-request to match a reference's proportions. Neither would have been found by
-any rule in the suite, which is the argument Phase 18 makes and this phase
-paid off twice.
+19.10, 19.11 and 19.12 were not in the plan. All three came from looking at the
+rendered dialog — one from a screenshot showing the same sentence twice, one
+from a request to match a reference's proportions, one from a screenshot of a
+ward dropdown that would not open. None would have been found by any rule in the
+suite, which is the argument Phase 18 makes and this phase paid off three times.
 
 Four things this phase got wrong in the plan and corrected in the work, each
 written up in the brief that found it:

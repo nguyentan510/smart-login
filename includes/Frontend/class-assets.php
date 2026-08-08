@@ -66,7 +66,7 @@ class Assets {
 
 		wp_register_script(
 			self::ADDRESS_HANDLE,
-			SMART_LOGIN_URL . 'assets/js/address.js',
+			self::address_script(),
 			array(),
 			SMART_LOGIN_VERSION,
 			true
@@ -83,19 +83,7 @@ class Assets {
 			wp_register_script( self::CAPTCHA_HANDLE, $captcha_script, array(), null, true ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- the provider versions its own endpoint.
 		}
 
-		wp_localize_script(
-			self::ADDRESS_HANDLE,
-			'SmartLoginAddress',
-			array(
-				'restUrl' => esc_url_raw( rest_url( 'smart-login/v1/' ) ),
-				'i18n'    => array(
-					'chooseProvince' => __( 'Chọn Tỉnh/Thành phố', 'smart-login' ),
-					'chooseWard'     => __( 'Chọn Phường/Xã', 'smart-login' ),
-					'loading'        => __( 'Đang tải…', 'smart-login' ),
-					'noResults'      => __( 'Không tìm thấy', 'smart-login' ),
-				),
-			)
-		);
+		wp_localize_script( self::ADDRESS_HANDLE, 'SmartLoginAddress', self::address_config() );
 
 		wp_localize_script(
 			self::HANDLE,
@@ -123,6 +111,35 @@ class Assets {
 					'unsaved'     => __( 'Có thay đổi chưa lưu', 'smart-login' ),
 				),
 			)
+		);
+	}
+
+	/**
+	 * The address picker's script, and everything it needs to run.
+	 *
+	 * Two callers, one array: the localize call above, and
+	 * `LoginDialog::contract()`. The dialog loads this script itself — the
+	 * enqueue below is a no-op inside the REST request that renders its
+	 * fragments, which is 19.12 — and a second copy of the config assembled over
+	 * there is how the two drift. Same argument as the step allowlist, applied to
+	 * a payload instead of a list.
+	 */
+	public static function address_script(): string {
+		return SMART_LOGIN_URL . 'assets/js/address.js';
+	}
+
+	/**
+	 * @return array{restUrl:string,i18n:array<string,string>}
+	 */
+	public static function address_config(): array {
+		return array(
+			'restUrl' => esc_url_raw( rest_url( 'smart-login/v1/' ) ),
+			'i18n'    => array(
+				'chooseProvince' => __( 'Chọn Tỉnh/Thành phố', 'smart-login' ),
+				'chooseWard'     => __( 'Chọn Phường/Xã', 'smart-login' ),
+				'loading'        => __( 'Đang tải…', 'smart-login' ),
+				'noResults'      => __( 'Không tìm thấy', 'smart-login' ),
+			),
 		);
 	}
 

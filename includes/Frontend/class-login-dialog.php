@@ -136,6 +136,23 @@ class LoginDialog {
 			),
 			'dialogCss' => SMART_LOGIN_URL . 'assets/css/smart-login-dialog.css',
 			'dialogJs'  => SMART_LOGIN_URL . 'assets/js/smart-login-dialog.js',
+
+			/*
+			 * A third stage, for the same reason there is a second one.
+			 *
+			 * The address picker is inert markup until `address.js` upgrades it,
+			 * and until 19.12 nothing on this path loaded that file at all: the
+			 * template asks through `Assets::enqueue_address()`, and inside the
+			 * REST request that renders a fragment there is no
+			 * `wp_enqueue_scripts` to answer. The picker appears on exactly one
+			 * step, so the dialog fetches it when a fragment turns out to have
+			 * one rather than on every open that does not.
+			 *
+			 * The config comes from `Assets` rather than being rebuilt here —
+			 * `wp_localize_script()` cannot reach a script this file injects.
+			 */
+			'addressJs' => Assets::address_script(),
+			'address'   => Assets::address_config(),
 			// Finding 6: the fill-time floor was written for a form that loads
 			// with the page. The dialog keeps submit disabled until the fragment
 			// it is showing is old enough, so a visitor whose password manager
