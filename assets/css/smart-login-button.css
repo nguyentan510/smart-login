@@ -19,10 +19,21 @@
  * `<details>` element's; 21.6 adds behaviour on top and removes none.
  */
 
+/*
+ * The collapse breakpoint is 782px, matching WordPress's own admin-bar
+ * breakpoint, and it is written literally in the media query at the bottom of
+ * this file.
+ *
+ * It is deliberately **not** a custom property. A custom property cannot appear
+ * in a media query condition — `@media (max-width: var(--x))` is invalid and the
+ * browser drops the entire rule — so a variable here would look like a knob,
+ * change nothing when turned, and fail silently. A theme moves the breakpoint by
+ * re-declaring those two rules at its own width; its stylesheet loads after this
+ * one.
+ */
 .sl-account,
 .sl-account-btn {
 	--sl-account-gap: var(--sl-space-2);
-	--sl-account-collapse: 782px;
 }
 
 /* ---------- the button, in both states ---------- */
@@ -37,7 +48,16 @@
 	align-items: center;
 	gap: var(--sl-account-gap);
 	box-sizing: border-box;
+	/*
+	 * Both floors, not just the height. Measured at 375px with the label
+	 * collapsed, the button came to 43.6 x 44: an 18px icon plus padding and
+	 * borders lands just under the 44px touch target, and only the height had a
+	 * floor to catch it. A miss of 0.4px is still a miss, and it is the axis
+	 * nobody thinks to check because the height looks deliberate.
+	 */
 	min-height: 44px;
+	min-width: 44px;
+	justify-content: center;
 	padding: var(--sl-space-2) var(--sl-space-3);
 	border: 1px solid transparent;
 	border-radius: var(--sl-radius);

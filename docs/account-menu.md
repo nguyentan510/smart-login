@@ -372,9 +372,19 @@ feature request with no answer on file.
 | Refused | Why | Replaced by |
 | --- | --- | --- |
 | Colour picker | `--sl-accent` already exists (`smart-login.css:7`). A picker makes two sources of colour, and the CSS one still wins | decision 13's `:root` tokens, documented in `README.md` |
-| Breakpoint as a number field | the theme owns its breakpoints. A number stored here will disagree with the theme's and neither side will be visibly wrong | a CSS variable the theme sets |
+| Breakpoint as a number field | the theme owns its breakpoints. A number stored here will disagree with the theme's and neither side will be visibly wrong | the theme re-declares the collapse rules at its own width — **not** a CSS variable, see below |
 | Per-role item visibility | WordPress already refuses the destination to a member who may not have it. A second gate here is a second authorisation model, and the wrong one to trust | nothing; the deferral below |
 | Open the menu on hover | `<details>` has no hover state, and hover menus are unusable on touch. Two behaviours means one of them is untested on the device most visitors use | one behaviour: click |
+
+**Correction, made in 21.6.** The breakpoint row above said the replacement was
+"a CSS variable the theme sets". That is not possible: a custom property cannot
+appear in a media query condition — `@media (max-width: var(--x))` is invalid
+CSS, and the rule is simply dropped. The refusal stands and its reason is
+unchanged; only the replacement was wrong. The collapse breakpoint is `782px`,
+matching WordPress's own admin-bar breakpoint, it is written once in
+`smart-login-button.css`, and a theme that wants a different one re-declares
+those rules at its own width in a stylesheet that loads after ours. Recorded
+here rather than quietly fixed, because it was an approved decision.
 
 ---
 

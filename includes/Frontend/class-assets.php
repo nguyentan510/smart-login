@@ -103,6 +103,16 @@ class Assets {
 			SMART_LOGIN_VERSION
 		);
 
+		// Manners, not mechanics: the menu already opens and closes without it.
+		// See the file header for what it adds and what it must never remove.
+		wp_register_script(
+			self::BUTTON_HANDLE,
+			SMART_LOGIN_URL . 'assets/js/smart-login-account.js',
+			array(),
+			SMART_LOGIN_VERSION,
+			true
+		);
+
 		wp_register_script(
 			self::HANDLE,
 			SMART_LOGIN_URL . 'assets/js/smart-login.js',
@@ -202,6 +212,7 @@ class Assets {
 	 */
 	public static function enqueue_button(): void {
 		wp_enqueue_style( self::BUTTON_HANDLE );
+		wp_enqueue_script( self::BUTTON_HANDLE );
 	}
 
 	public static function enqueue(): void {

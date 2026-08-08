@@ -2612,9 +2612,18 @@ existed, not by an argument at the end.
       The template suite refused both new templates for having no fixture, which
       is the rule that exists because the Woo account template went six phases
       unexecuted; Templates 109 → 115 once they had them
-- [ ] **21.6** [The dropdown, and the small
+- [x] **21.6** [The dropdown, and the small
       screen](account-menu/21.6-the-dropdown.md) — outside-click, `Escape`,
-      `aria-expanded`, 375px. Measurements, taken
+      `aria-expanded`, 375px. **Measurements, taken in a browser**, all in the
+      brief. Two findings reading the CSS would not have produced: the collapsed
+      button was **43.60 x 44.00**, missing the touch target on the axis nobody
+      checks because only the height had a floor; and the spec's claim that a
+      **CSS variable could set the breakpoint is false** — a custom property
+      cannot appear in a media query condition, so the refusal stands but its
+      replacement was wrong, corrected in `account-menu.md`. **Decision 8 is now
+      a fact**: the same page built with zero scripts still opens, lists all
+      three destinations and closes, which only works because 21.5 shipped the
+      markup a sub-phase early
 - [ ] **21.7** [Placement, the documentation, and the
       promotion](account-menu/21.7-placement-and-the-promotion.md) — nav-menu
       injection off by default, `README.md`, suite `spec` → `required`
