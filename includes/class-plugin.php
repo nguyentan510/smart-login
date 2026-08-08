@@ -17,6 +17,7 @@ use SmartLogin\Auth\ProviderAuthController;
 use SmartLogin\Frontend\Assets;
 use SmartLogin\Frontend\FormController;
 use SmartLogin\Frontend\LoginDialog;
+use SmartLogin\Frontend\NavMenuItem;
 use SmartLogin\Frontend\RestController;
 use SmartLogin\Frontend\Shortcodes;
 use SmartLogin\Frontend\WooIntegration;
@@ -59,6 +60,7 @@ final class Plugin {
 		$this->services['assets']    = new Assets();
 		$this->services['codes']     = new Shortcodes();
 		$this->services['dialog']    = new LoginDialog();
+		$this->services['nav_item']  = new NavMenuItem();
 
 		if ( Settings::is_on( 'address.enabled' ) ) {
 			$this->services['address_rest'] = new AddressRest();

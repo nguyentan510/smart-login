@@ -35,7 +35,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **P1–P6 — The backlog after Phase 18** *(see below)*
 - [x] **Phase 19 — Sign-in on every page**
 - [x] **Phase 20 — Sending a code**
-- [ ] **Phase 21 — The account menu**
+- [x] **Phase 21 — The account menu**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -2624,9 +2624,17 @@ existed, not by an argument at the end.
       a fact**: the same page built with zero scripts still opens, lists all
       three destinations and closes, which only works because 21.5 shipped the
       markup a sub-phase early
-- [ ] **21.7** [Placement, the documentation, and the
+- [x] **21.7** [Placement, the documentation, and the
       promotion](account-menu/21.7-placement-and-the-promotion.md) — nav-menu
-      injection off by default, `README.md`, suite `spec` → `required`
+      injection off by default, `README.md`. **Account menu 38/0/0 and
+      `required`; the gate is 12/12 against the real site.** The promotion had
+      already happened in 21.5. The gate found a defect in **itself** — it
+      attached a second `NavMenuItem` and reported two injected items, because
+      `add_filter()` de-duplicates by object hash and `Plugin::boot()` had
+      already registered one. The README rule iterates `IconSet::names()` and
+      the shortcode's own `shortcode_atts()` block rather than a list typed into
+      the test, paired with a rule that the list was actually found so a stale
+      regex cannot narrow it to nothing
 
 ---
 

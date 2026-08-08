@@ -698,4 +698,63 @@ sl_assert(
 	'finding 1: the one trigger built for people who cannot edit templates is the only one with no CSS'
 );
 
+// ---------------------------------------------------------------------------
+sl_section( '21.7 — the public surface is documented (decision 11)' );
+// ---------------------------------------------------------------------------
+
+/*
+ * Checked against what is actually registered, never against a list typed here.
+ * A second list would go stale in the same commit as the first, and this
+ * project has twice found the README asserting a control that does not exist.
+ */
+$sl_readme = $sl_file( 'README.md' );
+
+$sl_undocumented = array();
+
+// Every icon the picker offers, since the filter example tells people to name one.
+foreach ( array_keys( \SmartLogin\Frontend\IconSet::names() ) as $sl_icon ) {
+	if ( false === strpos( $sl_readme, '`' . $sl_icon . '`' ) ) {
+		$sl_undocumented[] = 'icon ' . $sl_icon;
+	}
+}
+
+// Every attribute the shortcode accepts, read off the shortcode itself.
+preg_match(
+	'/shortcode_atts\(\s*array\((.*?)\),/s',
+	$sl_file( 'includes/Frontend/class-shortcodes.php' ),
+	$sl_atts_block
+);
+
+preg_match_all( "/'([a-z_]+)'\s*=>/", $sl_atts_block[1] ?? '', $sl_atts_found );
+
+foreach ( array_unique( $sl_atts_found[1] ?? array() ) as $sl_att ) {
+	if ( false === strpos( $sl_readme, '`' . $sl_att . '`' ) ) {
+		$sl_undocumented[] = 'attribute ' . $sl_att;
+	}
+}
+
+foreach ( array( 'smart_login_account_menu', 'smart_login_button', '--sl-accent', 'smart-login-tokens.css' ) as $sl_name ) {
+	if ( false === strpos( $sl_readme, $sl_name ) ) {
+		$sl_undocumented[] = $sl_name;
+	}
+}
+
+sl_assert(
+	'README documents every public name this phase added',
+	array() === $sl_undocumented,
+	'missing: ' . implode( ', ', $sl_undocumented )
+);
+
+sl_assert(
+	'the shortcode attribute list was actually found',
+	count( $sl_atts_found[1] ?? array() ) >= 4,
+	'a rule that narrows to nothing passes vacuously — found: ' . implode( ', ', $sl_atts_found[1] ?? array() )
+);
+
+sl_assert(
+	'nav-menu placement is off by default',
+	'' === (string) \SmartLogin\FieldRegistry::get( \SmartLogin\Frontend\NavMenuItem::SETTING )['default'],
+	'decision 11: a plugin may default to being invisible, not to editing the theme'
+);
+
 sl_summary( 'Account menu' );

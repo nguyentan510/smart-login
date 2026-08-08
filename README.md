@@ -62,6 +62,77 @@ Tại sao query param là dạng chuẩn chứ không phải `#login`: fragment 
 giờ được gửi lên server, nên nó không thể render sẵn trước lần vẽ đầu, không
 thể làm đích của một redirect, và không hiển thị gì khi JavaScript hỏng.
 
+---
+
+## Nút tài khoản trên header
+
+`[smart_login_button]` là **một shortcode, hai trạng thái**. Chưa đăng nhập nó
+là nút `Đăng nhập`; đã đăng nhập nó hiện tên của thành viên kèm menu tài khoản
+đổ xuống. Không phải hai shortcode, vì người đặt nút vào header không biết
+trước khách là ai.
+
+| Thuộc tính | Mặc định | Ý nghĩa |
+|---|---|---|
+| `label` | `Đăng nhập` | chữ khi chưa đăng nhập |
+| `collapse` | `mobile` | dưới 782px chỉ còn biểu tượng; `none` để luôn hiện chữ |
+| `class` | — | thêm class của bạn |
+| `step` | `identify` | bước mở ra khi bấm |
+
+Không sửa được template thì vào **Cài đặt → Hồ sơ & Địa chỉ → Menu tài khoản**
+và chọn một vị trí menu của giao diện; nút sẽ được chèn vào cuối menu đó. Mặc
+định là **không chèn** — plugin được phép mặc định vô hình, nhưng không được
+phép mặc định sửa markup của theme.
+
+Menu đổ xuống chạy bằng `<details>`, nên nó **mở và đóng được kể cả khi
+JavaScript không chạy**. Script chỉ thêm: bấm ra ngoài để đóng, phím `Escape`,
+và `aria-expanded`.
+
+### Các mục trong menu
+
+Hai đầu là của plugin và không cấu hình được: **Thông tin cá nhân** tự tìm
+trang tài khoản, **Đăng xuất** cần nonce nên không thể là một dòng link gõ tay.
+Phần giữa là của bạn — thêm ở cùng màn hình cài đặt, mỗi dòng gồm biểu tượng,
+nhãn và liên kết. Để trống cũng không sao: menu vẫn có hai mục dùng được.
+
+Biểu tượng chọn từ một bộ đóng, không nhập SVG: `user`, `lock`, `map-pin`,
+`shield`, `box`, `file-text`, `calendar`, `pill`, `heart`, `log-out`.
+
+Sửa cả danh sách bằng code — filter chạy **sau cùng**, trên mảng đã ghép, nên
+gỡ được cả hai đầu ghim:
+
+```php
+add_filter( 'smart_login_account_menu', function ( array $items, int $user_id ): array {
+	$items[] = array(
+		'key'   => 'wishlist',   // ổn định, dùng để so khớp; không phải nhãn
+		'label' => 'Sản phẩm yêu thích',
+		'icon'  => 'heart',      // tên trong bộ trên; tên lạ tự chuyển về mặc định
+		'url'   => home_url( '/yeu-thich/' ),
+	);
+
+	return $items;
+}, 10, 2 );
+```
+
+Mỗi mục đúng bốn khoá. Khoá thứ năm sẽ bị loại bỏ khi chuẩn hoá.
+
+### Đổi màu, đổi khoảng cách
+
+Không có bảng chọn màu trong cài đặt, và sẽ không có. Toàn bộ token nằm trên
+`:root` trong `assets/css/smart-login-tokens.css`, ghi đè một dòng là xong:
+
+```css
+:root {
+	--sl-accent: #0f62fe;
+	--sl-accent-dark: #0043ce;
+	--sl-radius: 4px;
+}
+```
+
+Breakpoint thu gọn là `782px` và **không phải** một biến — CSS không cho phép
+custom property trong điều kiện `@media`. Muốn đổi thì khai báo lại hai rule
+`@media (max-width: …)` của `smart-login-button.css` ở độ rộng của bạn; CSS của
+theme nạp sau nên nó thắng.
+
 Tắt hoàn toàn, hoặc chừa một link ra:
 
 ```php

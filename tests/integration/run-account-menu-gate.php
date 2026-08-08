@@ -180,6 +180,88 @@ $check(
 	'tail: ' . wp_json_encode( $tail )
 );
 
+/*
+ * 21.7 — placement into a theme's own menu.
+ *
+ * `wp_nav_menu_items` fires inside markup the theme owns, and whether the
+ * result is a valid `<li>` in the right `<ul>` is not a question a fixture can
+ * answer. The location is registered here rather than assumed, because the
+ * active theme may register none and the gate would then be measuring nothing.
+ */
+register_nav_menu( 'sl-gate-location', 'Smart Login gate location' );
+
+/*
+ * The filter is already attached — `Plugin::boot()` registered NavMenuItem when
+ * wp-load ran. Attaching a second instance here made the gate report two
+ * `.sl-account-item` on its first run: `add_filter()` de-duplicates a callback
+ * by object hash, so two instances of the same class are two subscribers, not
+ * one. That was the fixture's defect, not the code's, and it is left written
+ * down because "call register() to be sure" is the obvious thing to do next
+ * time somebody extends this file.
+ */
+$theme_items = '<li class="menu-item"><a href="/">Trang chủ</a></li>';
+$args_wanted = (object) array( 'theme_location' => 'sl-gate-location' );
+$args_other  = (object) array( 'theme_location' => 'some-other-location' );
+
+// Off by default: nothing selected, nothing touched.
+$check(
+	'with no location selected, the theme menu is returned unchanged',
+	apply_filters( 'wp_nav_menu_items', $theme_items, $args_wanted ) === $theme_items,
+	'decision 11: a plugin may default to being invisible, not to editing the theme'
+);
+
+\SmartLogin\Settings::update( array( 'account_menu.nav_location' => 'sl-gate-location' ) );
+
+$injected = (string) apply_filters( 'wp_nav_menu_items', $theme_items, $args_wanted );
+$elsewhere = (string) apply_filters( 'wp_nav_menu_items', $theme_items, $args_other );
+
+$check(
+	'the chosen location gains exactly one .sl-account-item',
+	1 === substr_count( $injected, 'sl-account-item' ),
+	'found ' . substr_count( $injected, 'sl-account-item' )
+);
+
+$check(
+	'and it is an <li>, which is the filter\'s whole contract',
+	(bool) preg_match( '#<li class="menu-item sl-account-item">.*</li>\s*$#s', $injected ),
+	'anything else puts a stray node inside the theme\'s <ul>'
+);
+
+$check(
+	'every other location is left alone',
+	$elsewhere === $theme_items,
+	'a second menu on the page must not sprout a button'
+);
+
+/*
+ * The one-renderer rule, compared rather than inspected. Two entry points
+ * producing two markups is the drift this phase is organised against, and
+ * placement is where it would reappear.
+ */
+$from_shortcode = ( new \SmartLogin\Frontend\Shortcodes() )->render_button( array() );
+$inner          = (string) preg_replace( '#^.*<li class="menu-item sl-account-item">(.*)</li>\s*$#s', '$1', $injected );
+
+$check(
+	'the injected markup is the shortcode\'s markup, not a second copy',
+	trim( $inner ) === trim( $from_shortcode ),
+	'lengths: ' . strlen( trim( $inner ) ) . ' vs ' . strlen( trim( $from_shortcode ) )
+);
+
+/*
+ * A theme switch leaves the option pointing at a location that no longer
+ * exists. Simulated by asking for a location the theme never registered, which
+ * is the same state from the filter's point of view.
+ */
+\SmartLogin\Settings::update( array( 'account_menu.nav_location' => 'gone-with-the-old-theme' ) );
+
+$check(
+	'a stale location injects nothing and warns about nothing',
+	apply_filters( 'wp_nav_menu_items', $theme_items, $args_wanted ) === $theme_items,
+	'themes get switched; a stale option is not an error condition'
+);
+
+\SmartLogin\Settings::update( array( 'account_menu.nav_location' => '' ) );
+
 $cleanup();
 
 printf( "\nAccount menu gate: %d checks, %d failed\n", count( $checks ), count( $failures ) );

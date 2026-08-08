@@ -808,7 +808,33 @@ final class FieldRegistry {
 				// machine-generated string in the site header.
 				'help'    => __( 'Chữ hiển thị cạnh biểu tượng khi khách đã đăng nhập.', 'smart-login' ),
 			),
+			'account_menu.nav_location'   => array(
+				'type'    => 'select',
+				'default' => '',
+				'tab'     => 'profile',
+				'section' => 'account_menu',
+				'label'   => __( 'Chèn nút vào menu', 'smart-login' ),
+				// Built from what the theme registered, so this is a closed list
+				// rather than a hook name typed by hand. The empty first option is
+				// the default and it means "do not touch the theme's menus".
+				'choices' => array( '' => __( '— Không chèn —', 'smart-login' ) ) + self::nav_locations(),
+				'help'    => self::nav_locations()
+					? __( 'Nút sẽ xuất hiện ở cuối menu được chọn. Bạn vẫn có thể đặt thủ công bằng shortcode <code>[smart_login_button]</code>.', 'smart-login' )
+					: __( 'Giao diện hiện tại không khai báo vị trí menu nào, nên chỉ có thể đặt nút bằng shortcode <code>[smart_login_button]</code>.', 'smart-login' ),
+			),
 		);
+	}
+
+	/**
+	 * The theme's registered menu locations.
+	 *
+	 * Delegated rather than inlined so the settings row and the injection read
+	 * one list — the row offers a location only if the filter would honour it.
+	 *
+	 * @return array<string,string>
+	 */
+	private static function nav_locations(): array {
+		return \SmartLogin\Frontend\NavMenuItem::locations();
 	}
 
 	/**
