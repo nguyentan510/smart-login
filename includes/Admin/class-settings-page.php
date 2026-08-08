@@ -17,6 +17,7 @@ use SmartLogin\Admin\Screens\AuditScreen;
 use SmartLogin\Admin\Screens\OverviewScreen;
 use SmartLogin\Admin\Screens\SettingsScreen;
 use SmartLogin\FieldRegistry;
+use SmartLogin\Installer;
 use SmartLogin\Settings;
 
 defined( 'ABSPATH' ) || exit;
@@ -30,6 +31,9 @@ class SettingsPage {
 	/** The readiness screen. It holds no fields, so it is not a registry tab. */
 	const OVERVIEW = 'overview';
 
+	/** admin-post action that clears what an upgrade left behind. */
+	const DISMISS_NOTICE = 'smart_login_dismiss_migration_notice';
+
 	public function register(): void {
 		// The overview screen owns one admin-post handler (resume sending), which
 		// has to be registered whether or not that screen is the one rendering.
@@ -39,6 +43,8 @@ class SettingsPage {
 		add_action( 'admin_init', array( $this, 'register_settings' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue' ) );
 		add_action( 'admin_notices', array( $this, 'dev_mode_notice' ) );
+		add_action( 'admin_notices', array( $this, 'migration_notices' ) );
+		add_action( 'admin_post_' . self::DISMISS_NOTICE, array( $this, 'dismiss_migration_notices' ) );
 		add_filter( 'plugin_action_links_' . SMART_LOGIN_BASENAME, array( $this, 'action_links' ) );
 	}
 
@@ -134,6 +140,52 @@ class SettingsPage {
 			esc_html__( 'Smart Login:', 'smart-login' ),
 			esc_html__( 'Chế độ DEV đang bật — mã OTP được hiển thị trực tiếp trên màn hình. Hãy tắt trước khi đưa lên môi trường thật.', 'smart-login' )
 		);
+	}
+
+	/**
+	 * What an upgrade could not decide for the site.
+	 *
+	 * Shown on every admin screen rather than only on Smart Login's own, because
+	 * the administrator who needs to read it has no reason to be visiting this
+	 * plugin — the configuration worked yesterday.
+	 *
+	 * Dismissal deletes the record. Nothing else clears it: it does not expire, it
+	 * does not go away on the next upgrade, and it survives a settings save, which
+	 * is the difference between a notice and a flash message.
+	 */
+	public function migration_notices(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+
+		$notices = (array) get_option( Installer::MIGRATION_NOTICE_OPTION, array() );
+
+		if ( ! $notices ) {
+			return;
+		}
+
+		foreach ( $notices as $notice ) {
+			printf(
+				'<div class="notice notice-warning"><p>%s</p></div>',
+				wp_kses( (string) $notice, array( 'code' => array() ) )
+			);
+		}
+
+		printf(
+			'<div class="notice notice-warning"><p><a href="%s">%s</a></p></div>',
+			esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=' . self::DISMISS_NOTICE ), self::DISMISS_NOTICE ) ),
+			esc_html__( 'Tôi đã đọc — ẩn thông báo này', 'smart-login' )
+		);
+	}
+
+	public function dismiss_migration_notices(): void {
+		self::require_capability();
+		check_admin_referer( self::DISMISS_NOTICE );
+
+		delete_option( Installer::MIGRATION_NOTICE_OPTION );
+
+		wp_safe_redirect( wp_get_referer() ? wp_get_referer() : admin_url() );
+		exit;
 	}
 
 	// -----------------------------------------------------------------

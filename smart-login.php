@@ -20,7 +20,7 @@ defined( 'ABSPATH' ) || exit;
 define( 'SMART_LOGIN_VERSION', '1.1.0' );
 // Bumped to 2 so maybe_upgrade() runs once more: a login provider was dropped and
 // its stored settings block and sealed secret have no screen left to clear them.
-define( 'SMART_LOGIN_DB_VERSION', '2' );
+define( 'SMART_LOGIN_DB_VERSION', '3' );
 define( 'SMART_LOGIN_FILE', __FILE__ );
 define( 'SMART_LOGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'SMART_LOGIN_URL', plugin_dir_url( __FILE__ ) );

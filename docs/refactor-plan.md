@@ -2404,10 +2404,16 @@ halves were reasonable readings. Together they delivered nothing.
       reused unchanged, which is the whole point. **Delivery routing 57/3, Admin
       screens 141/5** — two more passing than before, because `show_if` was made
       checkable rather than exempt from the tab-coverage gate
-- [ ] **20.3** Migration, and it refuses to be silent. `automation.url` +
-      `automation.secret` → `signed` credentials. `route_email = automation` has
-      no equivalent and raises an admin notice naming the setting rather than
-      choosing for the site
+- [x] **20.3** [The migration that refuses to be
+      silent](sending-a-code/20.3-the-migration-that-refuses-to-be-silent.md) —
+      `automation.url` + `automation.secret` → the signed provider, secrets
+      through the secret store on both sides because a raw block copy would copy
+      an absence. Two shapes cannot be migrated and are **reported by name**
+      instead: `route_email = automation`, which has no equivalent, and
+      `route_phone = automation` with an **empty endpoint** — the shape the
+      reporting install is in, which the brief missed and which the first
+      implementation would have "migrated" straight over a configured gateway.
+      Idempotence asserted, not assumed. **Delivery routing 72/3**
 - [ ] **20.4** The bus becomes the top-level tab **Thông báo & Tích hợp**, off by
       default. Not under Gửi mã because it delivers nothing to a visitor; not
       called Automation because that named a platform rather than a behaviour,

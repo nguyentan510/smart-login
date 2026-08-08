@@ -12,7 +12,15 @@ defined( 'ABSPATH' ) || exit;
 class Installer {
 
 	const DB_VERSION_OPTION = 'smart_login_db_version';
-	const CLEANUP_HOOK      = 'smart_login_cleanup';
+
+	/**
+	 * Where an upgrade leaves a message it could not act on by itself.
+	 *
+	 * Not a transient. A notice that expires is a notice nobody read, and the
+	 * configurations this records are ones a human has to decide about.
+	 */
+	const MIGRATION_NOTICE_OPTION = 'smart_login_migration_notices';
+	const CLEANUP_HOOK            = 'smart_login_cleanup';
 
 	public static function activate(): void {
 		self::install_tables();
@@ -62,7 +70,95 @@ class Installer {
 
 		self::install_tables();
 		self::forget_unshipped_providers();
+		self::migrate_automation_delivery();
 		update_option( self::DB_VERSION_OPTION, SMART_LOGIN_DB_VERSION );
+	}
+
+	/**
+	 * Carry an automation-routed site onto the signed provider.
+	 *
+	 * The second migration this plugin has, and the first one that cannot be
+	 * skipped. 10.1 shipped with defaults reproducing existing behaviour byte for
+	 * byte, so an install that ignored the upgrade was still correct. Phase 20
+	 * deletes two settings that sites have deliberately set, and an install that
+	 * ignored this one would stop delivering codes without saying anything.
+	 *
+	 * Reads the stored option directly rather than through `Settings::get()`. By
+	 * the time this runs on most installs, 20.1 will have removed
+	 * `delivery.route_*` from the registry, and a hydrated read drops paths the
+	 * registry does not declare — so the hydrated value of the very setting this
+	 * function exists to read would be empty.
+	 *
+	 * Idempotent by inspection rather than by the version guard alone: a support
+	 * script, a second activation or a restored database can all call it twice,
+	 * and the guard only covers the path through `maybe_upgrade()`.
+	 *
+	 * Deliberately **not** destructive. `automation.url` and `automation.secret`
+	 * stay exactly where they are — 20.4 decides the bus role, and erasing a
+	 * source before the destination has been used in anger is unrecoverable.
+	 */
+	public static function migrate_automation_delivery(): void {
+		$settings = get_option( Settings::OPTION, array() );
+
+		if ( ! is_array( $settings ) ) {
+			return;
+		}
+
+		$notices  = array();
+		$endpoint = trim( (string) ( $settings['automation']['url'] ?? '' ) );
+
+		if ( 'automation' === (string) ( $settings['delivery']['route_phone'] ?? '' ) && '' === $endpoint ) {
+			// Routed at an endpoint that was never configured, which is the state
+			// the reporting install was in. There is nothing to move, and moving
+			// nothing is not harmless: it would point the provider at a signed
+			// endpoint that does not exist *and* overwrite the gateway the
+			// administrator had configured on the way past. That is the failure
+			// `Installer::cleanup()`'s flat retention keys already cost this
+			// project once — a hook rewriting a setting it was not asked about.
+			$notices['route_phone'] = __(
+				'Smart Login: cài đặt <code>delivery.route_phone</code> đang trỏ tới endpoint automation nhưng endpoint đó chưa được cấu hình, nên mã gửi tới số điện thoại chưa từng đi được. Cách định tuyến này không còn nữa — hãy vào tab Kênh SMS và chọn nhà cung cấp.',
+				'smart-login'
+			);
+		} elseif ( 'automation' === (string) ( $settings['delivery']['route_phone'] ?? '' )
+			&& GatewayPresets::ENVELOPE_SIGNED !== (string) ( $settings['sms']['preset'] ?? '' ) ) {
+
+			$settings['sms']['preset']     = GatewayPresets::ENVELOPE_SIGNED;
+			$settings['sms']['signed_url'] = $endpoint;
+			// Left on rather than merely configured: the channel was delivering
+			// before the upgrade, and arriving switched off would be the silent
+			// failure this whole sub-phase exists to prevent.
+			$settings['sms']['enabled'] = 1;
+
+			update_option( Settings::OPTION, $settings );
+
+			// Through the secret store on both sides. `absorb_secret_fields()`
+			// prunes plaintext out of the option array, so copying the raw block
+			// would faithfully copy an absence.
+			$secret = Settings::read_secret( 'automation.secret' );
+
+			if ( '' !== $secret ) {
+				Settings::store_secret( 'sms.signed_secret', $secret );
+			}
+		}
+
+		if ( 'automation' === (string) ( $settings['delivery']['route_email'] ?? '' ) ) {
+			// Named, not summarised. There is no email-side equivalent of the
+			// signed provider — an external email sender was deferred in
+			// delivery-routing.md D5 and this phase does not add one — so the site
+			// loses a capability. Choosing a replacement is not an upgrade hook's
+			// decision; saying which setting stopped meaning anything is.
+			$notices['route_email'] = __(
+				'Smart Login: cài đặt <code>delivery.route_email</code> đang gửi mã email qua endpoint automation, và cách gửi này không còn nữa. Mã gửi tới email sẽ đi qua <code>wp_mail()</code>. Nếu bạn cần một bên thứ ba gửi email, hãy cấu hình một plugin SMTP.',
+				'smart-login'
+			);
+		}
+
+		if ( $notices ) {
+			update_option(
+				self::MIGRATION_NOTICE_OPTION,
+				$notices + (array) get_option( self::MIGRATION_NOTICE_OPTION, array() )
+			);
+		}
 	}
 
 	/**

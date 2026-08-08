@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-08 06:23+0000\n"
+"POT-Creation-Date: 2026-08-08 06:34+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -157,7 +157,7 @@ msgstr ""
 msgid "Bạn không có quyền thực hiện việc này."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:237
+#: includes/Admin/class-settings-page.php:289
 msgid "Bạn không có quyền truy cập trang này."
 msgstr ""
 
@@ -453,7 +453,7 @@ msgstr ""
 msgid "Chế độ DEV"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:135
+#: includes/Admin/class-settings-page.php:141
 msgid "Chế độ DEV đang bật — mã OTP được hiển thị trực tiếp trên màn hình. Hãy tắt trước khi đưa lên môi trường thật."
 msgstr ""
 
@@ -535,9 +535,9 @@ msgstr ""
 msgid "Cloudflare Turnstile"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:58
-#: includes/Admin/class-settings-page.php:59
-#: includes/Admin/class-settings-page.php:114
+#: includes/Admin/class-settings-page.php:64
+#: includes/Admin/class-settings-page.php:65
+#: includes/Admin/class-settings-page.php:120
 msgid "Cài đặt"
 msgstr ""
 
@@ -922,7 +922,7 @@ msgstr ""
 #: includes/Admin/Screens/class-settings-screen.php:342
 #: includes/Admin/Screens/class-settings-screen.php:366
 #: includes/Admin/class-readiness.php:195
-#: includes/Admin/class-settings-page.php:103
+#: includes/Admin/class-settings-page.php:109
 msgid "Gửi thử"
 msgstr ""
 
@@ -1154,7 +1154,7 @@ msgstr ""
 msgid "Không gửi được mã xác thực. Vui lòng thử lại sau ít phút."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:104
+#: includes/Admin/class-settings-page.php:110
 msgid "Không kết nối được tới máy chủ."
 msgstr ""
 
@@ -1621,7 +1621,7 @@ msgstr ""
 msgid "Nhập secret"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:105
+#: includes/Admin/class-settings-page.php:111
 msgid "Nhập số điện thoại hoặc email để gửi thử."
 msgstr ""
 
@@ -1637,8 +1637,8 @@ msgstr ""
 msgid "Nhập thông tin tài khoản của bạn. Chúng tôi sẽ gửi mã xác thực để bạn đặt lại mật khẩu."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:67
-#: includes/Admin/class-settings-page.php:68
+#: includes/Admin/class-settings-page.php:73
+#: includes/Admin/class-settings-page.php:74
 msgid "Nhật ký"
 msgstr ""
 
@@ -1876,8 +1876,8 @@ msgstr ""
 
 #: includes/Admin/Screens/class-overview-screen.php:63
 #: includes/Admin/Screens/class-settings-screen.php:45
-#: includes/Admin/class-settings-page.php:47
-#: includes/Admin/class-settings-page.php:48
+#: includes/Admin/class-settings-page.php:53
+#: includes/Admin/class-settings-page.php:54
 msgid "Smart Login"
 msgstr ""
 
@@ -1885,8 +1885,16 @@ msgstr ""
 msgid "Smart Login yêu cầu PHP 8.0 trở lên. Plugin đang tạm dừng hoạt động."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:134
+#: includes/Admin/class-settings-page.php:140
 msgid "Smart Login:"
+msgstr ""
+
+#: includes/class-installer.php:150
+msgid "Smart Login: cài đặt <code>delivery.route_email</code> đang gửi mã email qua endpoint automation, và cách gửi này không còn nữa. Mã gửi tới email sẽ đi qua <code>wp_mail()</code>. Nếu bạn cần một bên thứ ba gửi email, hãy cấu hình một plugin SMTP."
+msgstr ""
+
+#: includes/class-installer.php:118
+msgid "Smart Login: cài đặt <code>delivery.route_phone</code> đang trỏ tới endpoint automation nhưng endpoint đó chưa được cấu hình, nên mã gửi tới số điện thoại chưa từng đi được. Cách định tuyến này không còn nữa — hãy vào tab Kênh SMS và chọn nhà cung cấp."
 msgstr ""
 
 #: includes/OTP/class-placeholders.php:146
@@ -2255,6 +2263,10 @@ msgstr ""
 msgid "Tình trạng hệ thống"
 msgstr ""
 
+#: includes/Admin/class-settings-page.php:177
+msgid "Tôi đã đọc — ẩn thông báo này"
+msgstr ""
+
 #. translators: %s: linked terms and conditions label.
 #: templates/form-signup.php:112
 msgid "Tôi đồng ý với %s."
@@ -2305,7 +2317,7 @@ msgstr ""
 msgid "Tỉnh/Thành phố không hợp lệ."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:167
+#: includes/Admin/class-settings-page.php:219
 msgid "Tổng quan"
 msgstr ""
 
@@ -2677,7 +2689,7 @@ msgstr ""
 msgid "Đang gửi mã xác thực cho: %s."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:102
+#: includes/Admin/class-settings-page.php:108
 #: includes/Frontend/class-assets.php:104
 msgid "Đang gửi…"
 msgstr ""

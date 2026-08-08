@@ -988,6 +988,152 @@ Settings::update(
 Settings::store_secret( 'sms.signed_secret', '' );
 
 // =====================================================================
+sl_section( 'Rule 19 — an automation-routed site survives the upgrade (20.3)' );
+
+/*
+ * The load-bearing rule of the phase. 10.1 shipped with defaults that reproduced
+ * existing behaviour byte for byte; this phase deletes two settings sites have
+ * deliberately set, so the only thing standing between an upgrade and a site that
+ * silently stops delivering codes is this function.
+ *
+ * Asserted three ways, because "it migrated" is not one property:
+ *   1. a phone-routed install arrives fully configured on the signed provider
+ *   2. an email-routed install, which has no destination, produces a notice
+ *   3. a site that never used automation is not touched at all
+ */
+$sl_migrator = array( \SmartLogin\Installer::class, 'migrate_automation_delivery' );
+
+sl_assert(
+	'the migration exists',
+	is_callable( $sl_migrator ),
+	'Installer::migrate_automation_delivery() — 20.3'
+);
+
+/** Put the option into a known pre-upgrade shape and forget every secret. */
+function sl_seed_pre_upgrade( array $settings ): void {
+	Settings::store_secret( 'automation.secret', '' );
+	Settings::store_secret( 'sms.signed_secret', '' );
+	update_option( Settings::OPTION, array() );
+	delete_option( \SmartLogin\Installer::MIGRATION_NOTICE_OPTION );
+	Settings::update( $settings );
+}
+
+if ( is_callable( $sl_migrator ) ) {
+	// 1. Phone routed at automation: the configuration has to arrive intact.
+	sl_seed_pre_upgrade(
+		array(
+			'delivery.route_phone' => 'automation',
+			'automation.url'       => 'https://n8n.example/otp',
+			'sms.preset'           => 'generic',
+			'sms.enabled'          => 0,
+		)
+	);
+	Settings::store_secret( 'automation.secret', 'the-original-key' );
+
+	$sl_migrator();
+
+	sl_check( 'the endpoint arrives', 'https://n8n.example/otp', (string) Settings::get( 'sms.signed_url' ) );
+	sl_check( 'the provider is the signed one', 'signed', (string) Settings::get( 'sms.preset' ) );
+	sl_check( 'the channel is left switched on', 1, (int) Settings::get( 'sms.enabled' ) );
+	sl_check( 'the signing key reads back', 'the-original-key', Settings::read_secret( 'sms.signed_secret' ) );
+
+	sl_assert(
+		'the source configuration is not erased',
+		'https://n8n.example/otp' === (string) Settings::get( 'automation.url' ),
+		'20.4 decides the bus role. Erasing the source before the destination has been used in anger is unrecoverable.'
+	);
+
+	// Idempotence, asserted rather than assumed. The version guard is not the
+	// only thing that can call this — a support script or a second activation can.
+	$sl_after_first = Settings::all();
+	$sl_migrator();
+
+	sl_check( 'migrating twice is the same as migrating once', $sl_after_first, Settings::all() );
+
+	// 2. Email routed at automation: nothing to migrate, so it must be reported.
+	sl_seed_pre_upgrade(
+		array(
+			'delivery.route_email' => 'automation',
+			'automation.url'       => 'https://n8n.example/otp',
+		)
+	);
+	Settings::store_secret( 'automation.secret', 'the-original-key' );
+
+	$sl_migrator();
+
+	$sl_notices = (array) get_option( \SmartLogin\Installer::MIGRATION_NOTICE_OPTION, array() );
+
+	sl_assert(
+		'an email route that cannot be migrated is reported',
+		array() !== $sl_notices,
+		'The site loses a delivery capability. An upgrade hook may not choose a replacement, but it may not stay quiet either.'
+	);
+
+	sl_assert(
+		'the report names the setting',
+		false !== strpos( implode( ' ', $sl_notices ), 'route_email' ),
+		'A notice that does not name what changed sends the administrator hunting. Got: ' . implode( ' | ', $sl_notices )
+	);
+
+	/*
+	 * 3. Routed at automation with no endpoint — the shape the reporting install
+	 * was actually in, and the one that turns a migration into a demolition.
+	 *
+	 * There is nothing to move: the site was not delivering through automation,
+	 * because there was no automation to deliver through. Migrating anyway would
+	 * point `sms.preset` at a signed provider with no endpoint *and* overwrite the
+	 * gateway the administrator had configured on the way past. That is the
+	 * failure `Installer::cleanup()`'s flat retention keys already cost this
+	 * project once: a hook rewriting a setting it was not asked about.
+	 */
+	sl_seed_pre_upgrade(
+		array(
+			'delivery.route_phone' => 'automation',
+			'automation.url'       => '',
+			'sms.preset'           => 'generic',
+			'sms.url'              => 'https://n8n.example/local-otp',
+			'sms.enabled'          => 1,
+		)
+	);
+
+	$sl_migrator();
+
+	sl_check( 'an empty endpoint does not overwrite the configured gateway', 'generic', (string) Settings::get( 'sms.preset' ) );
+	sl_check( 'and does not overwrite its URL', 'https://n8n.example/local-otp', (string) Settings::get( 'sms.url' ) );
+
+	sl_assert(
+		'a route pointing at nothing is reported instead',
+		false !== strpos( implode( ' ', (array) get_option( \SmartLogin\Installer::MIGRATION_NOTICE_OPTION, array() ) ), 'route_phone' ),
+		'The site was routed at an endpoint it never configured, so it has not been delivering. Silence here is how it stays that way.'
+	);
+
+	// 4. A site that never used automation keeps its own gateway untouched.
+	sl_seed_pre_upgrade(
+		array(
+			'delivery.route_phone' => 'sms',
+			'sms.preset'           => 'esms',
+			'sms.url'              => 'https://rest.esms.vn/x',
+		)
+	);
+
+	$sl_migrator();
+
+	sl_check( 'an unrelated site keeps its provider', 'esms', (string) Settings::get( 'sms.preset' ) );
+	sl_check( 'and keeps its gateway URL', 'https://rest.esms.vn/x', (string) Settings::get( 'sms.url' ) );
+	sl_check(
+		'and is reported nothing',
+		array(),
+		(array) get_option( \SmartLogin\Installer::MIGRATION_NOTICE_OPTION, array() )
+	);
+} else {
+	foreach ( array( 'the endpoint arrives', 'the signing key reads back', 'an unrelated site keeps its provider' ) as $sl_blocked ) {
+		sl_pending( $sl_blocked, 'Installer::migrate_automation_delivery() — 20.3' );
+	}
+}
+
+sl_seed_pre_upgrade( array( 'delivery.route_phone' => 'sms' ) );
+
+// =====================================================================
 sl_section( 'Rule 8 — a failed send leaves the code already delivered usable (10.7)' );
 
 /*
