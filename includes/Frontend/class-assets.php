@@ -17,6 +17,14 @@ class Assets {
 	const ADDRESS_HANDLE = 'smart-login-address';
 	const CAPTCHA_HANDLE = 'smart-login-captcha';
 
+	/**
+	 * The design tokens, split out in 21.1.
+	 *
+	 * A dependency of every stylesheet that reads a `--sl-*`, so no caller has
+	 * to remember it and no second surface has to restate a colour.
+	 */
+	const TOKENS_HANDLE = 'smart-login-tokens';
+
 	public function register(): void {
 		add_action( 'wp_enqueue_scripts', array( $this, 'register_assets' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'maybe_enqueue' ), 15 );
@@ -50,9 +58,16 @@ class Assets {
 
 	public function register_assets(): void {
 		wp_register_style(
+			self::TOKENS_HANDLE,
+			SMART_LOGIN_URL . 'assets/css/smart-login-tokens.css',
+			array(),
+			SMART_LOGIN_VERSION
+		);
+
+		wp_register_style(
 			self::HANDLE,
 			SMART_LOGIN_URL . 'assets/css/smart-login.css',
-			array(),
+			array( self::TOKENS_HANDLE ),
 			SMART_LOGIN_VERSION
 		);
 

@@ -83,6 +83,18 @@ $sl_identity = static function ( string $channel, string $label, bool $federated
 $sl_css      = sl_source( 'assets/css/smart-login.css' );
 $sl_css_code = (string) preg_replace( '#/\*.*?\*/#s', '', $sl_css );
 
+/*
+ * The scale moved to its own file in 21.1, and this suite caught it — five
+ * assertions went red the moment the tokens left `.smart-login`, which is the
+ * boundary CLAUDE.md warns a rename crosses.
+ *
+ * The property being asserted has not changed: a token used but never declared
+ * resolves to nothing and the declaration silently drops. Only where the
+ * declaration lives has. So this reads the token file, and the rest of the
+ * suite keeps reading the stylesheet it was written against.
+ */
+$sl_tokens_code = (string) preg_replace( '#/\*.*?\*/#s', '', sl_source( 'assets/css/smart-login-tokens.css' ) );
+
 // ---------------------------------------------------------------------
 sl_section( 'Rule 1 — the provider\'s own mark, wherever the provider is named (17.1)' );
 
@@ -216,7 +228,7 @@ sl_assert(
 foreach ( array( '--sl-space-1', '--sl-space-6', '--sl-fs-xs', '--sl-fs-xl', '--sl-radius-card' ) as $sl_token ) {
 	sl_assert(
 		sprintf( 'the scale declares %s', $sl_token ),
-		(bool) preg_match( '/' . preg_quote( $sl_token, '/' ) . '\s*:/', $sl_css_code ),
+		(bool) preg_match( '/' . preg_quote( $sl_token, '/' ) . '\s*:/', $sl_tokens_code ),
 		'A token used but never declared resolves to nothing, and the property silently drops.'
 	);
 }

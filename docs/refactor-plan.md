@@ -2553,10 +2553,19 @@ existed, not by an argument at the end.
       also found inline SVG in two files the spec had not counted,
       `templates/onboarding.php` and `templates/partials/password-field.php`,
       which widens 21.2
-- [ ] **21.1** [The tokens leave the
+- [x] **21.1** [The tokens leave the
       layout](account-menu/21.1-the-tokens-leave-the-layout.md) — twenty design
       tokens move from `.smart-login` to `:root` in their own file. No value
-      changes; the rendered-surface baseline is the acceptance
+      changed. **Rendered surface 25 before and 25 after**; Rule 1 green;
+      Account menu 4/9/10 → 7/8/9. The **account-card suite caught the rename**
+      — five assertions red the moment the tokens moved, because they asked
+      whether the scale was declared in `smart-login.css`. Their property is
+      unchanged and their subject moved, so they read the token file now.
+      `--sl-dlg-*` stays on `.sl-dialog`: checking found it never crosses a
+      stylesheet boundary, which sharpened Rule 1 into "a token a stylesheet
+      reads without declaring must come from the token file". Two consumers the
+      brief had not listed — `tests/visual/render.php` inlines the CSS with no
+      dependency graph, and the launcher injects `<link>`s by URL
 - [ ] **21.2** [One glyph
       vocabulary](account-menu/21.2-one-glyph-vocabulary.md) — `IconSet`, ten
       names, `sections_meta()` reads from it. Provider brand marks stay out

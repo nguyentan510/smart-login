@@ -99,23 +99,60 @@ sl_assert(
 	'Decision 13: the token block leaves .smart-login, which welds twenty design tokens to a page-layout rule.'
 );
 
+/*
+ * The rule is about *shared* tokens, and 21.1 is where that got sharpened.
+ *
+ * The first phrasing was "no --sl-* declaration outside the token file", which
+ * would also have swept up the eight `--sl-dlg-*` on `.sl-dialog`. Those are
+ * declared and read inside `smart-login-dialog.css` and nowhere else: a variable
+ * that never crosses a stylesheet boundary is component-local, and promoting it
+ * to a global name is the opposite of the scoping this plugin keeps.
+ *
+ * So: a token a stylesheet *reads without declaring* must come from the token
+ * file. That is the property decision 13 actually needs, and it still fails
+ * loudly while the token file does not exist.
+ */
 if ( '' === $sl_token_file ) {
-	sl_pending( 'no --sl-* declaration lives outside the token file', 'the token file' );
+	sl_pending( 'every cross-file token is declared in the token file', 'the token file' );
 } else {
-	$sl_stray = array();
+	preg_match_all( '/^\s*(--sl-[a-z0-9-]+)\s*:/m', $sl_token_file, $sl_declared_tokens );
+	$sl_known = $sl_declared_tokens[1];
+	$sl_orphan = array();
 
 	foreach ( array( 'assets/css/smart-login.css', 'assets/css/smart-login-dialog.css', 'assets/css/smart-login-button.css', 'assets/css/admin.css' ) as $sl_css ) {
 		$sl_body = $sl_file( $sl_css );
 
-		if ( '' !== $sl_body && preg_match( '/^\s*--sl-[a-z0-9-]+\s*:/m', $sl_body ) ) {
-			$sl_stray[] = $sl_css;
+		if ( '' === $sl_body ) {
+			continue;
+		}
+
+		preg_match_all( '/^\s*(--sl-[a-z0-9-]+)\s*:/m', $sl_body, $sl_local );
+		preg_match_all( '/var\(\s*(--sl-[a-z0-9-]+)/', $sl_body, $sl_used );
+
+		foreach ( array_unique( $sl_used[1] ) as $sl_token ) {
+			if ( ! in_array( $sl_token, $sl_local[1], true ) && ! in_array( $sl_token, $sl_known, true ) ) {
+				$sl_orphan[] = $sl_css . ' reads ' . $sl_token;
+			}
 		}
 	}
 
 	sl_assert(
-		'no --sl-* declaration lives outside the token file',
-		array() === $sl_stray,
-		'declared in: ' . implode( ', ', $sl_stray )
+		'every cross-file token is declared in the token file',
+		array() === $sl_orphan,
+		implode( '; ', $sl_orphan )
+	);
+
+	/*
+	 * A declaration, not a usage. The first version of this pattern stopped at
+	 * `--sl-` and matched `color: var(--sl-text)` inside the very rule it was
+	 * checking, so it failed against a file that was already correct. The colon
+	 * is what distinguishes the two: a declaration is `--sl-x:`, a reference is
+	 * `--sl-x)`.
+	 */
+	sl_assert(
+		'.smart-login declares no design token of its own',
+		! preg_match( '/\.smart-login\s*\{[^}]*--sl-[a-z0-9-]+\s*:/s', $sl_file( 'assets/css/smart-login.css' ) ),
+		'decision 13: the token set and the page-layout block were one rule'
 	);
 }
 
