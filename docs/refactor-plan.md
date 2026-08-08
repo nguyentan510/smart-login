@@ -2194,6 +2194,21 @@ instead of carrying it.
       survives. What did not survive was the visitor's *place*, which is 19.5.
       Ships one rule over the session writers and one integration scenario
       instead of cart code nobody needs
+- [x] **19.10** One heading per screen — found by looking at the thing, not by a
+      rule. The shell's bar and the fragment's own `<h2>` said the same sentence
+      forty pixels apart. The shell's cannot go: it is the dialog's accessible
+      name. Rule 14 was written first and immediately showed this was **every**
+      step, not one, so `partials/screen-title` became the single owner rather
+      than six copies of one condition. Copy as asked: *Đăng nhập* + *Vui lòng
+      đăng nhập để hưởng những đặc quyền dành cho thành viên.*
+- [x] **19.11** The dialog's proportions — a token scale on `.sl-dialog`,
+      declared then **measured**: panel 480, control 52, gaps 16/20/20/16, lead
+      two lines, no overflow at 375/480/1400. Two things deliberately not copied
+      from the reference, both argued in the commit: the benefit badges are a
+      slot (empty by default, `smart_login_dialog_benefits`) because they were
+      one pharmacy's claims, and the provider row adapts rather than always
+      being circles. Measuring found the lead at three lines and a mobile sheet
+      that two rules had already killed between them
 - [x] **19.7** [The measurements](sign-in-anywhere/19.7-the-measurements.md) —
       375/480/1400, the keyboard walk, the integration gate, suite promoted to
       `required`, baseline restated. Numbered before 19.8 and 19.9, **runs after
@@ -2224,10 +2239,16 @@ visitor stays where they were — is the thing 19.5 builds.
 **Outcome.** Every sub-phase landed. Final state:
 
 ```text
-Sign-in anywhere: 44 passed, 0 failed, 0 pending   (required since 19.7)
+Sign-in anywhere: 51 passed, 0 failed, 0 pending   (required since 19.7)
 Integration gate: 15 checks, 0 failed              SMART_LOGIN_DIALOG_INTEGRATION_OK
 Every required suite PASS.
 ```
+
+19.10 and 19.11 were not in the plan. Both came from looking at the rendered
+dialog — one from a screenshot showing the same sentence twice, one from a
+request to match a reference's proportions. Neither would have been found by
+any rule in the suite, which is the argument Phase 18 makes and this phase
+paid off twice.
 
 Three things this phase got wrong in the plan and corrected in the work, each
 written up in the brief that found it:
