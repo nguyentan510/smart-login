@@ -26,6 +26,7 @@
  */
 
 use SmartLogin\Address\AddressFields;
+use SmartLogin\Frontend\IconSet;
 use SmartLogin\Frontend\TemplateLoader;
 use SmartLogin\Security\RequestGuard;
 
@@ -50,9 +51,7 @@ $sl_name   = '' !== $sl_first ? $sl_first : (string) $user->display_name;
 
 	<div class="sl-congrats">
 		<span class="sl-congrats__mark" aria-hidden="true">
-			<svg viewBox="0 0 24 24" width="28" height="28" focusable="false">
-				<path d="M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z" fill="currentColor"/>
-			</svg>
+			<?php echo IconSet::get( 'check' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- IconSet returns fixed markup from a closed set; nothing here comes from input. ?>
 		</span>
 		<p class="sl-congrats-label"><?php esc_html_e( 'ĐĂNG KÝ THÀNH CÔNG', 'smart-login' ); ?></p>
 		<h2 class="sl-congrats-title">

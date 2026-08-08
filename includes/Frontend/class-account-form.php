@@ -90,10 +90,14 @@ final class AccountForm {
 	 * rewrite exists to make unrepresentable. A section's name and its mark are
 	 * one decision and are declared together.
 	 *
-	 * The marks are inline SVG at 18×18, matching what `icon_svg()` already
-	 * returns for a provider, so the card has one glyph size and not two.
-	 * `currentColor` throughout: the slot decides the colour, and the accent is
-	 * already on `.sl-card__icon`.
+	 * The marks come from `IconSet` since 21.2. They used to be built here by a
+	 * local closure, which made this the second of three places in the plugin
+	 * that knew how to draw a glyph — the drift this method's own history is
+	 * about, one level up. What is declared here is *which* mark a section
+	 * carries; what a mark looks like is not this class's decision.
+	 *
+	 * Still 18×18 and still `currentColor`: the slot decides the colour, and the
+	 * accent is already on `.sl-card__icon`.
 	 *
 	 * `providers` is absent, and that is not the same absence as in
 	 * FORM_SECTIONS above. It is a section, and it renders — but since 16.3 it
@@ -105,28 +109,22 @@ final class AccountForm {
 	 * @return array<string,array{label:string,icon:string}>
 	 */
 	public static function sections_meta(): array {
-		$svg = static function ( string $body ): string {
-			return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"'
-				. ' stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"'
-				. ' focusable="false" aria-hidden="true">' . $body . '</svg>';
-		};
-
 		return array(
 			'profile'  => array(
 				'label' => __( 'Thông tin cá nhân', 'smart-login' ),
-				'icon'  => $svg( '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>' ),
+				'icon'  => IconSet::get( 'user' ),
 			),
 			'contact'  => array(
 				'label' => __( 'Đăng nhập & liên hệ', 'smart-login' ),
-				'icon'  => $svg( '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>' ),
+				'icon'  => IconSet::get( 'lock' ),
 			),
 			'address'  => array(
 				'label' => __( 'Địa chỉ nhận hàng', 'smart-login' ),
-				'icon'  => $svg( '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>' ),
+				'icon'  => IconSet::get( 'map-pin' ),
 			),
 			'password' => array(
 				'label' => __( 'Bảo mật', 'smart-login' ),
-				'icon'  => $svg( '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>' ),
+				'icon'  => IconSet::get( 'shield' ),
 			),
 		);
 	}

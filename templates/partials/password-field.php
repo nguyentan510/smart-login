@@ -15,6 +15,8 @@
  * @package SmartLogin
  */
 
+use SmartLogin\Frontend\IconSet;
+
 defined( 'ABSPATH' ) || exit;
 
 $sl_id           = $id ?? 'sl-' . $name;
@@ -53,9 +55,7 @@ $sl_autofocus    = ! empty( $autofocus );
 			<?php echo $sl_autofocus ? 'autofocus' : ''; ?>
 		/>
 		<button type="button" class="sl-toggle-password" aria-label="<?php esc_attr_e( 'Hiện mật khẩu', 'smart-login' ); ?>" data-target="<?php echo esc_attr( $sl_id ); ?>">
-			<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
-				<path d="M12 5c-5 0-9 4.5-10 7 1 2.5 5 7 10 7s9-4.5 10-7c-1-2.5-5-7-10-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-2.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z" fill="currentColor"/>
-			</svg>
+			<?php echo IconSet::get( 'eye' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- IconSet returns fixed markup from a closed set; nothing here comes from input. ?>
 		</button>
 	</div>
 </div>

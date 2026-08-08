@@ -2566,9 +2566,16 @@ existed, not by an argument at the end.
       reads without declaring must come from the token file". Two consumers the
       brief had not listed — `tests/visual/render.php` inlines the CSS with no
       dependency graph, and the launcher injects `<link>`s by URL
-- [ ] **21.2** [One glyph
+- [x] **21.2** [One glyph
       vocabulary](account-menu/21.2-one-glyph-vocabulary.md) — `IconSet`, ten
-      names, `sections_meta()` reads from it. Provider brand marks stay out
+      names, `sections_meta()` reads from it. Provider brand marks stay out.
+      **Account menu 7/8/9 → 11/6/7**, rules 1–3 green, `card-head.php`
+      untouched and all three moved glyphs byte-identical. The two extra call
+      sites 21.0 found turned out **not to be the same kind of glyph** — 28×28
+      and 20×20, solid, against the vocabulary's 18×18 outlines — so `IconSet`
+      holds per-icon geometry, and `names()` (pickable) is split from `get()`
+      (any glyph) rather than growing an allowlist. `Identity fitness` caught
+      the ten new labels as a stale POT; rebuilt to 698 strings
 - [ ] **21.3** [The registry](account-menu/21.3-the-registry.md) — `AccountMenu`,
       pinned ends and a filter that runs last. Lands with no consumer
 - [ ] **21.4** [The settings
