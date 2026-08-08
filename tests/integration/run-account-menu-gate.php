@@ -63,11 +63,124 @@ if ( ! class_exists( \SmartLogin\Frontend\Shortcodes::class ) ) {
 	$blocked( 'the plugin is not active on this install' );
 }
 
-$checks = array();
+$checks   = array();
 $failures = array();
 
-// Rules arrive in 21.5 and 21.7. Until then this gate proves it can boot a real
-// WordPress and reach the plugin, which is the whole of its job today.
+$check = static function ( string $label, bool $ok, string $detail = '' ) use ( &$checks, &$failures ): void {
+	$checks[] = $label;
+
+	if ( ! $ok ) {
+		$failures[] = $label . ( '' !== $detail ? ' (' . $detail . ')' : '' );
+	}
+
+	printf( "  %-5s %s\n", $ok ? 'OK' : 'FAIL', $label );
+
+	if ( ! $ok && '' !== $detail ) {
+		printf( "        %s\n", $detail );
+	}
+};
+
+/*
+ * A real page carrying only the button shortcode.
+ *
+ * `Assets::maybe_enqueue()` gates on `is_singular()` and a shortcode in
+ * post_content, so nothing short of a real query proves it fires. Removed again
+ * at the end — this gate is not the destructive one.
+ */
+$page_id = wp_insert_post(
+	array(
+		'post_type'    => 'page',
+		'post_status'  => 'publish',
+		'post_title'   => 'Smart Login button gate',
+		'post_content' => '[smart_login_button]',
+	)
+);
+
+if ( ! $page_id || is_wp_error( $page_id ) ) {
+	$blocked( 'could not create the fixture page' );
+}
+
+$cleanup = static function () use ( $page_id ): void {
+	wp_delete_post( $page_id, true );
+};
+
+$assets = new \SmartLogin\Frontend\Assets();
+
+$GLOBALS['wp_query'] = new WP_Query( array( 'page_id' => $page_id ) );
+$GLOBALS['wp_the_query'] = $GLOBALS['wp_query'];
+$GLOBALS['wp_query']->the_post();
+
+$assets->register_assets();
+$assets->maybe_enqueue();
+
+$enqueued = wp_styles()->queue;
+
+$check(
+	'a page with only [smart_login_button] enqueues the button stylesheet',
+	in_array( \SmartLogin\Frontend\Assets::BUTTON_HANDLE, $enqueued, true ),
+	'queue: ' . implode( ', ', $enqueued )
+);
+
+/*
+ * Finding 1 in one line. The button is not the form, and a page carrying it must
+ * not pay for 1,500 lines of stylesheet it does not use.
+ */
+$check(
+	'and does not drag in the sign-in form stylesheet',
+	! in_array( \SmartLogin\Frontend\Assets::HANDLE, $enqueued, true ),
+	'queue: ' . implode( ', ', $enqueued )
+);
+
+/*
+ * Registration order is not enough — WordPress resolves the dependency at print
+ * time, so the question is what the printed document contains and in which
+ * order.
+ */
+ob_start();
+wp_print_styles( array( \SmartLogin\Frontend\Assets::BUTTON_HANDLE ) );
+$printed = (string) ob_get_clean();
+
+$token_at  = strpos( $printed, 'smart-login-tokens.css' );
+$button_at = strpos( $printed, 'smart-login-button.css' );
+
+$check(
+	'the token stylesheet is printed, and before the button',
+	false !== $token_at && false !== $button_at && $token_at < $button_at,
+	'tokens at ' . var_export( $token_at, true ) . ', button at ' . var_export( $button_at, true )
+);
+
+/*
+ * Inherited from 21.3, which could not assert it: the pure suite stubs
+ * `wp_logout_url()` to a fixed string, so the property "this URL is generated
+ * per session, not stored" is only visible against a real WordPress.
+ */
+$logout_one = wp_logout_url( home_url( '/' ) );
+
+wp_set_current_user( 1 );
+$logout_admin = wp_logout_url( home_url( '/' ) );
+
+$check(
+	'the logout URL carries a nonce',
+	false !== strpos( $logout_one, '_wpnonce=' ),
+	$logout_one
+);
+
+$check(
+	'the logout URL differs once the visitor is somebody',
+	$logout_one !== $logout_admin,
+	'a stored string could not do this'
+);
+
+$menu = \SmartLogin\Frontend\AccountMenu::items( get_current_user_id() );
+$tail = end( $menu ) ?: array();
+
+$check(
+	'AccountMenu hands out that generated URL, not a stored one',
+	'logout' === ( $tail['key'] ?? '' ) && ( $tail['url'] ?? '' ) === wp_logout_url( home_url( '/' ) ),
+	'tail: ' . wp_json_encode( $tail )
+);
+
+$cleanup();
 
 printf( "\nAccount menu gate: %d checks, %d failed\n", count( $checks ), count( $failures ) );
 

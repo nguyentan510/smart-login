@@ -2600,9 +2600,18 @@ existed, not by an argument at the end.
       now **never dropped for an underivable key**, it falls back to `item-N`,
       because losing a menu item over the alphabet of its label is not a
       defensible refusal
-- [ ] **21.5** [The button, two
+- [x] **21.5** [The button, two
       states](account-menu/21.5-the-button-two-states.md) — the finding-1 fix, a
-      separate stylesheet, `<details>` with no script
+      separate stylesheet, `<details>` with no script. **Account menu 31/4/0 →
+      35/0/0, every rule from 21.0 green**, and the **integration gate's first
+      six checks pass against the real site**. The suite was **promoted to
+      `required` here rather than in 21.7** — the agreement promotes the moment
+      a spec suite goes green, and holding it two sub-phases would be 15.4's
+      mistake with a shorter fuse. 21.3's deferral is discharged: against a real
+      WordPress the logout URL carries `_wpnonce=` and changes with the visitor.
+      The template suite refused both new templates for having no fixture, which
+      is the rule that exists because the Woo account template went six phases
+      unexecuted; Templates 109 → 115 once they had them
 - [ ] **21.6** [The dropdown, and the small
       screen](account-menu/21.6-the-dropdown.md) — outside-click, `Escape`,
       `aria-expanded`, 375px. Measurements, taken

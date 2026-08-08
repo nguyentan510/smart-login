@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-08 15:45+0000\n"
+"POT-Creation-Date: 2026-08-08 15:55+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -494,11 +494,11 @@ msgstr ""
 msgid "Chỉnh sửa thông tin"
 msgstr ""
 
-#: includes/Frontend/class-assets.php:154
+#: includes/Frontend/class-assets.php:186
 msgid "Chọn Phường/Xã"
 msgstr ""
 
-#: includes/Frontend/class-assets.php:153
+#: includes/Frontend/class-assets.php:185
 msgid "Chọn Tỉnh/Thành phố"
 msgstr ""
 
@@ -556,7 +556,7 @@ msgstr ""
 msgid "Cân bằng — khuyến nghị"
 msgstr ""
 
-#: includes/Frontend/class-assets.php:126
+#: includes/Frontend/class-assets.php:158
 msgid "Có thay đổi chưa lưu"
 msgstr ""
 
@@ -877,7 +877,7 @@ msgstr ""
 msgid "Gửi không chờ phản hồi, <strong>không bao giờ kèm mã OTP</strong>, và dùng chung trần đếm mỗi giờ với nhật ký — nên tắt nhật ký là tắt luôn phần này."
 msgstr ""
 
-#: includes/Frontend/class-assets.php:115
+#: includes/Frontend/class-assets.php:147
 #: templates/form-otp.php:145
 msgid "Gửi lại"
 msgstr ""
@@ -887,7 +887,7 @@ msgid "Gửi lại mã"
 msgstr ""
 
 #. translators: %d: seconds remaining before the code can be resent.
-#: includes/Frontend/class-assets.php:117
+#: includes/Frontend/class-assets.php:149
 msgid "Gửi lại sau %ds"
 msgstr ""
 
@@ -959,7 +959,7 @@ msgstr ""
 msgid "Hiển thị ở màn hình chào mừng và trong hồ sơ; không hiển thị khi đăng ký."
 msgstr ""
 
-#: includes/Frontend/class-assets.php:120
+#: includes/Frontend/class-assets.php:152
 #: templates/partials/password-field.php:57
 msgid "Hiện mật khẩu"
 msgstr ""
@@ -1205,7 +1205,7 @@ msgstr ""
 msgid "Không thể đăng ký với thông tin này."
 msgstr ""
 
-#: includes/Frontend/class-assets.php:156
+#: includes/Frontend/class-assets.php:188
 msgid "Không tìm thấy"
 msgstr ""
 
@@ -1413,7 +1413,7 @@ msgid "Mã OTP đang hiển thị thẳng trên màn hình. Tắt trước khi c
 msgstr ""
 
 #. translators: %s: masked phone number or email address.
-#: includes/Frontend/class-assets.php:123
+#: includes/Frontend/class-assets.php:155
 msgid "Mã OTP đã được gửi tới %s."
 msgstr ""
 
@@ -1467,7 +1467,7 @@ msgid "Mã đã dùng hoặc hết hạn sẽ bị xoá sau khoảng thời gian
 msgstr ""
 
 #. translators: %d: seconds remaining before the code can be resent.
-#: includes/Frontend/class-assets.php:118
+#: includes/Frontend/class-assets.php:150
 msgid "Mã đã hết hạn"
 msgstr ""
 
@@ -2132,7 +2132,7 @@ msgid "Thông tin liên hệ không hợp lệ."
 msgstr ""
 
 #. translators: %s: masked phone number or email address.
-#: includes/Frontend/class-assets.php:124
+#: includes/Frontend/class-assets.php:156
 msgid "Thông tin liên hệ đã được xác thực."
 msgstr ""
 
@@ -2251,6 +2251,10 @@ msgstr ""
 
 #: includes/class-gateway-presets.php:54
 msgid "Tuỳ chỉnh — tự khai báo API"
+msgstr ""
+
+#: templates/account-button.php:48
+msgid "Tài khoản"
 msgstr ""
 
 #: templates/partials/account/password.php:49
@@ -2740,7 +2744,7 @@ msgid "Đang gửi mã xác thực tới %s."
 msgstr ""
 
 #: includes/Admin/class-settings-page.php:108
-#: includes/Frontend/class-assets.php:119
+#: includes/Frontend/class-assets.php:151
 msgid "Đang gửi…"
 msgstr ""
 
@@ -2763,7 +2767,7 @@ msgid "Đang theo dõi %d sự kiện."
 msgid_plural "Đang theo dõi %d sự kiện."
 msgstr[0] ""
 
-#: includes/Frontend/class-assets.php:155
+#: includes/Frontend/class-assets.php:187
 #: templates/login-dialog.php:56
 msgid "Đang tải…"
 msgstr ""
@@ -2773,7 +2777,7 @@ msgid "Đang tắt."
 msgstr ""
 
 #. translators: %s: masked phone number or email address.
-#: includes/Frontend/class-assets.php:125
+#: includes/Frontend/class-assets.php:157
 msgid "Đang xử lý…"
 msgstr ""
 
@@ -2872,6 +2876,7 @@ msgid "Đăng ký và điều hướng"
 msgstr ""
 
 #: includes/Frontend/class-fragment-renderer.php:187
+#: includes/Frontend/class-shortcodes.php:81
 #: templates/form-password.php:64
 msgid "Đăng nhập"
 msgstr ""
@@ -2882,10 +2887,6 @@ msgstr ""
 
 #: includes/class-field-registry.php:45
 msgid "Đăng nhập & Đăng ký"
-msgstr ""
-
-#: includes/Frontend/class-shortcodes.php:60
-msgid "Đăng nhập / Đăng ký"
 msgstr ""
 
 #: includes/class-field-registry.php:186
@@ -3091,7 +3092,7 @@ msgstr ""
 msgid "Ẩn Mã bưu điện"
 msgstr ""
 
-#: includes/Frontend/class-assets.php:121
+#: includes/Frontend/class-assets.php:153
 msgid "Ẩn mật khẩu"
 msgstr ""
 

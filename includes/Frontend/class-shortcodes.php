@@ -46,27 +46,71 @@ class Shortcodes {
 	public function render_button( $atts = array() ): string {
 		$atts = shortcode_atts(
 			array(
-				'step'  => Flow::STEP_IDENTIFY,
-				'label' => '',
-				'class' => '',
+				'step'     => Flow::STEP_IDENTIFY,
+				'label'    => '',
+				'class'    => '',
+				'collapse' => 'mobile',
 			),
 			(array) $atts,
 			'smart_login_button'
 		);
 
-		$step  = in_array( $atts['step'], Flow::public_steps(), true ) ? (string) $atts['step'] : Flow::STEP_IDENTIFY;
-		$label = '' !== trim( (string) $atts['label'] )
-			? (string) $atts['label']
-			: __( 'Đăng nhập / Đăng ký', 'smart-login' );
-		$href  = Flow::login_url();
+		Assets::enqueue_button();
 
-		return sprintf(
-			'<a class="sl-btn sl-btn--primary %1$s" href="%2$s" data-smart-login="%3$s">%4$s</a>',
-			esc_attr( trim( (string) $atts['class'] ) ),
-			esc_url( '' !== $href ? add_query_arg( 'smart_login_step', $step, $href ) : '#login' ),
-			esc_attr( $step ),
-			esc_html( $label )
+		$step     = in_array( $atts['step'], Flow::public_steps(), true ) ? (string) $atts['step'] : Flow::STEP_IDENTIFY;
+		$href     = Flow::login_url();
+		$collapse = 'none' !== $atts['collapse'];
+
+		if ( is_user_logged_in() ) {
+			return TemplateLoader::render(
+				'account-button',
+				array(
+					'label'    => self::account_label(),
+					'items'    => AccountMenu::items( get_current_user_id() ),
+					'class'    => trim( (string) $atts['class'] ),
+					'collapse' => $collapse,
+				)
+			);
+		}
+
+		return TemplateLoader::render(
+			'login-button',
+			array(
+				'label'    => '' !== trim( (string) $atts['label'] )
+					? (string) $atts['label']
+					: __( 'Đăng nhập', 'smart-login' ),
+				'step'     => $step,
+				'href'     => '' !== $href ? add_query_arg( 'smart_login_step', $step, $href ) : '#login',
+				'class'    => trim( (string) $atts['class'] ),
+				'collapse' => $collapse,
+			)
 		);
+	}
+
+	/**
+	 * What the signed-in button calls the member.
+	 *
+	 * `auto` is the phone when there is one and the display name otherwise. No
+	 * email option exists, and that is spec decision 12 rather than an oversight:
+	 * an OTP registration mints an address nobody chose, so a member whose only
+	 * address is synthetic would see a machine-generated string in the header.
+	 */
+	private static function account_label(): string {
+		$user_id = get_current_user_id();
+		$source  = (string) Settings::get( 'account_menu.label_source', 'auto' );
+		$phone   = (string) get_user_meta( $user_id, UserManager::META_PHONE, true );
+		$user    = wp_get_current_user();
+		$name    = $user ? (string) $user->display_name : '';
+
+		if ( 'phone' === $source ) {
+			return '' !== $phone ? $phone : $name;
+		}
+
+		if ( 'name' === $source ) {
+			return '' !== $name ? $name : $phone;
+		}
+
+		return '' !== $phone ? $phone : $name;
 	}
 
 	/**

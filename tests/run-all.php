@@ -204,9 +204,16 @@ $suites = array(
 		// button rules are phrased as absences, `shortcode_atts()` was not
 		// stubbed, `render_button()` threw, and three of them passed against an
 		// empty string. They now run only against markup that rendered.
+		//
+		// `required` since 21.5, not 21.7 as the plan had it. The suite went
+		// green when the button landed, and the working agreement promotes a
+		// spec suite the moment that happens — 15.4 found that rule being
+		// ignored for four phases, and a green suite that cannot block only
+		// hides the next regression. Waiting two sub-phases to honour the rule
+		// would have been the same mistake with a shorter fuse.
 		'name' => 'Account menu',
 		'file' => 'identity/run-account-menu-tests.php',
-		'kind' => 'spec',
+		'kind' => 'required',
 	),
 );
 
