@@ -267,3 +267,22 @@ function sanitize_html_class( $class_name, $fallback = '' ) {
 
 	return '' !== $sanitized ? $sanitized : $fallback;
 }
+
+/**
+ * Added in 21.0, because `[smart_login_button]` was the first shortcode any
+ * suite had rendered directly. Without it `render_button()` threw, the suite
+ * caught the throw, and three of the button rules "passed" against an empty
+ * string — a false green of exactly the kind the phase is guarding against.
+ *
+ * Matches WordPress: keys come from $pairs, $atts may only override them.
+ */
+function shortcode_atts( $pairs, $atts, $shortcode = '' ) {
+	$atts = (array) $atts;
+	$out  = array();
+
+	foreach ( (array) $pairs as $name => $default ) {
+		$out[ $name ] = array_key_exists( $name, $atts ) ? $atts[ $name ] : $default;
+	}
+
+	return $out;
+}

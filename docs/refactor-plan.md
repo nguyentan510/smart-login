@@ -34,6 +34,8 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 18 — The rendered surface**
 - [x] **P1–P6 — The backlog after Phase 18** *(see below)*
 - [x] **Phase 19 — Sign-in on every page**
+- [x] **Phase 20 — Sending a code**
+- [ ] **Phase 21 — The account menu**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -2513,6 +2515,68 @@ per phase.
 
 ---
 
+## Phase 21 — The account menu
+
+Spec: [`account-menu.md`](account-menu.md). Briefs in
+[`account-menu/`](account-menu/).
+
+Requested 2026-08-08 with two screenshots of nhathuoclongchau.com.vn: an
+`Đăng nhập` button in the header, and after sign-in the member's phone number
+with a dropdown of account links. The dropdown is the visible part. The two
+screenshots also show the same seven items as a **sidebar** on the account page,
+and that is the part that decides the architecture — one list, or two lists that
+are one refactor away from disagreeing on the screen where it shows most.
+
+Research contradicted the framing twice, and both findings changed the plan:
+
+- `[smart_login_button]` exists but **renders unstyled** — it is missing from
+  `Assets::maybe_enqueue()`'s tag list, so the one trigger built for people who
+  cannot edit templates is the only one with no CSS
+- The obvious source for the menu, `AccountForm::sections_meta()`, names *cards
+  on one page*, not destinations. Its own doc comment already refuses to hold an
+  entry nothing draws
+
+**Ordering is not preference.** 21.1 is a CSS refactor with no visible output and
+it goes first, because every later sub-phase needs a colour and the alternative
+is a second stylesheet carrying its own copy of the accent. 21.5 ships the
+dropdown working with **no JavaScript at all**, and 21.6 only upgrades it — so
+decision 8's degradation claim is verified by an intermediate state that actually
+existed, not by an argument at the end.
+
+- [x] **21.0** Guard rails, landed red —
+      [brief](account-menu/21.0-guard-rails.md). Twelve rules; those whose
+      subject does not exist yet report PENDING rather than PASS. **Account menu
+      4/9/10**, no other suite moved, phpcs unchanged at 21/17/15. The first
+      draft **passed three rules against an empty string** — `shortcode_atts()`
+      was unstubbed, `render_button()` threw, and every button rule is phrased as
+      an absence; the helper now reports PENDING unless markup rendered. Rule 2
+      also found inline SVG in two files the spec had not counted,
+      `templates/onboarding.php` and `templates/partials/password-field.php`,
+      which widens 21.2
+- [ ] **21.1** [The tokens leave the
+      layout](account-menu/21.1-the-tokens-leave-the-layout.md) — twenty design
+      tokens move from `.smart-login` to `:root` in their own file. No value
+      changes; the rendered-surface baseline is the acceptance
+- [ ] **21.2** [One glyph
+      vocabulary](account-menu/21.2-one-glyph-vocabulary.md) — `IconSet`, ten
+      names, `sections_meta()` reads from it. Provider brand marks stay out
+- [ ] **21.3** [The registry](account-menu/21.3-the-registry.md) — `AccountMenu`,
+      pinned ends and a filter that runs last. Lands with no consumer
+- [ ] **21.4** [The settings
+      section](account-menu/21.4-the-settings-section.md) — the icon+text+link
+      repeater, modelled on the `headers` field, and the signed-in label choice
+- [ ] **21.5** [The button, two
+      states](account-menu/21.5-the-button-two-states.md) — the finding-1 fix, a
+      separate stylesheet, `<details>` with no script
+- [ ] **21.6** [The dropdown, and the small
+      screen](account-menu/21.6-the-dropdown.md) — outside-click, `Escape`,
+      `aria-expanded`, 375px. Measurements, taken
+- [ ] **21.7** [Placement, the documentation, and the
+      promotion](account-menu/21.7-placement-and-the-promotion.md) — nav-menu
+      injection off by default, `README.md`, suite `spec` → `required`
+
+---
+
 ## Risks
 
 | Risk | Mitigation |
@@ -2582,3 +2646,12 @@ per phase.
 | The query trigger creates a second URL for every page and splits it in search results | 19.4 owns that cost: the dialog-open variant is `noindex` and the page's canonical tag is untouched, asserted rather than assumed |
 | 19.9 discovers the cart merge works and the sub-phase is quietly dropped, leaving `wp_login` load-bearing with nothing asserting it | The finding is *why* the sub-phase exists in its current form. The rule sits over the session writers, and the acceptance is that removing `do_action( 'wp_login' )` from `SessionIssuer` **fails** it — verified by removing it, because a rule that has never failed is a comment |
 | The whole phase ships without a browser ever opening it, exactly as 8.4, 16.3 and 17.3 did | 19.7 is a sub-phase with readings as acceptance, not a courtesy at the end, and the tool it needs already exists — 18.1 committed it precisely so this could not happen again |
+| 21.1 moves the design tokens every surface in the plugin reads — the largest CSS blast radius in the project, and it produces nothing visible | Acceptance is the rendered-surface baseline **not moving**, run on both sides of the commit with both outputs in the message. No value may change in the same diff, so any visual difference is a bug and not a redesign. Existing theme overrides keep winning: `.smart-login { --sl-accent }` outranks `:root` on specificity, which is compatibility by construction rather than by testing |
+| `AccountMenu` is designed for a sidebar and an orders system that do not exist, so its shape is a guess | The entry stays at four keys and rule 6 fails the day a fifth appears. `key` is the one thing decided early, because it is the one thing expensive to change later — and it is keyed `account`, not `profile`, so the vocabulary keeps the distinction the code just made |
+| The registry lands in 21.3 with no consumer and nothing proves it works | One consumer, in 21.5, in the same phase. A registry with none would be unverified; one with two would be building the sidebar this phase deferred |
+| An administrator types an icon name, a label and a URL, and something of theirs reaches the DOM as markup | Icons are a closed set resolved through `IconSet`, so an unknown name becomes the fallback and never survives as a string; labels and URLs are escaped at render. Rule 3 asserts the property, not one instance |
+| Logout is configured as an ordinary row and members meet the "Bạn có chắc muốn đăng xuất?" interstitial instead of signing out | `wp_logout_url()` is nonced per session, so it cannot be a stored string. The tail is plugin-owned, its key is refused to settings rows, and rule 8 asserts the URL differs between two users — which is what proves it was generated rather than typed |
+| 21.7 injects into a theme's own `<ul>` and breaks its markup | The filter's contract is a string of `<li>`; the injected node is one `<li>`, asserted in a real WordPress with a real theme because no fixture reproduces where `wp_nav_menu_items` fires. Off by default: capture may default on because it rewrites nothing, but injection adds a node to somebody else's markup |
+| A stored nav location survives a theme switch and the setting silently points at nothing | Injects nothing, warns nothing, asserted directly. Themes get switched and a stale option is not an error condition |
+| The dropdown is built on `<details>` and a later change quietly makes JavaScript load-bearing | 21.5 ships it working with no script at all, and 21.6's acceptance re-runs 21.5's with the script removed. The degradation claim is checked against a state that existed, not argued for at the end |
+| The header button re-fights the `width: 100%` argument `.sl-btn` already settled | It does not use `.sl-btn`. Rule 11 asserts the class is absent from the rendered button, so the two cannot be quietly merged later |

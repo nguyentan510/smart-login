@@ -187,6 +187,27 @@ $suites = array(
 		'file' => 'identity/run-sign-in-anywhere-tests.php',
 		'kind' => 'required',
 	),
+	array(
+		// Phase 21, landed red at 21.0 before any production file moved.
+		//
+		// `spec` for the reason every guard-rail suite before it was: rules that
+		// are meant to fail cannot live in a suite that blocks. It is promoted in
+		// 21.7, and the working agreement says that promotion happens the moment
+		// the suite goes green — 15.4 found that rule being ignored for four
+		// phases, and a green suite that cannot block only hides the next
+		// regression.
+		//
+		// Ten of its assertions report PENDING rather than passing, because their
+		// subject does not exist yet. That is the 10.0 precedent.
+		//
+		// One rule caught the suite lying about itself on the day it landed: the
+		// button rules are phrased as absences, `shortcode_atts()` was not
+		// stubbed, `render_button()` threw, and three of them passed against an
+		// empty string. They now run only against markup that rendered.
+		'name' => 'Account menu',
+		'file' => 'identity/run-account-menu-tests.php',
+		'kind' => 'spec',
+	),
 );
 
 $results  = array();
