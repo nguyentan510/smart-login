@@ -247,9 +247,22 @@ sl_assert(
 if ( ! $sl_has_menu ) {
 	sl_pending( 'AccountMenu never calls sections_meta()', 'AccountMenu' );
 } else {
+	/*
+	 * Comments stripped first. The rule forbids a *call*, and the class
+	 * explains at length why it does not make one — a plain substring search
+	 * failed against a file whose only mention of the method was the paragraph
+	 * saying it must not be used, which is a rule punishing the documentation
+	 * of its own intent.
+	 */
+	$sl_menu_code = (string) preg_replace(
+		array( '#/\*.*?\*/#s', '#//[^\n]*#' ),
+		'',
+		$sl_file( 'includes/Frontend/class-account-menu.php' )
+	);
+
 	sl_assert(
 		'AccountMenu never calls sections_meta()',
-		false === strpos( $sl_file( 'includes/Frontend/class-account-menu.php' ), 'sections_meta' ),
+		false === strpos( $sl_menu_code, 'sections_meta' ),
 		'a section is a card on one page; a destination is a page'
 	);
 }
@@ -335,6 +348,134 @@ if ( ! $sl_has_menu ) {
 			&& '' !== (string) ( $sl_last['url'] ?? '' )
 			&& (string) ( $sl_last['url'] ?? '' ) === wp_logout_url( home_url( '/' ) ),
 		'finding 7: wp_logout_url() is nonced, so it cannot be a stored string'
+	);
+}
+
+// ---------------------------------------------------------------------------
+sl_section( '21.3 — what the registry refuses (decision 3, step 5)' );
+// ---------------------------------------------------------------------------
+
+/**
+ * Run `items()` with one temporary filter, then put the hook back as it was.
+ *
+ * The stub keeps filters in a global array and has no `remove_filter()`, so a
+ * filter added for one assertion would still be attached for the next one and
+ * the second result would be measuring the first test.
+ */
+$sl_with_filter = static function ( callable $callback ): array {
+	$was = $GLOBALS['sl_filters']['smart_login_account_menu'] ?? array();
+
+	add_filter( 'smart_login_account_menu', $callback );
+	$items = class_exists( '\SmartLogin\Frontend\AccountMenu' )
+		? (array) \SmartLogin\Frontend\AccountMenu::items()
+		: array();
+
+	$GLOBALS['sl_filters']['smart_login_account_menu'] = $was;
+
+	return $items;
+};
+
+if ( ! $sl_has_menu ) {
+	sl_pending( 'an entry with no URL is dropped rather than rendered dead', 'AccountMenu' );
+	sl_pending( 'an entry with an unusable key is dropped', 'AccountMenu' );
+	sl_pending( 'a filtered entry is normalised to the four-key shape', 'AccountMenu' );
+	sl_pending( 'an unknown icon from a filter folds to the fallback', 'AccountMenu' );
+} else {
+	/*
+	 * The branch that matters most: `AccountForm::edit_url()` returns '' on a
+	 * site with no account page. Driven through the filter rather than by
+	 * removing the stub, because the property is "an entry with no URL is
+	 * dropped" and the missing account page is only one way to reach it.
+	 */
+	$sl_no_url = $sl_with_filter(
+		static function ( array $items ): array {
+			foreach ( $items as $index => $item ) {
+				if ( 'account' === ( $item['key'] ?? '' ) ) {
+					$items[ $index ]['url'] = '';
+				}
+			}
+
+			return $items;
+		}
+	);
+
+	sl_assert(
+		'an entry with no URL is dropped rather than rendered dead',
+		array( 'logout' ) === array_column( $sl_no_url, 'key' ),
+		'got: ' . implode( ', ', array_column( $sl_no_url, 'key' ) )
+	);
+
+	$sl_bad_key = $sl_with_filter(
+		static function ( array $items ): array {
+			$items[] = array(
+				'key'   => 'Bad Key!',
+				'label' => 'Nowhere',
+				'icon'  => 'user',
+				'url'   => 'https://example.test/nowhere/',
+			);
+
+			return $items;
+		}
+	);
+
+	sl_assert(
+		'an entry with an unusable key is dropped',
+		! in_array( 'Bad Key!', array_column( $sl_bad_key, 'key' ), true ),
+		'keys are compared by later surfaces to decide which item is active'
+	);
+
+	$sl_extra = $sl_with_filter(
+		static function ( array $items ): array {
+			$items[] = array(
+				'key'        => 'orders',
+				'label'      => 'Đơn hàng',
+				'icon'       => 'box',
+				'url'        => 'https://example.test/orders/',
+				'capability' => 'manage_options',
+			);
+
+			return $items;
+		}
+	);
+
+	$sl_added = array_values(
+		array_filter(
+			$sl_extra,
+			static function ( array $item ): bool {
+				return 'orders' === $item['key'];
+			}
+		)
+	);
+
+	$sl_added_shape = $sl_added ? array_keys( $sl_added[0] ) : array();
+	sort( $sl_added_shape );
+
+	sl_assert(
+		'a filtered entry is normalised to the four-key shape',
+		array( 'icon', 'key', 'label', 'url' ) === $sl_added_shape,
+		'decision 5 — got: ' . implode( '+', $sl_added_shape )
+	);
+
+	$sl_bad_icon = $sl_with_filter(
+		static function ( array $items ): array {
+			$items[] = array(
+				'key'   => 'weird',
+				'label' => 'Weird',
+				'icon'  => '<script>alert(1)</script>',
+				'url'   => 'https://example.test/weird/',
+			);
+
+			return $items;
+		}
+	);
+
+	$sl_icons = array_column( $sl_bad_icon, 'icon' );
+
+	sl_assert(
+		'an unknown icon from a filter folds to the fallback',
+		! in_array( '<script>alert(1)</script>', $sl_icons, true )
+			&& in_array( \SmartLogin\Frontend\IconSet::FALLBACK, $sl_icons, true ),
+		'icons: ' . implode( ', ', $sl_icons )
 	);
 }
 

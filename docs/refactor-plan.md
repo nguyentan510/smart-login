@@ -2576,8 +2576,17 @@ existed, not by an argument at the end.
       holds per-icon geometry, and `names()` (pickable) is split from `get()`
       (any glyph) rather than growing an allowlist. `Identity fitness` caught
       the ten new labels as a stale POT; rebuilt to 698 strings
-- [ ] **21.3** [The registry](account-menu/21.3-the-registry.md) — `AccountMenu`,
-      pinned ends and a filter that runs last. Lands with no consumer
+- [x] **21.3** [The registry](account-menu/21.3-the-registry.md) — `AccountMenu`,
+      pinned ends and a filter that runs last. Lands with no consumer.
+      **Account menu 11/6/7 → 22/5/1**, rules 4–8 green. Rule 4 failed against a
+      class that was obeying it — a substring search matched the paragraph
+      explaining why the call must not be made, so comments are stripped now;
+      third rule in three sub-phases to match a spelling rather than a
+      construct. Rule 6 is now **guaranteed by `normalise()` rather than
+      asserted**, which is the preferred direction, and it keeps a real subject:
+      it fails if `normalise()` goes. The nonce-per-user half of rule 8 is
+      **deferred to the integration gate** and written into 21.5 — the pure
+      suite stubs `wp_logout_url()`, so asserting it there would measure the stub
 - [ ] **21.4** [The settings
       section](account-menu/21.4-the-settings-section.md) — the icon+text+link
       repeater, modelled on the `headers` field, and the signed-in label choice
