@@ -102,6 +102,26 @@ return array(
 		'grant'   => 'grant-token',
 	),
 	/*
+	 * Filled, because this suite asserts every template produces markup and the
+	 * row renders nothing until a site says what its reasons are. The *empty*
+	 * path — the one every install runs by default — is asserted separately in
+	 * run-sign-in-anywhere-tests.php, where "renders nothing" is the property
+	 * being checked rather than a failure.
+	 */
+	'partials/dialog-benefits'       => array(
+		'benefits' => array(
+			array(
+				'icon'  => '🚚',
+				'label' => 'Miễn phí vận chuyển',
+			),
+			array(
+				'icon'  => '⭐',
+				'label' => 'Ưu đãi riêng cho thành viên',
+			),
+		),
+	),
+
+	/*
 	 * The one owner of a step's heading. It draws nothing when something else
 	 * is the outer surface, which is why 19.10 exists: six templates each drew
 	 * their own, and inside the dialog that was the second heading on screen.

@@ -185,3 +185,53 @@ Worth recording because of how it read: a missing stylesheet in the *tool*
 looked exactly like a control below the target-size floor in the *product*.
 Phase 18 exists because measurements were claimed and not taken; this is the
 adjacent failure — a measurement taken against the wrong thing.
+
+### The proportions (19.11)
+
+Declared as custom properties on `.sl-dialog` and then measured, because 18.3
+recorded what reading pixels off a picture costs — the number taken from the
+source was wrong in magnitude *and* direction.
+
+| Token | Value | Measured as |
+| --- | --- | --- |
+| `--sl-dlg-pad` | 28px (20px under 480) | panel 480 wide, content 424 |
+| `--sl-dlg-gap` | 20px | lead→benefits 20, benefits→form 20 |
+| `--sl-dlg-radius` | 16px | panel corner |
+| `--sl-dlg-control` | 52px | input **52**, submit **52** |
+
+Type scale, read off `getComputedStyle`:
+
+| Element | Size | Weight | Align |
+| --- | --- | --- | --- |
+| dialog title | 22px | 700 | centre |
+| lead | 15px / 1.55 | 400 | centre, **2 lines** |
+| input & submit | 16px | 400 / 600 | — |
+| benefit caption | 13px / 1.35 | 400 | centre |
+| divider, terms | 14px / 13px | 400 | centre |
+
+Spacing down the dialog at 720 × 860, with three benefits filled:
+
+```text
+title  →  lead          16
+lead   →  benefits      20
+benefits → form         20
+input  →  submit        16
+panel                   480 × 469
+benefit marks           44 × 44, 44 × 44, 44 × 44   (one baseline)
+close                   32 × 32
+no horizontal overflow at 375, 480 or 1400
+```
+
+**The lead was three lines before it was measured.** At `max-width: 30ch` the
+sentence broke to three inside a 480px panel and stopped reading as a subtitle;
+26rem wraps it to two and keeps a ragged right edge. That is the whole argument
+for taking the reading rather than declaring the value and moving on.
+
+**The mobile sheet was removed, not restyled.** A `@media (max-width: 480px)`
+block used to make the panel a bottom-anchored sheet, and the geometry block
+below it set `max-width` on the same selector later in the same file — so the
+two were fighting and the card was already winning. What shipped was a
+bottom-margined panel with square bottom corners that was not full-bleed: a
+shape nobody designed. Measured at 375 the card is 343 wide with 16px either
+side, and the panel scrolls inside its own `max-height`, which is the answer to
+the keyboard argument the sheet was written for.

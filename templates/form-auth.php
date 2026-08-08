@@ -61,7 +61,7 @@ $sl_identity_id = wp_unique_id( 'sl-identity-' );
  */
 $sl_in_dialog = '' !== Flow::base();
 ?>
-<div class="smart-login smart-login--identify">
+<div class="smart-login smart-login--identify<?php echo $sl_in_dialog ? ' smart-login--in-dialog' : ''; ?>">
 
 	<?php
 	/*
@@ -110,6 +110,15 @@ $sl_in_dialog = '' !== Flow::base();
 		?>
 	</p>
 
+	<?php
+	// Only in the dialog: on a page the surrounding content is the site's own
+	// argument for signing up, and repeating it inside the form would be the
+	// plugin talking over the page it was placed on.
+	if ( $sl_in_dialog ) {
+		TemplateLoader::output( 'partials/dialog-benefits' );
+	}
+	?>
+
 	<?php TemplateLoader::output( 'partials/notices', array( 'notices' => $notices ) ); ?>
 
 	<form method="post" class="sl-form sl-form--identify">
@@ -119,7 +128,19 @@ $sl_in_dialog = '' !== Flow::base();
 		<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $sl_redirect ); ?>" />
 
 		<div class="sl-field">
-			<label class="sl-label" for="<?php echo esc_attr( $sl_identity_id ); ?>">
+			<?php
+			/*
+			 * The label stays in the DOM inside the dialog and only stops being
+			 * visible. 18.2 removed a placeholder-only input from this plugin
+			 * because "a placeholder is not a name — it is a hint that
+			 * disappears the moment somebody types". That objection is to having
+			 * no accessible name at all, and a visually hidden label has one.
+			 *
+			 * Visible on a page, where there is room and no title above it doing
+			 * the same job.
+			 */
+			?>
+			<label class="sl-label<?php echo $sl_in_dialog ? ' sl-label--sr' : ''; ?>" for="<?php echo esc_attr( $sl_identity_id ); ?>">
 				<?php echo esc_html( RegisterHandler::identifier_label() ); ?>
 				<span class="sl-required">*</span>
 			</label>
@@ -138,7 +159,20 @@ $sl_in_dialog = '' !== Flow::base();
 				id="<?php echo esc_attr( $sl_identity_id ); ?>"
 				name="identity"
 				value="<?php echo esc_attr( Flow::old( 'identity' ) ); ?>"
-				placeholder="<?php echo $sl_phone ? esc_attr__( '0969 789 475', 'smart-login' ) : esc_attr__( 'ban@example.com', 'smart-login' ); ?>"
+				<?php
+				$sl_placeholder = $sl_phone ? __( '0969 789 475', 'smart-login' ) : __( 'ban@example.com', 'smart-login' );
+
+				if ( $sl_in_dialog ) {
+					// The hidden label's words, so the field is never unlabelled
+					// on screen even though the <label> is only for the reader.
+					$sl_placeholder = sprintf(
+						/* translators: %s: identifier label, e.g. "Số điện thoại hoặc Email". */
+						__( 'Nhập %s', 'smart-login' ),
+						mb_strtolower( RegisterHandler::identifier_label() )
+					);
+				}
+				?>
+				placeholder="<?php echo esc_attr( $sl_placeholder ); ?>"
 				autocomplete="username"
 				autocapitalize="none"
 				autocorrect="off"

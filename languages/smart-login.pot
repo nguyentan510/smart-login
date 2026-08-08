@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-07 15:11+0000\n"
+"POT-Creation-Date: 2026-08-07 15:22+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -85,7 +85,7 @@ msgstr ""
 msgid "(bắt buộc)"
 msgstr ""
 
-#: templates/form-auth.php:141
+#: templates/form-auth.php:163
 msgid "0969 789 475"
 msgstr ""
 
@@ -116,7 +116,7 @@ msgstr ""
 msgid "Body"
 msgstr ""
 
-#: includes/OTP/Transports/class-webhook-transport.php:125
+#: includes/OTP/Transports/class-webhook-transport.php:129
 msgid "Body template không tạo ra JSON hợp lệ. Kiểm tra lại dấu ngoặc kép và dấu phẩy."
 msgstr ""
 
@@ -405,7 +405,7 @@ msgstr ""
 msgid "Chưa cấu hình"
 msgstr ""
 
-#: includes/OTP/Transports/class-transport-router.php:126
+#: includes/OTP/Transports/class-transport-router.php:154
 msgid "Chưa cấu hình kênh gửi mã xác thực."
 msgstr ""
 
@@ -712,7 +712,7 @@ msgid "Endpoint automation chưa có URL hoặc chưa có khoá ký. Hãy lưu c
 msgstr ""
 
 #. translators: %d: HTTP status code.
-#: includes/OTP/Transports/class-automation-transport.php:118
+#: includes/OTP/Transports/class-automation-transport.php:121
 msgid "Endpoint automation trả về HTTP %d."
 msgstr ""
 
@@ -735,7 +735,7 @@ msgid "Gateway SMS"
 msgstr ""
 
 #. translators: %d: HTTP status code.
-#: includes/OTP/Transports/class-webhook-transport.php:209
+#: includes/OTP/Transports/class-webhook-transport.php:213
 msgid "Gateway trả về HTTP %d."
 msgstr ""
 
@@ -918,7 +918,7 @@ msgid "Gửi tới email quản trị một lần mỗi lần site chạm trần
 msgstr ""
 
 #. translators: 1: JSON path, 2: expected value.
-#: includes/OTP/Transports/class-webhook-transport.php:216
+#: includes/OTP/Transports/class-webhook-transport.php:220
 msgid "HTTP 2xx nhưng điều kiện thành công không khớp (cần \"%1$s\" = \"%2$s\")."
 msgstr ""
 
@@ -973,7 +973,7 @@ msgstr ""
 msgid "Hoàn tất đăng ký"
 msgstr ""
 
-#: templates/form-auth.php:165
+#: templates/form-auth.php:199
 #: templates/form-forgot.php:51
 msgid "Hoặc"
 msgstr ""
@@ -1073,7 +1073,7 @@ msgid "Khi nào hiện"
 msgstr ""
 
 #. translators: %s: linked terms and conditions label.
-#: templates/form-auth.php:195
+#: templates/form-auth.php:229
 msgid "Khi tiếp tục, bạn đồng ý với %s."
 msgstr ""
 
@@ -1130,13 +1130,13 @@ msgstr ""
 msgid "Không gửi bất kỳ email nào tới địa chỉ ảo (khuyến nghị bật)"
 msgstr ""
 
-#: includes/OTP/Transports/class-mail-transport.php:126
+#: includes/OTP/Transports/class-mail-transport.php:130
 msgid "Không gửi được email xác thực. Vui lòng thử lại sau ít phút."
 msgstr ""
 
-#: includes/OTP/Transports/class-automation-transport.php:134
-#: includes/OTP/Transports/class-transport-router.php:149
-#: includes/OTP/Transports/class-webhook-transport.php:47
+#: includes/OTP/Transports/class-automation-transport.php:137
+#: includes/OTP/Transports/class-transport-router.php:175
+#: includes/OTP/Transports/class-webhook-transport.php:51
 msgid "Không gửi được mã xác thực. Vui lòng thử lại sau ít phút."
 msgstr ""
 
@@ -1223,6 +1223,11 @@ msgstr ""
 msgid "Kiểu dữ liệu"
 msgstr ""
 
+#. translators: %s: transport id, e.g. "zns".
+#: includes/OTP/Transports/class-transport-router.php:109
+msgid "Kênh \"%s\" chưa được cấu hình. Liên hệ quản trị viên."
+msgstr ""
+
 #: includes/class-field-registry.php:49
 msgid "Kênh Email"
 msgstr ""
@@ -1231,11 +1236,11 @@ msgstr ""
 msgid "Kênh SMS"
 msgstr ""
 
-#: includes/OTP/Transports/class-transport-router.php:134
+#: includes/OTP/Transports/class-webhook-transport.php:36
 msgid "Kênh SMS chưa được cấu hình. Liên hệ quản trị viên."
 msgstr ""
 
-#: includes/OTP/Transports/class-automation-transport.php:58
+#: includes/OTP/Transports/class-automation-transport.php:52
 msgid "Kênh automation chưa được cấu hình. Liên hệ quản trị viên."
 msgstr ""
 
@@ -1243,7 +1248,7 @@ msgstr ""
 msgid "Kênh chịu trách nhiệm gửi và báo thành công hay thất bại."
 msgstr ""
 
-#: includes/OTP/Transports/class-transport-router.php:135
+#: includes/OTP/Transports/class-mail-transport.php:32
 msgid "Kênh email chưa được cấu hình. Liên hệ quản trị viên."
 msgstr ""
 
@@ -1251,7 +1256,7 @@ msgstr ""
 msgid "Kênh email đang bật nhưng chưa từng gửi được mã nào, máy chủ không khai báo đường gửi thư và không thấy plugin SMTP nào. Bật một plugin SMTP hoặc dùng nút Gửi thử để xác nhận trước khi mở đăng ký."
 msgstr ""
 
-#: includes/OTP/Transports/class-mail-transport.php:36
+#: includes/OTP/Transports/class-mail-transport.php:40
 msgid "Kênh email đang tắt."
 msgstr ""
 
@@ -1565,6 +1570,11 @@ msgstr ""
 
 #: includes/Auth/class-account-provisioner.php:71
 msgid "Nhà cung cấp không trả về định danh hợp lệ."
+msgstr ""
+
+#. translators: %s: identifier label, e.g. "Số điện thoại hoặc Email".
+#: templates/form-auth.php:170
+msgid "Nhập %s"
 msgstr ""
 
 #: templates/form-auth.php:106
@@ -2135,7 +2145,7 @@ msgstr ""
 msgid "Tiến độ đăng ký"
 msgstr ""
 
-#: templates/form-auth.php:151
+#: templates/form-auth.php:185
 #: templates/form-otp.php:128
 #: templates/registered-success.php:36
 msgid "Tiếp tục"
@@ -2193,7 +2203,7 @@ msgstr ""
 msgid "Tài khoản nhà cung cấp đã liên kết với người dùng khác."
 msgstr ""
 
-#: includes/OTP/Transports/class-mail-transport.php:48
+#: includes/OTP/Transports/class-mail-transport.php:52
 msgid "Tài khoản này chưa có email thật. Vui lòng dùng số điện thoại."
 msgstr ""
 
@@ -2447,7 +2457,7 @@ msgstr ""
 msgid "Webhook chưa bật hoặc chưa có URL. Hãy lưu cấu hình trước."
 msgstr ""
 
-#: includes/OTP/Transports/class-webhook-transport.php:62
+#: includes/OTP/Transports/class-webhook-transport.php:66
 msgid "Webhook chưa được bật hoặc chưa có URL."
 msgstr ""
 
@@ -2548,7 +2558,7 @@ msgid "Yêu cầu nhập OTP khi đăng nhập từ thiết bị chưa từng th
 msgstr ""
 
 #: includes/Admin/Screens/class-settings-screen.php:364
-#: templates/form-auth.php:141
+#: templates/form-auth.php:163
 msgid "ban@example.com"
 msgstr ""
 
@@ -2557,7 +2567,7 @@ msgid "chưa liên kết"
 msgstr ""
 
 #. translators: %s: linked terms and conditions label.
-#: templates/form-auth.php:196
+#: templates/form-auth.php:230
 #: templates/form-signup.php:113
 msgid "các điều khoản áp dụng"
 msgstr ""
@@ -2928,7 +2938,7 @@ msgid "Địa chỉ 2 cấp"
 msgstr ""
 
 #: includes/Admin/class-webhook-tester.php:176
-#: includes/OTP/Transports/class-mail-transport.php:40
+#: includes/OTP/Transports/class-mail-transport.php:44
 msgid "Địa chỉ email không hợp lệ."
 msgstr ""
 

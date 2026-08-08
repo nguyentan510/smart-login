@@ -296,11 +296,49 @@ foreach ( $sl_names as $sl_name ) {
 	}
 
 	if ( 'dialog' === $sl_name ) {
-		// The shell holds a step, because a picture of an empty container says
-		// nothing about the thing anybody looks at.
+		/*
+		 * The shell holds a step, because a picture of an empty container says
+		 * nothing about the thing anybody looks at — and it holds the *dialog*
+		 * rendering of that step, not the page one. `Flow::set_base()` is the
+		 * switch the template reads: without it this would picture the page
+		 * variant inside the dialog's chrome, which is a screen that does not
+		 * exist.
+		 */
+		\SmartLogin\Frontend\Flow::set_base( 'https://example.test/san-pham/ao-thun/' );
+
+		/*
+		 * Three benefits, so the row can be looked at. The plugin ships none —
+		 * see partials/dialog-benefits.php for why — so a picture taken without
+		 * this would be a picture of the default, which is a dialog with a gap
+		 * where the row is not.
+		 */
+		add_filter(
+			'smart_login_dialog_benefits',
+			static function (): array {
+				return array(
+					array(
+						'icon'  => '🚚',
+						'label' => 'Miễn phí vận chuyển',
+					),
+					array(
+						'icon'  => '⭐',
+						'label' => 'Ưu đãi riêng cho thành viên',
+					),
+					array(
+						'icon'  => '⚡',
+						'label' => 'Giao nhanh trong 1 giờ',
+					),
+				);
+			}
+		);
+
+		$sl_step = $sl_render( 'form-auth', $sl_fixtures['form-auth'] );
+
+		\SmartLogin\Frontend\Flow::set_base( '' );
+
 		$sl_body = str_replace(
 			'<p class="sl-dialog__loading">Đang tải…</p>',
-			'<div class="smart-login smart-login--identify">' . $sl_render( 'form-auth', $sl_fixtures['form-auth'] ) . '</div>',
+			$sl_step,
 			$sl_body
 		);
 	}

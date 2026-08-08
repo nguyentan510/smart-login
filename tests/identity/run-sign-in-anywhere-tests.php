@@ -715,4 +715,54 @@ if ( class_exists( \SmartLogin\Frontend\FragmentRenderer::class ) ) {
 	sl_pending( 'a fragment draws no heading of its own', 'includes/Frontend/class-fragment-renderer.php' );
 }
 
+// ---------------------------------------------------------------------------
+sl_section( 'Rule 15 — the plugin makes no promises of its own (19.11)' );
+// ---------------------------------------------------------------------------
+
+/*
+ * The benefits row's layout comes from a reference where the three badges are
+ * one pharmacy's claims. Shipping those would put somebody else's marketing on
+ * every site that installed this; inventing our own would be making promises
+ * the plugin has no way to keep.
+ *
+ * So the default is nothing, and that is asserted rather than trusted — an
+ * empty row is the state every install starts in, and the template suite cannot
+ * check it there because "renders nothing" fails its produces-markup rule.
+ */
+$sl_benefits_default = sl_capture(
+	static function (): void {
+		\SmartLogin\Frontend\TemplateLoader::output( 'partials/dialog-benefits' );
+	}
+);
+
+sl_check( 'the benefits row is empty until a site fills it', '', trim( $sl_benefits_default['html'] ) );
+
+sl_assert(
+	'and it renders without a notice when empty',
+	null === $sl_benefits_default['error'] && array() === $sl_benefits_default['warnings'],
+	(string) $sl_benefits_default['error'] . ' ' . implode( ' | ', $sl_benefits_default['warnings'] )
+);
+
+$sl_benefits_filled = sl_capture(
+	static function (): void {
+		\SmartLogin\Frontend\TemplateLoader::output(
+			'partials/dialog-benefits',
+			array(
+				'benefits' => array(
+					array(
+						'icon'  => '🚚',
+						'label' => 'Miễn phí vận chuyển',
+					),
+				),
+			)
+		);
+	}
+);
+
+sl_assert(
+	'and it renders when a site does',
+	false !== strpos( $sl_benefits_filled['html'], 'sl-benefit__label' ),
+	'A slot nobody can fill is a slot that should not exist.'
+);
+
 sl_summary( 'Sign-in anywhere' );
