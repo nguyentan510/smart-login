@@ -2250,7 +2250,7 @@ request to match a reference's proportions. Neither would have been found by
 any rule in the suite, which is the argument Phase 18 makes and this phase
 paid off twice.
 
-Three things this phase got wrong in the plan and corrected in the work, each
+Four things this phase got wrong in the plan and corrected in the work, each
 written up in the brief that found it:
 
 - **19.1's guard placement.** The brief put `RequestGuard::verify()` in the
@@ -2261,6 +2261,19 @@ written up in the brief that found it:
 - **19.9 was scoped as a feature and delivered as a proof.** The WooCommerce
   cart already survives a sign-in, because `SessionIssuer` fires `wp_login`.
   Writing cart code on top of that would have been inventing work.
+- **19.5 left a required rule asserting the shape it replaced.** Two checks in
+  the Regression suite read `signup()` and `finish_registration()` for a literal
+  `->go( $this->welcome_url() )`. 19.5 made the ending a *decision* — redirect
+  when page-hosted, render when in place — and moved it into
+  `after_registration()`, which is the right shape and turned both checks red
+  against correct code. Repointed to follow the ownership rather than the text:
+  neither finisher may decide the ending or render the welcome screen inline,
+  and the one method that decides must still redirect on the page-hosted path.
+  The nonce hazard the rule exists for is unchanged and still unreachable by any
+  suite here, so it stays structural — that deferral is written above the rule.
+  Verified by breaking it twice: deleting the `! $this->in_place` guard, and
+  restoring the pre-19.5 shape in `signup()`, each fail two checks.
+  `335 passed, 2 failed` → `342 passed, 0 failed`
 
 **Three rules passed their structural form and needed a behavioural one** — 3, 7
 and 12. The pattern is worth carrying forward: *a rule that reads source proves
@@ -2279,6 +2292,64 @@ it on itself.
 for the same reason: the popup is a presentation of a flow that has to be able
 to finish in place first, and a dialog wrapped around today's redirect policy
 would look finished while sending every new member to `wp-admin`.
+
+---
+
+## The transport that answered in another's name
+
+Reported on 2026-08-08, from the dialog on the running site: a phone number was
+typed into the identify step and came back **"Kênh email chưa được cấu hình.
+Liên hệ quản trị viên."** The question asked was whether the response was wrong,
+the provider flow was wrong, or the routing was wrong. It was the first.
+
+A Phase 10 defect found during Phase 19, so it is written here rather than given
+a 19.N number — the code and the spec entry both belong to delivery routing
+(`docs/delivery-routing.md` D8).
+
+Everything up to the sentence was correct, and that is what took the longest to
+establish:
+
+```text
+destination : 84969789475
+channel     : phone                    <- correct, no '@'
+transport   : automation               <- correct, delivery.route_phone
+result      : smart_login_transport_unavailable
+              "Kênh email chưa được cấu hình. Liên hệ quản trị viên."
+```
+
+The install had `delivery.route_phone = automation` with `automation.url` empty.
+Routing did its job; the refusal was worded by a two-branch ternary that 10.1
+never revisited — `'sms' === $transport_id ? … : email` — so every transport that
+was not the SMS gateway was refused in the mail transport's name.
+
+- [x] **T1** — **a transport is described by itself, not by a list.** A third
+      branch would fix the instance; the bug class is a fixed list of ids
+      describing an open registry, since `smart_login_otp_transports` exists so a
+      site can add ZNS or in-app push and those were being called email too. The
+      transport answers instead, through an **optional** `ReportsUnavailability`.
+      Optional and not a fourth method on `TransportInterface`, because that
+      interface is published API and the router's own docblock promises adding a
+      transport means implementing it "and nothing else" — a required method
+      would fatal every transport written against that promise, including the
+      three test doubles in this repository, which is how the cost was measured.
+      A transport that does not implement it is named by its id. Rule 10 already
+      asserted the send fails closed but not that the refusal said *which* door
+      closed; two new rules landed red on exactly the reported sentence, and a
+      third — that an unavailable transport is refused before its own `send()`
+      runs — passed already and stays as a regression guard, because reaching
+      `send()` would feed the circuit breaker a failure that says nothing about
+      the gateway. `47 passed, 2 failed` → `49 passed, 0 failed`, integration
+      gate `SMART_LOGIN_DELIVERY_GATE_OK` on wordpress=7.0.3
+
+**What the readiness screen already had right.** D7 prints the transport it
+asked about (`class-readiness.php:176-181`), so the admin side named
+`automation` correctly the whole time. Only the path the visitor sees guessed.
+Two descriptions of one fact, and the one nobody was testing drifted — the same
+shape as the four-way drift the `FieldRegistry` rewrite removed.
+
+**Found by looking, not by a rule** — the fourth time in two phases, after
+19.10, 19.11 and 19.12. Every suite was green while a phone number was being
+told its email was misconfigured.
 
 ---
 
