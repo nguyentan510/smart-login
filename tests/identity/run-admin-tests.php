@@ -1275,4 +1275,133 @@ sl_check( 'a tab-scoped save writes its own tab', 'both', (string) ( $sl_scoped[
 sl_check( 'and does not write another tab field', 300, (int) ( $sl_scoped['otp']['ttl'] ?? 0 ) );
 
 // ---------------------------------------------------------------------
+sl_section( 'Rule 16 — one label per concept (20.5)' );
+
+/*
+ * A string check, and it will annoy somebody in six months. The reason is
+ * written here rather than left to be re-derived: this vocabulary took a working
+ * install down to zero delivered codes, and the diagnosis cost a session with
+ * database access. See docs/sending-a-code.md D4.
+ *
+ * Every visible string in the registry, by owner, so a failure names the thing
+ * that has to change rather than the count that changed.
+ */
+$sl_visible_strings = array();
+
+foreach ( FieldRegistry::tabs() as $sl_slug => $sl_label ) {
+	$sl_visible_strings[ 'tab:' . $sl_slug ] = array( $sl_label );
+}
+
+foreach ( FieldRegistry::sections() as $sl_slug => $sl_label ) {
+	$sl_visible_strings[ 'section:' . $sl_slug ] = array( $sl_label );
+}
+
+foreach ( FieldRegistry::all() as $sl_key => $sl_field ) {
+	$sl_visible_strings[ $sl_key ] = array_merge(
+		array( (string) ( $sl_field['label'] ?? '' ), (string) ( $sl_field['help'] ?? '' ) ),
+		array_values( (array) ( $sl_field['choices'] ?? array() ) )
+	);
+}
+
+/**
+ * Which owners show a string, exactly or as a substring.
+ *
+ * @param array<string,string[]> $strings
+ * @return string[]
+ */
+function sl_owners_showing( array $strings, string $needle, bool $exact ): array {
+	$owners = array();
+
+	foreach ( $strings as $owner => $values ) {
+		foreach ( $values as $value ) {
+			if ( $exact ? ( $needle === $value ) : ( '' !== $value && false !== strpos( $value, $needle ) ) ) {
+				$owners[] = $owner;
+				continue 2;
+			}
+		}
+	}
+
+	return $owners;
+}
+
+// Today: the identity provider's section, the SMS vendor, and the captcha
+// vendor. Three concepts, one word, and two of them sit on delivery screens.
+sl_check(
+	'"Nhà cung cấp" names at most one concept',
+	array(),
+	array_slice( sl_owners_showing( $sl_visible_strings, 'Nhà cung cấp', true ), 1 )
+);
+
+// "Webhook" belongs to the event tab. On an SMS screen it is the word that sent
+// an n8n URL to the wrong half of the plugin.
+sl_check(
+	'no SMS setting says "Webhook"',
+	array(),
+	array_values(
+		array_filter(
+			sl_owners_showing( $sl_visible_strings, 'Webhook', false ),
+			static fn( string $owner ): bool => 0 === strpos( $owner, 'sms.' )
+		)
+	)
+);
+
+// "Automation" named a category of product rather than a behaviour.
+sl_check(
+	'no tab or section is called "Automation"',
+	array(),
+	array_values(
+		array_filter(
+			sl_owners_showing( $sl_visible_strings, 'Automation', false ),
+			static fn( string $owner ): bool => 0 === strpos( $owner, 'tab:' ) || 0 === strpos( $owner, 'section:' )
+		)
+	)
+);
+
+// ---------------------------------------------------------------------
+sl_section( 'Rule 17 — an enabled channel says whether it is serving anything (20.6)' );
+
+/*
+ * delivery-routing.md D2 required this two phases ago and no screen does it:
+ *
+ *   "configured but not delivering" and "broken" look identical otherwise
+ *
+ * Rendered with the exact configuration from the report — the channel enabled,
+ * a real gateway URL saved, and routing pointed somewhere else — because that is
+ * the state the administrator was looking at while nothing was being delivered.
+ */
+$sl_status_restore = array(
+	'sms.enabled'          => Settings::get( 'sms.enabled' ),
+	'sms.url'              => Settings::get( 'sms.url' ),
+	'delivery.route_phone' => Settings::get( 'delivery.route_phone' ),
+);
+
+Settings::update(
+	array(
+		'sms.enabled'          => 1,
+		'sms.url'              => 'https://gateway.example/send',
+		'delivery.route_phone' => 'automation',
+	)
+);
+
+$sl_idle_html = sl_capture(
+	static function () use ( $screen ): void {
+		$screen->render( 'delivery-sms' );
+	}
+)['html'];
+
+Settings::update( $sl_status_restore );
+
+sl_assert(
+	'a channel screen declares whether it is serving a channel',
+	false !== strpos( $sl_idle_html, 'data-sl-channel-status' ),
+	'The screen renders no status at all, so an administrator cannot tell a configured channel from a serving one.'
+);
+
+sl_assert(
+	'the reported configuration renders as not serving',
+	false !== strpos( $sl_idle_html, 'data-sl-channel-status="idle"' ),
+	'Enabled, a real URL saved, and nothing routed to it — the screen must say so. This is the exact state that produced the report.'
+);
+
+// ---------------------------------------------------------------------
 sl_summary( 'Admin screens' );

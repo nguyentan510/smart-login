@@ -767,6 +767,131 @@ Settings::update(
 );
 
 // =====================================================================
+sl_section( 'Rule 14 — no setting names a transport (20.1)' );
+
+/*
+ * 10.1 made the transport a setting so a site could reach an automation platform
+ * for phone delivery. 20.2 reaches the same platform through a gateway preset,
+ * which was already there and is more flexible, so the setting now buys nothing
+ * and costs a 2x2 matrix with one cell that delivers nothing and says nothing.
+ * An administrator walked into that cell; see docs/sending-a-code.md.
+ *
+ * Asserted against the registry rather than against a file, so the way this
+ * comes back — `delivery.route_whatsapp` for the next channel — fails too.
+ */
+$sl_route_settings = array_values(
+	array_filter(
+		array_keys( FieldRegistry::all() ),
+		static fn( string $key ): bool => 1 === preg_match( '/^delivery\.route_/', $key )
+	)
+);
+
+sl_check( 'no setting names the transport for a channel', array(), $sl_route_settings );
+
+/*
+ * The positive half. Forbidding the setting leaves the replacement unstated, and
+ * "the channel decides" has to be true of the router, not just absent from the
+ * form. Behavioural: no stored value may move the answer.
+ */
+$sl_fixed_router = new TransportRouter(
+	array(
+		'sms'        => new SL_Fake_Transport( true ),
+		'email'      => new SL_Fake_Transport( true ),
+		'automation' => new SL_Fake_Transport( true ),
+	)
+);
+
+$sl_before_setting = $sl_fixed_router->transport_for( '84969789475' );
+Settings::update( array( 'delivery.route_phone' => 'automation' ) );
+$sl_after_setting = $sl_fixed_router->transport_for( '84969789475' );
+Settings::update( array( 'delivery.route_phone' => 'sms' ) );
+
+sl_check( 'no stored value can change which transport serves a phone', $sl_before_setting, $sl_after_setting );
+
+// =====================================================================
+sl_section( 'Rule 15 — the bus and the OTP path share no setting (20.2)' );
+
+/*
+ * Rule 6 asserts the *runtime* separation: a failing bus never reaches the OTP
+ * path. 10.4 shipped that while the *configuration* was still shared, so turning
+ * on an event stream silently configured an OTP transport as well. Four settings
+ * sit on both paths today, all of them through AutomationEndpoint.
+ *
+ * The two paths are declared rather than discovered, because TransportRouter
+ * does not expose its map and 20.0 changes no production file. The companion
+ * check below is what stops the declaration from being edited into a pass.
+ */
+$sl_otp_path_files = array(
+	'includes/OTP/Transports/class-webhook-transport.php',
+	'includes/OTP/Transports/class-mail-transport.php',
+	'includes/OTP/Transports/class-automation-transport.php',
+	// Reached by AutomationTransport, and the reason the two sets intersect.
+	// It leaves this list when the transport role retires in 20.2.
+	'includes/OTP/Transports/class-automation-endpoint.php',
+);
+
+$sl_bus_files = array(
+	'includes/OTP/Transports/class-event-bus.php',
+	'includes/OTP/Transports/class-automation-endpoint.php',
+);
+
+/**
+ * Settings keys named in a set of files, grounded in the registry.
+ *
+ * Filtered against `FieldRegistry::all()` so an ordinary string that happens to
+ * look like a dot path — a JSON key, a filter name — cannot inflate the answer.
+ *
+ * @param string[] $relative_files
+ * @return string[]
+ */
+function sl_setting_keys_in( array $relative_files ): array {
+	$known = array_flip( array_keys( FieldRegistry::all() ) );
+	$found = array();
+
+	foreach ( $relative_files as $relative ) {
+		if ( preg_match_all( "/'([a-z_]+\.[a-z_]+)'/", sl_source( $relative ), $matches ) ) {
+			foreach ( $matches[1] as $key ) {
+				if ( isset( $known[ $key ] ) ) {
+					$found[ $key ] = true;
+				}
+			}
+		}
+	}
+
+	ksort( $found );
+
+	return array_keys( $found );
+}
+
+$sl_shared_settings = array_values(
+	array_intersect( sl_setting_keys_in( $sl_otp_path_files ), sl_setting_keys_in( $sl_bus_files ) )
+);
+
+sl_check( 'no setting is read by both the OTP path and the event bus', array(), $sl_shared_settings );
+
+/*
+ * Without this, Rule 15 is satisfied by deleting a line from the list above.
+ * Every transport in the tree must be accounted for on the OTP side.
+ */
+$sl_unaccounted = array();
+
+foreach ( sl_plugin_sources() as $relative => $contents ) {
+	if ( 0 !== strpos( $relative, 'includes/OTP/Transports/' ) ) {
+		continue;
+	}
+
+	if ( false === strpos( $contents, 'implements TransportInterface' ) ) {
+		continue;
+	}
+
+	if ( ! in_array( $relative, $sl_otp_path_files, true ) ) {
+		$sl_unaccounted[] = $relative;
+	}
+}
+
+sl_check( 'every transport in the tree is on the declared OTP path', array(), $sl_unaccounted );
+
+// =====================================================================
 sl_section( 'Rule 8 — a failed send leaves the code already delivered usable (10.7)' );
 
 /*

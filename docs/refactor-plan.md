@@ -2382,10 +2382,15 @@ The install had a working gateway URL in `sms.url`, `sms.enabled` on, and
 `delivery.route_phone` pointed at `automation` with an empty endpoint. Both
 halves were reasonable readings. Together they delivered nothing.
 
-- [ ] **20.0** Guard rails, landed red —
+- [x] **20.0** Guard rails, landed red —
       [brief](sending-a-code/20.0-guard-rails.md). Four rules: no setting names a
       transport, one label per concept, the bus cannot reach the OTP path, and an
-      enabled channel that serves nothing says so
+      enabled channel that serves nothing says so. **Delivery routing 50/3,
+      Admin screens 139/5**, no other suite moved. Rule 16 corrected the spec's
+      headline finding — "Nhà cung cấp" labels three *settings*, one of them
+      `security.captcha_provider`, which the spec had missed and 20.5 now owns.
+      Rule 15's intersection is exactly `AutomationEndpoint`'s four settings, so
+      20.2 removes it in one move and only two of them travel in 20.3
 - [ ] **20.1** The routing table goes away. `delivery.route_phone` and
       `delivery.route_email` deleted; the identity channel decides the transport.
       `channel_for()` untouched — it answers a property of the identifier and was

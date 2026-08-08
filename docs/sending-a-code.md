@@ -20,15 +20,21 @@ revises — D1, D2 and D8 in particular.
 
 ## Findings
 
-### 1. "Provider" names three unrelated things
+### 1. "Nhà cung cấp" is the label of three different settings
 
-| Where | What it actually means |
+Measured by Rule 16 rather than counted by hand, and the count was wrong when
+counted by hand — the first draft of this spec said two:
+
+| Owner | What it actually means |
 | --- | --- |
-| Tab **Đăng nhập nhanh**, `providers.*` (`class-field-registry.php:46`) | an **identity** provider — Google |
-| `GatewayPresets` (`class-gateway-presets.php:31`) | an **SMS vendor** — eSMS.vn |
-| `TransportInterface` (`class-transport-interface.php:20`) | a **route out** — not a vendor at all |
+| section `provider` (`class-field-registry.php:100`) | an **identity** provider — Google |
+| `sms.preset` (`class-field-registry.php:445`) | an **SMS vendor** — eSMS.vn |
+| `security.captcha_provider` (`class-field-registry.php:880`) | a **captcha vendor** — Turnstile, hCaptcha |
 
-Three concepts, one word, and the tabs sit four rows apart in the same nav.
+Three settings, one word, on three different tabs. A fourth sense exists in the
+code but not on screen: `TransportInterface` (`class-transport-interface.php:20`)
+is a route out, not a vendor, and its own docblock has to spend a paragraph
+saying so.
 
 ### 2. Two webhook mechanisms exist, and nothing in the naming separates them
 
