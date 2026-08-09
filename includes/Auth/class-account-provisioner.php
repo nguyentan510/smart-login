@@ -68,7 +68,7 @@ final class AccountProvisioner {
 	/** @return array{user:\WP_User,context:AuthContext}|WP_Error */
 	public function resolve( ProviderIdentity $identity, array $transaction ) {
 		if ( '' === $identity->provider || '' === $identity->subject || strlen( $identity->subject ) > 191 ) {
-			return new WP_Error( 'smart_login_provider_identity', __( 'Nhà cung cấp không trả về định danh hợp lệ.', 'smart-login' ) );
+			return new WP_Error( 'smart_login_provider_identity', __( 'Nhà cung cấp đăng nhập không trả về định danh hợp lệ.', 'smart-login' ) );
 		}
 
 		$existing = $this->identities->find( $this->claim_for( $identity ) );

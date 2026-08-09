@@ -344,6 +344,58 @@ function sanitize_key( $value ) {
 	return preg_replace( '/[^a-z0-9_\-]/', '', strtolower( (string) $value ) );
 }
 
+/**
+ * Vietnamese-aware accent folding, added in 21.4.
+ *
+ * WordPress folds `Đơn hàng` to `Don hang` before slugging it, and the account
+ * menu derives an entry key from a label an administrator types — in Vietnamese,
+ * on every install this plugin targets. A stub that skipped the folding would
+ * produce a different key here than production does, which is a fixture telling
+ * a comfortable lie about the one input this feature actually receives.
+ *
+ * Only the Vietnamese repertoire plus Latin-1, because that is what the plugin's
+ * own UI is written in. It is not a general `remove_accents()`.
+ */
+function remove_accents( $string ) {
+	static $map = null;
+
+	if ( null === $map ) {
+		$groups = array(
+			'a' => 'àáạảãâầấậẩẫăằắặẳẵ',
+			'e' => 'èéẹẻẽêềếệểễ',
+			'i' => 'ìíịỉĩ',
+			'o' => 'òóọỏõôồốộổỗơờớợởỡ',
+			'u' => 'ùúụủũưừứựửữ',
+			'y' => 'ỳýỵỷỹ',
+			'd' => 'đ',
+			'c' => 'ç',
+			'n' => 'ñ',
+		);
+
+		$map = array();
+
+		foreach ( $groups as $plain => $accented ) {
+			foreach ( preg_split( '//u', $accented, -1, PREG_SPLIT_NO_EMPTY ) as $character ) {
+				$map[ $character ]                      = $plain;
+				$map[ mb_strtoupper( $character, 'UTF-8' ) ] = strtoupper( $plain );
+			}
+		}
+	}
+
+	return strtr( (string) $string, $map );
+}
+
+/**
+ * Label -> slug, the way WordPress does it: fold, lowercase, collapse to dashes.
+ */
+function sanitize_title( $title, $fallback = '', $context = 'save' ) {
+	$slug = strtolower( remove_accents( (string) $title ) );
+	$slug = preg_replace( '/[^a-z0-9]+/u', '-', $slug );
+	$slug = trim( (string) $slug, '-' );
+
+	return '' !== $slug ? $slug : (string) $fallback;
+}
+
 function current_time( $type, $gmt = false ) {
 	return 'timestamp' === $type ? time() : gmdate( 'Y-m-d H:i:s' );
 }

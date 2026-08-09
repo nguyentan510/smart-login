@@ -1,62 +1,15 @@
 /**
  * Smart Login — front-end styles.
  * Scoped under .smart-login so nothing leaks into the theme.
+ *
+ * The design tokens this file reads live in `smart-login-tokens.css`, which is
+ * a registered dependency rather than an import — 21.1 moved them out because
+ * declaring them here meant they could only be inherited together with the
+ * page-layout block below, and the account button in a site header can afford
+ * the colours but not the 460px cap.
  */
 
 .smart-login {
-	--sl-accent: #e30613;
-	--sl-accent-dark: #c00410;
-	--sl-text: #1f2430;
-	--sl-muted: #6b7280;
-	--sl-border: #d9dde5;
-
-	/* Two recessed surfaces, each of which was a hex repeated in two places.
-	   A card that layers a sub-panel on itself needs the second one to be a
-	   value somebody can change, not a colour that happens to appear twice. */
-	--sl-surface-2: #f7f8fa;
-	--sl-surface-3: #fafafa;
-
-	--sl-radius: 6px;
-	--sl-radius-card: 12px;
-
-	/*
-	 * The scale. Six spacing steps and five type steps, so a distance is chosen
-	 * from a set rather than invented at the component.
-	 *
-	 * Until 17.2 this block held six tokens and all six were colours, which is
-	 * how the account card came to carry ten spacing values, nine font sizes,
-	 * and two negative margins whose entire job was to cancel a distance the
-	 * component above them had emitted.
-	 *
-	 * The account surface reads these throughout. P5 converted every *other*
-	 * declaration whose values were already on the scale — 51 of them, no value
-	 * changed, so the sign-in screens render byte-identically and the conversion
-	 * carries no visual risk at all.
-	 *
-	 * What is left is 40 declarations holding genuinely off-scale numbers: 6, 10,
-	 * 11, 14, 17, 18, 22, 28, 46. Each is a judgement call with a visual
-	 * consequence, so they are pinned as a baseline in
-	 * tests/identity/run-rendered-surface-tests.php rather than converted in
-	 * bulk — the count may fall and must not rise.
-	 *
-	 * Some will never fall. `padding-right: 46px` on `.sl-field--password`
-	 * reserves room for the eye button; that is control geometry, not rhythm, and
-	 * rounding it to a scale step would be the scale inventing a requirement
-	 * nobody made.
-	 */
-	--sl-space-1: 4px;
-	--sl-space-2: 8px;
-	--sl-space-3: 12px;
-	--sl-space-4: 16px;
-	--sl-space-5: 20px;
-	--sl-space-6: 24px;
-
-	--sl-fs-xs: 12px;
-	--sl-fs-sm: 13px;
-	--sl-fs-md: 15px;
-	--sl-fs-lg: 16px;
-	--sl-fs-xl: 20px;
-
 	box-sizing: border-box;
 	max-width: 460px;
 	margin: 0 auto;

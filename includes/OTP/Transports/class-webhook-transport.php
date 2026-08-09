@@ -7,6 +7,7 @@
 
 namespace SmartLogin\OTP\Transports;
 
+use SmartLogin\GatewayPresets;
 use SmartLogin\OTP\Placeholders;
 use SmartLogin\Settings;
 use WP_Error;
@@ -24,12 +25,33 @@ class WebhookTransport implements TransportInterface, ReportsUnavailability {
 	 */
 	const MAX_TIMEOUT = 15;
 
+	/** The event name a signed envelope carries for an OTP send. */
+	const EVENT_OTP_SEND = 'otp.send';
+
 	public function id(): string {
 		return 'sms';
 	}
 
 	public function is_available(): bool {
-		return Settings::is_on( 'sms.enabled' ) && '' !== trim( (string) Settings::get( 'sms.url', '' ) );
+		if ( ! Settings::is_on( 'sms.enabled' ) ) {
+			return false;
+		}
+
+		// A signed provider is configured by two different fields, so asking
+		// about `sms.url` would report it ready while it had no endpoint.
+		if ( $this->signs() ) {
+			return '' !== trim( (string) Settings::get( 'sms.signed_url', '' ) )
+				&& '' !== Settings::read_secret( 'sms.signed_secret' );
+		}
+
+		return '' !== trim( (string) Settings::get( 'sms.url', '' ) );
+	}
+
+	/** Does the chosen provider speak the signed envelope rather than a template? */
+	private function signs(): bool {
+		return GatewayPresets::ENVELOPE_SIGNED === GatewayPresets::envelope(
+			(string) Settings::get( 'sms.preset', GatewayPresets::CUSTOM )
+		);
 	}
 
 	public function unavailable_message(): string {
@@ -63,14 +85,19 @@ class WebhookTransport implements TransportInterface, ReportsUnavailability {
 	 */
 	public function dispatch( string $destination, string $code, array $ctx ): array {
 		if ( ! $this->is_available() ) {
-			return $this->failure( __( 'Webhook chưa được bật hoặc chưa có URL.', 'smart-login' ) );
+			return $this->failure( __( 'Kênh SMS chưa được bật hoặc chưa cấu hình nhà cung cấp.', 'smart-login' ) );
 		}
 
 		$delivery_id        = bin2hex( random_bytes( 16 ) );
 		$ctx['delivery_id'] = $delivery_id;
-		$map                = Placeholders::build( $destination, $code, $ctx );
-		$method             = strtoupper( (string) Settings::get( 'sms.method', 'POST' ) );
-		$content_type       = (string) Settings::get( 'sms.content_type', 'application/json' );
+
+		if ( $this->signs() ) {
+			return $this->dispatch_signed( $destination, $code, $ctx, $delivery_id );
+		}
+
+		$map          = Placeholders::build( $destination, $code, $ctx );
+		$method       = strtoupper( (string) Settings::get( 'sms.method', 'POST' ) );
+		$content_type = (string) Settings::get( 'sms.content_type', 'application/json' );
 		// Clamped again here, not only by the registry. Settings::sanitize()
 		// applies the registry maximum on save, so an install that stored 30
 		// under the old ceiling keeps 30 until somebody happens to re-save that
@@ -163,6 +190,80 @@ class WebhookTransport implements TransportInterface, ReportsUnavailability {
 			}
 		}
 
+		$duration = (int) round( ( microtime( true ) - $started ) * 1000 );
+		$request  = $this->redact_request( $url, $args, $code );
+
+		if ( is_wp_error( $response ) ) {
+			return array(
+				'ok'          => false,
+				'error'       => $response->get_error_message(),
+				'status'      => 0,
+				'request'     => $request,
+				'response'    => '',
+				'duration_ms' => $duration,
+			);
+		}
+
+		$status    = (int) wp_remote_retrieve_response_code( $response );
+		$raw_body  = (string) wp_remote_retrieve_body( $response );
+		$succeeded = $this->is_success( $response );
+
+		return array(
+			'ok'          => $succeeded,
+			'error'       => $succeeded ? '' : $this->explain_failure( $status, $raw_body ),
+			'status'      => $status,
+			'request'     => $request,
+			'response'    => $this->redact( substr( $raw_body, 0, 4000 ), $code ),
+			'duration_ms' => $duration,
+		);
+	}
+
+	/**
+	 * Send the signed envelope.
+	 *
+	 * Separate from the templated path rather than a set of conditionals inside
+	 * it, because almost nothing is shared: no placeholder map, no body template,
+	 * no JSON-validity check on something an administrator typed, no GET, and no
+	 * retry — the receiver of a signed envelope has a delivery id and can
+	 * deduplicate, which is the property `sms.retry` demands and cannot verify of
+	 * an arbitrary gateway.
+	 *
+	 * The payload is built here and signed by the same call that serialises it,
+	 * which is the whole argument in `class-envelope-signer.php:3-14`. Nothing
+	 * between that call and `wp_remote_request()` may touch the body.
+	 *
+	 * @return array{ok:bool,error:string,status:int,request:array,response:string,duration_ms:int}
+	 */
+	private function dispatch_signed( string $destination, string $code, array $ctx, string $delivery_id ): array {
+		$ttl = (int) ( $ctx['ttl_seconds'] ?? Settings::get_int( 'otp.ttl', 300 ) );
+
+		$envelope = EnvelopeSigner::base_envelope( self::EVENT_OTP_SEND, $delivery_id ) + array(
+			// Named rather than inferred, for the reason AutomationTransport
+			// records: a receiver should not have to work the channel out from
+			// which field happens to be empty.
+			'channel'     => TransportRouter::channel_for( $destination ),
+			'destination' => $destination,
+			'intent'      => (string) ( $ctx['intent'] ?? '' ),
+			'code'        => $code,
+			'ttl_seconds' => $ttl,
+			'expires_ts'  => (int) ( $ctx['expires_ts'] ?? ( time() + $ttl ) ),
+		);
+
+		$signed  = EnvelopeSigner::sign( $envelope, Settings::read_secret( 'sms.signed_secret' ) );
+		$headers = EnvelopeSigner::merge_headers( $signed['headers'], (array) Settings::get( 'sms.headers', array() ) );
+
+		$url  = trim( (string) Settings::get( 'sms.signed_url', '' ) );
+		$args = array(
+			'method'      => 'POST',
+			'timeout'     => min( self::MAX_TIMEOUT, max( 1, Settings::get_int( 'sms.timeout', 5 ) ) ),
+			'redirection' => 0,
+			'headers'     => $headers,
+			'body'        => $signed['body'],
+			'user-agent'  => 'SmartLogin/' . SMART_LOGIN_VERSION . '; ' . home_url( '/' ),
+		);
+
+		$started  = microtime( true );
+		$response = wp_remote_request( $url, $args );
 		$duration = (int) round( ( microtime( true ) - $started ) * 1000 );
 		$request  = $this->redact_request( $url, $args, $code );
 

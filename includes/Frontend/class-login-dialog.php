@@ -130,6 +130,12 @@ class LoginDialog {
 				'flag' => 'smartlogin_welcome',
 				'step' => Flow::STEP_ONBOARD,
 			),
+			// Split out in 21.1 and named separately here for the same reason it
+			// is a registered dependency elsewhere: this path injects <link>
+			// elements by URL, so there is no dependency graph to resolve it,
+			// and a stylesheet arriving without its tokens is a surface with
+			// every colour and every distance unresolved.
+			'tokensCss' => SMART_LOGIN_URL . 'assets/css/smart-login-tokens.css',
 			'assets'    => array(
 				'css' => SMART_LOGIN_URL . 'assets/css/smart-login.css',
 				'js'  => SMART_LOGIN_URL . 'assets/js/smart-login.js',

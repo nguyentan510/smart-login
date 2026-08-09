@@ -26,7 +26,8 @@ require __DIR__ . '/../harness.php';
 use SmartLogin\FieldRegistry;
 use SmartLogin\OTP\OtpRepository;
 use SmartLogin\OTP\OtpService;
-use SmartLogin\OTP\Transports\AutomationTransport;
+use SmartLogin\OTP\Transports\AutomationEndpoint;
+use SmartLogin\OTP\Transports\EnvelopeSigner;
 use SmartLogin\OTP\Transports\EventBus;
 use SmartLogin\OTP\Transports\TransportInterface;
 use SmartLogin\Security\AuditLog;
@@ -232,33 +233,16 @@ $sl_routing_router = new TransportRouter(
 	)
 );
 
-sl_check(
-	'a phone destination follows the routing table',
-	'automation',
-	( static function () use ( $sl_routing_router ): string {
-		Settings::update( array( 'delivery.route_phone' => 'automation' ) );
-		$answer = $sl_routing_router->transport_for( '84969789475' );
-		Settings::update( array( 'delivery.route_phone' => 'sms' ) );
-
-		return $answer;
-	} )()
-);
-
-sl_check(
-	'an email destination follows the routing table',
-	'automation',
-	( static function () use ( $sl_routing_router ): string {
-		Settings::update( array( 'delivery.route_email' => 'automation' ) );
-		$answer = $sl_routing_router->transport_for( 'ban@example.com' );
-		Settings::update( array( 'delivery.route_email' => 'email' ) );
-
-		return $answer;
-	} )()
-);
-
-// The defaults must reproduce what the '@' test used to answer, byte for byte.
-// This is the whole no-migration argument, so it is asserted directly rather
-// than inferred from the suites staying green.
+/*
+ * 10.1's two assertions here required a stored setting to move the answer. 20.1
+ * reversed that decision — the argument is D1 in docs/sending-a-code.md — and
+ * Rule 14 below now asserts the opposite property, behaviourally: no stored
+ * value may move it. They are not both keepable, and the newer one is the one an
+ * administrator walked into.
+ *
+ * What survives unchanged is the pair underneath, which never depended on the
+ * table: the channel decides, and it decides the same way it did before 10.1.
+ */
 sl_check( 'a phone number defaults to the SMS gateway', 'sms', $sl_routing_router->transport_for( '84969789475' ) );
 sl_check( 'an email address defaults to wp_mail()', 'email', $sl_routing_router->transport_for( 'ban@example.com' ) );
 
@@ -438,32 +422,31 @@ sl_forbid_pattern(
 	'An unsigned request carrying an OTP is the failure mode HMAC exists to prevent.'
 );
 
-Settings::update(
-	array(
-		'automation.url'     => 'https://hooks.example.com/otp',
-		'delivery.route_phone' => 'automation',
-	)
-);
+Settings::update( array( 'automation.url' => 'https://hooks.example.com/otp' ) );
 Settings::store_secret( 'automation.secret', 'shared-signing-secret' );
 
-$sl_automation                 = new SmartLogin\OTP\Transports\AutomationTransport();
+/*
+ * Driven through the endpoint rather than through a transport since 20.1. The
+ * OTP half of this endpoint retired into the signed SMS provider, where Rule 18
+ * asserts the same property over the bytes that provider transmits. What is left
+ * here is the bus, and the bus signs through exactly this call.
+ */
+$sl_endpoint                   = new AutomationEndpoint();
 $GLOBALS['sl_http_requests']   = array();
 $GLOBALS['sl_http_response']   = array(
 	'response' => array( 'code' => 200 ),
 	'body'     => '{"ok":true}',
 );
 
-$sl_sent = $sl_automation->send(
-	'84969789475',
-	'482913',
-	array(
-		'intent'      => 'login',
-		'ttl_seconds' => 300,
-		'expires_ts'  => 1754136300,
-	)
+$sl_sent = $sl_endpoint->post(
+	AutomationEndpoint::base_envelope( 'otp.send', 'fixed-delivery-id' ) + array(
+		'channel' => 'phone',
+		'code'    => '482913',
+	),
+	true
 );
 
-sl_assert( 'the automation transport delivers on a 2xx', true === $sl_sent, 'Expected true, got a WP_Error.' );
+sl_assert( 'the endpoint delivers on a 2xx', ! is_wp_error( $sl_sent ), 'Expected a response, got a WP_Error.' );
 
 $sl_request = $GLOBALS['sl_http_requests'][0] ?? array();
 $sl_body    = (string) ( $sl_request['args']['body'] ?? '' );
@@ -498,46 +481,31 @@ sl_check(
 // Without a secret there is no signature, so the endpoint would receive live
 // codes it cannot authenticate. That configuration is not offered.
 Settings::store_secret( 'automation.secret', '' );
-sl_check( 'no secret means the transport is not available', false, $sl_automation->is_available() );
+sl_check( 'no secret means the endpoint is not configured', false, $sl_endpoint->is_configured() );
 Settings::store_secret( 'automation.secret', 'shared-signing-secret' );
 
 unset( $GLOBALS['sl_http_response'] );
 
 // =====================================================================
-sl_section( 'Rule 5 — the routing table cannot dangle (10.1)' );
+sl_section( 'Rule 5 — retired by 20.1' );
 
-$sl_route_fields = array_filter(
-	FieldRegistry::all(),
-	static fn( string $path ): bool => 0 === strpos( $path, 'delivery.route_' ),
-	ARRAY_FILTER_USE_KEY
-);
-
-if ( array() === $sl_route_fields ) {
-	// Deliberately not a pass. With no route fields declared the loop below has
-	// nothing to iterate, and a rule that passes because its subject is absent
-	// reports the opposite of the truth.
-	sl_pending(
-		'every routing choice names a transport the router can resolve',
-		'delivery.route_phone / delivery.route_email — 10.1'
-	);
-} else {
-	$sl_router  = new TransportRouter();
-	$sl_dangled = array();
-
-	foreach ( $sl_route_fields as $sl_path => $sl_field ) {
-		foreach ( array_keys( (array) ( $sl_field['choices'] ?? array() ) ) as $sl_choice ) {
-			if ( ! $sl_router->get( (string) $sl_choice ) ) {
-				$sl_dangled[] = $sl_path . ' → ' . $sl_choice;
-			}
-		}
-	}
-
-	sl_assert(
-		'every routing choice names a transport the router can resolve',
-		array() === $sl_dangled,
-		'A choice the router cannot resolve fails closed at send time with nothing on screen to explain it: ' . implode( ', ', $sl_dangled )
-	);
-}
+/*
+ * 10.1 asked whether every choice in `delivery.route_phone` and
+ * `delivery.route_email` named a transport the router could resolve, and it
+ * reported PENDING rather than passing when the fields were absent — because a
+ * rule that passes for want of a subject reports the opposite of the truth.
+ *
+ * 20.1 removed the subject deliberately. The successor is Rule 14, and it holds
+ * a strictly stronger property: not "every routing choice resolves" but "no
+ * setting names a transport at all", which makes a dangling choice
+ * unrepresentable instead of merely absent. Leaving this rule here would report
+ * PENDING for ever against a table that is never coming back.
+ *
+ * Retired rather than deleted silently, because a rule that vanishes from a
+ * suite with no note is indistinguishable from one somebody quietly removed to
+ * get a green run.
+ */
+sl_note( 'superseded by Rule 14 — no setting names a transport (20.1)' );
 
 // =====================================================================
 sl_section( 'Rule 6 — a failing bus never reaches the OTP path (10.4)' );
@@ -576,7 +544,7 @@ sl_check( 'and the OTP row survives', 1, count( $sl_bus_repo->live_rows() ) );
 // because the behaviour only diverges on the day it matters.
 sl_assert(
 	'the bus breaker and the transport breaker are separate keys',
-	EventBus::BREAKER_ID !== ( new AutomationTransport() )->id(),
+	EventBus::BREAKER_ID !== ( new WebhookTransport() )->id(),
 	'Sharing a breaker would let a dead bus endpoint open the circuit that OTP delivery consults.'
 );
 
@@ -697,13 +665,14 @@ $sl_unconfigured = new TransportRouter(
 	array(
 		'sms'        => new SL_Fake_Transport( true ),
 		'email'      => new SL_Fake_Transport( true ),
-		'automation' => new SmartLogin\OTP\Transports\AutomationTransport(),
+		'automation' => new SL_Unconfigured_Transport( 'automation' ),
 	)
 );
 
-Settings::update( array( 'delivery.route_phone' => 'automation' ) );
-
-$sl_closed = $sl_unconfigured->send( '84969789475', '482913', array( 'intent' => 'login' ) );
+// Named on the context, because 20.1 removed the setting that used to name it.
+// The property under test never was the routing table — it is that a transport
+// which cannot send refuses, and says which one it was.
+$sl_closed = $sl_unconfigured->send( '84969789475', '482913', array( 'intent' => 'login', 'transport' => 'automation' ) );
 
 sl_assert(
 	'an unconfigured automation endpoint refuses rather than falling through',
@@ -741,9 +710,7 @@ $sl_third_party = new TransportRouter(
 	)
 );
 
-Settings::update( array( 'delivery.route_phone' => 'zns' ) );
-
-$sl_third_party_refusal = $sl_third_party->send( '84969789475', '482913', array( 'intent' => 'login' ) );
+$sl_third_party_refusal = $sl_third_party->send( '84969789475', '482913', array( 'intent' => 'login', 'transport' => 'zns' ) );
 
 sl_assert(
 	'a transport registered by a filter is not described as one of the built-ins',
@@ -765,6 +732,371 @@ Settings::update(
 		'automation.url'       => '',
 	)
 );
+
+// =====================================================================
+sl_section( 'Rule 14 — no setting names a transport (20.1)' );
+
+/*
+ * 10.1 made the transport a setting so a site could reach an automation platform
+ * for phone delivery. 20.2 reaches the same platform through a gateway preset,
+ * which was already there and is more flexible, so the setting now buys nothing
+ * and costs a 2x2 matrix with one cell that delivers nothing and says nothing.
+ * An administrator walked into that cell; see docs/sending-a-code.md.
+ *
+ * Asserted against the registry rather than against a file, so the way this
+ * comes back — `delivery.route_whatsapp` for the next channel — fails too.
+ */
+$sl_route_settings = array_values(
+	array_filter(
+		array_keys( FieldRegistry::all() ),
+		static fn( string $key ): bool => 1 === preg_match( '/^delivery\.route_/', $key )
+	)
+);
+
+sl_check( 'no setting names the transport for a channel', array(), $sl_route_settings );
+
+/*
+ * The positive half. Forbidding the setting leaves the replacement unstated, and
+ * "the channel decides" has to be true of the router, not just absent from the
+ * form. Behavioural: no stored value may move the answer.
+ */
+$sl_fixed_router = new TransportRouter(
+	array(
+		'sms'        => new SL_Fake_Transport( true ),
+		'email'      => new SL_Fake_Transport( true ),
+		'automation' => new SL_Fake_Transport( true ),
+	)
+);
+
+$sl_before_setting = $sl_fixed_router->transport_for( '84969789475' );
+Settings::update( array( 'delivery.route_phone' => 'automation' ) );
+$sl_after_setting = $sl_fixed_router->transport_for( '84969789475' );
+Settings::update( array( 'delivery.route_phone' => 'sms' ) );
+
+sl_check( 'no stored value can change which transport serves a phone', $sl_before_setting, $sl_after_setting );
+
+// =====================================================================
+sl_section( 'Rule 15 — the bus and the OTP path share no setting (20.2)' );
+
+/*
+ * Rule 6 asserts the *runtime* separation: a failing bus never reaches the OTP
+ * path. 10.4 shipped that while the *configuration* was still shared, so turning
+ * on an event stream silently configured an OTP transport as well. Four settings
+ * sit on both paths today, all of them through AutomationEndpoint.
+ *
+ * The two paths are declared rather than discovered, because TransportRouter
+ * does not expose its map and 20.0 changes no production file. The companion
+ * check below is what stops the declaration from being edited into a pass.
+ */
+$sl_otp_path_files = array(
+	'includes/OTP/Transports/class-webhook-transport.php',
+	'includes/OTP/Transports/class-mail-transport.php',
+	// AutomationTransport and AutomationEndpoint left this list in 20.1, when
+	// the transport role retired into the signed provider. That is what empties
+	// the intersection; nothing about the bus's own settings changed.
+);
+
+$sl_bus_files = array(
+	'includes/OTP/Transports/class-event-bus.php',
+	'includes/OTP/Transports/class-automation-endpoint.php',
+);
+
+/**
+ * Settings keys named in a set of files, grounded in the registry.
+ *
+ * Filtered against `FieldRegistry::all()` so an ordinary string that happens to
+ * look like a dot path — a JSON key, a filter name — cannot inflate the answer.
+ *
+ * @param string[] $relative_files
+ * @return string[]
+ */
+function sl_setting_keys_in( array $relative_files ): array {
+	$known = array_flip( array_keys( FieldRegistry::all() ) );
+	$found = array();
+
+	foreach ( $relative_files as $relative ) {
+		if ( preg_match_all( "/'([a-z_]+\.[a-z_]+)'/", sl_source( $relative ), $matches ) ) {
+			foreach ( $matches[1] as $key ) {
+				if ( isset( $known[ $key ] ) ) {
+					$found[ $key ] = true;
+				}
+			}
+		}
+	}
+
+	ksort( $found );
+
+	return array_keys( $found );
+}
+
+$sl_shared_settings = array_values(
+	array_intersect( sl_setting_keys_in( $sl_otp_path_files ), sl_setting_keys_in( $sl_bus_files ) )
+);
+
+sl_check( 'no setting is read by both the OTP path and the event bus', array(), $sl_shared_settings );
+
+/*
+ * Without this, Rule 15 is satisfied by deleting a line from the list above.
+ * Every transport in the tree must be accounted for on the OTP side.
+ */
+$sl_unaccounted = array();
+
+foreach ( sl_plugin_sources() as $relative => $contents ) {
+	if ( 0 !== strpos( $relative, 'includes/OTP/Transports/' ) ) {
+		continue;
+	}
+
+	if ( false === strpos( $contents, 'implements TransportInterface' ) ) {
+		continue;
+	}
+
+	if ( ! in_array( $relative, $sl_otp_path_files, true ) ) {
+		$sl_unaccounted[] = $relative;
+	}
+}
+
+sl_check( 'every transport in the tree is on the declared OTP path', array(), $sl_unaccounted );
+
+// =====================================================================
+sl_section( 'Rule 18 — a signed provider signs what it sends (20.2)' );
+
+/*
+ * The control this sub-phase exists to preserve. D2's first draft would have
+ * signed a rendered body template; `class-envelope-signer.php:3-14` explains at
+ * length why that makes a signature decorative. So the assertion is deliberately
+ * not "a signature header is present" — it recomputes the HMAC over the bytes the
+ * transport actually produced, which is the only version of this test that would
+ * have failed the design it replaced.
+ */
+Settings::update(
+	array(
+		'sms.enabled'       => 1,
+		'sms.preset'        => 'signed',
+		'sms.signed_url'    => 'https://automation.example/hook',
+		'sms.headers'       => array(
+			// An administrator trying to take the signature over, deliberately.
+			array(
+				'key'   => EnvelopeSigner::SIGNATURE_HEADER,
+				'value' => 'sha256=forged',
+			),
+			array(
+				'key'   => 'X-Tenant',
+				'value' => 'acme',
+			),
+		),
+	)
+);
+
+// Secrets travel through the path-keyed store, not the option array.
+Settings::store_secret( 'sms.signed_secret', 'test-signing-key' );
+
+$GLOBALS['sl_http_requests'] = array();
+$GLOBALS['sl_http_response'] = array(
+	'response' => array( 'code' => 200 ),
+	'body'     => '{"ok":true}',
+);
+
+( new WebhookTransport() )->send( '84969789475', '482913', array( 'intent' => 'register' ) );
+
+$sl_signed_request = $GLOBALS['sl_http_requests'][0] ?? null;
+
+$sl_sent_body    = (string) ( $sl_signed_request['args']['body'] ?? '' );
+$sl_sent_headers = (array) ( $sl_signed_request['args']['headers'] ?? array() );
+$sl_sent_sig     = (string) ( $sl_sent_headers[ EnvelopeSigner::SIGNATURE_HEADER ] ?? '' );
+
+sl_assert(
+	'a signed provider produces a request at all',
+	null !== $sl_signed_request,
+	'Nothing was sent, so everything below is vacuous.'
+);
+
+sl_check(
+	'the signature verifies against the transmitted bytes',
+	'sha256=' . hash_hmac( 'sha256', $sl_sent_body, 'test-signing-key' ),
+	$sl_sent_sig
+);
+
+sl_assert(
+	'the body is the envelope, not a rendered template',
+	is_array( json_decode( $sl_sent_body, true ) )
+		&& '482913' === (string) ( json_decode( $sl_sent_body, true )['code'] ?? '' ),
+	'A signed provider must build its payload in code. Got: ' . substr( $sl_sent_body, 0, 120 )
+);
+
+sl_assert(
+	'an administrator header cannot replace the signature',
+	'sha256=forged' !== $sl_sent_sig,
+	'Configured headers may add, never replace — otherwise the one control that makes this endpoint safe is switchable from the settings screen.'
+);
+
+sl_check(
+	'an administrator header that collides with nothing still travels',
+	'acme',
+	(string) ( $sl_sent_headers['X-Tenant'] ?? '' )
+);
+
+sl_assert(
+	'the signed endpoint is where the request went',
+	'https://automation.example/hook' === (string) ( $sl_signed_request['url'] ?? '' ),
+	'Got: ' . (string) ( $sl_signed_request['url'] ?? '(none)' )
+);
+
+Settings::update(
+	array(
+		'sms.enabled'       => 0,
+		'sms.preset'        => 'generic',
+		'sms.signed_url'    => '',
+		'sms.headers'       => array(),
+	)
+);
+
+Settings::store_secret( 'sms.signed_secret', '' );
+
+// =====================================================================
+sl_section( 'Rule 19 — an automation-routed site survives the upgrade (20.3)' );
+
+/*
+ * The load-bearing rule of the phase. 10.1 shipped with defaults that reproduced
+ * existing behaviour byte for byte; this phase deletes two settings sites have
+ * deliberately set, so the only thing standing between an upgrade and a site that
+ * silently stops delivering codes is this function.
+ *
+ * Asserted three ways, because "it migrated" is not one property:
+ *   1. a phone-routed install arrives fully configured on the signed provider
+ *   2. an email-routed install, which has no destination, produces a notice
+ *   3. a site that never used automation is not touched at all
+ */
+$sl_migrator = array( \SmartLogin\Installer::class, 'migrate_automation_delivery' );
+
+sl_assert(
+	'the migration exists',
+	is_callable( $sl_migrator ),
+	'Installer::migrate_automation_delivery() — 20.3'
+);
+
+/** Put the option into a known pre-upgrade shape and forget every secret. */
+function sl_seed_pre_upgrade( array $settings ): void {
+	Settings::store_secret( 'automation.secret', '' );
+	Settings::store_secret( 'sms.signed_secret', '' );
+	update_option( Settings::OPTION, array() );
+	delete_option( \SmartLogin\Installer::MIGRATION_NOTICE_OPTION );
+	Settings::update( $settings );
+}
+
+if ( is_callable( $sl_migrator ) ) {
+	// 1. Phone routed at automation: the configuration has to arrive intact.
+	sl_seed_pre_upgrade(
+		array(
+			'delivery.route_phone' => 'automation',
+			'automation.url'       => 'https://n8n.example/otp',
+			'sms.preset'           => 'generic',
+			'sms.enabled'          => 0,
+		)
+	);
+	Settings::store_secret( 'automation.secret', 'the-original-key' );
+
+	$sl_migrator();
+
+	sl_check( 'the endpoint arrives', 'https://n8n.example/otp', (string) Settings::get( 'sms.signed_url' ) );
+	sl_check( 'the provider is the signed one', 'signed', (string) Settings::get( 'sms.preset' ) );
+	sl_check( 'the channel is left switched on', 1, (int) Settings::get( 'sms.enabled' ) );
+	sl_check( 'the signing key reads back', 'the-original-key', Settings::read_secret( 'sms.signed_secret' ) );
+
+	sl_assert(
+		'the source configuration is not erased',
+		'https://n8n.example/otp' === (string) Settings::get( 'automation.url' ),
+		'20.4 decides the bus role. Erasing the source before the destination has been used in anger is unrecoverable.'
+	);
+
+	// Idempotence, asserted rather than assumed. The version guard is not the
+	// only thing that can call this — a support script or a second activation can.
+	$sl_after_first = Settings::all();
+	$sl_migrator();
+
+	sl_check( 'migrating twice is the same as migrating once', $sl_after_first, Settings::all() );
+
+	// 2. Email routed at automation: nothing to migrate, so it must be reported.
+	sl_seed_pre_upgrade(
+		array(
+			'delivery.route_email' => 'automation',
+			'automation.url'       => 'https://n8n.example/otp',
+		)
+	);
+	Settings::store_secret( 'automation.secret', 'the-original-key' );
+
+	$sl_migrator();
+
+	$sl_notices = (array) get_option( \SmartLogin\Installer::MIGRATION_NOTICE_OPTION, array() );
+
+	sl_assert(
+		'an email route that cannot be migrated is reported',
+		array() !== $sl_notices,
+		'The site loses a delivery capability. An upgrade hook may not choose a replacement, but it may not stay quiet either.'
+	);
+
+	sl_assert(
+		'the report names the setting',
+		false !== strpos( implode( ' ', $sl_notices ), 'route_email' ),
+		'A notice that does not name what changed sends the administrator hunting. Got: ' . implode( ' | ', $sl_notices )
+	);
+
+	/*
+	 * 3. Routed at automation with no endpoint — the shape the reporting install
+	 * was actually in, and the one that turns a migration into a demolition.
+	 *
+	 * There is nothing to move: the site was not delivering through automation,
+	 * because there was no automation to deliver through. Migrating anyway would
+	 * point `sms.preset` at a signed provider with no endpoint *and* overwrite the
+	 * gateway the administrator had configured on the way past. That is the
+	 * failure `Installer::cleanup()`'s flat retention keys already cost this
+	 * project once: a hook rewriting a setting it was not asked about.
+	 */
+	sl_seed_pre_upgrade(
+		array(
+			'delivery.route_phone' => 'automation',
+			'automation.url'       => '',
+			'sms.preset'           => 'generic',
+			'sms.url'              => 'https://n8n.example/local-otp',
+			'sms.enabled'          => 1,
+		)
+	);
+
+	$sl_migrator();
+
+	sl_check( 'an empty endpoint does not overwrite the configured gateway', 'generic', (string) Settings::get( 'sms.preset' ) );
+	sl_check( 'and does not overwrite its URL', 'https://n8n.example/local-otp', (string) Settings::get( 'sms.url' ) );
+
+	sl_assert(
+		'a route pointing at nothing is reported instead',
+		false !== strpos( implode( ' ', (array) get_option( \SmartLogin\Installer::MIGRATION_NOTICE_OPTION, array() ) ), 'route_phone' ),
+		'The site was routed at an endpoint it never configured, so it has not been delivering. Silence here is how it stays that way.'
+	);
+
+	// 4. A site that never used automation keeps its own gateway untouched.
+	sl_seed_pre_upgrade(
+		array(
+			'delivery.route_phone' => 'sms',
+			'sms.preset'           => 'esms',
+			'sms.url'              => 'https://rest.esms.vn/x',
+		)
+	);
+
+	$sl_migrator();
+
+	sl_check( 'an unrelated site keeps its provider', 'esms', (string) Settings::get( 'sms.preset' ) );
+	sl_check( 'and keeps its gateway URL', 'https://rest.esms.vn/x', (string) Settings::get( 'sms.url' ) );
+	sl_check(
+		'and is reported nothing',
+		array(),
+		(array) get_option( \SmartLogin\Installer::MIGRATION_NOTICE_OPTION, array() )
+	);
+} else {
+	foreach ( array( 'the endpoint arrives', 'the signing key reads back', 'an unrelated site keeps its provider' ) as $sl_blocked ) {
+		sl_pending( $sl_blocked, 'Installer::migrate_automation_delivery() — 20.3' );
+	}
+}
+
+sl_seed_pre_upgrade( array( 'delivery.route_phone' => 'sms' ) );
 
 // =====================================================================
 sl_section( 'Rule 8 — a failed send leaves the code already delivered usable (10.7)' );

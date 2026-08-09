@@ -34,6 +34,8 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 18 — The rendered surface**
 - [x] **P1–P6 — The backlog after Phase 18** *(see below)*
 - [x] **Phase 19 — Sign-in on every page**
+- [x] **Phase 20 — Sending a code**
+- [x] **Phase 21 — The account menu**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -2298,7 +2300,10 @@ is what landing them red is for.
 
 **The coding-standards baseline was stale.** Documented as `18 ERRORS AND 20
 WARNINGS ... IN 16 FILES`; `main` re-measured with a cleared `.phpcs-cache`
-gives **23 / 25 / 19**, and this branch gives **21 / 20 / 16**. The first
+gives **23 / 25 / 19**, and this branch gave **21 / 20 / 16** — and **21 / 17 /
+15** from 20.4 onward, where `phpcbf` cleared three long-standing alignment
+warnings in `class-field-registry.php` while fixing alignment 20.4 had disturbed,
+taking that file off the report entirely. The first
 attempt at that comparison was wrong because the cache was serving the previous
 tree — *two runs are not a comparison*, and this is the phase that had to prove
 it on itself.
@@ -2365,6 +2370,271 @@ shape as the four-way drift the `FieldRegistry` rewrite removed.
 **Found by looking, not by a rule** — the fourth time in two phases, after
 19.10, 19.11 and 19.12. Every suite was green while a phone number was being
 told its email was misconfigured.
+
+---
+
+## Phase 20 — Sending a code
+
+Spec: [`sending-a-code.md`](sending-a-code.md). Revises Phase 10 — D1, D2, D8.
+
+**Not a feature. A vocabulary removal.** Reported 2026-08-08 by the administrator
+who had just hit *The transport that answered in another's name*: the message was
+fixed and the configuration was still wrong, because the screen that produced it
+offers one word for three concepts and three words for one concept. The report is
+the spec — *"Việc cấu trúc sai, nên tôi hiểu sai nên cấu hình sai."*
+
+The install had a working gateway URL in `sms.url`, `sms.enabled` on, and
+`delivery.route_phone` pointed at `automation` with an empty endpoint. Both
+halves were reasonable readings. Together they delivered nothing.
+
+- [x] **20.0** Guard rails, landed red —
+      [brief](sending-a-code/20.0-guard-rails.md). Four rules: no setting names a
+      transport, one label per concept, the bus cannot reach the OTP path, and an
+      enabled channel that serves nothing says so. **Delivery routing 50/3,
+      Admin screens 139/5**, no other suite moved. Rule 16 corrected the spec's
+      headline finding — "Nhà cung cấp" labels three *settings*, one of them
+      `security.captcha_provider`, which the spec had missed and 20.5 now owns.
+      Rule 15's intersection is exactly `AutomationEndpoint`'s four settings, so
+      20.2 removes it in one move and only two of them travel in 20.3
+- [x] **20.1** [The routing table goes
+      away](sending-a-code/20.1-the-routing-table-goes-away.md) — both settings
+      deleted, `ROUTES` becomes the `CHANNEL_TRANSPORT` constant,
+      `AutomationTransport` deleted outright because Rule 15's companion would
+      otherwise hold that rule red for ever. `channel_for()` untouched. Three
+      **rules** turned out to be consumers too and none was removed quietly:
+      10.1's own two assertions and Rule 5 retired with their reasons, 10.5's
+      readiness scenario repointed at the modern spelling of the same broken
+      site. **Rules 14 and 15 green; Delivery routing 72/0/0**
+- [x] **20.2** [The signed envelope becomes a
+      provider](sending-a-code/20.2-the-signed-provider.md), **not a preset** —
+      D2 was rewritten before any code moved. Reading `EnvelopeSigner` first
+      found four controls a body template cannot carry, so the layering changed
+      instead: one transport per channel, and the *provider* selects the wire
+      format. `WebhookTransport` gains a signed branch; `EnvelopeSigner` is
+      reused unchanged, which is the whole point. **Delivery routing 57/3, Admin
+      screens 141/5** — two more passing than before, because `show_if` was made
+      checkable rather than exempt from the tab-coverage gate
+- [x] **20.3** [The migration that refuses to be
+      silent](sending-a-code/20.3-the-migration-that-refuses-to-be-silent.md) —
+      `automation.url` + `automation.secret` → the signed provider, secrets
+      through the secret store on both sides because a raw block copy would copy
+      an absence. Two shapes cannot be migrated and are **reported by name**
+      instead: `route_email = automation`, which has no equivalent, and
+      `route_phone = automation` with an **empty endpoint** — the shape the
+      reporting install is in, which the brief missed and which the first
+      implementation would have "migrated" straight over a configured gateway.
+      Idempotence asserted, not assumed. **Delivery routing 72/3**
+- [x] **20.4** [The bus gets its own
+      tab](sending-a-code/20.4-the-bus-gets-its-own-tab.md) — top-level **Thông
+      báo & Tích hợp**, and the slug goes with it: `delivery-automation` asserted
+      the association 20.1 removed and was visible in the address bar. Aliased so
+      a bookmark still lands right. No `automation.enabled` flag — a fresh
+      install subscribes to nothing and configures nothing, so a toggle would be
+      a fourth way for the screen to disagree with itself. A **test fixture**
+      turned out to depend on the hierarchy and was repointed.
+      **phpcs baseline moves to 21 / 17 / 15** — see below
+- [x] **20.5** [One word, one
+      meaning](sending-a-code/20.5-one-word-one-meaning.md) — **Rule 16 green.**
+      "Nhà cung cấp" split three ways (đăng nhập / SMS / Dịch vụ chống robot);
+      "Webhook" removed from all six SMS-side labels and left to the event tab.
+      The captcha field was in scope only because 20.0's rule found what the spec
+      had missed. Two help strings still described the routing table three
+      sub-phases after it was deleted — no rule could see those, only reading
+      could. **Admin screens 144/2**, and the last two reds are 20.6's
+- [x] **20.6** [A channel that says what it is
+      doing](sending-a-code/20.6-a-channel-that-says-what-it-is-doing.md) —
+      `data-sl-channel-status` on both channel screens, and **Rule 17 green**.
+      Rule 17's own fixture was stale: it described a channel routed elsewhere,
+      which 20.1 made unrepresentable, so it was repointed to the remaining
+      spelling — enabled but its identity channel is not — and **strengthened**
+      to assert both states. The **integration gate** then failed on four counts
+      that `run-all.php` cannot see; see the phase outcome. **Admin screens
+      147/0**
+
+---
+
+**Ordering rationale.** 20.2 before 20.1, and that is the only counter-intuitive
+edge. The preset has to be able to carry a site's configuration *before* the
+routing table that currently carries it is deleted, or 20.1 lands a window in
+which an automation-routed install has nowhere to be. 20.3 then moves the data
+across and 20.1 removes the empty shell.
+
+20.4 after 20.3 for the same reason in the other direction: the tab cannot be
+re-parented while a migration is still reading `automation.*` as a transport.
+
+20.5 and 20.6 are last because they are the visible half, and the same argument
+Phase 19 records applies — a screen relabelled around a structure that is still
+moving gets relabelled twice.
+
+**Risk this phase carries and Phase 10 did not.** 10.1 shipped with defaults that
+reproduced existing behaviour byte for byte, so no site changed on upgrade. This
+one deletes two settings that sites have deliberately set. There is no
+no-migration path; 20.3 is load-bearing, and the acceptance for it is written
+before 20.2 starts.
+
+---
+
+**Outcome.** Every sub-phase landed. Final state:
+
+```text
+Delivery routing  72 passed, 0 failed, 0 pending
+Admin screens    147 passed, 0 failed, 0 pending
+Every required suite PASS.
+Integration gate  SMART_LOGIN_DELIVERY_GATE_OK   wordpress=7.0.3
+phpcs 21 / 17 / 15   (was 21 / 20 / 16; 20.4 cleared three, see above)
+```
+
+**The plan was wrong five times out of seven, and the corrections are the phase.**
+
+- **D2, the central decision, was a category error** — caught by reading
+  `EnvelopeSigner` before writing code rather than after. A preset is data; a wire
+  format is code. Both end as "POST JSON to a URL", which is why they looked
+  alike, and four security controls do not survive the confusion.
+- **20.3's migration would have eaten a working gateway** on exactly the install
+  that filed the report — routed at automation with an empty endpoint, a shape the
+  brief had not listed.
+- **Three rules, not code, turned out to be the consumers** of the structure being
+  removed (20.1), and a fourth was a test fixture (20.4). Each was retired or
+  repointed with its reason written down.
+- **Rule 16 corrected the spec that commissioned it**, finding a third owner of
+  "Nhà cung cấp" that the findings had missed.
+- **20.5 surprised nobody**, and that is the control: its guard rail asked the
+  registry instead of counting by eye, so its list was exact before the work began.
+
+**The reported configuration is a test case, not an anecdote.** Twice the install
+in the original report was the case the plan forgot. It is now a fixture in two
+suites.
+
+**`run-all.php` is not the gate this file's own working agreement describes.**
+The integration gate sat red for five sub-phases on four checks — a deleted
+transport, a moved envelope, a `show_if` field, a hard-coded summary line — and
+none of them appeared in the summary that was green after every commit. The
+agreement already says anything touching a real WordPress goes through
+`tests/integration/`; what was missing was running it per sub-phase rather than
+per phase.
+
+---
+
+## Phase 21 — The account menu
+
+Spec: [`account-menu.md`](account-menu.md). Briefs in
+[`account-menu/`](account-menu/).
+
+Requested 2026-08-08 with two screenshots of nhathuoclongchau.com.vn: an
+`Đăng nhập` button in the header, and after sign-in the member's phone number
+with a dropdown of account links. The dropdown is the visible part. The two
+screenshots also show the same seven items as a **sidebar** on the account page,
+and that is the part that decides the architecture — one list, or two lists that
+are one refactor away from disagreeing on the screen where it shows most.
+
+Research contradicted the framing twice, and both findings changed the plan:
+
+- `[smart_login_button]` exists but **renders unstyled** — it is missing from
+  `Assets::maybe_enqueue()`'s tag list, so the one trigger built for people who
+  cannot edit templates is the only one with no CSS
+- The obvious source for the menu, `AccountForm::sections_meta()`, names *cards
+  on one page*, not destinations. Its own doc comment already refuses to hold an
+  entry nothing draws
+
+**Ordering is not preference.** 21.1 is a CSS refactor with no visible output and
+it goes first, because every later sub-phase needs a colour and the alternative
+is a second stylesheet carrying its own copy of the accent. 21.5 ships the
+dropdown working with **no JavaScript at all**, and 21.6 only upgrades it — so
+decision 8's degradation claim is verified by an intermediate state that actually
+existed, not by an argument at the end.
+
+- [x] **21.0** Guard rails, landed red —
+      [brief](account-menu/21.0-guard-rails.md). Twelve rules; those whose
+      subject does not exist yet report PENDING rather than PASS. **Account menu
+      4/9/10**, no other suite moved, phpcs unchanged at 21/17/15. The first
+      draft **passed three rules against an empty string** — `shortcode_atts()`
+      was unstubbed, `render_button()` threw, and every button rule is phrased as
+      an absence; the helper now reports PENDING unless markup rendered. Rule 2
+      also found inline SVG in two files the spec had not counted,
+      `templates/onboarding.php` and `templates/partials/password-field.php`,
+      which widens 21.2
+- [x] **21.1** [The tokens leave the
+      layout](account-menu/21.1-the-tokens-leave-the-layout.md) — twenty design
+      tokens move from `.smart-login` to `:root` in their own file. No value
+      changed. **Rendered surface 25 before and 25 after**; Rule 1 green;
+      Account menu 4/9/10 → 7/8/9. The **account-card suite caught the rename**
+      — five assertions red the moment the tokens moved, because they asked
+      whether the scale was declared in `smart-login.css`. Their property is
+      unchanged and their subject moved, so they read the token file now.
+      `--sl-dlg-*` stays on `.sl-dialog`: checking found it never crosses a
+      stylesheet boundary, which sharpened Rule 1 into "a token a stylesheet
+      reads without declaring must come from the token file". Two consumers the
+      brief had not listed — `tests/visual/render.php` inlines the CSS with no
+      dependency graph, and the launcher injects `<link>`s by URL
+- [x] **21.2** [One glyph
+      vocabulary](account-menu/21.2-one-glyph-vocabulary.md) — `IconSet`, ten
+      names, `sections_meta()` reads from it. Provider brand marks stay out.
+      **Account menu 7/8/9 → 11/6/7**, rules 1–3 green, `card-head.php`
+      untouched and all three moved glyphs byte-identical. The two extra call
+      sites 21.0 found turned out **not to be the same kind of glyph** — 28×28
+      and 20×20, solid, against the vocabulary's 18×18 outlines — so `IconSet`
+      holds per-icon geometry, and `names()` (pickable) is split from `get()`
+      (any glyph) rather than growing an allowlist. `Identity fitness` caught
+      the ten new labels as a stale POT; rebuilt to 698 strings
+- [x] **21.3** [The registry](account-menu/21.3-the-registry.md) — `AccountMenu`,
+      pinned ends and a filter that runs last. Lands with no consumer.
+      **Account menu 11/6/7 → 22/5/1**, rules 4–8 green. Rule 4 failed against a
+      class that was obeying it — a substring search matched the paragraph
+      explaining why the call must not be made, so comments are stripped now;
+      third rule in three sub-phases to match a spelling rather than a
+      construct. Rule 6 is now **guaranteed by `normalise()` rather than
+      asserted**, which is the preferred direction, and it keeps a real subject:
+      it fails if `normalise()` goes. The nonce-per-user half of rule 8 is
+      **deferred to the integration gate** and written into 21.5 — the pure
+      suite stubs `wp_logout_url()`, so asserting it there would measure the stub
+- [x] **21.4** [The settings
+      section](account-menu/21.4-the-settings-section.md) — the icon+text+link
+      repeater, modelled on the `headers` field, and the signed-in label choice.
+      **Account menu 22/5/1 → 31/4/0**; only the four button rules remain red.
+      The **regression suite caught the sanitiser before it ever ran** — the
+      round-trip sample had no `menu_items` case — and chasing that found
+      `sanitize_title()` and `remove_accents()` were **never stubbed**, so no
+      suite could reach this sanitiser at all. The stub had to fold Vietnamese
+      accents or the fixture would produce different keys than production
+      (`Đơn hàng` → `don-hang`). Writing it made a brief decision wrong: a row is
+      now **never dropped for an underivable key**, it falls back to `item-N`,
+      because losing a menu item over the alphabet of its label is not a
+      defensible refusal
+- [x] **21.5** [The button, two
+      states](account-menu/21.5-the-button-two-states.md) — the finding-1 fix, a
+      separate stylesheet, `<details>` with no script. **Account menu 31/4/0 →
+      35/0/0, every rule from 21.0 green**, and the **integration gate's first
+      six checks pass against the real site**. The suite was **promoted to
+      `required` here rather than in 21.7** — the agreement promotes the moment
+      a spec suite goes green, and holding it two sub-phases would be 15.4's
+      mistake with a shorter fuse. 21.3's deferral is discharged: against a real
+      WordPress the logout URL carries `_wpnonce=` and changes with the visitor.
+      The template suite refused both new templates for having no fixture, which
+      is the rule that exists because the Woo account template went six phases
+      unexecuted; Templates 109 → 115 once they had them
+- [x] **21.6** [The dropdown, and the small
+      screen](account-menu/21.6-the-dropdown.md) — outside-click, `Escape`,
+      `aria-expanded`, 375px. **Measurements, taken in a browser**, all in the
+      brief. Two findings reading the CSS would not have produced: the collapsed
+      button was **43.60 x 44.00**, missing the touch target on the axis nobody
+      checks because only the height had a floor; and the spec's claim that a
+      **CSS variable could set the breakpoint is false** — a custom property
+      cannot appear in a media query condition, so the refusal stands but its
+      replacement was wrong, corrected in `account-menu.md`. **Decision 8 is now
+      a fact**: the same page built with zero scripts still opens, lists all
+      three destinations and closes, which only works because 21.5 shipped the
+      markup a sub-phase early
+- [x] **21.7** [Placement, the documentation, and the
+      promotion](account-menu/21.7-placement-and-the-promotion.md) — nav-menu
+      injection off by default, `README.md`. **Account menu 38/0/0 and
+      `required`; the gate is 12/12 against the real site.** The promotion had
+      already happened in 21.5. The gate found a defect in **itself** — it
+      attached a second `NavMenuItem` and reported two injected items, because
+      `add_filter()` de-duplicates by object hash and `Plugin::boot()` had
+      already registered one. The README rule iterates `IconSet::names()` and
+      the shortcode's own `shortcode_atts()` block rather than a list typed into
+      the test, paired with a rule that the list was actually found so a stale
+      regex cannot narrow it to nothing
 
 ---
 
@@ -2437,3 +2707,12 @@ told its email was misconfigured.
 | The query trigger creates a second URL for every page and splits it in search results | 19.4 owns that cost: the dialog-open variant is `noindex` and the page's canonical tag is untouched, asserted rather than assumed |
 | 19.9 discovers the cart merge works and the sub-phase is quietly dropped, leaving `wp_login` load-bearing with nothing asserting it | The finding is *why* the sub-phase exists in its current form. The rule sits over the session writers, and the acceptance is that removing `do_action( 'wp_login' )` from `SessionIssuer` **fails** it — verified by removing it, because a rule that has never failed is a comment |
 | The whole phase ships without a browser ever opening it, exactly as 8.4, 16.3 and 17.3 did | 19.7 is a sub-phase with readings as acceptance, not a courtesy at the end, and the tool it needs already exists — 18.1 committed it precisely so this could not happen again |
+| 21.1 moves the design tokens every surface in the plugin reads — the largest CSS blast radius in the project, and it produces nothing visible | Acceptance is the rendered-surface baseline **not moving**, run on both sides of the commit with both outputs in the message. No value may change in the same diff, so any visual difference is a bug and not a redesign. Existing theme overrides keep winning: `.smart-login { --sl-accent }` outranks `:root` on specificity, which is compatibility by construction rather than by testing |
+| `AccountMenu` is designed for a sidebar and an orders system that do not exist, so its shape is a guess | The entry stays at four keys and rule 6 fails the day a fifth appears. `key` is the one thing decided early, because it is the one thing expensive to change later — and it is keyed `account`, not `profile`, so the vocabulary keeps the distinction the code just made |
+| The registry lands in 21.3 with no consumer and nothing proves it works | One consumer, in 21.5, in the same phase. A registry with none would be unverified; one with two would be building the sidebar this phase deferred |
+| An administrator types an icon name, a label and a URL, and something of theirs reaches the DOM as markup | Icons are a closed set resolved through `IconSet`, so an unknown name becomes the fallback and never survives as a string; labels and URLs are escaped at render. Rule 3 asserts the property, not one instance |
+| Logout is configured as an ordinary row and members meet the "Bạn có chắc muốn đăng xuất?" interstitial instead of signing out | `wp_logout_url()` is nonced per session, so it cannot be a stored string. The tail is plugin-owned, its key is refused to settings rows, and rule 8 asserts the URL differs between two users — which is what proves it was generated rather than typed |
+| 21.7 injects into a theme's own `<ul>` and breaks its markup | The filter's contract is a string of `<li>`; the injected node is one `<li>`, asserted in a real WordPress with a real theme because no fixture reproduces where `wp_nav_menu_items` fires. Off by default: capture may default on because it rewrites nothing, but injection adds a node to somebody else's markup |
+| A stored nav location survives a theme switch and the setting silently points at nothing | Injects nothing, warns nothing, asserted directly. Themes get switched and a stale option is not an error condition |
+| The dropdown is built on `<details>` and a later change quietly makes JavaScript load-bearing | 21.5 ships it working with no script at all, and 21.6's acceptance re-runs 21.5's with the script removed. The degradation claim is checked against a state that existed, not argued for at the end |
+| The header button re-fights the `width: 100%` argument `.sl-btn` already settled | It does not use `.sl-btn`. Rule 11 asserts the class is absent from the rendered button, so the two cannot be quietly merged later |

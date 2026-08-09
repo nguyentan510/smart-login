@@ -164,18 +164,16 @@ final class Readiness {
 		}
 
 		foreach ( $channels as $channel => $label ) {
-			// Read through the router's own table, not by building the path from
-			// a literal prefix — the abuse suite forbids that for good reason,
-			// and it caught this line: a key assembled by concatenation is a key
-			// nothing can check against the registry.
-			$route        = TransportRouter::ROUTES[ $channel ];
-			$transport_id = (string) Settings::get( $route['setting'], '' );
-			$transport    = $router->get( $transport_id ) ? $transport_id : $route['fallback'];
+			// Still read through the router's own table rather than by assembling a
+			// key from a literal prefix — the reason has not changed, only the
+			// table has. Since 20.1 it is a constant, so there is no stored value
+			// to fall back from and no cell for a channel to be pointed into.
+			$transport = TransportRouter::CHANNEL_TRANSPORT[ $channel ];
 
 			if ( ! $router->is_available( $transport ) ) {
 				$broken[] = sprintf(
 					/* translators: 1: identity channel, 2: transport id. */
-					__( '%1$s (đang định tuyến qua "%2$s")', 'smart-login' ),
+					__( '%1$s (kênh gửi "%2$s")', 'smart-login' ),
 					$label,
 					$transport
 				);
@@ -241,9 +239,10 @@ final class Readiness {
 			return '';
 		}
 
-		if ( 'email' !== (string) Settings::get( 'delivery.route_email', 'email' ) ) {
-			return '';
-		}
+		// The guard that used to sit here asked whether the email channel was
+		// routed somewhere other than wp_mail(), which 20.1 made unaskable: since
+		// the routing table went away, email has exactly one transport. The check
+		// below is now unconditionally the right one for this channel.
 
 		// An SMTP plugin registers one of these long before this screen renders.
 		// MailTransport's own phpmailer_init clamp is added around its send and

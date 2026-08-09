@@ -89,7 +89,11 @@
 
 		var assets = data.assets || {};
 
+		// Tokens first in the list, so their <link> is appended first. Both of
+		// the stylesheets below read `--sl-*` and neither declares one since
+		// 21.1 moved the block to :root.
 		loading = Promise.all( [
+			loadAsset( 'link', { rel: 'stylesheet', href: data.tokensCss } ),
 			loadAsset( 'link', { rel: 'stylesheet', href: data.dialogCss } ),
 			loadAsset( 'link', { rel: 'stylesheet', href: assets.css } ),
 			loadAsset( 'script', { src: assets.js, async: false } )

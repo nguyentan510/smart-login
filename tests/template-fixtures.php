@@ -143,6 +143,42 @@ return array(
 		'notices'    => array(),
 		'my_account' => 'https://example.test/my-account/',
 	),
+	// The header button, both states. Two fixtures rather than one because the
+	// shortcode renders two different templates and a fixture per template is
+	// what this file is — the signed-out one is an anchor, the signed-in one is
+	// a <details> that has to survive with no script at all.
+	'login-button'                   => array(
+		'label'    => 'Đăng nhập',
+		'step'     => 'identify',
+		'href'     => 'https://example.test/dang-nhap?smart_login_step=identify',
+		'class'    => '',
+		'collapse' => true,
+	),
+	'account-button'                 => array(
+		'label'    => '0969789475',
+		'items'    => array(
+			array(
+				'key'   => 'account',
+				'label' => 'Thông tin cá nhân',
+				'icon'  => 'user',
+				'url'   => 'https://example.test/my-account/',
+			),
+			array(
+				'key'   => 'don-hang',
+				'label' => 'Đơn hàng của tôi',
+				'icon'  => 'box',
+				'url'   => 'https://example.test/don-hang/',
+			),
+			array(
+				'key'   => 'logout',
+				'label' => 'Đăng xuất',
+				'icon'  => 'log-out',
+				'url'   => 'https://example.test/wp-login.php?action=logout',
+			),
+		),
+		'class'    => '',
+		'collapse' => true,
+	),
 	'profile-summary'                => array(
 		'user'      => new WP_User( 7, 'Nguyễn Như' ),
 		'notices'   => array(),

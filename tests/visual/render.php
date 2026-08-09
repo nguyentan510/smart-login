@@ -218,7 +218,15 @@ $sl_render = static function ( string $template, array $args ) use ( $sl_root ):
  * exist.
  */
 $sl_page = static function ( string $name, string $body, ?string $modifier = 'account' ) use ( $sl_root ): string {
-	$css = (string) file_get_contents( $sl_root . 'assets/css/smart-login.css' );
+	/*
+	 * Tokens first, and separately, since 21.1 split them out of
+	 * `.smart-login`. In a real page WordPress resolves this from the registered
+	 * dependency; here there is no dependency graph, so a picture built without
+	 * this file is a picture with every colour, space and font size unresolved.
+	 */
+	$css = (string) file_get_contents( $sl_root . 'assets/css/smart-login-tokens.css' );
+
+	$css .= "\n" . (string) file_get_contents( $sl_root . 'assets/css/smart-login.css' );
 
 	/*
 	 * The dialog ships its own stylesheet, and the two-stage asset load is why:

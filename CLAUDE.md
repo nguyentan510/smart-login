@@ -102,5 +102,17 @@ section.
 php tests/run-all.php
 ```
 
+On Windows, use the wrapper instead — there is often no `php` on PATH, and the
+binary nearest to hand is Local's, which loads no `php.ini` and turns five suites
+red on the environment rather than on the code:
+
+```bash
+powershell -File scripts/run-tests.ps1
+```
+
+It picks an interpreter by probing for `openssl` and `mbstring` and **blocks**
+when none has them, rather than producing a red count with environment noise in
+it. `-Strict` forwards `--strict`; `-Suite <file>` runs one suite.
+
 `--strict` refuses to tolerate a `spec` suite. Coding standards run against a
 documented baseline — compare, do not assume zero.

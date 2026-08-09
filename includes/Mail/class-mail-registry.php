@@ -233,7 +233,7 @@ Cấu hình: {{site_url}}wp-admin/admin.php?page=smart-login&tab=delivery',
 					'section' => self::section_for( $row ),
 					/* translators: %s: message name. */
 					'label'   => sprintf( __( '%s — gửi email', 'smart-login' ), $row['label'] ),
-					'help'    => __( 'Tắt nếu bạn đã nhận sự kiện này qua Automation. Nhật ký và sự kiện vẫn được ghi như cũ — đây chỉ là email.', 'smart-login' ),
+					'help'    => __( 'Tắt nếu bạn đã nhận sự kiện này qua tab Thông báo & Tích hợp. Nhật ký và sự kiện vẫn được ghi như cũ — đây chỉ là email.', 'smart-login' ),
 				);
 			}
 

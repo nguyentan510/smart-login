@@ -58,19 +58,15 @@ class AutomationEndpoint {
 	 * @return array|WP_Error Whatever the HTTP layer returned.
 	 */
 	public function post( array $envelope, bool $blocking ) {
-		$signed  = EnvelopeSigner::sign( $envelope, Settings::read_secret( 'automation.secret' ) );
-		$headers = $signed['headers'];
+		$signed = EnvelopeSigner::sign( $envelope, Settings::read_secret( 'automation.secret' ) );
 
-		// Administrator headers may add, never replace. A configured
-		// `X-Smart-Login-Signature` would otherwise silently disable the only
-		// control that makes this endpoint safe to point anywhere.
-		foreach ( (array) Settings::get( 'automation.headers', array() ) as $row ) {
-			if ( empty( $row['key'] ) || isset( $headers[ $row['key'] ] ) ) {
-				continue;
-			}
-
-			$headers[ $row['key'] ] = (string) ( $row['value'] ?? '' );
-		}
+		// Administrator headers may add, never replace. The rule moved to
+		// EnvelopeSigner in 20.2 so the signed SMS provider enforces the same one
+		// rather than a second copy of it.
+		$headers = EnvelopeSigner::merge_headers(
+			$signed['headers'],
+			(array) Settings::get( 'automation.headers', array() )
+		);
 
 		return wp_remote_request(
 			$this->url(),
@@ -89,15 +85,14 @@ class AutomationEndpoint {
 	/**
 	 * The fields every envelope carries, whichever role built it.
 	 *
+	 * Delegates since 20.2. The body of this lives on EnvelopeSigner, which reads
+	 * no setting and can therefore be shared with the OTP path; keeping the call
+	 * here means the bus's own callers did not have to move.
+	 *
 	 * @param string $event       Event name.
 	 * @param string $delivery_id Stable id for deduplication on the far end.
 	 */
 	public static function base_envelope( string $event, string $delivery_id ): array {
-		return array(
-			'event'       => $event,
-			'delivery_id' => $delivery_id,
-			'site'        => home_url( '/' ),
-			'timestamp'   => time(),
-		);
+		return EnvelopeSigner::base_envelope( $event, $delivery_id );
 	}
 }

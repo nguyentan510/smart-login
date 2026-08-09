@@ -25,6 +25,7 @@ use SmartLogin\Admin\ProviderCards;
 use SmartLogin\Admin\SettingsPage;
 use SmartLogin\FieldRegistry;
 use SmartLogin\GatewayPresets;
+use SmartLogin\Identity\Channels\MailChannel;
 use SmartLogin\Identity\Channels\PhoneChannel;
 use SmartLogin\Installer;
 use SmartLogin\OTP\Placeholders;
@@ -122,7 +123,7 @@ final class SettingsScreen {
 		echo '<table class="form-table" role="presentation">';
 
 		foreach ( $fields as $path => $field ) {
-			if ( isset( $derived[ $path ] ) ) {
+			if ( isset( $derived[ $path ] ) || ! self::field_applies( $field ) ) {
 				continue;
 			}
 
@@ -136,6 +137,26 @@ final class SettingsScreen {
 		}
 
 		$this->after_section( $section );
+	}
+
+	/**
+	 * Whether a field's `show_if` condition holds against the stored settings.
+	 *
+	 * Declared in the registry beside the field rather than as a branch here, for
+	 * the reason the registry exists at all: one array decides the default, the
+	 * type, the tab, the control — and now whether the control is relevant.
+	 * A field with no condition always applies.
+	 *
+	 * @param array $field Field spec.
+	 */
+	private static function field_applies( array $field ): bool {
+		foreach ( (array) ( $field['show_if'] ?? array() ) as $path => $expected ) {
+			if ( (string) Settings::get( $path, '' ) !== (string) $expected ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**
@@ -201,6 +222,71 @@ final class SettingsScreen {
 		if ( 'automation' === $section ) {
 			$this->automation_role();
 		}
+
+		if ( 'sms' === $section ) {
+			$this->channel_status( PhoneChannel::ID, 'sms.enabled', Settings::phone_enabled() );
+		}
+
+		if ( 'email' === $section ) {
+			$this->channel_status( MailChannel::ID, 'email.enabled', Settings::email_enabled() );
+		}
+	}
+
+	/**
+	 * Whether this channel is carrying anything, said rather than implied.
+	 *
+	 * `delivery-routing.md` D2 asked for this two phases before anybody hit it:
+	 * "configured but not delivering" and "broken" look identical otherwise. An
+	 * administrator did hit it, and the screen they were reading said nothing at
+	 * all while their phone numbers went nowhere.
+	 *
+	 * Cheap only because 20.1 removed the routing table. While the answer was a
+	 * lookup through two settings this would have been a fourth place that could
+	 * disagree with the other three; now it is two booleans, and both of them are
+	 * on screens the reader can get to from here.
+	 *
+	 * @param string $channel          Identity channel id, for the wording.
+	 * @param string $enabled_path     The channel's own on/off setting.
+	 * @param bool   $identity_enabled Whether that identity is accepted at all.
+	 */
+	private function channel_status( string $channel, string $enabled_path, bool $identity_enabled ): void {
+		$is_phone = PhoneChannel::ID === $channel;
+		$label    = $is_phone ? __( 'số điện thoại', 'smart-login' ) : __( 'email', 'smart-login' );
+
+		if ( ! Settings::is_on( $enabled_path ) ) {
+			$state   = 'off';
+			$class   = 'notice-info';
+			$message = sprintf(
+				/* translators: %s: identity channel, e.g. "số điện thoại". */
+				__( 'Kênh này đang tắt. Không mã xác thực nào được gửi tới %s.', 'smart-login' ),
+				$label
+			);
+		} elseif ( ! $identity_enabled ) {
+			// The state this whole sub-phase exists for: switched on, configured,
+			// and unreachable — because the identity it carries is not accepted.
+			$state   = 'idle';
+			$class   = 'notice-warning';
+			$message = sprintf(
+				/* translators: %s: identity channel, e.g. "số điện thoại". */
+				__( 'Kênh này đang bật nhưng chưa có gì đi qua: website hiện không nhận %s làm cách định danh. Đổi ở tab Đăng nhập & Đăng ký, mục Định danh.', 'smart-login' ),
+				$label
+			);
+		} else {
+			$state   = 'serving';
+			$class   = 'notice-success';
+			$message = sprintf(
+				/* translators: %s: identity channel, e.g. "số điện thoại". */
+				__( 'Đang gửi mã xác thực tới %s.', 'smart-login' ),
+				$label
+			);
+		}
+
+		printf(
+			'<div class="notice %1$s inline" data-sl-channel-status="%2$s"><p>%3$s</p></div>',
+			esc_attr( $class ),
+			esc_attr( $state ),
+			esc_html( $message )
+		);
 	}
 
 	/**
@@ -212,30 +298,17 @@ final class SettingsScreen {
 	 * not enabled OTP delivery, and nothing else on the page would say so.
 	 */
 	private function automation_role(): void {
-		$routes = array();
-
-		foreach ( TransportRouter::ROUTES as $channel => $route ) {
-			if ( 'automation' === (string) Settings::get( $route['setting'], '' ) ) {
-				$routes[] = PhoneChannel::ID === $channel
-					? __( 'số điện thoại', 'smart-login' )
-					: __( 'email', 'smart-login' );
-			}
-		}
-
 		$events = count( EventBus::subscribed() );
 
-		if ( $routes ) {
+		if ( $events > 0 ) {
 			$message = sprintf(
-				/* translators: %s: comma-separated identity channels. */
-				__( 'Đang gửi mã xác thực cho: %s.', 'smart-login' ),
-				implode( ', ', $routes )
+				/* translators: %d: number of subscribed events. */
+				_n( 'Đang gửi %d loại sự kiện ra ngoài.', 'Đang gửi %d loại sự kiện ra ngoài.', $events, 'smart-login' ),
+				$events
 			);
 			$class = 'notice-success';
-		} elseif ( $events > 0 ) {
-			$message = __( 'Chỉ gửi sự kiện, không gửi mã xác thực. Để dùng làm kênh gửi mã, đổi Định tuyến ở tab Chính sách mã.', 'smart-login' );
-			$class   = 'notice-info';
 		} else {
-			$message = __( 'Chưa được dùng. Chọn sự kiện bên dưới, hoặc đổi Định tuyến ở tab Chính sách mã để kênh này gửi mã xác thực.', 'smart-login' );
+			$message = __( 'Chưa được dùng. Chọn sự kiện bên dưới để website gửi thông báo ra ngoài. Endpoint này không gửi mã xác thực — mã xác thực đi qua tab Kênh SMS và Kênh Email.', 'smart-login' );
 			$class   = 'notice-info';
 		}
 

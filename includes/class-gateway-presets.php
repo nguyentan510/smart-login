@@ -32,13 +32,26 @@ final class GatewayPresets {
 
 	const CUSTOM = 'custom';
 
+	/** A provider whose body is built in code and signed, not rendered from a template. */
+	const ENVELOPE_SIGNED = 'signed';
+
+	/**
+	 * The wire format a provider speaks, or '' for the templated default.
+	 *
+	 * The one question a caller has to ask before deciding whether there is a
+	 * body template at all.
+	 */
+	public static function envelope( string $slug ): string {
+		return (string) ( self::get( $slug )['envelope'] ?? '' );
+	}
+
 	/**
 	 * @return array<string,array>
 	 */
 	public static function all(): array {
 		$presets = array(
 			self::CUSTOM => array(
-				'label'       => __( 'Tuỳ chỉnh — tự khai báo mọi thứ', 'smart-login' ),
+				'label'       => __( 'Tuỳ chỉnh — tự khai báo API', 'smart-login' ),
 				'credentials' => array(),
 			),
 			'esms'       => array(
@@ -64,15 +77,26 @@ final class GatewayPresets {
 					),
 				),
 			),
+			// Not a template, and therefore not shaped like its neighbours. A
+			// signed provider declares an envelope instead of a body, because the
+			// payload is built in code where it is signed — see D2 in
+			// docs/sending-a-code.md for the four controls a template loses. Its
+			// endpoint and key are ordinary fields rather than credentials, so
+			// they can carry `https_url` and `secret`, which this array cannot.
+			'signed'     => array(
+				'label'       => __( 'Envelope ký HMAC (chuẩn SmartLogin)', 'smart-login' ),
+				'envelope'    => self::ENVELOPE_SIGNED,
+				'credentials' => array(),
+			),
 			'generic'    => array(
-				'label'        => __( 'Webhook JSON (n8n / Make / Zapier)', 'smart-login' ),
+				'label'        => __( 'Gửi JSON tới endpoint của bạn (n8n / Make / Zapier)', 'smart-login' ),
 				'url'          => '{{cred:endpoint}}',
 				'method'       => 'POST',
 				'content_type' => 'application/json',
 				'body'         => '{"phone":"{{phone_local}}","code":"{{code}}","minutes":"{{ttl_minutes}}","site":"{{site_name}}"}',
 				'credentials'  => array(
 					'endpoint' => array(
-						'label'  => __( 'URL nhận webhook', 'smart-login' ),
+						'label'  => __( 'URL nhận yêu cầu', 'smart-login' ),
 						'secret' => false,
 					),
 				),
@@ -126,7 +150,11 @@ final class GatewayPresets {
 	 * @return array<string,mixed>
 	 */
 	public static function resolve( string $slug, array $credentials ): array {
-		if ( self::is_custom( $slug ) ) {
+		// A signed provider derives nothing, for the same reason it is not a
+		// preset: there is no body template to fill. Writing empty strings over
+		// `sms.url` and friends would also make the derived-values panel show a
+		// blank request that never gets sent.
+		if ( self::is_custom( $slug ) || '' !== self::envelope( $slug ) ) {
 			return array();
 		}
 

@@ -17,6 +17,24 @@ class Assets {
 	const ADDRESS_HANDLE = 'smart-login-address';
 	const CAPTCHA_HANDLE = 'smart-login-captcha';
 
+	/**
+	 * The design tokens, split out in 21.1.
+	 *
+	 * A dependency of every stylesheet that reads a `--sl-*`, so no caller has
+	 * to remember it and no second surface has to restate a colour.
+	 */
+	const TOKENS_HANDLE = 'smart-login-tokens';
+
+	/**
+	 * The header button and its account menu, split out in 21.5.
+	 *
+	 * Separate from HANDLE deliberately. A page that only carries the button
+	 * must not pull 1,500 lines of form CSS for a control that shares a colour
+	 * token with them and nothing else — that is the cost the two-stage asset
+	 * split declined, and a header button must not quietly re-incur it.
+	 */
+	const BUTTON_HANDLE = 'smart-login-button';
+
 	public function register(): void {
 		add_action( 'wp_enqueue_scripts', array( $this, 'register_assets' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'maybe_enqueue' ), 15 );
@@ -46,14 +64,53 @@ class Assets {
 				return;
 			}
 		}
+
+		/*
+		 * The button asks for a different stylesheet, so it is a separate scan
+		 * rather than a seventh tag above. Missing from that list entirely until
+		 * 21.5, which is finding 1: the one trigger built for people who cannot
+		 * edit templates was the only one that rendered unstyled.
+		 *
+		 * Still worth doing here even though render_button() also asks, for the
+		 * reason this method exists — a late enqueue prints in the footer, and a
+		 * header button that arrives unstyled and then snaps into place is more
+		 * visible than a form doing the same.
+		 */
+		if ( has_shortcode( $post->post_content, 'smart_login_button' ) ) {
+			self::enqueue_button();
+		}
 	}
 
 	public function register_assets(): void {
 		wp_register_style(
-			self::HANDLE,
-			SMART_LOGIN_URL . 'assets/css/smart-login.css',
+			self::TOKENS_HANDLE,
+			SMART_LOGIN_URL . 'assets/css/smart-login-tokens.css',
 			array(),
 			SMART_LOGIN_VERSION
+		);
+
+		wp_register_style(
+			self::HANDLE,
+			SMART_LOGIN_URL . 'assets/css/smart-login.css',
+			array( self::TOKENS_HANDLE ),
+			SMART_LOGIN_VERSION
+		);
+
+		wp_register_style(
+			self::BUTTON_HANDLE,
+			SMART_LOGIN_URL . 'assets/css/smart-login-button.css',
+			array( self::TOKENS_HANDLE ),
+			SMART_LOGIN_VERSION
+		);
+
+		// Manners, not mechanics: the menu already opens and closes without it.
+		// See the file header for what it adds and what it must never remove.
+		wp_register_script(
+			self::BUTTON_HANDLE,
+			SMART_LOGIN_URL . 'assets/js/smart-login-account.js',
+			array(),
+			SMART_LOGIN_VERSION,
+			true
 		);
 
 		wp_register_script(
@@ -146,6 +203,18 @@ class Assets {
 	/**
 	 * Called by whatever renders a form.
 	 */
+	/**
+	 * The header button only.
+	 *
+	 * Never calls enqueue(): the point of the split is that a page carrying the
+	 * button does not load the sign-in form's stylesheet. The token dependency
+	 * comes along on its own, declared at registration.
+	 */
+	public static function enqueue_button(): void {
+		wp_enqueue_style( self::BUTTON_HANDLE );
+		wp_enqueue_script( self::BUTTON_HANDLE );
+	}
+
 	public static function enqueue(): void {
 		wp_enqueue_style( self::HANDLE );
 		wp_enqueue_script( self::HANDLE );

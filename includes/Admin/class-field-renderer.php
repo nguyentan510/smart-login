@@ -52,6 +52,11 @@ final class FieldRenderer {
 			return;
 		}
 
+		if ( 'menu_items' === $type ) {
+			self::menu_items( $path, $field );
+			return;
+		}
+
 		if ( 'credentials' === $type ) {
 			self::credentials( $path );
 			return;
@@ -496,6 +501,80 @@ final class FieldRenderer {
 					</tbody>
 				</table>
 				<p class="description"><?php esc_html_e( 'Bỏ trống dòng không dùng. Giá trị chứa từ khoá bảo mật sẽ được che khi hiển thị kết quả gửi thử.', 'smart-login' ); ?></p>
+			</td>
+		</tr>
+		<?php
+	}
+
+	/**
+	 * The account menu's configurable middle: icon, text, link.
+	 *
+	 * Modelled on headers() above, including the part that looks like a
+	 * shortcut: a fixed row count with one spare, and no JavaScript. Reordering
+	 * therefore means retyping rows, which is a real cost and is written down in
+	 * docs/account-menu.md rather than hidden — a drag handle needs a sortable,
+	 * and the repeater this borrows from has managed without one since Phase 10.
+	 *
+	 * The icon column is a <select> built from `IconSet::names()`, so a name the
+	 * picker offers is a name the renderer has by construction, and no SVG can
+	 * originate in a form.
+	 */
+	private static function menu_items( string $path, array $field ): void {
+		$rows_in   = (array) Settings::get( $path, array() );
+		$row_count = max( 5, count( $rows_in ) + 1 );
+		$name      = self::name( $path );
+		$icons     = \SmartLogin\Frontend\IconSet::names();
+		?>
+		<tr>
+			<th scope="row"><?php echo esc_html( $field['label'] ?? $path ); ?></th>
+			<td>
+				<table class="widefat sl-menu-items-table">
+					<thead>
+						<tr>
+							<th style="width:14em"><?php esc_html_e( 'Biểu tượng', 'smart-login' ); ?></th>
+							<th style="width:16em"><?php esc_html_e( 'Nhãn', 'smart-login' ); ?></th>
+							<th><?php esc_html_e( 'Liên kết', 'smart-login' ); ?></th>
+						</tr>
+					</thead>
+					<tbody>
+						<?php for ( $i = 0; $i < $row_count; $i++ ) : ?>
+							<?php $row = is_array( $rows_in[ $i ] ?? null ) ? $rows_in[ $i ] : array(); ?>
+							<tr>
+								<td>
+									<select name="<?php echo esc_attr( $name . '[' . $i . '][icon]' ); ?>">
+										<?php foreach ( $icons as $icon_name => $icon_label ) : ?>
+											<option
+												value="<?php echo esc_attr( $icon_name ); ?>"
+												<?php selected( (string) ( $row['icon'] ?? '' ), (string) $icon_name ); ?>
+											>
+												<?php echo esc_html( $icon_label ); ?>
+											</option>
+										<?php endforeach; ?>
+									</select>
+								</td>
+								<td>
+									<input
+										type="text"
+										name="<?php echo esc_attr( $name . '[' . $i . '][label]' ); ?>"
+										value="<?php echo esc_attr( (string) ( $row['label'] ?? '' ) ); ?>"
+										placeholder="<?php esc_attr_e( 'Đơn hàng của tôi', 'smart-login' ); ?>"
+										class="regular-text"
+									/>
+								</td>
+								<td>
+									<input
+										type="url"
+										name="<?php echo esc_attr( $name . '[' . $i . '][url]' ); ?>"
+										value="<?php echo esc_attr( (string) ( $row['url'] ?? '' ) ); ?>"
+										placeholder="https://"
+										class="large-text"
+									/>
+								</td>
+							</tr>
+						<?php endfor; ?>
+					</tbody>
+				</table>
+				<?php self::help( $field ); ?>
 			</td>
 		</tr>
 		<?php

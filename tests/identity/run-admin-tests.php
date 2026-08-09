@@ -28,6 +28,25 @@ use SmartLogin\FieldRegistry;
 use SmartLogin\Settings;
 
 // ---------------------------------------------------------------------
+/**
+ * Mirrors SettingsScreen::field_applies(), deliberately.
+ *
+ * A second copy of a rule is normally the defect this project hunts, but a gate
+ * that asked the screen whether the screen was right would assert nothing. The
+ * duplication is the test.
+ *
+ * @param array $field Field spec.
+ */
+function sl_show_if_holds( array $field ): bool {
+	foreach ( (array) ( $field['show_if'] ?? array() ) as $path => $expected ) {
+		if ( (string) Settings::get( $path, '' ) !== (string) $expected ) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 sl_section( 'Every settings tab renders' );
 
 $screen = new SettingsScreen();
@@ -68,6 +87,16 @@ foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
 		// Those are covered by their own assertions below, where the condition
 		// is set up deliberately.
 		if ( ! empty( $field['conditional'] ) ) {
+			continue;
+		}
+
+		// A `show_if` field is drawn only while its condition holds, so the
+		// invariant applies *under* the condition rather than unconditionally.
+		// This is not an exemption like `conditional` above: the field says which
+		// setting decides it, so the deliberate pass further down sets that
+		// setting and requires the field to appear. A field that is never drawn
+		// under any value of its own condition still fails.
+		if ( ! sl_show_if_holds( $field ) ) {
 			continue;
 		}
 
@@ -177,26 +206,28 @@ sl_check(
 );
 
 /*
- * 10.5. The two cases above stay exactly as they were — they still describe
- * valid configurations — and these extend them to the one 10.1 made possible:
- * a channel whose route points somewhere other than its built-in transport.
+ * 10.5, repointed by 20.1. The scenario was "a channel whose route points
+ * somewhere other than its built-in transport", which the routing table made
+ * possible and 20.1 made unrepresentable. The property underneath it did not go
+ * anywhere: a channel whose transport cannot send must be reported as blocking,
+ * and the report must name what is actually wrong.
  *
- * Before 10.5 this check constructed WebhookTransport and MailTransport
- * directly, so it answered about transports the site might not be using. Here
- * the SMS gateway is configured and healthy, and the site is still broken.
+ * The modern spelling of the same broken site is a provider the channel cannot
+ * use. The SMS channel is on, a gateway URL is saved and healthy, and the signed
+ * provider is selected with no endpoint — so the saved gateway is irrelevant and
+ * nothing can be delivered.
  */
 Settings::update(
 	array(
-		'identity.mode'        => 'both',
-		'sms.enabled'          => 1,
-		'sms.url'              => 'https://gateway.example.test/send',
-		'email.enabled'        => 1,
-		'delivery.route_phone' => 'automation',
-		'delivery.route_email' => 'email',
-		'automation.url'       => '',
+		'identity.mode'  => 'both',
+		'sms.enabled'    => 1,
+		'sms.url'        => 'https://gateway.example.test/send',
+		'sms.preset'     => 'signed',
+		'sms.signed_url' => '',
+		'email.enabled'  => 1,
 	)
 );
-Settings::store_secret( 'automation.secret', '' );
+Settings::store_secret( 'sms.signed_secret', '' );
 
 $routed = null;
 
@@ -213,13 +244,13 @@ sl_check(
 );
 
 sl_assert(
-	'and the detail names the routed transport, not the built-in one',
-	false !== strpos( (string) ( $routed['detail'] ?? '' ), 'automation' ),
-	'"Chưa cấu hình: SMS" would send the administrator to gateway settings that are already correct. Detail was: ' . ( $routed['detail'] ?? '' )
+	'and the detail names the channel that cannot deliver',
+	false !== strpos( (string) ( $routed['detail'] ?? '' ), 'sms' ),
+	'A report that does not name the failing channel sends the administrator hunting. Detail was: ' . ( $routed['detail'] ?? '' )
 );
 
-Settings::update( array( 'automation.url' => 'https://hooks.example.test/otp' ) );
-Settings::store_secret( 'automation.secret', 'admin-suite-signing-secret' );
+Settings::update( array( 'sms.signed_url' => 'https://hooks.example.test/otp' ) );
+Settings::store_secret( 'sms.signed_secret', 'admin-suite-signing-secret' );
 
 $routed_after = null;
 
@@ -230,7 +261,7 @@ foreach ( ( new \SmartLogin\Admin\Readiness() )->checks() as $check ) {
 }
 
 sl_assert(
-	'configuring the routed transport clears it',
+	'configuring the provider clears it',
 	\SmartLogin\Admin\Readiness::FAIL !== ( $routed_after['status'] ?? 'missing' ),
 	'Still blocking after the endpoint was configured: ' . ( $routed_after['detail'] ?? '' )
 );
@@ -579,13 +610,16 @@ sl_check( 'every tab is reachable from the navigation', array(), $unlinked );
 // produced four screens with no way between them.
 $sub = sl_capture(
 	static function (): void {
-		SettingsPage::nav( 'delivery-automation' );
+		// Any surviving child of the delivery family. 20.4 moved the automation
+		// screen out of it, so the fixture that used to stand here is now a
+		// top-level tab and would have proved the opposite of the rule.
+		SettingsPage::nav( 'delivery-sms' );
 	}
 );
 
 $siblings_missing = array();
 
-foreach ( array( 'delivery', 'delivery-sms', 'delivery-email' ) as $sibling ) {
+foreach ( array( 'delivery', 'delivery-email', 'delivery-mail' ) as $sibling ) {
 	if ( false === strpos( $sub['html'], 'tab=' . $sibling . '"' ) ) {
 		$siblings_missing[] = $sibling;
 	}
@@ -618,7 +652,9 @@ foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
 	)['html'];
 
 	foreach ( FieldRegistry::all() as $path => $field ) {
-		if ( '' === (string) ( $field['tab'] ?? '' ) || ! empty( $field['conditional'] ) ) {
+		// `show_if` fields answer this question in their own pass, where the
+		// condition is set. Here they would read as "drawn nowhere".
+		if ( '' === (string) ( $field['tab'] ?? '' ) || ! empty( $field['conditional'] ) || ! sl_show_if_holds( $field ) ) {
 			continue;
 		}
 
@@ -631,7 +667,7 @@ foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
 $wrong_home = array();
 
 foreach ( FieldRegistry::all() as $path => $field ) {
-	if ( '' === (string) ( $field['tab'] ?? '' ) || ! empty( $field['conditional'] ) ) {
+	if ( '' === (string) ( $field['tab'] ?? '' ) || ! empty( $field['conditional'] ) || ! sl_show_if_holds( $field ) ) {
 		continue;
 	}
 
@@ -1273,6 +1309,217 @@ $sl_scoped = Settings::sanitize(
 
 sl_check( 'a tab-scoped save writes its own tab', 'both', (string) ( $sl_scoped['identity']['mode'] ?? '' ) );
 sl_check( 'and does not write another tab field', 300, (int) ( $sl_scoped['otp']['ttl'] ?? 0 ) );
+
+// ---------------------------------------------------------------------
+sl_section( 'A conditional field is drawn when its condition holds (20.2)' );
+
+/*
+ * The other half of the `show_if` invariant. The coverage loop above skips a
+ * field whose condition is false; without this, declaring `show_if` would be a
+ * way to make a field disappear from the gate entirely — which is exactly the
+ * failure that gate exists to catch, wearing a new hat.
+ */
+$sl_conditional_fields = array_filter(
+	FieldRegistry::all(),
+	static fn( array $field ): bool => ! empty( $field['show_if'] )
+);
+
+sl_assert(
+	'at least one field declares a condition',
+	array() !== $sl_conditional_fields,
+	'Nothing to check, so the assertions below would pass vacuously.'
+);
+
+$sl_undrawn_when_shown = array();
+
+foreach ( $sl_conditional_fields as $sl_path => $sl_field ) {
+	$sl_restore = array();
+
+	foreach ( (array) $sl_field['show_if'] as $sl_dep => $sl_value ) {
+		$sl_restore[ $sl_dep ] = Settings::get( $sl_dep );
+		Settings::update( array( $sl_dep => $sl_value ) );
+	}
+
+	$sl_shown_html = sl_capture(
+		static function () use ( $screen, $sl_field ): void {
+			$screen->render( (string) $sl_field['tab'] );
+		}
+	)['html'];
+
+	if ( false === strpos( $sl_shown_html, 'name="' . \SmartLogin\Admin\FieldRenderer::name( $sl_path ) ) ) {
+		$sl_undrawn_when_shown[] = $sl_path;
+	}
+
+	Settings::update( $sl_restore );
+}
+
+sl_check( 'every conditional field is drawn once its condition holds', array(), $sl_undrawn_when_shown );
+
+// ---------------------------------------------------------------------
+sl_section( 'Rule 16 — one label per concept (20.5)' );
+
+/*
+ * A string check, and it will annoy somebody in six months. The reason is
+ * written here rather than left to be re-derived: this vocabulary took a working
+ * install down to zero delivered codes, and the diagnosis cost a session with
+ * database access. See docs/sending-a-code.md D4.
+ *
+ * Every visible string in the registry, by owner, so a failure names the thing
+ * that has to change rather than the count that changed.
+ */
+$sl_visible_strings = array();
+
+foreach ( FieldRegistry::tabs() as $sl_slug => $sl_label ) {
+	$sl_visible_strings[ 'tab:' . $sl_slug ] = array( $sl_label );
+}
+
+foreach ( FieldRegistry::sections() as $sl_slug => $sl_label ) {
+	$sl_visible_strings[ 'section:' . $sl_slug ] = array( $sl_label );
+}
+
+foreach ( FieldRegistry::all() as $sl_key => $sl_field ) {
+	$sl_visible_strings[ $sl_key ] = array_merge(
+		array( (string) ( $sl_field['label'] ?? '' ), (string) ( $sl_field['help'] ?? '' ) ),
+		array_values( (array) ( $sl_field['choices'] ?? array() ) )
+	);
+}
+
+/**
+ * Which owners show a string, exactly or as a substring.
+ *
+ * @param array<string,string[]> $strings
+ * @return string[]
+ */
+function sl_owners_showing( array $strings, string $needle, bool $exact ): array {
+	$owners = array();
+
+	foreach ( $strings as $owner => $values ) {
+		foreach ( $values as $value ) {
+			if ( $exact ? ( $needle === $value ) : ( '' !== $value && false !== strpos( $value, $needle ) ) ) {
+				$owners[] = $owner;
+				continue 2;
+			}
+		}
+	}
+
+	return $owners;
+}
+
+// Today: the identity provider's section, the SMS vendor, and the captcha
+// vendor. Three concepts, one word, and two of them sit on delivery screens.
+sl_check(
+	'"Nhà cung cấp" names at most one concept',
+	array(),
+	array_slice( sl_owners_showing( $sl_visible_strings, 'Nhà cung cấp', true ), 1 )
+);
+
+// "Webhook" belongs to the event tab. On an SMS screen it is the word that sent
+// an n8n URL to the wrong half of the plugin.
+sl_check(
+	'no SMS setting says "Webhook"',
+	array(),
+	array_values(
+		array_filter(
+			sl_owners_showing( $sl_visible_strings, 'Webhook', false ),
+			static fn( string $owner ): bool => 0 === strpos( $owner, 'sms.' )
+		)
+	)
+);
+
+// "Automation" named a category of product rather than a behaviour.
+sl_check(
+	'no tab or section is called "Automation"',
+	array(),
+	array_values(
+		array_filter(
+			sl_owners_showing( $sl_visible_strings, 'Automation', false ),
+			static fn( string $owner ): bool => 0 === strpos( $owner, 'tab:' ) || 0 === strpos( $owner, 'section:' )
+		)
+	)
+);
+
+// ---------------------------------------------------------------------
+sl_section( 'Rule 17 — an enabled channel says whether it is serving anything (20.6)' );
+
+/*
+ * delivery-routing.md D2 required this two phases ago and no screen does it:
+ *
+ *   "configured but not delivering" and "broken" look identical otherwise
+ *
+ * Rendered with the exact configuration from the report — the channel enabled,
+ * a real gateway URL saved, and routing pointed somewhere else — because that is
+ * the state the administrator was looking at while nothing was being delivered.
+ */
+$sl_status_restore = array(
+	'identity.mode' => Settings::get( 'identity.mode' ),
+	'sms.enabled'   => Settings::get( 'sms.enabled' ),
+	'sms.url'       => Settings::get( 'sms.url' ),
+	'sms.preset'    => Settings::get( 'sms.preset' ),
+);
+
+/**
+ * Render one channel tab and return its markup.
+ */
+function sl_channel_html( SettingsScreen $screen, string $tab ): string {
+	return sl_capture(
+		static function () use ( $screen, $tab ): void {
+			$screen->render( $tab );
+		}
+	)['html'];
+}
+
+/*
+ * Repointed by 20.6, and the reason is written here because the original
+ * fixture is the more interesting of the two.
+ *
+ * 20.0 wrote this against `delivery.route_phone = automation` — a channel
+ * enabled and configured while the routing table pointed elsewhere. 20.1 deleted
+ * that setting, and `Settings::update()` drops paths the registry does not
+ * declare, so the old fixture now describes a channel that *is* serving.
+ * Asserting `idle` against it would assert something false.
+ *
+ * The property is unchanged; its only remaining spelling is different. A channel
+ * is idle when it is enabled but its identity channel is not — a site on
+ * `email_only` with the SMS gateway switched on and configured is paying for a
+ * gateway nothing can reach, and until now no screen said so.
+ *
+ * Both states are asserted, where 20.0 asserted one. A status line hard-coded to
+ * either value fails this.
+ */
+Settings::update(
+	array(
+		'identity.mode' => 'email_only',
+		'sms.enabled'   => 1,
+		'sms.preset'    => 'generic',
+		'sms.url'       => 'https://gateway.example/send',
+	)
+);
+
+$sl_idle_html = sl_channel_html( $screen, 'delivery-sms' );
+
+Settings::update( array( 'identity.mode' => 'both' ) );
+
+$sl_serving_html = sl_channel_html( $screen, 'delivery-sms' );
+
+Settings::update( $sl_status_restore );
+
+sl_assert(
+	'a channel screen declares whether it is serving a channel',
+	false !== strpos( $sl_idle_html, 'data-sl-channel-status' ),
+	'The screen renders no status at all, so an administrator cannot tell a configured channel from a serving one.'
+);
+
+sl_assert(
+	'an enabled channel nothing can reach renders as idle',
+	false !== strpos( $sl_idle_html, 'data-sl-channel-status="idle"' ),
+	'Enabled, a real gateway saved, and no phone identity accepted — the screen must say so. "Configured but not delivering" and "broken" look identical otherwise.'
+);
+
+sl_assert(
+	'and the same channel renders as serving once it is reachable',
+	false !== strpos( $sl_serving_html, 'data-sl-channel-status="serving"' ),
+	'Without this the rule is satisfied by a status line hard-coded to "idle", which would be worse than no status at all.'
+);
 
 // ---------------------------------------------------------------------
 sl_summary( 'Admin screens' );
