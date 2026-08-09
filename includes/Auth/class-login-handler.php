@@ -291,6 +291,9 @@ class LoginHandler {
 	// Device memory
 	// -----------------------------------------------------------------
 
+	/**
+	 * Whether this browser has signed this account in before.
+	 */
 	public static function is_known_device( int $user_id ): bool {
 		$devices = get_user_meta( $user_id, self::META_DEVICES, true );
 		$devices = is_array( $devices ) ? $devices : array();

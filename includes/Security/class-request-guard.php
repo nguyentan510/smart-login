@@ -68,7 +68,9 @@ class RequestGuard {
 	}
 
 	/**
-	 * @param array $request Usually $_POST (unslashed by the caller is not required).
+	 * @param string $action
+	 * @param array  $request Usually $_POST (unslashed by the caller is not required).
+	 * @param string $prefix
 	 * @return true|WP_Error
 	 */
 	public static function verify( string $action, array $request, string $prefix = '' ) {

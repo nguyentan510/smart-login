@@ -163,6 +163,9 @@ class PendingSession {
 
 	// -----------------------------------------------------------------
 
+	/**
+	 * Write the flow cookie, or do nothing when it is already too late.
+	 */
 	private static function set_cookie( string $value, int $expires ): void {
 		if ( headers_sent() ) {
 			return;

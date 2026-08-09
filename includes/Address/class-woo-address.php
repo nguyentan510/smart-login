@@ -358,10 +358,14 @@ class WooAddress {
 	/**
 	 * Persist the exact ward code on the order.
 	 *
+	 * `$data` is unused and stays: `woocommerce_checkout_create_order` passes it,
+	 * and a callback that drops a parameter from its signature documents the hook
+	 * wrongly for the next reader. Declared, named, and deliberately ignored.
+	 *
 	 * @param \WC_Order $order
 	 * @param array     $data
 	 */
-	public function store_order_ward( $order, $data ): void {
+	public function store_order_ward( $order, $data ): void { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter -- part of the WooCommerce hook signature.
 		if ( ! empty( $this->posted_wards['billing'] ) ) {
 			$order->update_meta_data( self::ORDER_META_WARD, $this->posted_wards['billing'] );
 		}

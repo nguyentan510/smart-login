@@ -14,9 +14,12 @@
 
 // phpcs:disable WordPress.Security.EscapeOutput -- CLI output.
 
-$root   = dirname( __DIR__ );
-$domain = 'smart-login';
-$out    = $root . '/languages/' . $domain . '.pot';
+// `$text_domain`, not `$domain`: this file's variables live at global scope and
+// `$domain` is one WordPress owns, so assigning it here overwrites a global for
+// anything loaded afterwards.
+$root        = dirname( __DIR__ );
+$text_domain = 'smart-login';
+$out         = $root . '/languages/' . $text_domain . '.pot';
 
 $scan_dirs = array( 'includes', 'templates' );
 $scan_root = array( 'smart-login.php', 'uninstall.php' );
@@ -86,7 +89,7 @@ foreach ( $files as $relative ) {
 
 		$args = sl_pot_read_args( $tokens, $i, $count );
 
-		if ( null === $args || ! isset( $args[ $domain_at ] ) || $domain !== $args[ $domain_at ] ) {
+		if ( null === $args || ! isset( $args[ $domain_at ] ) || $text_domain !== $args[ $domain_at ] ) {
 			continue;
 		}
 
@@ -133,7 +136,7 @@ $pot .= "\"Content-Type: text/plain; charset=UTF-8\\n\"\n";
 $pot .= "\"Content-Transfer-Encoding: 8bit\\n\"\n";
 $pot .= "\"Plural-Forms: nplurals=1; plural=0;\\n\"\n";
 $pot .= "\"X-Generator: bin/build-pot.php\\n\"\n";
-$pot .= "\"X-Domain: {$domain}\\n\"\n";
+$pot .= "\"X-Domain: {$text_domain}\\n\"\n";
 
 foreach ( $entries as $entry ) {
 	$pot .= "\n";

@@ -83,9 +83,9 @@ final class MailStructure {
 	private static function expand_buttons( string $body, bool $is_html ): string {
 		return (string) preg_replace_callback(
 			self::BUTTON_PATTERN,
-			static function ( array $match ) use ( $is_html ): string {
-				$url   = trim( $match[1] );
-				$label = trim( $match[2] );
+			static function ( array $matches ) use ( $is_html ): string {
+				$url   = trim( $matches[1] );
+				$label = trim( $matches[2] );
 
 				if ( ! $is_html ) {
 					// A link the reader cannot click has to be one they can copy.

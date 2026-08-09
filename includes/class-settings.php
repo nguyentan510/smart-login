@@ -365,6 +365,7 @@ class Settings {
 	 * credential inputs, and those are redrawn per profile rather than edited beneath
 	 * it.
 	 *
+	 * @param array  $clean  Settings array being assembled, by reference.
 	 * @param string $stored The profile before this save.
 	 */
 	private static function apply_otp_preset( array &$clean, string $stored ): void {
@@ -381,7 +382,7 @@ class Settings {
 		foreach ( OtpPresets::resolve( $chosen ) as $path => $value ) {
 			// Loose comparison on purpose: the form posts strings and the profile
 			// declares integers, so 300 and '300' are the same answer here.
-			if ( self::dig( $clean, $path ) != $value ) { // phpcs:ignore WordPress.PHP.StrictComparisons
+			if ( self::dig( $clean, $path ) != $value ) { // phpcs:ignore WordPress.PHP.StrictComparisons, Universal.Operators.StrictComparisons.LooseNotEqual
 				self::plant( $clean, 'otp.preset', OtpPresets::CUSTOM );
 
 				return;

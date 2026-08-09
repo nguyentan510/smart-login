@@ -164,7 +164,10 @@ final class IdentityLinkService {
 	/**
 	 * Detach one identity from an account.
 	 *
-	 * @param string $password The account password, for re-authentication.
+	 * @param int    $user_id
+	 * @param string $channel_id
+	 * @param string $subject
+	 * @param string $password   The account password, for re-authentication.
 	 * @return true|WP_Error
 	 */
 	public function unlink( int $user_id, string $channel_id, string $subject, string $password ) {
@@ -261,6 +264,7 @@ final class IdentityLinkService {
 	/**
 	 * Which providers are not linked yet, so the UI can offer only those.
 	 *
+	 * @param int      $user_id
 	 * @param string[] $available Provider ids the site has configured.
 	 * @return string[]
 	 */

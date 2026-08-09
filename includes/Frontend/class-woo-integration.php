@@ -233,7 +233,7 @@ class WooIntegration {
 			return;
 		}
 		$requested = strtolower( sanitize_email( wp_unslash( $_POST['account_email'] ) ) ); // phpcs:ignore WordPress.Security.NonceVerification
-		if ( '' !== $requested && $requested !== strtolower( (string) $user->user_email ) ) {
+		if ( '' !== $requested && strtolower( (string) $user->user_email ) !== $requested ) {
 			$errors->add( 'smart_login_email_verification_required', __( 'Email mới phải được xác thực bằng mã OTP trước khi lưu.', 'smart-login' ) );
 		}
 	}

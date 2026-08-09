@@ -35,7 +35,10 @@ foreach ( array(
 	if ( ! defined( $smart_login_provider_constant ) && function_exists( 'getenv' ) ) {
 		$smart_login_provider_value = getenv( $smart_login_provider_constant );
 		if ( false !== $smart_login_provider_value && '' !== (string) $smart_login_provider_value ) {
-			define( $smart_login_provider_constant, (string) $smart_login_provider_value );
+			// The name is a variable, so the prefix sniff cannot see it. Every
+			// value it can hold is a literal in the array five lines above and
+			// every one of them starts with SMART_LOGIN_.
+			define( $smart_login_provider_constant, (string) $smart_login_provider_value ); // phpcs:ignore WordPress.NamingConventions.PrefixAllGlobals.VariableConstantNameFound
 		}
 	}
 }

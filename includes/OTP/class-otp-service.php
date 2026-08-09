@@ -203,6 +203,8 @@ class OtpService {
 	/**
 	 * Check a code against its token.
 	 *
+	 * @param string $token
+	 * @param string $code
 	 * @param string $expected_intent Optional server-side intent binding.
 	 * @return array|WP_Error The consumed row (including `payload`) on success.
 	 */
@@ -366,6 +368,9 @@ class OtpService {
 	// Internals
 	// -----------------------------------------------------------------
 
+	/**
+	 * A code of the configured length, zero-padded so every code is that length.
+	 */
 	private function generate_code(): string {
 		$length = min( 8, max( 4, Settings::get_int( 'otp.length', 6 ) ) );
 		$max    = (int) str_repeat( '9', $length );

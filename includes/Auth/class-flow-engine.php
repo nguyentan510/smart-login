@@ -285,9 +285,11 @@ class FlowEngine {
 	}
 
 	/**
-	 * @param WP_Error $error          Carries a fresh grant when one was issued.
-	 * @param string   $fallback_grant Used when the failure happened before the
-	 *                                 grant was spent, so no fresh one exists.
+	 * @param FlowDecision $decision
+	 * @param WP_Error     $error          Carries a fresh grant when one was issued.
+	 * @param string       $fallback_grant Used when the failure happened before
+	 *                                     the grant was spent, so no fresh one
+	 *                                     exists.
 	 */
 	private function fail_signup( FlowDecision $decision, WP_Error $error, string $fallback_grant ): FlowDecision {
 		$decision->error( $error );
@@ -421,6 +423,12 @@ class FlowEngine {
 
 	// -----------------------------------------------------------------
 
+	/**
+	 * The registration step, after the identifier has been proved.
+	 *
+	 * @param array $input Posted fields, in whatever names the surrounding form
+	 *                     used — normalising those is the first thing it does.
+	 */
 	public function register( array $input ): FlowDecision {
 		if ( empty( $input['identity'] ) && array_key_exists( 'register_identity', $input ) ) {
 			$input['identity'] = $input['register_identity'];
@@ -567,7 +575,9 @@ class FlowEngine {
 	 * goes where they already are. Any other answer is a destination, including
 	 * for a failed issue, which falls back to the ordinary login redirect.
 	 *
+	 * @param FlowDecision         $decision
 	 * @param AuthResult|\WP_Error $result
+	 * @param string               $intended_url
 	 */
 	private function after_session( FlowDecision $decision, $result, string $intended_url ): FlowDecision {
 		if ( is_wp_error( $result ) ) {

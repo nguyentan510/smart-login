@@ -98,6 +98,9 @@ final class Readiness {
 
 	// -----------------------------------------------------------------
 
+	/**
+	 * The identity channel the site is configured to accept.
+	 */
 	private function identity(): array {
 		$modes = array(
 			'phone_only' => __( 'Chỉ số điện thoại', 'smart-login' ),

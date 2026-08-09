@@ -116,9 +116,14 @@ it. `-Strict` forwards `--strict`; `-Suite <file>` runs one suite.
 
 `--strict` refuses to tolerate a `spec` suite.
 
-Coding standards run against a **ratchet**, and the numbers live in
-`tests/run-phpcs.php` — not in this file, and not in the tracker. The gate fails
-when a change adds a violation **and** when the count drops below the baseline
-without the baseline being lowered, so the number cannot go stale in silence.
-Both directions are a failure on purpose: a ratchet nobody tightens is a ratchet
-that has stopped working.
+Coding standards are **at zero** for every enabled sniff, and the gate keeps
+them there. The baseline lives in `tests/run-phpcs.php` — not in this file, and
+not in the tracker — and it fails in both directions: when a change adds a
+violation, and when the real count drops below the number without the number
+being lowered. That second direction is what took it to zero, and it is why
+"compare against the documented baseline" is no longer something a person has
+to remember.
+
+Still deferred, and written down in `phpcs.xml`: the **documentation** sniffs
+(`Missing`, `MissingParamTag`, …) are excluded. That is a different statement
+from "the standard is red" — everything switched on passes.

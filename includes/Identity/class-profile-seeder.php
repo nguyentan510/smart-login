@@ -91,6 +91,7 @@ final class ProfileSeeder {
 	/**
 	 * Seed several fields at once.
 	 *
+	 * @param int                  $user_id
 	 * @param array<string,string> $pairs
 	 * @return int Number of fields actually written.
 	 */
@@ -130,6 +131,7 @@ final class ProfileSeeder {
 	}
 
 	/**
+	 * @param int                  $user_id
 	 * @param array<string,string> $pairs
 	 */
 	public static function set_many_from_user_input( int $user_id, array $pairs ): int {

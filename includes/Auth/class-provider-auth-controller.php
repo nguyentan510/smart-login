@@ -49,9 +49,12 @@ final class ProviderAuthController {
 	const IN_PLACE_ARG = 'sl_place';
 
 	/**
-	 * @param bool $in_place Whether a dialog started this, and so expects the
-	 *                       visitor back on the page they left rather than on
-	 *                       the account screen. See AuthContext::$in_place.
+	 * @param string $provider
+	 * @param string $return_url
+	 * @param bool   $linking
+	 * @param bool   $in_place   Whether a dialog started this, and so expects the
+	 *                           visitor back on the page they left rather than on
+	 *                           the account screen. See AuthContext::$in_place.
 	 */
 	public static function start_url( string $provider, string $return_url = '', bool $linking = false, bool $in_place = false ): string {
 		$provider = sanitize_key( $provider );

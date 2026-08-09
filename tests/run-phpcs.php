@@ -24,14 +24,19 @@
  */
 
 /**
- * What the tree is allowed to carry today.
+ * What the tree is allowed to carry today: **nothing**.
  *
- * Lower both numbers whenever violations are removed — the gate insists on it.
+ * P7.3 landed this ratchet at 18 and 4. P7.4 cleared the rest, and the gate
+ * reported its own baseline stale on the first run afterwards — which is the
+ * mechanism working, and the reason the number is here instead of in prose.
+ *
  * Raising either one is a decision, and it belongs in a commit message that
- * says which violation was accepted and why.
+ * says which violation was accepted and why. The enabled sniffs are now a wall,
+ * not a ratchet; the *excluded* documentation sniffs in `phpcs.xml` are still a
+ * written deferral and that has not changed.
  */
-const SL_PHPCS_BASELINE_ERRORS   = 18;
-const SL_PHPCS_BASELINE_WARNINGS = 4;
+const SL_PHPCS_BASELINE_ERRORS   = 0;
+const SL_PHPCS_BASELINE_WARNINGS = 0;
 
 $root   = dirname( __DIR__ );
 $phpcs  = $root . '/vendor/bin/phpcs';

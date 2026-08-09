@@ -83,6 +83,13 @@
 		Each remaining suppression in the source is a one-line phpcs:ignore with a
 		written reason next to it.
 
+		As of P7.4 that gate is genuinely at zero — 38 violations were cleared in
+		three commits, and tests/run-phpcs.php now fails on the first one added
+		back. `ParamNameNoMatch` and `WrongStyle` are NOT in the list below and
+		never were: they were simply failing. A docblock that names a parameter
+		the function does not have is wrong rather than absent, and absent is the
+		only thing this block defers.
+
 		Remove these excludes one at a time, not all at once.
 	-->
 	<rule ref="Squiz.Commenting.FunctionComment">
