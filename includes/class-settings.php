@@ -312,7 +312,6 @@ class Settings {
 		} else {
 			SecretBox::put( self::SECRET_OPTION, $path, $secret );
 		}
-
 	}
 
 	/**

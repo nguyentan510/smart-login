@@ -25,16 +25,16 @@ $scan_root = array( 'smart-login.php', 'uninstall.php' );
  * function name => [ index of singular arg, index of plural arg or null, index of domain arg ]
  */
 $functions = array(
-	'__'              => array( 0, null, 1 ),
-	'_e'              => array( 0, null, 1 ),
-	'esc_html__'      => array( 0, null, 1 ),
-	'esc_html_e'      => array( 0, null, 1 ),
-	'esc_attr__'      => array( 0, null, 1 ),
-	'esc_attr_e'      => array( 0, null, 1 ),
-	'_x'              => array( 0, null, 2 ),
-	'esc_html_x'      => array( 0, null, 2 ),
-	'_n'              => array( 0, 1, 3 ),
-	'_nx'             => array( 0, 1, 4 ),
+	'__'         => array( 0, null, 1 ),
+	'_e'         => array( 0, null, 1 ),
+	'esc_html__' => array( 0, null, 1 ),
+	'esc_html_e' => array( 0, null, 1 ),
+	'esc_attr__' => array( 0, null, 1 ),
+	'esc_attr_e' => array( 0, null, 1 ),
+	'_x'         => array( 0, null, 2 ),
+	'esc_html_x' => array( 0, null, 2 ),
+	'_n'         => array( 0, 1, 3 ),
+	'_nx'        => array( 0, 1, 4 ),
 );
 
 $files = array();
@@ -243,7 +243,7 @@ function sl_pot_read_args( array $tokens, int $start, int $count ): ?array {
 	$i = $start + 1;
 
 	while ( $i < $count && is_array( $tokens[ $i ] ) && T_WHITESPACE === $tokens[ $i ][0] ) {
-		$i++;
+		++$i;
 	}
 
 	if ( $i >= $count || '(' !== $tokens[ $i ] ) {
@@ -259,12 +259,12 @@ function sl_pot_read_args( array $tokens, int $start, int $count ): ?array {
 		$token = $tokens[ $i ];
 
 		if ( '(' === $token ) {
-			$depth++;
+			++$depth;
 			continue;
 		}
 
 		if ( ')' === $token ) {
-			$depth--;
+			--$depth;
 			if ( 0 === $depth ) {
 				$args[] = $dynamic ? null : $current;
 				break;
