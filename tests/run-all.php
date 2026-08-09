@@ -222,6 +222,21 @@ $suites = array(
 		'file' => 'identity/run-account-menu-tests.php',
 		'kind' => 'required',
 	),
+	array(
+		// Phase 22, landed red at 22.0 before any production file moved.
+		//
+		// `spec` for the reason every guard-rail suite before it was: rules that
+		// are meant to fail cannot live in a suite that blocks, and every
+		// neighbouring suite here has been `required` for phases.
+		//
+		// All twelve of its assertions report PENDING on the tree it landed on,
+		// because neither the screen nor the shortcode catalog exists yet — the
+		// 10.0 precedent, and 21.0's finding that a rule phrased as an absence
+		// will happily pass against an empty string.
+		'name' => 'Guide tab',
+		'file' => 'identity/run-guide-tests.php',
+		'kind' => 'spec',
+	),
 );
 
 $results  = array();
