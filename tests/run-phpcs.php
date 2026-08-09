@@ -1,6 +1,19 @@
 <?php
 /**
- * Coding-standards gate.
+ * Coding-standards gate — a ratchet, not a wall.
+ *
+ * **The baseline lives here, and nowhere else.** Until P7.3 it lived in prose:
+ * `refactor-plan.md` told the story of it moving — 40/44, then 18/22, then
+ * 18/20 — and CLAUDE.md said "compare against the documented baseline" without
+ * saying where that was. So comparing meant grepping a 2,600-line tracker and
+ * hoping the last mention was current. It twice was not.
+ *
+ * A number in prose goes stale silently. A number here cannot: the second
+ * assertion below fails when the real count drops beneath it, so improving the
+ * codebase forces the baseline down with it. That is the shape
+ * `run-rendered-surface-tests.php` rule 8 already uses for the off-scale
+ * literals, and its comment says "the same way phpcs is" — this file is that
+ * sentence finally becoming true.
  *
  * Skips rather than fails when phpcs is not installed, so `composer install` is
  * not a prerequisite for running the rest of the suite. CI installs it.
@@ -9,6 +22,16 @@
  *
  * @package SmartLogin
  */
+
+/**
+ * What the tree is allowed to carry today.
+ *
+ * Lower both numbers whenever violations are removed — the gate insists on it.
+ * Raising either one is a decision, and it belongs in a commit message that
+ * says which violation was accepted and why.
+ */
+const SL_PHPCS_BASELINE_ERRORS   = 18;
+const SL_PHPCS_BASELINE_WARNINGS = 4;
 
 $root   = dirname( __DIR__ );
 $phpcs  = $root . '/vendor/bin/phpcs';
@@ -33,6 +56,17 @@ $text = implode( "\n", $output );
 
 if ( 0 === $status ) {
 	printf( "Coding standards: clean\n" );
+
+	if ( SL_PHPCS_BASELINE_ERRORS > 0 || SL_PHPCS_BASELINE_WARNINGS > 0 ) {
+		printf(
+			"The baseline is stale: it still allows %d error(s) and %d warning(s). Set both to 0 in tests/run-phpcs.php.\n",
+			SL_PHPCS_BASELINE_ERRORS,
+			SL_PHPCS_BASELINE_WARNINGS
+		);
+
+		exit( 1 );
+	}
+
 	exit( 0 );
 }
 
@@ -44,4 +78,53 @@ foreach ( array_slice( $output, -14 ) as $line ) {
 
 printf( "\nFull report: php vendor/bin/phpcs\nAuto-fix:    php vendor/bin/phpcbf\n" );
 
-exit( 1 );
+/*
+ * A non-zero exit from phpcs means "not clean", which is the state this project
+ * has chosen to be in. What decides pass or fail here is the count against the
+ * baseline, so the totals have to be read out of the report rather than
+ * inferred from the exit code.
+ */
+if ( ! preg_match( '/A TOTAL OF (\d+) ERRORS? AND (\d+) WARNINGS? WERE FOUND/i', $text, $totals ) ) {
+	printf( "\nCould not read the violation totals out of the report — failing rather than guessing.\n" );
+	exit( 1 );
+}
+
+$errors   = (int) $totals[1];
+$warnings = (int) $totals[2];
+
+if ( $errors > SL_PHPCS_BASELINE_ERRORS || $warnings > SL_PHPCS_BASELINE_WARNINGS ) {
+	printf(
+		"\nAbove baseline: %d/%d errors, %d/%d warnings. This change added a violation.\n",
+		$errors,
+		SL_PHPCS_BASELINE_ERRORS,
+		$warnings,
+		SL_PHPCS_BASELINE_WARNINGS
+	);
+
+	exit( 1 );
+}
+
+/*
+ * Below baseline is also a failure, and deliberately so. A ratchet nobody
+ * tightens is a ratchet that has stopped working: leaving the number above the
+ * real count re-creates the slack that a later regression hides in.
+ */
+if ( $errors < SL_PHPCS_BASELINE_ERRORS || $warnings < SL_PHPCS_BASELINE_WARNINGS ) {
+	printf(
+		"\nBelow baseline — good, now lower it. Counted %d error(s) and %d warning(s) against %d and %d in tests/run-phpcs.php.\n",
+		$errors,
+		$warnings,
+		SL_PHPCS_BASELINE_ERRORS,
+		SL_PHPCS_BASELINE_WARNINGS
+	);
+
+	exit( 1 );
+}
+
+printf(
+	"\nAt baseline: %d error(s), %d warning(s). No new violation.\n",
+	$errors,
+	$warnings
+);
+
+exit( 0 );

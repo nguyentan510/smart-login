@@ -114,5 +114,11 @@ It picks an interpreter by probing for `openssl` and `mbstring` and **blocks**
 when none has them, rather than producing a red count with environment noise in
 it. `-Strict` forwards `--strict`; `-Suite <file>` runs one suite.
 
-`--strict` refuses to tolerate a `spec` suite. Coding standards run against a
-documented baseline — compare, do not assume zero.
+`--strict` refuses to tolerate a `spec` suite.
+
+Coding standards run against a **ratchet**, and the numbers live in
+`tests/run-phpcs.php` — not in this file, and not in the tracker. The gate fails
+when a change adds a violation **and** when the count drops below the baseline
+without the baseline being lowered, so the number cannot go stale in silence.
+Both directions are a failure on purpose: a ratchet nobody tightens is a ratchet
+that has stopped working.

@@ -40,11 +40,18 @@ $suites = array(
 	),
 	array(
 		// Skips itself when phpcs is not installed, so it never blocks a plain
-		// checkout. Marked `spec` because the documentation sniffs are a known,
-		// documented deferral — see the comment block in phpcs.xml.
+		// checkout.
+		//
+		// `required` since P7.3, and the suite stopped being permanently red in
+		// the same commit. It was `spec` because the documentation sniffs are a
+		// known deferral — but "known deferral" and "red for ever" are not the
+		// same thing, and a suite that is always red teaches everyone reading
+		// this summary to skip the line. It now passes at its baseline and fails
+		// when a change adds a violation, which is the only state in which
+		// marking it `required` means anything.
 		'name' => 'Coding standards',
 		'file' => 'run-phpcs.php',
-		'kind' => 'spec',
+		'kind' => 'required',
 	),
 	array(
 		'name' => 'Identity core',
