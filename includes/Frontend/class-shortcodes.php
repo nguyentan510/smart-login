@@ -17,16 +17,76 @@ defined( 'ABSPATH' ) || exit;
 
 class Shortcodes {
 
+	/**
+	 * Every tag this plugin registers, and the defaults it accepts.
+	 *
+	 * The one list. `register()` walks it, the two render methods that take
+	 * attributes read their `shortcode_atts()` defaults out of it, and the
+	 * Hướng dẫn screen documents it. A tag that is registered but undocumented
+	 * cannot be expressed, because there is no second list to leave it out of —
+	 * which is the state this replaced: nine tags registered, six named in
+	 * `README.md`, and `[smart_account]` and `[smart_address]` named nowhere.
+	 *
+	 * **Structure only.** No labels, no help text: this array is built on every
+	 * front-end request on its way to rendering a login form, and it must not be
+	 * paying to translate copy that is only ever read in `wp-admin`. The prose
+	 * lives on the screen, keyed by the same tags, and a rule requires the two
+	 * key sets to be identical in both directions.
+	 *
+	 * @var array<string,array{callback:string,atts:array<string,string>}>
+	 */
+	public const CATALOG = array(
+		'smart_auth'            => array(
+			'callback' => 'render_login',
+			'atts'     => array(),
+		),
+		'smart_login'           => array(
+			'callback' => 'render_login',
+			'atts'     => array(),
+		),
+		'smart_register'        => array(
+			'callback' => 'render_register',
+			'atts'     => array(),
+		),
+		'smart_verify_otp'      => array(
+			'callback' => 'render_otp',
+			'atts'     => array(),
+		),
+		'smart_forgot_password' => array(
+			'callback' => 'render_forgot',
+			'atts'     => array(),
+		),
+		'smart_profile'         => array(
+			'callback' => 'render_profile',
+			'atts'     => array(),
+		),
+		'smart_account'         => array(
+			'callback' => 'render_account',
+			'atts'     => array(),
+		),
+		'smart_address'         => array(
+			'callback' => 'render_address',
+			'atts'     => array( 'required' => 'yes' ),
+		),
+		'smart_login_button'    => array(
+			'callback' => 'render_button',
+			// `label` defaults to '' rather than to "Đăng nhập": a translated
+			// string is not a constant expression, so render_button() fills it
+			// in — and pushing it here would translate it on every front-end
+			// request for the benefit of one admin screen.
+			'atts'     => array(
+				'step'     => Flow::STEP_IDENTIFY,
+				'label'    => '',
+				'class'    => '',
+				'collapse' => 'mobile',
+			),
+		),
+	);
+
 	public function register(): void {
-		add_shortcode( 'smart_auth', array( $this, 'render_login' ) );
-		add_shortcode( 'smart_login', array( $this, 'render_login' ) );
-		add_shortcode( 'smart_register', array( $this, 'render_register' ) );
-		add_shortcode( 'smart_verify_otp', array( $this, 'render_otp' ) );
-		add_shortcode( 'smart_forgot_password', array( $this, 'render_forgot' ) );
-		add_shortcode( 'smart_profile', array( $this, 'render_profile' ) );
-		add_shortcode( 'smart_account', array( $this, 'render_account' ) );
-		add_shortcode( 'smart_address', array( $this, 'render_address' ) );
-		add_shortcode( 'smart_login_button', array( $this, 'render_button' ) );
+		foreach ( self::CATALOG as $tag => $entry ) {
+			add_shortcode( $tag, array( $this, $entry['callback'] ) );
+		}
 	}
 
 	/**
@@ -45,12 +105,7 @@ class Shortcodes {
 	 */
 	public function render_button( $atts = array() ): string {
 		$atts = shortcode_atts(
-			array(
-				'step'     => Flow::STEP_IDENTIFY,
-				'label'    => '',
-				'class'    => '',
-				'collapse' => 'mobile',
-			),
+			self::CATALOG['smart_login_button']['atts'],
 			(array) $atts,
 			'smart_login_button'
 		);
@@ -149,9 +204,7 @@ class Shortcodes {
 		}
 
 		$atts = shortcode_atts(
-			array(
-				'required' => 'yes',
-			),
+			self::CATALOG['smart_address']['atts'],
 			(array) $atts,
 			'smart_address'
 		);
