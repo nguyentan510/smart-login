@@ -347,16 +347,6 @@ class Settings {
 	}
 
 	/**
-	 * Derive the webhook transport settings from the chosen gateway.
-	 *
-	 * The administrator fills in credentials; URL, body, headers and the success
-	 * condition come from GatewayPresets. Choosing "Tuỳ chỉnh" derives nothing,
-	 * so a hand-written configuration is never overwritten — which is the rule
-	 * that makes the whole arrangement predictable.
-	 *
-	 * @param array $clean Settings array being assembled, by reference.
-	 */
-	/**
 	 * Apply the OTP profile, or step aside when the administrator is editing values.
 	 *
 	 * `otp.preset` shares the `delivery` tab with the six fields it owns, and both are
@@ -399,6 +389,16 @@ class Settings {
 		}
 	}
 
+	/**
+	 * Derive the webhook transport settings from the chosen gateway.
+	 *
+	 * The administrator fills in credentials; URL, body, headers and the success
+	 * condition come from GatewayPresets. Choosing "Tuỳ chỉnh" derives nothing,
+	 * so a hand-written configuration is never overwritten — which is the rule
+	 * that makes the whole arrangement predictable.
+	 *
+	 * @param array $clean Settings array being assembled, by reference.
+	 */
 	private static function apply_gateway_preset( array &$clean ): void {
 		$slug        = (string) self::dig( $clean, 'sms.preset' );
 		$credentials = (array) self::dig( $clean, 'sms.credentials' );

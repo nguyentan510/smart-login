@@ -197,7 +197,15 @@ class WooIntegration {
 		 * branch originally existed for: a placeholder address is still the
 		 * current address.
 		 */
-		if ( ! isset( $_POST['account_email'] ) || '' === trim( (string) $_POST['account_email'] ) ) {
+		// Unslashed and sanitised even though the value is only tested for
+		// emptiness and then overwritten. The line below already does it
+		// properly; leaving one raw read here means the file contains an example
+		// of both, and the wrong one is the one somebody copies.
+		$posted_email = isset( $_POST['account_email'] )
+			? trim( sanitize_text_field( wp_unslash( $_POST['account_email'] ) ) )
+			: '';
+
+		if ( '' === $posted_email ) {
 			$_POST['account_email'] = wp_get_current_user()->user_email;
 		}
 

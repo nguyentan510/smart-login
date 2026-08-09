@@ -157,8 +157,15 @@ final class IconSet {
 		);
 	}
 
-	/** Whether a name may be stored by a settings row. */
-	public static function is_pickable( string $name ): bool {
+	/**
+	 * Whether a name may be stored by a settings row.
+	 *
+	 * Private: `sanitize()` is the only caller and the only thing a caller
+	 * actually wants. A public predicate here would be a promise nobody has
+	 * asked for, and the answer it gives is already implied by what `sanitize()`
+	 * hands back.
+	 */
+	private static function is_pickable( string $name ): bool {
 		return array_key_exists( $name, self::names() );
 	}
 

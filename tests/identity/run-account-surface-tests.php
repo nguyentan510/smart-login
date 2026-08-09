@@ -95,10 +95,47 @@ sl_assert(
 // Since 8.4 the email is text with a "Đổi" beside it, not an input, so nothing
 // posts account_email. Backfilling only for synthetic addresses — which is what
 // this did — left every real account failing WooCommerce's required-field check.
+/*
+ * Rewritten in P7.2, and the reason is worth keeping.
+ *
+ * The first version matched `isset( $_POST['account_email'] ) …
+ * wp_get_current_user()->user_email` as one span of text, so it was asserting a
+ * *layout* — two statements close together — rather than the property. Adding
+ * `wp_unslash()` to the read pushed them apart and the rule went red against
+ * behaviour that had not changed at all.
+ *
+ * Two assertions now, and together they still fail on the real regression. The
+ * defect this guards is a backfill that only fires for a synthetic address,
+ * which is what left every real account failing WooCommerce's required-field
+ * check: the assignment must exist, and the method must not consult
+ * `synthetic` anywhere while deciding to make it.
+ */
+preg_match( '/function prepare_account_post\(\).*?\n\t\}/s', $woo, $sl_prepare );
+
+/*
+ * Comments stripped, or the second assertion fails against correct code: the
+ * method's own comment explains that the backfill "also covers the synthetic
+ * case", and a rule forbidding a word cannot be allowed to punish the sentence
+ * that documents why the word is not a condition. Phase 21 hit this three
+ * times; it is the same mistake and it is cheap to keep avoiding.
+ */
+$sl_prepare_body = (string) preg_replace(
+	array( '#/\*.*?\*/#s', '#//[^\n]*#' ),
+	'',
+	$sl_prepare[0] ?? ''
+);
+
 sl_assert(
-	'account_email is backfilled whatever kind of address is on file',
-	(bool) preg_match( "/isset\(\s*\\\$_POST\['account_email'\]\s*\)[^;]*\R?[^;]*wp_get_current_user\(\)->user_email/", $woo ),
+	'prepare_account_post backfills account_email from the address on file',
+	'' !== $sl_prepare_body
+		&& (bool) preg_match( "/\\\$_POST\['account_email'\]\s*=\s*wp_get_current_user\(\)->user_email/", $sl_prepare_body ),
 	'The account form cannot change an email at all, so the address on file is always what it is submitting.'
+);
+
+sl_assert(
+	'and it does so whatever kind of address that is',
+	'' !== $sl_prepare_body && false === stripos( $sl_prepare_body, 'synthetic' ),
+	'Backfilling only for synthetic addresses left every real account failing WooCommerce\'s required-field check.'
 );
 
 // ---------------------------------------------------------------------
