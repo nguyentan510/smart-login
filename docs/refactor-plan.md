@@ -36,6 +36,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 19 — Sign-in on every page**
 - [x] **Phase 20 — Sending a code**
 - [x] **Phase 21 — The account menu**
+- [x] **Phase 22 — The guide inside the plugin**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -2659,15 +2660,16 @@ appear in no document at all. A hand-written list in a new tab would have been
 the third copy of a list that is already wrong twice — so 22.1 turns the
 registration itself into the list, and the screen in 22.2 reads it.
 
-- [ ] **22.0** Guard rails, landed red —
+- [x] **22.0** Guard rails, landed red —
       [brief](in-plugin-guide/22.0-guard-rails.md). Twelve rules; those whose
       subject does not exist yet report PENDING rather than PASS
-- [ ] **22.1** [One list of shortcodes](in-plugin-guide/22.1-the-catalog.md) —
+- [x] **22.1** [One list of shortcodes](in-plugin-guide/22.1-the-catalog.md) —
       `Shortcodes::CATALOG`; `register()` and both `shortcode_atts()` call sites
       read it
-- [ ] **22.2** [The screen](in-plugin-guide/22.2-the-screen.md) — the
+- [x] **22.2** [The screen](in-plugin-guide/22.2-the-screen.md) — the
       **Hướng dẫn** tab: three steps to running, the shortcodes, the four
-      triggers, the header button, the troubleshooting table, four filters
+      triggers, the header button, the troubleshooting table, four filters.
+      **Guide tab 21/0/0 and `required`**
 
 ---
 

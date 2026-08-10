@@ -14,6 +14,7 @@
 namespace SmartLogin\Admin;
 
 use SmartLogin\Admin\Screens\AuditScreen;
+use SmartLogin\Admin\Screens\GuideScreen;
 use SmartLogin\Admin\Screens\OverviewScreen;
 use SmartLogin\Admin\Screens\SettingsScreen;
 use SmartLogin\FieldRegistry;
@@ -221,16 +222,30 @@ class SettingsPage {
 			return;
 		}
 
+		// Routed here rather than through the registry: it holds no fields, so a
+		// save would have nothing to write. Same reason the overview screen below
+		// is not a registry tab either.
+		if ( GuideScreen::SLUG === $requested ) {
+			( new GuideScreen() )->render();
+			return;
+		}
+
 		( new OverviewScreen() )->render();
 	}
 
 	/**
-	 * Every screen in the strip, readiness first.
+	 * Every screen in the strip: readiness first, instructions last.
+	 *
+	 * The order is the order the two get opened in. Overview is what you read
+	 * after installing; the guide is what you read when you are stuck, and that
+	 * is not the same moment.
 	 *
 	 * @return array<string,string>
 	 */
 	public static function tabs(): array {
-		return array( self::OVERVIEW => __( 'Tổng quan', 'smart-login' ) ) + FieldRegistry::tabs();
+		return array( self::OVERVIEW => __( 'Tổng quan', 'smart-login' ) )
+			+ FieldRegistry::tabs()
+			+ array( GuideScreen::SLUG => __( 'Hướng dẫn', 'smart-login' ) );
 	}
 
 	public function render_audit(): void {

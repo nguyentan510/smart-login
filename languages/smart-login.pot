@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-09 06:48+0000\n"
+"POT-Creation-Date: 2026-08-10 06:34+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -97,6 +97,18 @@ msgstr ""
 msgid "0969789475 hoặc ban@example.com"
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:120
+msgid "<code>mobile</code>: dưới 782px chỉ còn biểu tượng. <code>none</code>: luôn hiện chữ."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:109
+msgid "<code>yes</code> bắt buộc chọn, <code>no</code> cho phép bỏ trống."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:285
+msgid "Ba bước để chạy được"
+msgstr ""
+
 #: includes/Security/class-request-guard.php:128
 #: includes/Security/class-request-guard.php:176
 msgid "Biểu mẫu đã hết hạn. Vui lòng tải lại trang."
@@ -118,9 +130,17 @@ msgstr ""
 msgid "Brandname đã đăng ký"
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:107
+msgid "Bên trong một form do bạn tự viết."
+msgstr ""
+
 #. translators: 1: current step number, 2: total steps.
 #: templates/partials/steps.php:46
 msgid "Bước %1$d trên %2$d"
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:117
+msgid "Bước mở ra khi bấm."
 msgstr ""
 
 #: templates/partials/account/status.php:65
@@ -151,7 +171,7 @@ msgstr ""
 msgid "Bạn không có quyền thực hiện việc này."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:303
+#: includes/Admin/class-settings-page.php:318
 msgid "Bạn không có quyền truy cập trang này."
 msgstr ""
 
@@ -178,6 +198,10 @@ msgstr ""
 
 #: includes/Security/class-rate-limiter.php:69
 msgid "Bạn đã yêu cầu quá nhiều mã xác thực. Vui lòng thử lại sau 1 giờ."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:260
+msgid "Bản tóm tắt để dùng hằng ngày. Bản đầy đủ — hook, REST API, cách đổi màu — nằm trong tệp README.md của plugin."
 msgstr ""
 
 #: includes/Admin/Screens/class-settings-screen.php:452
@@ -218,8 +242,16 @@ msgstr ""
 msgid "Bật kênh gửi email"
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:293
+msgid "Bật kênh gửi mã tương ứng, rồi bấm Gửi thử."
+msgstr ""
+
 #: includes/class-field-registry.php:408
 msgid "Bật kênh gửi mã tới số điện thoại"
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:152
+msgid "Bật kênh và gửi thử. Nếu máy chủ không gửi được thư, hãy cài một plugin SMTP."
 msgstr ""
 
 #: includes/Admin/class-readiness.php:478
@@ -267,6 +299,10 @@ msgstr ""
 msgid "Bổ sung thông tin"
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:199
+msgid "Bộ chọn Tỉnh/Thành không hiện gì"
+msgstr ""
+
 #: includes/Admin/Screens/class-settings-screen.php:374
 msgid "Bộ chọn địa chỉ sẽ không hiển thị gì cho tới khi bạn sinh dữ liệu bằng lệnh sau:"
 msgstr ""
@@ -303,6 +339,18 @@ msgstr ""
 
 #: includes/Admin/Screens/class-audit-screen.php:45
 msgid "Chi tiết"
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:568
+msgid "Cho lập trình viên"
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:94
+msgid "Cho thành viên thấy hồ sơ còn thiếu gì và đã xác minh được những gì. Không sửa được ở đây."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:431
+msgid "Cho website dựng bằng Elementor hoặc Gutenberg, không sửa được template."
 msgstr ""
 
 #. translators: %s: the member's first name.
@@ -400,6 +448,10 @@ msgstr ""
 msgid "Chưa có trang nào chứa [smart_auth], và tích hợp My Account đang tắt."
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:193
+msgid "Chưa có trang nào chứa [smart_auth], và tích hợp trang My Account của WooCommerce đang tắt."
+msgstr ""
+
 #: includes/Admin/class-provider-cards.php:99
 #: includes/Admin/class-provider-cards.php:298
 msgid "Chưa cấu hình"
@@ -434,6 +486,10 @@ msgstr ""
 msgid "Chạm trần thì việc gửi mã bị tạm dừng và admin nhận email. Đặt 0 để bỏ giới hạn — <strong>không khuyến nghị nếu bạn trả tiền cho mỗi tin nhắn</strong>."
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:201
+msgid "Chạy <code>php bin/build-address-data.php path/to/source.json</code>. Trạng thái dữ liệu hiển thị ngay trên màn hình cài đặt."
+msgstr ""
+
 #: includes/Admin/class-provider-cards.php:344
 msgid "Chạy kiểm tra"
 msgstr ""
@@ -452,16 +508,28 @@ msgstr ""
 msgid "Chế độ DEV"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:141
+#: includes/Admin/class-settings-page.php:142
 msgid "Chế độ DEV đang bật — mã OTP được hiển thị trực tiếp trên màn hình. Hãy tắt trước khi đưa lên môi trường thật."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:221
+msgid "Chế độ DEV đang bật."
 msgstr ""
 
 #: includes/class-field-registry.php:954
 msgid "Chế độ thích ứng chỉ hiện thử thách khi ngân sách đã tiêu quá nửa, kill switch vừa nổ, kênh gửi đang bị ngắt mạch, hoặc IP đó đã dùng quá nửa hạn mức tra cứu. Ngày thường khách không thấy gì — một captcha hiện lên vào thứ Ba yên ả là lỗi chuyển đổi, không phải biện pháp bảo mật."
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:105
+msgid "Chỉ bộ chọn Tỉnh/Thành – Phường/Xã"
+msgstr ""
+
 #: includes/class-field-registry.php:600
 msgid "Chỉ dùng khi gửi dạng HTML. Để trống thì hiện tên website. Nhiều ứng dụng email chặn ảnh cho tới khi người nhận bấm hiển thị, nên đừng đặt thông tin quan trọng trong ảnh."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:71
+msgid "Chỉ dùng khi trang cũ của bạn đang gắn sẵn tên này."
 msgstr ""
 
 #: includes/class-field-registry.php:930
@@ -471,6 +539,10 @@ msgstr ""
 #: includes/Admin/class-readiness.php:107
 #: includes/class-field-registry.php:189
 msgid "Chỉ email"
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:64
+msgid "Chỉ hỏi một ô định danh. Máy chủ tra xem đã có tài khoản chưa rồi tự chuyển sang mật khẩu, mã OTP hoặc đăng ký, cho tới màn hình chào mừng."
 msgstr ""
 
 #: includes/class-field-registry.php:951
@@ -510,12 +582,20 @@ msgstr ""
 msgid "Chọn Tỉnh/Thành phố trước để hiện danh sách Phường/Xã."
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:288
+msgid "Chọn cách định danh."
+msgstr ""
+
 #: includes/class-field-registry.php:344
 msgid "Chọn một mức và sáu giá trị bên dưới được đặt theo. Chọn <em>Tuỳ chỉnh</em> để tự điều chỉnh."
 msgstr ""
 
 #: includes/class-field-registry.php:423
 msgid "Chọn nhà cung cấp và chỉ cần điền thông tin xác thực; URL, Body và điều kiện thành công được sinh tự động."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:145
+msgid "Chọn nhà cung cấp, điền thông tin, bật Kích hoạt rồi bấm Gửi thử."
 msgstr ""
 
 #: includes/class-field-registry.php:53
@@ -530,13 +610,17 @@ msgstr ""
 msgid "Chữ hiển thị cạnh biểu tượng khi khách đã đăng nhập."
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:118
+msgid "Chữ trên nút khi khách chưa đăng nhập. Bỏ trống là “Đăng nhập”."
+msgstr ""
+
 #: includes/class-field-registry.php:940
 msgid "Cloudflare Turnstile"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:64
 #: includes/Admin/class-settings-page.php:65
-#: includes/Admin/class-settings-page.php:120
+#: includes/Admin/class-settings-page.php:66
+#: includes/Admin/class-settings-page.php:121
 msgid "Cài đặt"
 msgstr ""
 
@@ -552,8 +636,16 @@ msgstr ""
 msgid "Các mục hiển thị giữa <strong>Thông tin cá nhân</strong> và <strong>Đăng xuất</strong>. Bỏ trống dòng không dùng. Thứ tự dòng chính là thứ tự menu."
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:496
+msgid "Các mục ở giữa menu là của bạn, thêm ở cùng màn hình đó. Biểu tượng chọn từ một bộ đóng, không nhập SVG:"
+msgstr ""
+
 #: includes/Admin/class-field-renderer.php:371
 msgid "Các thẻ dùng được trong mẫu này"
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:423
+msgid "Cách viết ngắn, gõ tay trong trình soạn thảo. Fragment không bao giờ được gửi lên máy chủ, nên nó không làm được ba việc ở trên."
 msgstr ""
 
 #: includes/class-otp-presets.php:28
@@ -568,8 +660,16 @@ msgstr ""
 msgid "Có thể chứa placeholder, ví dụ <code>https://api.gateway.vn/send?to={{phone_local}}</code>."
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:70
+msgid "Cùng một màn hình, không khác gì."
+msgstr ""
+
 #: includes/class-field-registry.php:655
 msgid "Cùng trần cứng với kênh SMS, và vì cùng một lý do: mỗi lần gửi giữ một tiến trình PHP trong đúng khoảng này."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:75
+msgid "Cũng là màn hình đó, giọng đăng ký"
 msgstr ""
 
 #: includes/class-field-registry.php:190
@@ -609,12 +709,26 @@ msgstr ""
 msgid "Cập nhật ngay"
 msgstr ""
 
+#. translators: %s: link to the audit log screen.
+#: includes/Admin/Screens/class-guide-screen.php:518
+msgid "Cột đầu là đúng chữ mà khách nhìn thấy. Khi cần biết nhà cung cấp trả về gì, mở %s — mỗi lần gửi đều được ghi lại ở đó."
+msgstr ""
+
 #: includes/class-field-registry.php:223
 msgid "Danh sách cách nhau bằng dấu phẩy, ví dụ <code>84,65,1</code>. <strong>Để trống nghĩa là chỉ chấp nhận mã quốc gia mặc định ở trên</strong> — không phải chấp nhận mọi quốc gia. Mở rộng danh sách này làm tăng rủi ro bị đốt tin nhắn qua các đầu số quốc tế."
 msgstr ""
 
 #: includes/class-field-registry.php:230
 msgid "Domain email ảo"
+msgstr ""
+
+#. translators: %s: the [smart_auth] shortcode.
+#: includes/Admin/Screens/class-guide-screen.php:303
+msgid "Dán %s vào trang đăng nhập. Website dùng WooCommerce thì có thể bật thay form My Account thay cho việc này — hoặc làm cả hai."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:335
+msgid "Dán vào nội dung trang như một đoạn văn bản thường. Chỉ [smart_auth] là bắt buộc; những cái còn lại là tuỳ nhu cầu."
 msgstr ""
 
 #: includes/class-field-registry.php:232
@@ -643,6 +757,10 @@ msgstr ""
 
 #: includes/class-field-registry.php:986
 msgid "Dạng CIDR, mỗi dòng một dải — ví dụ <code>173.245.48.0/20</code>. Cloudflare công bố danh sách tại <code>https://www.cloudflare.com/ips/</code>. Plugin <strong>không kèm sẵn</strong> danh sách này: một danh sách cứng sẽ lạc hậu âm thầm, và lúc đó nó thành lỗ hổng chứ không còn là biện pháp bảo vệ."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:417
+msgid "Dạng chuẩn."
 msgstr ""
 
 #. translators: %s: the offending CIDR.
@@ -860,6 +978,10 @@ msgstr ""
 msgid "Gần xong rồi!"
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:427
+msgid "Gắn lên phần tử bất kỳ, kể cả khi đó không phải là một link."
+msgstr ""
+
 #: includes/class-field-registry.php:543
 msgid "Gọi lại 1 lần sau 2 giây. Chỉ hoạt động khi đã cấu hình header idempotency bên dưới."
 msgstr ""
@@ -929,7 +1051,7 @@ msgstr ""
 #: includes/Admin/Screens/class-settings-screen.php:395
 #: includes/Admin/Screens/class-settings-screen.php:419
 #: includes/Admin/class-readiness.php:196
-#: includes/Admin/class-settings-page.php:109
+#: includes/Admin/class-settings-page.php:110
 msgid "Gửi thử"
 msgstr ""
 
@@ -946,6 +1068,10 @@ msgstr ""
 msgid "Hai mật khẩu mới không khớp."
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:115
+msgid "Header hoặc menu dựng bằng Elementor, Gutenberg… Không sửa được template thì dùng ô “Chèn nút vào menu” bên dưới."
+msgstr ""
+
 #: includes/class-field-registry.php:550
 msgid "Header idempotency"
 msgstr ""
@@ -956,6 +1082,10 @@ msgstr ""
 
 #: includes/class-field-registry.php:643
 msgid "Headers bổ sung"
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:83
+msgid "Hiếm khi cần: [smart_auth] đã tự chuyển sang bước này."
 msgstr ""
 
 #: includes/class-field-registry.php:1046
@@ -970,6 +1100,14 @@ msgstr ""
 #: includes/Frontend/class-assets.php:162
 #: templates/partials/password-field.php:57
 msgid "Hiện mật khẩu"
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:531
+msgid "Hiện tượng"
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:82
+msgid "Hiện ô nhập mã xác thực cho phiên đang chờ."
 msgstr ""
 
 #: includes/class-field-registry.php:362
@@ -1013,6 +1151,7 @@ msgid "Hôm nay %1$d tin SMS, ước tính %2$s đ."
 msgstr ""
 
 #: includes/Admin/class-provider-cards.php:142
+#: includes/Admin/class-settings-page.php:248
 msgid "Hướng dẫn"
 msgstr ""
 
@@ -1027,6 +1166,10 @@ msgstr ""
 
 #: includes/Security/class-rate-limiter.php:282
 msgid "Hệ thống đang tạm thời không gửi được mã. Vui lòng thử lại sau."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:100
+msgid "Họ tên, số điện thoại, email, mật khẩu, địa chỉ và các tài khoản đã liên kết — tất cả trong một trang, không cần WooCommerce."
 msgstr ""
 
 #: includes/Auth/class-profile-completion-service.php:119
@@ -1052,8 +1195,20 @@ msgstr ""
 msgid "Hồ sơ của bạn đã đầy đủ. Không còn gì phải điền cả."
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:409
+msgid "Hộp đăng nhập nổi lên ngay tại trang khách đang đứng và chạy trọn luồng ở đó — không ai bị đá ra khỏi trang sản phẩm đang xem. Bốn cách gọi, cùng một bộ từ vựng:"
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:63
+msgid "Hộp đăng nhập và đăng ký"
+msgstr ""
+
 #: includes/Admin/Screens/class-audit-screen.php:44
 msgid "IP"
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:106
+msgid "In ra đúng phần ô chọn địa chỉ, không kèm thẻ form, nonce hay nút gửi — những thứ đó thuộc về form bạn đang nhúng nó vào. Module địa chỉ tắt thì không in gì cả."
 msgstr ""
 
 #: includes/class-field-registry.php:208
@@ -1066,6 +1221,10 @@ msgstr ""
 
 #: includes/class-field-registry.php:322
 msgid "Khi Google xác nhận email đã verified, địa chỉ đó trở thành một cách đăng nhập và khôi phục tài khoản. Tắt trước khi cập nhật nếu không muốn áp dụng cho tài khoản đã có."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:513
+msgid "Khi có sự cố"
 msgstr ""
 
 #: includes/class-field-registry.php:996
@@ -1119,6 +1278,14 @@ msgstr ""
 msgid "Khác"
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:165
+msgid "Khách bấm “Gửi lại” sớm hơn thời gian chờ. Đây là hành vi đúng, không phải lỗi."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:289
+msgid "Khách đăng nhập bằng số điện thoại, bằng email, hay cả hai."
+msgstr ""
+
 #: includes/Auth/Providers/class-google-id-token-verifier.php:73
 msgid "Khóa xác thực của Google không hợp lệ."
 msgstr ""
@@ -1139,8 +1306,20 @@ msgstr ""
 msgid "Không có"
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:462
+msgid "Không có cách viết ngắn nào đang bật."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:76
+msgid "Không có màn hình đăng ký riêng: người dùng hiếm khi biết mình thuộc nhánh nào, nên bước đầu tự quyết định. Shortcode này chỉ đổi tiêu đề."
+msgstr ""
+
 #: includes/Admin/class-readiness.php:308
 msgid "Không có trần nào. Mọi giới hạn còn lại đều tính theo một số điện thoại hoặc một IP, nên không có gì chặn được kẻ tấn công đổi cả hai."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:173
+msgid "Không cần làm gì để mở khoá. Ngưỡng và thời gian khoá nằm ở đây."
 msgstr ""
 
 #: includes/Admin/Screens/class-overview-screen.php:170
@@ -1164,8 +1343,13 @@ msgstr ""
 msgid "Không gửi được mã xác thực. Vui lòng thử lại sau ít phút."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:110
+#: includes/Admin/class-settings-page.php:111
 msgid "Không kết nối được tới máy chủ."
+msgstr ""
+
+#. translators: %s: link to the settings screen holding the menu location.
+#: includes/Admin/Screens/class-guide-screen.php:486
+msgid "Không sửa được template thì chọn một vị trí menu của giao diện ở mục “Menu tài khoản” trong %s; nút sẽ được chèn vào cuối menu đó. Mặc định là không chèn."
 msgstr ""
 
 #: includes/Auth/class-identity-link-service.php:212
@@ -1243,6 +1427,10 @@ msgstr ""
 msgid "Kiểm tra"
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:208
+msgid "Kiểm tra thẻ nhà cung cấp: khi nào hiện “Sẵn sàng” thì nút mới xuất hiện ngoài trang."
+msgstr ""
+
 #: includes/class-field-registry.php:486
 msgid "Kiểu dữ liệu"
 msgstr ""
@@ -1272,6 +1460,10 @@ msgstr ""
 msgid "Kênh SMS chưa được cấu hình. Liên hệ quản trị viên."
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:144
+msgid "Kênh SMS đang tắt, hoặc đã bật nhưng chưa chọn nhà cung cấp và điền thông tin xác thực."
+msgstr ""
+
 #: includes/OTP/Transports/class-mail-transport.php:32
 msgid "Kênh email chưa được cấu hình. Liên hệ quản trị viên."
 msgstr ""
@@ -1280,6 +1472,7 @@ msgstr ""
 msgid "Kênh email đang bật nhưng chưa từng gửi được mã nào, máy chủ không khai báo đường gửi thư và không thấy plugin SMTP nào. Bật một plugin SMTP hoặc dùng nút Gửi thử để xác nhận trước khi mở đăng ký."
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:151
 #: includes/OTP/Transports/class-mail-transport.php:40
 msgid "Kênh email đang tắt."
 msgstr ""
@@ -1357,8 +1550,16 @@ msgstr ""
 msgid "Logo trong email"
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:180
+msgid "Loại trang chứa shortcode ra khỏi cache. Hộp đăng nhập nổi không gặp lỗi này vì nó tải form ngay lúc mở."
+msgstr ""
+
 #: includes/class-field-registry.php:952
 msgid "Luôn luôn"
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:342
+msgid "Làm gì"
 msgstr ""
 
 #: includes/class-field-registry.php:203
@@ -1400,6 +1601,23 @@ msgstr ""
 msgid "Menu tài khoản"
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:200
+msgid "Module địa chỉ đang bật nhưng dữ liệu hành chính chưa được sinh ra."
+msgstr ""
+
+#. translators: %s: the data attribute that opts a link out.
+#: includes/Admin/Screens/class-guide-screen.php:443
+msgid "Muốn chừa đúng một link ra thì thêm %s vào thẻ đó."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:166
+msgid "Muốn ngắn hơn thì đổi hồ sơ mã, hoặc chọn “Tuỳ chỉnh” để tự đặt thời gian chờ."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:215
+msgid "Màn hình Tổng quan báo còn bao nhiêu phút và có nút mở lại ngay. Xem nhật ký trước khi mở."
+msgstr ""
+
 #: includes/class-field-registry.php:885
 msgid "Màn hình đăng nhập tra xem một số điện thoại đã có tài khoản chưa. Không giới hạn thì danh sách khách hàng của bạn có thể bị dò sạch mà không tốn gì. Đặt 0 để bỏ giới hạn."
 msgstr ""
@@ -1408,12 +1626,25 @@ msgstr ""
 msgid "Màu nhấn"
 msgstr ""
 
+#. translators: 1: the CSS token file, 2: the README file.
+#: includes/Admin/Screens/class-guide-screen.php:583
+msgid "Màu sắc và bo góc là biến CSS trên :root trong %1$s — ghi đè một dòng là xong. Danh sách hook đầy đủ, REST API và cách thêm preset gateway nằm trong %2$s."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:418
+msgid "Máy chủ đọc được, nên gửi trong email/SMS hay dùng làm đích chuyển hướng đều được, và trang vẫn hiện form khi JavaScript không chạy."
+msgstr ""
+
 #: includes/class-otp-presets.php:29
 msgid "Mã 6 số, hiệu lực 5 phút, tối đa 5 mã mỗi số mỗi giờ."
 msgstr ""
 
 #: includes/OTP/class-placeholders.php:150
 msgid "Mã OTP"
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:220
+msgid "Mã OTP hiện thẳng trên màn hình"
 msgstr ""
 
 #: includes/Admin/class-readiness.php:646
@@ -1539,13 +1770,29 @@ msgstr ""
 msgid "Mỗi lần gửi giữ một tiến trình PHP trong đúng khoảng này. Đặt cao là cách nhanh nhất để một gateway chậm làm sập cả website, nên trần cứng là 15 giây kể cả khi giá trị cũ lớn hơn."
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:114
+msgid "Một shortcode, hai trạng thái: chưa đăng nhập là nút “Đăng nhập”, đã đăng nhập là tên thành viên kèm menu tài khoản đổ xuống."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:480
+msgid "Một shortcode, hai trạng thái: chưa đăng nhập là nút “Đăng nhập”, đã đăng nhập là tên thành viên kèm menu đổ xuống. Không phải hai shortcode, vì người đặt nút vào header không biết trước khách là ai."
+msgstr ""
+
 #. translators: %s: Google Cloud Console URL.
 #: includes/Admin/class-provider-cards.php:365
 msgid "Mở <a href=\"%s\" target=\"_blank\" rel=\"noopener noreferrer\">Google Cloud Console → Clients</a>, chọn đúng project."
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:159
+msgid "Mở Nhật ký để xem nhà cung cấp trả về đúng chữ gì, rồi bấm Gửi thử — nút đó hiển thị nguyên request và response."
+msgstr ""
+
 #: includes/Admin/class-readiness.php:659
 msgid "Mở cài đặt"
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:407
+msgid "Mở hộp đăng nhập từ bất kỳ trang nào"
 msgstr ""
 
 #: includes/Admin/Screens/class-overview-screen.php:89
@@ -1559,6 +1806,14 @@ msgstr ""
 
 #: includes/Admin/class-provider-cards.php:336
 msgid "Mở một vòng đăng nhập thật với nhà cung cấp rồi dừng lại ngay khi nhận được danh tính. Không tạo tài khoản, không đăng nhập, không liên kết gì."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:81
+msgid "Mở thẳng bước nhập mã"
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:87
+msgid "Mở thẳng bước quên mật khẩu"
 msgstr ""
 
 #: includes/class-field-registry.php:792
@@ -1580,6 +1835,10 @@ msgstr ""
 #: templates/onboarding.php:147
 #: templates/partials/account/profile.php:66
 msgid "Nam"
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:437
+msgid "Ngoài ra plugin tự nhận ra link đăng nhập sẵn có của giao diện, của wp-login.php và của WooCommerce rồi mở hộp thay vì chuyển trang. Nó chỉ chặn cú click và không bao giờ sửa href, nên khi JavaScript hỏng thì mọi link vẫn là link bình thường."
 msgstr ""
 
 #. translators: %s: credential source.
@@ -1613,6 +1872,14 @@ msgstr ""
 msgid "Nhà cung cấp SMS"
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:207
+msgid "Nhà cung cấp chưa bật, hoặc thiếu Client ID / Client Secret. Dán nhầm Secret trùng với ID cũng bị từ chối — đây là lỗi thường gặp nhất."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:158
+msgid "Nhà cung cấp đã nhận request nhưng trả về lỗi, hoặc hết thời gian chờ. Thường là sai thông tin xác thực, hết số dư, hoặc brandname chưa được duyệt."
+msgstr ""
+
 #: includes/class-field-registry.php:99
 msgid "Nhà cung cấp đăng nhập"
 msgstr ""
@@ -1623,6 +1890,14 @@ msgstr ""
 
 #: includes/Admin/class-field-renderer.php:535
 msgid "Nhãn"
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:294
+msgid "Nhận số điện thoại thì phải có kênh SMS: không có nhà cung cấp nào thì không mã nào tới được một số điện thoại."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:88
+msgid "Nhận định danh, gửi mã, rồi cho đặt lại mật khẩu."
 msgstr ""
 
 #. translators: %s: identifier label, e.g. "Số điện thoại hoặc Email".
@@ -1660,7 +1935,7 @@ msgstr ""
 msgid "Nhập secret"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:111
+#: includes/Admin/class-settings-page.php:112
 msgid "Nhập số điện thoại hoặc email để gửi thử."
 msgstr ""
 
@@ -1676,8 +1951,10 @@ msgstr ""
 msgid "Nhập thông tin tài khoản của bạn. Chúng tôi sẽ gửi mã xác thực để bạn đặt lại mật khẩu."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:73
+#. translators: %s: link to the audit log screen.
+#: includes/Admin/Screens/class-guide-screen.php:522
 #: includes/Admin/class-settings-page.php:74
+#: includes/Admin/class-settings-page.php:75
 msgid "Nhật ký"
 msgstr ""
 
@@ -1689,8 +1966,16 @@ msgstr ""
 msgid "Nhật ký Smart Login"
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:240
+msgid "Những link đăng nhập sẵn có mà plugin tự nhận ra và mở hộp thay vì chuyển trang. Trả về mảng rỗng để không đụng vào link nào của giao diện."
+msgstr ""
+
 #: includes/Admin/Screens/class-overview-screen.php:105
 msgid "Những mục màu đỏ bên dưới đang chặn luồng đăng nhập. Sửa xong là dùng được."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:179
+msgid "Nonce đã hết hạn. Gần như luôn là do trang chứa form bị cache, hoặc khách để form mở quá lâu."
 msgstr ""
 
 #: includes/class-field-registry.php:54
@@ -1699,6 +1984,15 @@ msgstr ""
 
 #: includes/class-field-registry.php:822
 msgid "Nút sẽ xuất hiện ở cuối menu được chọn. Bạn vẫn có thể đặt thủ công bằng shortcode <code>[smart_login_button]</code>."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:113
+#: includes/Admin/Screens/class-guide-screen.php:478
+msgid "Nút tài khoản trên header"
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:206
+msgid "Nút đăng nhập bằng Google không xuất hiện"
 msgstr ""
 
 #: includes/Admin/class-provider-cards.php:347
@@ -1901,6 +2195,11 @@ msgstr ""
 msgid "Settings đã mã hóa"
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:333
+#: includes/Admin/Screens/class-guide-screen.php:341
+msgid "Shortcode"
+msgstr ""
+
 #: includes/class-field-registry.php:204
 msgid "Singapore (+65)"
 msgstr ""
@@ -1913,10 +2212,11 @@ msgstr ""
 msgid "Site đứng sau proxy tin cậy"
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:255
 #: includes/Admin/Screens/class-overview-screen.php:63
 #: includes/Admin/Screens/class-settings-screen.php:46
-#: includes/Admin/class-settings-page.php:53
 #: includes/Admin/class-settings-page.php:54
+#: includes/Admin/class-settings-page.php:55
 msgid "Smart Login"
 msgstr ""
 
@@ -1924,7 +2224,7 @@ msgstr ""
 msgid "Smart Login yêu cầu PHP 8.0 trở lên. Plugin đang tạm dừng hoạt động."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:140
+#: includes/Admin/class-settings-page.php:141
 msgid "Smart Login:"
 msgstr ""
 
@@ -2055,9 +2355,17 @@ msgstr ""
 msgid "Số điện thoại này đã thuộc về tài khoản khác."
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:242
+msgid "Sửa các mục trong menu tài khoản, kể cả hai mục do plugin ghim."
+msgstr ""
+
 #. translators: %s: the offending CIDR.
 #: includes/Admin/class-readiness.php:402
 msgid "Sửa dải IP"
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:533
+msgid "Sửa ở đâu"
 msgstr ""
 
 #: includes/Admin/Screens/class-audit-screen.php:42
@@ -2105,6 +2413,10 @@ msgstr ""
 msgid "Thuốc"
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:187
+msgid "Thành viên tự thêm email thật ở trang tài khoản; địa chỉ đó phải xác minh bằng mã trước khi dùng để đăng nhập."
+msgstr ""
+
 #: includes/class-field-registry.php:205
 msgid "Thái Lan (+66)"
 msgstr ""
@@ -2112,6 +2424,18 @@ msgstr ""
 #: templates/partials/account/contact.php:64
 #: templates/partials/account/contact.php:74
 msgid "Thêm"
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:119
+msgid "Thêm class CSS của bạn vào nút."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:241
+msgid "Thêm hoặc bớt một cách viết <code>#…</code> để mở hộp."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:243
+msgid "Thêm một preset nhà cung cấp SMS."
 msgstr ""
 
 #: includes/class-field-registry.php:51
@@ -2225,6 +2549,34 @@ msgstr ""
 msgid "Tiếp tục với Google"
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:192
+msgid "Trang không hiện form nào cả"
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:101
+msgid "Trang tài khoản của website không dùng WooCommerce. Khách chưa đăng nhập sẽ thấy hộp đăng nhập."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:99
+msgid "Trang tài khoản đầy đủ, sửa được"
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:95
+msgid "Trang tài khoản. Khách chưa đăng nhập sẽ thấy hộp đăng nhập."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:65
+msgid "Trang đăng nhập của website. Đây là shortcode duy nhất bắt buộc phải có."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:89
+msgid "Trang “Quên mật khẩu”, nếu bạn muốn có một địa chỉ riêng. Hộp đăng nhập vốn đã có sẵn liên kết này."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:77
+msgid "Trang “Đăng ký”, nếu menu của bạn đã có sẵn một trang riêng."
+msgstr ""
+
 #: includes/Admin/class-provider-cards.php:380
 msgid "Trong Authorized redirect URIs, dán chính xác Callback URL ở tab Thiết lập."
 msgstr ""
@@ -2299,12 +2651,20 @@ msgstr ""
 msgid "Tài khoản đăng ký bằng số điện thoại không bị coi là thiếu thông tin khi chưa có email. <strong>Tắt sẽ khiến mọi tài khoản chỉ có số điện thoại bị nhắc bổ sung email.</strong>"
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:186
+msgid "Tài khoản được tạo bằng OTP số điện thoại, nên email của nó là một địa chỉ nội bộ và không nhận được thư nào."
+msgstr ""
+
 #: includes/Frontend/class-icon-set.php:152
 msgid "Tài liệu"
 msgstr ""
 
 #: includes/Admin/class-field-renderer.php:474
 msgid "Tên"
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:69
+msgid "Tên gọi khác của [smart_auth]"
 msgstr ""
 
 #: includes/class-field-registry.php:804
@@ -2327,7 +2687,11 @@ msgstr ""
 msgid "Tình trạng hệ thống"
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:177
+#: includes/Admin/Screens/class-guide-screen.php:93
+msgid "Tóm tắt hồ sơ, chỉ để xem"
+msgstr ""
+
+#: includes/Admin/class-settings-page.php:178
 msgid "Tôi đã đọc — ẩn thông báo này"
 msgstr ""
 
@@ -2362,6 +2726,10 @@ msgstr ""
 msgid "Tắt"
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:239
+msgid "Tắt hẳn hộp đăng nhập nổi trên toàn site."
+msgstr ""
+
 #: includes/Admin/class-readiness.php:648
 msgid "Tắt ngay"
 msgstr ""
@@ -2369,6 +2737,10 @@ msgstr ""
 #. translators: %s: message name.
 #: includes/Mail/class-mail-registry.php:236
 msgid "Tắt nếu bạn đã nhận sự kiện này qua tab Thông báo & Tích hợp. Nhật ký và sự kiện vẫn được ghi như cũ — đây chỉ là email."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:222
+msgid "Tắt trước khi đưa website chạy thật."
 msgstr ""
 
 #: includes/Address/class-woo-address.php:102
@@ -2381,7 +2753,9 @@ msgstr ""
 msgid "Tỉnh/Thành phố không hợp lệ."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:233
+#. translators: %s: link to the overview screen.
+#: includes/Admin/Screens/class-guide-screen.php:318
+#: includes/Admin/class-settings-page.php:246
 msgid "Tổng quan"
 msgstr ""
 
@@ -2502,6 +2876,10 @@ msgstr ""
 msgid "Vào tài khoản"
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:532
+msgid "Vì sao"
+msgstr ""
+
 #: includes/class-field-registry.php:535
 msgid "Ví dụ <code>100</code>."
 msgstr ""
@@ -2543,6 +2921,10 @@ msgstr ""
 msgid "WP_DEBUG"
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:213
+msgid "Website đột nhiên ngừng gửi mã, không báo lỗi gì"
+msgstr ""
+
 #: includes/Admin/Screens/class-settings-screen.php:449
 #: includes/class-field-registry.php:116
 msgid "WooCommerce"
@@ -2572,6 +2954,11 @@ msgstr ""
 #: includes/Admin/class-readiness.php:296
 #: includes/Admin/class-readiness.php:350
 msgid "Xem trần"
+msgstr ""
+
+#. translators: %s: link to the overview screen.
+#: includes/Admin/Screens/class-guide-screen.php:314
+msgid "Xong ba bước thì mở %s: màn hình đó liệt kê mọi điều kiện còn thiếu và nút đi thẳng tới chỗ sửa."
 msgstr ""
 
 #: includes/class-field-registry.php:1054
@@ -2755,7 +3142,7 @@ msgstr[0] ""
 msgid "Đang gửi mã xác thực tới %s."
 msgstr ""
 
-#: includes/Admin/class-settings-page.php:108
+#: includes/Admin/class-settings-page.php:109
 #: includes/Frontend/class-assets.php:161
 msgid "Đang gửi…"
 msgstr ""
@@ -2816,6 +3203,14 @@ msgstr ""
 #. translators: %s: email address.
 #: includes/Admin/class-webhook-tester.php:209
 msgid "Đã chuyển email cho WordPress gửi tới %s. Kiểm tra hộp thư (kể cả mục Spam)."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:172
+msgid "Đã chạm ngưỡng đăng nhập sai. Khoá tự mở sau khoảng thời gian đã đặt."
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:214
+msgid "Đã chạm trần gửi toàn site nên plugin tự tạm dừng. Đây là cái chặn hoá đơn khi bị tấn công bơm tin nhắn."
 msgstr ""
 
 #. translators: %d: minutes remaining.
@@ -2888,7 +3283,7 @@ msgid "Đăng ký và điều hướng"
 msgstr ""
 
 #: includes/Frontend/class-fragment-renderer.php:187
-#: includes/Frontend/class-shortcodes.php:81
+#: includes/Frontend/class-shortcodes.php:136
 #: templates/form-password.php:64
 msgid "Đăng nhập"
 msgstr ""
@@ -2964,6 +3359,10 @@ msgstr ""
 msgid "Đặt 0 để bỏ giới hạn."
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:299
+msgid "Đặt form lên một trang."
+msgstr ""
+
 #: includes/Mail/class-mail-registry.php:132
 #: templates/form-reset.php:21
 msgid "Đặt lại mật khẩu"
@@ -2973,8 +3372,16 @@ msgstr ""
 msgid "Đặt lại mật khẩu thành công. Vui lòng đăng nhập bằng mật khẩu mới."
 msgstr ""
 
+#: includes/Admin/Screens/class-guide-screen.php:194
+msgid "Đặt shortcode lên một trang, hoặc bật thay form My Account."
+msgstr ""
+
 #: includes/Admin/class-readiness.php:310
 msgid "Đặt trần"
+msgstr ""
+
+#: includes/Admin/Screens/class-guide-screen.php:343
+msgid "Đặt ở đâu"
 msgstr ""
 
 #: includes/Auth/class-profile-completion-service.php:44

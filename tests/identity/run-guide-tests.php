@@ -306,15 +306,18 @@ if ( null === $sl_problems ) {
 // ---------------------------------------------------------------------
 sl_section( 'Rule 8 — every filter named is a filter that runs' );
 
-$sl_filters = sl_guide_data( 'filters' );
+// Not `$sl_filters`: at global scope that *is* `$GLOBALS['sl_filters']`, the
+// stub filter registry, and assigning this list over it turned every registered
+// hook into a description string. The suite fataled inside add_filter().
+$sl_guide_filters = sl_guide_data( 'filters' );
 
-if ( null === $sl_filters ) {
+if ( null === $sl_guide_filters ) {
 	sl_pending( 'every filter named is applied in includes/', 'GuideScreen::filters() does not exist' );
 } else {
 	$sl_sources = sl_sources_outside_guide();
 	$sl_absent  = array();
 
-	foreach ( array_keys( $sl_filters ) as $sl_hook ) {
+	foreach ( array_keys( $sl_guide_filters ) as $sl_hook ) {
 		$sl_found = false;
 
 		foreach ( $sl_sources as $sl_contents ) {
@@ -329,7 +332,7 @@ if ( null === $sl_filters ) {
 		}
 	}
 
-	sl_assert( 'the guide names at least one filter', array() !== $sl_filters );
+	sl_assert( 'the guide names at least one filter', array() !== $sl_guide_filters );
 	sl_check( 'every filter named is applied in includes/', array(), $sl_absent );
 }
 
