@@ -718,16 +718,19 @@ foreach ( array_keys( \SmartLogin\Frontend\IconSet::names() ) as $sl_icon ) {
 	}
 }
 
-// Every attribute the shortcode accepts, read off the shortcode itself.
-preg_match(
-	'/shortcode_atts\(\s*array\((.*?)\),/s',
-	$sl_file( 'includes/Frontend/class-shortcodes.php' ),
-	$sl_atts_block
-);
+/*
+ * Every attribute the shortcode accepts, read off the shortcode itself.
+ *
+ * 21.7 read them with a regex over `shortcode_atts( array( … )` in the source,
+ * because there was nothing else to read: the defaults were a literal at the top
+ * of `render_button()`. 22.1 moved them into `Shortcodes::CATALOG`, so the same
+ * question now has an answer that does not involve parsing PHP with a pattern —
+ * and this rule asks the array instead. The guard below is unchanged and is what
+ * caught the move: the regex narrowed to nothing and reported an empty list.
+ */
+$sl_atts_found = array_keys( \SmartLogin\Frontend\Shortcodes::CATALOG['smart_login_button']['atts'] );
 
-preg_match_all( "/'([a-z_]+)'\s*=>/", $sl_atts_block[1] ?? '', $sl_atts_found );
-
-foreach ( array_unique( $sl_atts_found[1] ?? array() ) as $sl_att ) {
+foreach ( $sl_atts_found as $sl_att ) {
 	if ( false === strpos( $sl_readme, '`' . $sl_att . '`' ) ) {
 		$sl_undocumented[] = 'attribute ' . $sl_att;
 	}
@@ -747,8 +750,8 @@ sl_assert(
 
 sl_assert(
 	'the shortcode attribute list was actually found',
-	count( $sl_atts_found[1] ?? array() ) >= 4,
-	'a rule that narrows to nothing passes vacuously — found: ' . implode( ', ', $sl_atts_found[1] ?? array() )
+	count( $sl_atts_found ) >= 4,
+	'a rule that narrows to nothing passes vacuously — found: ' . implode( ', ', $sl_atts_found )
 );
 
 sl_assert(

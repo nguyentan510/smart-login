@@ -36,6 +36,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 19 — Sign-in on every page**
 - [x] **Phase 20 — Sending a code**
 - [x] **Phase 21 — The account menu**
+- [x] **Phase 22 — The guide inside the plugin**
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -2638,6 +2639,40 @@ existed, not by an argument at the end.
 
 ---
 
+## Phase 22 — The guide inside the plugin
+
+Spec: [`in-plugin-guide.md`](in-plugin-guide.md). Briefs in
+[`in-plugin-guide/`](in-plugin-guide/).
+
+Requested 2026-08-09: "the plugin has no instructions — a tab of its own, short
+and concrete: which shortcodes exist, where to put them, what to do when
+something breaks."
+
+Research contradicted the framing once, and it changed the plan. **The
+documentation is not missing** — `README.md` covers most of the request already.
+It is 33 KB on disk, reachable from `wp-admin` by nobody. So the phase is not
+"write the documentation"; it is "put a short version where the reader is, and
+make the two unable to disagree".
+
+The second finding decided the ordering. `Shortcodes::register()` registers
+**nine** tags and `README.md` names six; `[smart_account]` and `[smart_address]`
+appear in no document at all. A hand-written list in a new tab would have been
+the third copy of a list that is already wrong twice — so 22.1 turns the
+registration itself into the list, and the screen in 22.2 reads it.
+
+- [x] **22.0** Guard rails, landed red —
+      [brief](in-plugin-guide/22.0-guard-rails.md). Twelve rules; those whose
+      subject does not exist yet report PENDING rather than PASS
+- [x] **22.1** [One list of shortcodes](in-plugin-guide/22.1-the-catalog.md) —
+      `Shortcodes::CATALOG`; `register()` and both `shortcode_atts()` call sites
+      read it
+- [x] **22.2** [The screen](in-plugin-guide/22.2-the-screen.md) — the
+      **Hướng dẫn** tab: three steps to running, the shortcodes, the four
+      triggers, the header button, the troubleshooting table, four filters.
+      **Guide tab 21/0/0 and `required`**
+
+---
+
 ## Risks
 
 | Risk | Mitigation |
@@ -2716,3 +2751,7 @@ existed, not by an argument at the end.
 | A stored nav location survives a theme switch and the setting silently points at nothing | Injects nothing, warns nothing, asserted directly. Themes get switched and a stale option is not an error condition |
 | The dropdown is built on `<details>` and a later change quietly makes JavaScript load-bearing | 21.5 ships it working with no script at all, and 21.6's acceptance re-runs 21.5's with the script removed. The degradation claim is checked against a state that existed, not argued for at the end |
 | The header button re-fights the `width: 100%` argument `.sl-btn` already settled | It does not use `.sl-btn`. Rule 11 asserts the class is absent from the rendered button, so the two cannot be quietly merged later |
+| A guide screen becomes a fourth copy of documentation that is already wrong in two places | Nothing in it is typed twice: the shortcodes come from `Shortcodes::CATALOG`, the aliases from `LoginDialog::aliases()`, the icons from `IconSet::names()`, the links from `SettingsPage`. What cannot be derived — the quoted error strings — is asserted verbatim against `includes/` by rule 7 |
+| The guide restates a setting's default and goes stale the first time somebody edits it | Rule 12 forbids the screen from reading `Settings::` at all, so it has nothing to restate. It names what a value *means* and links to the screen that owns it |
+| `Shortcodes::CATALOG` moves nine `add_shortcode()` calls and one of them lands on the wrong callback | The tags and callbacks are unchanged data, and the existing suites already exercise the shortcodes that render — `[smart_login_button]` through the account-menu suite, the flow tags through the template and sign-in-anywhere suites. Acceptance is unchanged counts, not green suites |
+| A tab that holds no fields is added to `FieldRegistry::tabs()` later "for consistency", and its Save button silently writes nothing | Rule 1 asserts the absence, not merely the presence. Overview has held the same position since Phase 9 without one |

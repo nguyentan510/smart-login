@@ -222,6 +222,15 @@ $suites = array(
 		'file' => 'identity/run-account-menu-tests.php',
 		'kind' => 'required',
 	),
+	array(
+		// Phase 22. Landed `spec` in 22.0 with twelve PENDING rules; promoted
+		// here, in 22.2, the commit that turned all twelve green. The working
+		// agreement promotes the moment a spec suite goes green, and holding it
+		// longer would be 15.4's mistake with a shorter fuse.
+		'name' => 'Guide tab',
+		'file' => 'identity/run-guide-tests.php',
+		'kind' => 'required',
+	),
 );
 
 $results  = array();
