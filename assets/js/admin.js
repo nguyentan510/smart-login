@@ -205,10 +205,39 @@
 		} );
 	}
 
+	function initGuideToc( page ) {
+		var links = page.querySelectorAll( '.sl-guide-toc__link' );
+		var sections = page.querySelectorAll( '.sl-guide-section' );
+
+		if ( ! links.length || ! sections.length ) {
+			return;
+		}
+
+		links.forEach( function ( link ) {
+			link.addEventListener( 'click', function ( e ) {
+				var targetId = link.getAttribute( 'href' );
+
+				if ( targetId && targetId.charAt( 0 ) === '#' ) {
+					var targetEl = document.querySelector( targetId );
+
+					if ( targetEl ) {
+						e.preventDefault();
+						targetEl.scrollIntoView( { behavior: 'smooth', block: 'start' } );
+
+						links.forEach( function ( item ) {
+							item.classList.toggle( 'active', item === link );
+						} );
+					}
+				}
+			} );
+		} );
+	}
+
 	document.addEventListener( 'DOMContentLoaded', function () {
 		document.querySelectorAll( '.sl-tester' ).forEach( init );
 		document.querySelectorAll( '[data-provider-card]' ).forEach( initProviderCard );
 		document.querySelectorAll( '.sl-mail-surface' ).forEach( initMailMessages );
+		document.querySelectorAll( '.sl-guide-page' ).forEach( initGuideToc );
 		initMailActions( document );
 	} );
 } )();

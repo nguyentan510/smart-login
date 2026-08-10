@@ -27,6 +27,7 @@ class SettingsPage {
 
 	const SLUG       = 'smart-login';
 	const AUDIT_SLUG = 'smart-login-audit';
+	const GUIDE_SLUG = 'smart-login-guide';
 	const GROUP      = 'smart_login_group';
 
 	/** The readiness screen. It holds no fields, so it is not a registry tab. */
@@ -67,6 +68,15 @@ class SettingsPage {
 			'manage_options',
 			self::SLUG,
 			array( $this, 'render' )
+		);
+
+		add_submenu_page(
+			self::SLUG,
+			__( 'Hướng dẫn', 'smart-login' ),
+			__( 'Hướng dẫn', 'smart-login' ),
+			'manage_options',
+			self::GUIDE_SLUG,
+			array( $this, 'render_guide' )
 		);
 
 		add_submenu_page(
@@ -222,36 +232,28 @@ class SettingsPage {
 			return;
 		}
 
-		// Routed here rather than through the registry: it holds no fields, so a
-		// save would have nothing to write. Same reason the overview screen below
-		// is not a registry tab either.
-		if ( GuideScreen::SLUG === $requested ) {
-			( new GuideScreen() )->render();
-			return;
-		}
-
 		( new OverviewScreen() )->render();
 	}
 
 	/**
-	 * Every screen in the strip: readiness first, instructions last.
-	 *
-	 * The order is the order the two get opened in. Overview is what you read
-	 * after installing; the guide is what you read when you are stuck, and that
-	 * is not the same moment.
+	 * Every screen in the settings strip, readiness first.
 	 *
 	 * @return array<string,string>
 	 */
 	public static function tabs(): array {
-		return array( self::OVERVIEW => __( 'Tổng quan', 'smart-login' ) )
-			+ FieldRegistry::tabs()
-			+ array( GuideScreen::SLUG => __( 'Hướng dẫn', 'smart-login' ) );
+		return array( self::OVERVIEW => __( 'Tổng quan', 'smart-login' ) ) + FieldRegistry::tabs();
 	}
 
 	public function render_audit(): void {
 		self::require_capability();
 
 		( new AuditScreen() )->render();
+	}
+
+	public function render_guide(): void {
+		self::require_capability();
+
+		( new GuideScreen() )->render();
 	}
 
 	/**

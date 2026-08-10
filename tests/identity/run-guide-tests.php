@@ -108,14 +108,13 @@ $sl_guide_slug = class_exists( SL_GUIDE_CLASS ) && defined( SL_GUIDE_CLASS . '::
 	: '';
 
 if ( '' === $sl_guide_slug ) {
-	sl_pending( 'the guide is in the tab strip', 'GuideScreen does not exist' );
+	sl_pending( 'the guide is registered as a standalone page', 'GuideScreen does not exist' );
 	sl_pending( 'and is not a settings tab', 'GuideScreen does not exist' );
-	sl_pending( 'and the navigation links to it', 'GuideScreen does not exist' );
 } else {
 	sl_assert(
-		'the guide is in the tab strip',
-		isset( SettingsPage::tabs()[ $sl_guide_slug ] ),
-		'A screen nobody can reach from the navigation is a screen reachable by typing a URL.'
+		'the guide is registered as a standalone page',
+		SettingsPage::GUIDE_SLUG === $sl_guide_slug,
+		'A screen reachable by its own submenu slug.'
 	);
 
 	/*
@@ -126,20 +125,8 @@ if ( '' === $sl_guide_slug ) {
 	 */
 	sl_assert(
 		'and is not a settings tab',
-		! isset( FieldRegistry::tabs()[ $sl_guide_slug ] ),
+		! isset( FieldRegistry::tabs()[ $sl_guide_slug ] ) && ! isset( SettingsPage::tabs()[ $sl_guide_slug ] ),
 		'In FieldRegistry::tabs() it would be rendered by SettingsScreen, with a Save button that writes nothing.'
-	);
-
-	$sl_nav = sl_capture(
-		static function () use ( $sl_guide_slug ): void {
-			SettingsPage::nav( $sl_guide_slug );
-		}
-	);
-
-	sl_assert(
-		'and the navigation links to it',
-		null === $sl_nav['error'] && false !== strpos( $sl_nav['html'], 'tab=' . $sl_guide_slug . '"' ),
-		(string) $sl_nav['error']
 	);
 }
 

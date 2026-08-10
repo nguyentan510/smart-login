@@ -42,7 +42,7 @@ final class GuideScreen {
 	 * it. A guide added there for tidiness would ship a button that saves
 	 * nothing. It is a `SettingsPage` route beside the overview screen instead.
 	 */
-	const SLUG = 'guide';
+	const SLUG = 'smart-login-guide';
 
 	/**
 	 * What each shortcode is for, keyed by the tag that registers it.
@@ -247,27 +247,77 @@ final class GuideScreen {
 	// -----------------------------------------------------------------
 
 	/**
-	 * The six-section guide, in reading order.
+	 * The six-section guide in a 2-column layout (1:3 Table of Contents & Content).
 	 */
 	public function render(): void {
 		?>
-		<div class="wrap smart-login-admin">
-			<h1><?php esc_html_e( 'Smart Login', 'smart-login' ); ?></h1>
+		<div class="wrap smart-login-admin sl-guide-page">
+			<div class="sl-guide-header">
+				<h1><?php esc_html_e( 'Smart Login — Hướng dẫn', 'smart-login' ); ?></h1>
+				<p class="sl-guide-lead">
+					<?php esc_html_e( 'Bản tóm tắt hướng dẫn sử dụng nhanh. Bản đầy đủ — hook, REST API, cách đổi màu — nằm trong tệp README.md của plugin.', 'smart-login' ); ?>
+				</p>
+			</div>
 
-			<?php SettingsPage::nav( self::SLUG ); ?>
+			<div class="sl-guide-layout">
+				<aside class="sl-guide-toc">
+					<div class="sl-guide-toc__inner">
+						<h3><?php esc_html_e( 'Mục lục', 'smart-login' ); ?></h3>
+						<nav class="sl-guide-toc__nav">
+							<a href="#quick-start" class="sl-guide-toc__link active">
+								<span class="dashicons dashicons-controls-play"></span>
+								<?php esc_html_e( '1. Ba bước để chạy được', 'smart-login' ); ?>
+							</a>
+							<a href="#shortcodes" class="sl-guide-toc__link">
+								<span class="dashicons dashicons-shortcode"></span>
+								<?php esc_html_e( '2. Shortcode', 'smart-login' ); ?>
+							</a>
+							<a href="#triggers" class="sl-guide-toc__link">
+								<span class="dashicons dashicons-external"></span>
+								<?php esc_html_e( '3. Mở hộp đăng nhập', 'smart-login' ); ?>
+							</a>
+							<a href="#account-button" class="sl-guide-toc__link">
+								<span class="dashicons dashicons-admin-users"></span>
+								<?php esc_html_e( '4. Nút tài khoản header', 'smart-login' ); ?>
+							</a>
+							<a href="#troubleshooting" class="sl-guide-toc__link">
+								<span class="dashicons dashicons-warning"></span>
+								<?php esc_html_e( '5. Khi có sự cố', 'smart-login' ); ?>
+							</a>
+							<a href="#developers" class="sl-guide-toc__link">
+								<span class="dashicons dashicons-code-standards"></span>
+								<?php esc_html_e( '6. Cho lập trình viên', 'smart-login' ); ?>
+							</a>
+						</nav>
+					</div>
+				</aside>
 
-			<p class="sl-guide-lead">
-				<?php esc_html_e( 'Bản tóm tắt để dùng hằng ngày. Bản đầy đủ — hook, REST API, cách đổi màu — nằm trong tệp README.md của plugin.', 'smart-login' ); ?>
-			</p>
+				<main class="sl-guide-content">
+					<section id="quick-start" class="sl-guide-section">
+						<?php $this->quick_start(); ?>
+					</section>
 
-			<?php
-			$this->quick_start();
-			$this->shortcode_table();
-			$this->triggers();
-			$this->account_button();
-			$this->troubleshooting();
-			$this->for_developers();
-			?>
+					<section id="shortcodes" class="sl-guide-section">
+						<?php $this->shortcode_table(); ?>
+					</section>
+
+					<section id="triggers" class="sl-guide-section">
+						<?php $this->triggers(); ?>
+					</section>
+
+					<section id="account-button" class="sl-guide-section">
+						<?php $this->account_button(); ?>
+					</section>
+
+					<section id="troubleshooting" class="sl-guide-section">
+						<?php $this->troubleshooting(); ?>
+					</section>
+
+					<section id="developers" class="sl-guide-section">
+						<?php $this->for_developers(); ?>
+					</section>
+				</main>
+			</div>
 		</div>
 		<?php
 	}
