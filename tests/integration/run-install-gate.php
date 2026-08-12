@@ -11,7 +11,7 @@
  * or user meta carrying this plugin's prefixes may survive**. A query rather than a
  * list of names — a list has to be kept in step with the code, which is precisely the
  * mistake it would be there to catch. It already has one: 14.5 added
- * `smart_login_email_backfill_cursor` and never added it to `uninstall.php`.
+ * `OMNIWP_email_backfill_cursor` and never added it to `uninstall.php`.
  *
  * DESTRUCTIVE. It uninstalls the plugin twice: once to reach clean ground and once as
  * the subject.
@@ -29,25 +29,25 @@
  * Mirrors run-wordpress-gate.php's contract: BLOCKED for an environment problem,
  * FAILED for a defect, OK plus facts on success.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 declare( strict_types=1 );
 
-$wp_root     = rtrim( (string) getenv( 'SMART_LOGIN_WP_ROOT' ), "\\/" );
-$db_host     = (string) getenv( 'SMART_LOGIN_DB_HOST' );
-$db_name     = (string) getenv( 'SMART_LOGIN_DB_NAME' );
-$db_user     = (string) getenv( 'SMART_LOGIN_DB_USER' );
-$db_pass     = (string) getenv( 'SMART_LOGIN_DB_PASSWORD' );
-$prefix      = (string) getenv( 'SMART_LOGIN_DB_PREFIX' );
-$plugin_root = rtrim( (string) getenv( 'SMART_LOGIN_PLUGIN_ROOT' ), "\\/" );
-$destructive = '1' === (string) getenv( 'SMART_LOGIN_DESTRUCTIVE_OK' );
+$wp_root     = rtrim( (string) getenv( 'OMNIWP_WP_ROOT' ), "\\/" );
+$db_host     = (string) getenv( 'OMNIWP_DB_HOST' );
+$db_name     = (string) getenv( 'OMNIWP_DB_NAME' );
+$db_user     = (string) getenv( 'OMNIWP_DB_USER' );
+$db_pass     = (string) getenv( 'OMNIWP_DB_PASSWORD' );
+$prefix      = (string) getenv( 'OMNIWP_DB_PREFIX' );
+$plugin_root = rtrim( (string) getenv( 'OMNIWP_PLUGIN_ROOT' ), "\\/" );
+$destructive = '1' === (string) getenv( 'OMNIWP_DESTRUCTIVE_OK' );
 
-// `$sl_plugin`, not `$plugin`: wp-settings.php uses $plugin as a loop variable.
-$sl_plugin = $plugin_root . DIRECTORY_SEPARATOR . 'smart-login.php';
+// `$ow_plugin`, not `$plugin`: wp-settings.php uses $plugin as a loop variable.
+$ow_plugin = $plugin_root . DIRECTORY_SEPARATOR . 'omniwp.php';
 
 $blocked = static function ( string $message ): never {
-	echo "SMART_LOGIN_INSTALL_GATE_BLOCKED\n";
+	echo "OMNIWP_INSTALL_GATE_BLOCKED\n";
 	echo 'reason=' . $message . "\n";
 	exit( 2 );
 };
@@ -63,24 +63,24 @@ $ok = static function ( string $label ): void {
 };
 
 if ( ! $destructive ) {
-	$blocked( 'this gate drops the plugin\'s tables and options; set SMART_LOGIN_DESTRUCTIVE_OK=1 to allow it' );
+	$blocked( 'this gate drops the plugin\'s tables and options; set OMNIWP_DESTRUCTIVE_OK=1 to allow it' );
 }
 
-$force = '1' === (string) getenv( 'SMART_LOGIN_DISCARD_SETTINGS' );
+$force = '1' === (string) getenv( 'OMNIWP_DISCARD_SETTINGS' );
 if ( '' === $wp_root || ! is_file( $wp_root . DIRECTORY_SEPARATOR . 'wp-settings.php' ) ) {
-	$blocked( 'SMART_LOGIN_WP_ROOT must point to a WordPress public root' );
+	$blocked( 'OMNIWP_WP_ROOT must point to a WordPress public root' );
 }
-if ( '' === $plugin_root || ! is_file( $sl_plugin ) ) {
-	$blocked( 'SMART_LOGIN_PLUGIN_ROOT must point to the current plugin source' );
+if ( '' === $plugin_root || ! is_file( $ow_plugin ) ) {
+	$blocked( 'OMNIWP_PLUGIN_ROOT must point to the current plugin source' );
 }
 if ( '' === $db_host || '' === $db_name || '' === $db_user ) {
-	$blocked( 'SMART_LOGIN_DB_HOST, SMART_LOGIN_DB_NAME and SMART_LOGIN_DB_USER are required' );
+	$blocked( 'OMNIWP_DB_HOST, OMNIWP_DB_NAME and OMNIWP_DB_USER are required' );
 }
 
 $prefix = '' === $prefix ? 'wp_' : $prefix;
 
 if ( ! preg_match( '/^[A-Za-z0-9_]+$/', $prefix ) ) {
-	$blocked( 'SMART_LOGIN_DB_PREFIX contains unsupported characters' );
+	$blocked( 'OMNIWP_DB_PREFIX contains unsupported characters' );
 }
 
 define( 'ABSPATH', $wp_root . DIRECTORY_SEPARATOR );
@@ -101,8 +101,8 @@ try {
 	$blocked( 'WordPress bootstrap failed: ' . $exception->getMessage() );
 }
 
-if ( ! class_exists( 'SmartLogin\\Installer' ) ) {
-	require_once $sl_plugin;
+if ( ! class_exists( 'OmniWP\\Installer' ) ) {
+	require_once $ow_plugin;
 }
 
 global $wpdb;
@@ -120,27 +120,27 @@ if ( ! isset( $wpdb ) || ! $wpdb instanceof wpdb ) {
  */
 $configured = array();
 
-foreach ( \SmartLogin\FieldRegistry::all() as $sl_path => $sl_field ) {
-	if ( in_array( $sl_field['type'] ?? '', array( 'secret', 'passthrough' ), true ) ) {
+foreach ( \OmniWP\FieldRegistry::all() as $ow_path => $ow_field ) {
+	if ( in_array( $ow_field['type'] ?? '', array( 'secret', 'passthrough' ), true ) ) {
 		continue;
 	}
 
-	if ( null === $sl_field['default'] ) {
+	if ( null === $ow_field['default'] ) {
 		continue;
 	}
 
 	// Loose: the form posts strings and the registry declares scalars.
-	if ( \SmartLogin\Settings::get( $sl_path ) != $sl_field['default'] ) { // phpcs:ignore WordPress.PHP.StrictComparisons
-		$configured[] = $sl_path;
+	if ( \OmniWP\Settings::get( $ow_path ) != $ow_field['default'] ) { // phpcs:ignore WordPress.PHP.StrictComparisons
+		$configured[] = $ow_path;
 	}
 }
 
 if ( $configured && ! $force ) {
-	echo "SMART_LOGIN_INSTALL_GATE_BLOCKED\n";
+	echo "OMNIWP_INSTALL_GATE_BLOCKED\n";
 	echo 'reason=this site has settings that differ from the defaults and this gate would destroy them: '
 		. implode( ', ', array_slice( $configured, 0, 5 ) )
 		. ( count( $configured ) > 5 ? ' (+' . ( count( $configured ) - 5 ) . ' more)' : '' )
-		. '. Point the gate at a scratch site, or set SMART_LOGIN_DISCARD_SETTINGS=1 if losing them is intended.'
+		. '. Point the gate at a scratch site, or set OMNIWP_DISCARD_SETTINGS=1 if losing them is intended.'
 		. "\n";
 	exit( 2 );
 }
@@ -150,14 +150,14 @@ echo 'Phase 15 — the install lifecycle, against WordPress ' . get_bloginfo( 'v
 /**
  * Everything this plugin owns that is still in the database.
  *
- * Prefix-matched rather than enumerated. `smartlogin_` and `smart_login_` are both in
+ * Prefix-matched rather than enumerated. `OmniWP_` and `OMNIWP_` are both in
  * use — the tables and user meta chose one, the options the other — and a rule that
  * knew only one of them would pass while half the data survived.
  *
  * @return array{tables:string[],options:string[],meta:string[]}
  */
 $survey = static function () use ( $wpdb ): array {
-	$like = $wpdb->esc_like( $wpdb->prefix ) . '%smartlogin%';
+	$like = $wpdb->esc_like( $wpdb->prefix ) . '%OmniWP%';
 
 	return array(
 		'tables'  => (array) $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
@@ -166,12 +166,12 @@ $survey = static function () use ( $wpdb ): array {
 		'options' => (array) $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			"SELECT option_name FROM {$wpdb->options}
 			 WHERE option_name LIKE 'smart\\_login\\_%'
-			    OR option_name LIKE 'smartlogin\\_%'
+			    OR option_name LIKE 'OmniWP\\_%'
 			 ORDER BY option_name" // phpcs:ignore WordPress.DB.PreparedSQL
 		),
 		'meta'    => (array) $wpdb->get_col( // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 			"SELECT DISTINCT meta_key FROM {$wpdb->usermeta}
-			 WHERE meta_key LIKE '%smartlogin\\_%'
+			 WHERE meta_key LIKE '%OmniWP\\_%'
 			 ORDER BY meta_key" // phpcs:ignore WordPress.DB.PreparedSQL
 		),
 	);
@@ -181,17 +181,17 @@ $survey = static function () use ( $wpdb ): array {
  * Run uninstall.php the way WordPress runs it, opt-in included.
  */
 $uninstall = static function () use ( $plugin_root ): void {
-	$settings = get_option( 'smart_login_settings', array() );
+	$settings = get_option( 'OMNIWP_settings', array() );
 
 	if ( ! is_array( $settings ) ) {
 		$settings = array();
 	}
 
 	$settings['advanced']['delete_data_on_uninstall'] = 1;
-	update_option( 'smart_login_settings', $settings );
+	update_option( 'OMNIWP_settings', $settings );
 
 	if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
-		define( 'WP_UNINSTALL_PLUGIN', 'smart-login/smart-login.php' );
+		define( 'WP_UNINSTALL_PLUGIN', 'omniwp/omniwp.php' );
 	}
 
 	require $plugin_root . DIRECTORY_SEPARATOR . 'uninstall.php';
@@ -212,14 +212,14 @@ try {
 	// -----------------------------------------------------------------
 	// 1. Install.
 	// -----------------------------------------------------------------
-	\SmartLogin\Installer::activate();
+	\OmniWP\Installer::activate();
 	wp_cache_flush();
 
 	$expected_tables = array(
-		\SmartLogin\Installer::otp_table(),
-		\SmartLogin\Installer::audit_table(),
-		\SmartLogin\Installer::identities_table(),
-		\SmartLogin\Installer::identity_history_table(),
+		\OmniWP\Installer::otp_table(),
+		\OmniWP\Installer::audit_table(),
+		\OmniWP\Installer::identities_table(),
+		\OmniWP\Installer::identity_history_table(),
 	);
 
 	$installed = $survey();
@@ -234,7 +234,7 @@ try {
 		$ok( 'activate() creates all four tables on empty ground' );
 	}
 
-	$pending = \SmartLogin\Installer::pending_schema_changes();
+	$pending = \OmniWP\Installer::pending_schema_changes();
 
 	if ( $pending ) {
 		$fail( 'dbDelta still wants changes on a fresh install: ' . wp_json_encode( $pending ) );
@@ -242,15 +242,15 @@ try {
 		$ok( 'dbDelta is idempotent immediately after activate()' );
 	}
 
-	$stored_version = (string) get_option( \SmartLogin\Installer::DB_VERSION_OPTION );
+	$stored_version = (string) get_option( \OmniWP\Installer::DB_VERSION_OPTION );
 
-	if ( (string) SMART_LOGIN_DB_VERSION !== $stored_version ) {
-		$fail( 'db_version is ' . $stored_version . ' after activate(), expected ' . SMART_LOGIN_DB_VERSION );
+	if ( (string) OMNIWP_DB_VERSION !== $stored_version ) {
+		$fail( 'db_version is ' . $stored_version . ' after activate(), expected ' . OMNIWP_DB_VERSION );
 	} else {
 		$ok( 'activate() records db_version ' . $stored_version );
 	}
 
-	$settings = get_option( 'smart_login_settings', null );
+	$settings = get_option( 'OMNIWP_settings', null );
 
 	if ( ! is_array( $settings ) || ! $settings ) {
 		$fail( 'activate() left no settings option behind' );
@@ -267,10 +267,10 @@ try {
 	 * from `identity.mode` when it finds nothing. The property that matters is that the
 	 * path resolves at all, so `Settings::get()` never reaches its fallback.
 	 */
-	$sentinel         = '__sl_install_gate_unset__';
+	$sentinel         = '__ow_install_gate_unset__';
 	$missing_defaults = array();
 
-	foreach ( \SmartLogin\FieldRegistry::all() as $path => $field ) {
+	foreach ( \OmniWP\FieldRegistry::all() as $path => $field ) {
 		/*
 		 * A declared null default is skipped, because the settings layer cannot express
 		 * the difference. `Settings::get()` substitutes the caller's fallback whenever
@@ -286,7 +286,7 @@ try {
 			continue;
 		}
 
-		if ( $sentinel === \SmartLogin\Settings::get( $path, $sentinel ) ) {
+		if ( $sentinel === \OmniWP\Settings::get( $path, $sentinel ) ) {
 			$missing_defaults[] = $path;
 		}
 	}
@@ -300,7 +300,7 @@ try {
 	// -----------------------------------------------------------------
 	// 2. Use it, so every table and option that gets written has been written.
 	// -----------------------------------------------------------------
-	$user_login = 'sl_install_' . strtolower( wp_generate_password( 8, false, false ) );
+	$user_login = 'ow_install_' . strtolower( wp_generate_password( 8, false, false ) );
 	$user_id    = wp_insert_user(
 		array(
 			'user_login' => $user_login,
@@ -314,14 +314,14 @@ try {
 		$blocked( 'could not create the install-gate fixture user' );
 	}
 
-	$repository = new \SmartLogin\Identity\IdentityRepository();
-	$claim      = \SmartLogin\Identity\Claim::canonical( 'email', $user_login . '@example.test' );
+	$repository = new \OmniWP\Identity\IdentityRepository();
+	$claim      = \OmniWP\Identity\Claim::canonical( 'email', $user_login . '@example.test' );
 
 	if ( ! $repository->claim(
-		\SmartLogin\Identity\IdentityRecord::create(
+		\OmniWP\Identity\IdentityRecord::create(
 			(int) $user_id,
-			\SmartLogin\Identity\VerifiedClaim::from( $claim, \SmartLogin\Identity\VerifiedClaim::PROOF_OTP ),
-			\SmartLogin\Identity\IdentityRecord::BY_REGISTRATION,
+			\OmniWP\Identity\VerifiedClaim::from( $claim, \OmniWP\Identity\VerifiedClaim::PROOF_OTP ),
+			\OmniWP\Identity\IdentityRecord::BY_REGISTRATION,
 			true
 		)
 	) ) {
@@ -330,12 +330,12 @@ try {
 		$ok( 'the identities table accepts a claim on a fresh install' );
 	}
 
-	update_user_meta( (int) $user_id, \SmartLogin\Identity\UserManager::META_PHONE, '84969789475' );
-	update_user_meta( (int) $user_id, \SmartLogin\Identity\UserManager::META_EMAIL_VERIFIED, current_time( 'mysql', true ) );
+	update_user_meta( (int) $user_id, \OmniWP\Identity\UserManager::META_PHONE, '84969789475' );
+	update_user_meta( (int) $user_id, \OmniWP\Identity\UserManager::META_EMAIL_VERIFIED, current_time( 'mysql', true ) );
 
-	$otp = ( new \SmartLogin\OTP\OtpService() )->issue(
+	$otp = ( new \OmniWP\OTP\OtpService() )->issue(
 		$user_login . '@example.test',
-		\SmartLogin\OTP\OtpService::INTENT_LOGIN,
+		\OmniWP\OTP\OtpService::INTENT_LOGIN,
 		array( 'user_id' => (int) $user_id )
 	);
 
@@ -347,8 +347,8 @@ try {
 		$ok( 'a fresh install issues an OTP' );
 	}
 
-	\SmartLogin\Security\AuditLog::record(
-		\SmartLogin\Security\AuditLog::LOGIN_SUCCESS,
+	\OmniWP\Security\AuditLog::record(
+		\OmniWP\Security\AuditLog::LOGIN_SUCCESS,
 		'install-gate',
 		array( 'context' => 'install_gate' ),
 		(int) $user_id
@@ -395,15 +395,15 @@ try {
 
 	// Leave the site installed. A gate that ends with the plugin uninstalled would
 	// make every other gate BLOCKED on the next run.
-	\SmartLogin\Installer::activate();
+	\OmniWP\Installer::activate();
 } catch ( Throwable $exception ) {
-	echo "SMART_LOGIN_INSTALL_GATE_FAILED\n";
+	echo "OMNIWP_INSTALL_GATE_FAILED\n";
 	echo 'reason=install gate raised an exception: ' . $exception->getMessage() . "\n";
 	exit( 1 );
 }
 
 if ( $failures ) {
-	echo "SMART_LOGIN_INSTALL_GATE_FAILED\n";
+	echo "OMNIWP_INSTALL_GATE_FAILED\n";
 
 	foreach ( $failures as $message ) {
 		echo 'reason=' . $message . "\n";
@@ -412,6 +412,6 @@ if ( $failures ) {
 	exit( 1 );
 }
 
-echo "\nSMART_LOGIN_INSTALL_GATE_OK\n";
+echo "\nOMNIWP_INSTALL_GATE_OK\n";
 echo 'wordpress=' . get_bloginfo( 'version' ) . "\n";
-echo 'db_version=' . get_option( \SmartLogin\Installer::DB_VERSION_OPTION ) . "\n";
+echo 'db_version=' . get_option( \OmniWP\Installer::DB_VERSION_OPTION ) . "\n";

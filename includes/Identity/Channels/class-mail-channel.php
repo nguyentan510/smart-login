@@ -8,14 +8,14 @@
  * still `email` — that is the value in the database, and it must not change once
  * rows exist.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Identity\Channels;
+namespace OmniWP\Identity\Channels;
 
-use SmartLogin\Identity\Phone;
-use SmartLogin\Identity\UserManager;
-use SmartLogin\Identity\VerifiedClaim;
+use OmniWP\Identity\Phone;
+use OmniWP\Identity\UserManager;
+use OmniWP\Identity\VerifiedClaim;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -60,7 +60,7 @@ final class MailChannel implements IdentityChannel {
 	}
 
 	public function label(): string {
-		return __( 'Email', 'smart-login' );
+		return __( 'Email', 'omniwp' );
 	}
 
 	public function mask( string $subject ): string {

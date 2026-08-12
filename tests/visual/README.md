@@ -52,7 +52,7 @@ At 375, 480 and 1400 CSS pixels wide, in the console:
 ({
   viewport: innerWidth,
   scrollWidth: document.documentElement.scrollWidth,
-  overflowing: [...document.querySelectorAll('.smart-login *')]
+  overflowing: [...document.querySelectorAll('.omniwp *')]
     .filter(el => el.getBoundingClientRect().right > innerWidth + 0.5)
     .map(el => el.className)
 })
@@ -110,7 +110,7 @@ Tab from the top of the card to the bottom without touching the mouse. Record:
 ### 5. JavaScript off
 
 **The rendered page has none to begin with** — the renderer emits markup and the
-stylesheet, and `assets/js/smart-login.js` is never enqueued. So this page is
+stylesheet, and `assets/js/omniwp.js` is never enqueued. So this page is
 permanently in the state measurement 5 is about, which makes it the one reading
 the tool gives away for free.
 
@@ -127,7 +127,7 @@ Record:
 
 ## Adding a surface
 
-Add it to `$sl_surfaces` in `render.php`. Every
+Add it to `$ow_surfaces` in `render.php`. Every
 `templates/partials/account/*.php` must appear there — the rendered-surface
 suite fails when one does not, which is the same mechanism that makes "extend
 the smoke test" automatic rather than remembered.
@@ -177,7 +177,7 @@ so a picture taken that way is a picture of a different element.
 
 The surface rendered **unstyled**: close control 24 × 21, backdrop
 `rgba(0,0,0,0.1)` — the browser default. Nothing was wrong with the CSS. The
-tool was inlining only `smart-login.css`, and the dialog ships its own
+tool was inlining only `omniwp.css`, and the dialog ships its own
 stylesheet because the two-stage asset load requires the shell to be styled
 before the fragment arrives.
 

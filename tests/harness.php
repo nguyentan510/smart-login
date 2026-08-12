@@ -2,23 +2,23 @@
 /**
  * Shared assertion helpers for the newer test suites.
  *
- * Functions are `sl_` prefixed so this file can coexist with the original
+ * Functions are `ow_` prefixed so this file can coexist with the original
  * runner (`run-tests.php`), which declares its own global check()/section().
  * That runner is deliberately left untouched — its 163 assertions are a working
  * asset and must not be destabilised by the refactor.
  *
- * A suite ends by calling sl_summary(), which sets the process exit code.
+ * A suite ends by calling ow_summary(), which sets the process exit code.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-$GLOBALS['sl_harness'] = array(
+$GLOBALS['ow_harness'] = array(
 	'passed'  => 0,
 	'failed'  => 0,
 	'pending' => 0,
 );
 
-function sl_section( string $title ): void {
+function ow_section( string $title ): void {
 	echo "\n" . $title . "\n";
 }
 
@@ -26,13 +26,13 @@ function sl_section( string $title ): void {
  * @param mixed $expected
  * @param mixed $actual
  */
-function sl_check( string $label, $expected, $actual ): void {
+function ow_check( string $label, $expected, $actual ): void {
 	if ( $expected === $actual ) {
-		++$GLOBALS['sl_harness']['passed'];
+		++$GLOBALS['ow_harness']['passed'];
 		return;
 	}
 
-	++$GLOBALS['sl_harness']['failed'];
+	++$GLOBALS['ow_harness']['failed'];
 	printf(
 		"  FAIL     %s\n           expected: %s\n           actual:   %s\n",
 		$label,
@@ -44,13 +44,13 @@ function sl_check( string $label, $expected, $actual ): void {
 /**
  * Assert a condition that carries its own explanation when it fails.
  */
-function sl_assert( string $label, bool $condition, string $hint = '' ): void {
+function ow_assert( string $label, bool $condition, string $hint = '' ): void {
 	if ( $condition ) {
-		++$GLOBALS['sl_harness']['passed'];
+		++$GLOBALS['ow_harness']['passed'];
 		return;
 	}
 
-	++$GLOBALS['sl_harness']['failed'];
+	++$GLOBALS['ow_harness']['failed'];
 	printf( "  FAIL     %s\n", $label );
 
 	if ( '' !== $hint ) {
@@ -65,12 +65,12 @@ function sl_assert( string $label, bool $condition, string $hint = '' ): void {
  * reads as a to-do list rather than a wall of duplicate failures: one FAIL for
  * the missing building block, then PENDING for the behaviour that depends on it.
  */
-function sl_pending( string $label, string $blocked_on ): void {
-	++$GLOBALS['sl_harness']['pending'];
+function ow_pending( string $label, string $blocked_on ): void {
+	++$GLOBALS['ow_harness']['pending'];
 	printf( "  PENDING  %s\n           blocked on: %s\n", $label, $blocked_on );
 }
 
-function sl_note( string $text ): void {
+function ow_note( string $text ): void {
 	printf( "           %s\n", $text );
 }
 
@@ -78,8 +78,8 @@ function sl_note( string $text ): void {
  * Print the tally and exit. Pending items do not fail the suite on their own;
  * the missing building block they are blocked on already did.
  */
-function sl_summary( string $suite ): void {
-	$tally = $GLOBALS['sl_harness'];
+function ow_summary( string $suite ): void {
+	$tally = $GLOBALS['ow_harness'];
 
 	printf(
 		"\n%s: %d passed, %d failed, %d pending\n",
@@ -98,7 +98,7 @@ function sl_summary( string $suite ): void {
  * Returns '' for a missing file so fitness checks can report "absent" as a
  * finding instead of crashing.
  */
-function sl_source( string $relative ): string {
+function ow_source( string $relative ): string {
 	$file = dirname( __DIR__ ) . '/' . ltrim( $relative, '/' );
 
 	return is_readable( $file ) ? (string) file_get_contents( $file ) : '';
@@ -111,14 +111,14 @@ function sl_source( string $relative ): string {
  * describe production code, and data/ is machine-written.
  *
  * build/ and dist/ are skipped for a different reason: they hold *copies* of
- * the files below. Staging a release archive puts a second smart-login.php on
+ * the files below. Staging a release archive puts a second omniwp.php on
  * disk, and a rule phrased "no file outside X does Y" then fails against the
  * copy rather than against anything a reader could fix. Six suites went red
  * this way before the two names were added here.
  *
  * @return array<string,string> Relative path => contents.
  */
-function sl_plugin_sources(): array {
+function ow_plugin_sources(): array {
 	static $sources = null;
 
 	if ( null !== $sources ) {
@@ -160,10 +160,10 @@ function sl_plugin_sources(): array {
  *
  * @param string[] $allowed_files Relative paths permitted to match.
  */
-function sl_forbid_pattern( string $label, string $pattern, array $allowed_files = array(), string $hint = '' ): void {
+function ow_forbid_pattern( string $label, string $pattern, array $allowed_files = array(), string $hint = '' ): void {
 	$offenders = array();
 
-	foreach ( sl_plugin_sources() as $relative => $contents ) {
+	foreach ( ow_plugin_sources() as $relative => $contents ) {
 		if ( in_array( $relative, $allowed_files, true ) ) {
 			continue;
 		}
@@ -179,11 +179,11 @@ function sl_forbid_pattern( string $label, string $pattern, array $allowed_files
 	}
 
 	if ( ! $offenders ) {
-		++$GLOBALS['sl_harness']['passed'];
+		++$GLOBALS['ow_harness']['passed'];
 		return;
 	}
 
-	++$GLOBALS['sl_harness']['failed'];
+	++$GLOBALS['ow_harness']['failed'];
 	printf( "  FAIL     %s\n", $label );
 
 	if ( '' !== $hint ) {
@@ -210,10 +210,10 @@ function sl_forbid_pattern( string $label, string $pattern, array $allowed_files
  * Zero owners passes. A marker for a partial that has not been extracted yet is
  * a to-do, not a violation, and 8.0 lands before the partials exist.
  */
-function sl_require_single_template( string $label, string $pattern, string $hint = '' ): void {
+function ow_require_single_template( string $label, string $pattern, string $hint = '' ): void {
 	$owners = array();
 
-	foreach ( sl_plugin_sources() as $relative => $contents ) {
+	foreach ( ow_plugin_sources() as $relative => $contents ) {
 		if ( 0 !== strpos( $relative, 'templates/' ) ) {
 			continue;
 		}
@@ -224,11 +224,11 @@ function sl_require_single_template( string $label, string $pattern, string $hin
 	}
 
 	if ( count( $owners ) <= 1 ) {
-		++$GLOBALS['sl_harness']['passed'];
+		++$GLOBALS['ow_harness']['passed'];
 		return;
 	}
 
-	++$GLOBALS['sl_harness']['failed'];
+	++$GLOBALS['ow_harness']['failed'];
 	printf( "  FAIL     %s\n", $label );
 
 	if ( '' !== $hint ) {
@@ -246,7 +246,7 @@ function sl_require_single_template( string $label, string $pattern, string $hin
  * Used to tie a dangerous call site to its mandatory helper, e.g. every
  * wp_insert_user() call must go through OpaqueLogin.
  *
- * The allowlist is passed in at the call site, the same as sl_forbid_pattern's:
+ * The allowlist is passed in at the call site, the same as ow_forbid_pattern's:
  * a file that legitimately triggers the pattern and must *not* carry the
  * companion is an exception somebody has to write down. 17.0 added it for the
  * first such case — a provisioned account's random password is not a password
@@ -255,10 +255,10 @@ function sl_require_single_template( string $label, string $pattern, string $hin
  *
  * @param string[] $allowed_files Relative paths exempt from the requirement.
  */
-function sl_require_companion( string $label, string $trigger_pattern, string $required_pattern, string $hint = '', array $allowed_files = array() ): void {
+function ow_require_companion( string $label, string $trigger_pattern, string $required_pattern, string $hint = '', array $allowed_files = array() ): void {
 	$offenders = array();
 
-	foreach ( sl_plugin_sources() as $relative => $contents ) {
+	foreach ( ow_plugin_sources() as $relative => $contents ) {
 		if ( ! preg_match( $trigger_pattern, $contents ) || in_array( $relative, $allowed_files, true ) ) {
 			continue;
 		}
@@ -269,11 +269,11 @@ function sl_require_companion( string $label, string $trigger_pattern, string $r
 	}
 
 	if ( ! $offenders ) {
-		++$GLOBALS['sl_harness']['passed'];
+		++$GLOBALS['ow_harness']['passed'];
 		return;
 	}
 
-	++$GLOBALS['sl_harness']['failed'];
+	++$GLOBALS['ow_harness']['failed'];
 	printf( "  FAIL     %s\n", $label );
 
 	if ( '' !== $hint ) {
@@ -307,7 +307,7 @@ function sl_require_companion( string $label, string $trigger_pattern, string $r
  * @param string $method Method name, without parentheses.
  * @return string The body between its outer braces, comments removed, or ''.
  */
-function sl_method_body( string $source, string $method ): string {
+function ow_method_body( string $source, string $method ): string {
 	if ( '' === $source ) {
 		return '';
 	}
@@ -420,12 +420,12 @@ function sl_method_body( string $source, string $method ): string {
  *
  * @return array{html:string,error:?string,warnings:array}
  */
-function sl_capture( callable $render ): array {
-	$GLOBALS['sl_admin_warnings'] = array();
+function ow_capture( callable $render ): array {
+	$GLOBALS['ow_admin_warnings'] = array();
 
 	set_error_handler(
 		static function ( int $severity, string $message ) {
-			$GLOBALS['sl_admin_warnings'][] = $message;
+			$GLOBALS['ow_admin_warnings'][] = $message;
 			return true;
 		}
 	);
@@ -447,6 +447,6 @@ function sl_capture( callable $render ): array {
 	return array(
 		'html'     => $html,
 		'error'    => $error,
-		'warnings' => $GLOBALS['sl_admin_warnings'],
+		'warnings' => $GLOBALS['ow_admin_warnings'],
 	);
 }

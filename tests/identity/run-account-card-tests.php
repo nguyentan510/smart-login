@@ -15,17 +15,17 @@
  *
  * Run with:  php tests/identity/run-account-card-tests.php
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 require __DIR__ . '/../stubs.php';
 require __DIR__ . '/../template-stubs.php';
 require __DIR__ . '/../harness.php';
 
-use SmartLogin\Address\AddressFields;
-use SmartLogin\Auth\ProfileCompletionService;
-use SmartLogin\Auth\Providers\ProviderRegistry;
-use SmartLogin\Settings;
+use OmniWP\Address\AddressFields;
+use OmniWP\Auth\ProfileCompletionService;
+use OmniWP\Auth\Providers\ProviderRegistry;
+use OmniWP\Settings;
 
 Settings::update(
 	array(
@@ -37,21 +37,21 @@ Settings::update(
 	)
 );
 
-$GLOBALS['sl_logged_in']       = true;
-$GLOBALS['sl_current_user_id'] = 7;
+$GLOBALS['ow_logged_in']       = true;
+$GLOBALS['ow_current_user_id'] = 7;
 
-$sl_root = dirname( __DIR__, 2 ) . '/';
+$ow_root = dirname( __DIR__, 2 ) . '/';
 
 /**
  * Render one template and return its markup, failing loudly on a throw.
  */
-$sl_render = static function ( string $template, array $args ) use ( $sl_root ): string {
-	$captured = sl_capture(
-		static function () use ( $sl_root, $template, $args ): void {
-			( static function ( string $sl_file, array $sl_args ): void {
-				extract( $sl_args, EXTR_SKIP ); // phpcs:ignore WordPress.PHP.DontExtract
-				include $sl_file;
-			} )( $sl_root . 'templates/' . $template . '.php', $args );
+$ow_render = static function ( string $template, array $args ) use ( $ow_root ): string {
+	$captured = ow_capture(
+		static function () use ( $ow_root, $template, $args ): void {
+			( static function ( string $ow_file, array $ow_args ): void {
+				extract( $ow_args, EXTR_SKIP ); // phpcs:ignore WordPress.PHP.DontExtract
+				include $ow_file;
+			} )( $ow_root . 'templates/' . $template . '.php', $args );
 		}
 	);
 
@@ -65,7 +65,7 @@ $sl_render = static function ( string $template, array $args ) use ( $sl_root ):
 /**
  * One identity record in the shape IdentityLinkService::linked() emits.
  */
-$sl_identity = static function ( string $channel, string $label, bool $federated, bool $primary = false ): array {
+$ow_identity = static function ( string $channel, string $label, bool $federated, bool $primary = false ): array {
 	return array(
 		'channel'     => $channel,
 		'subject'     => 'federated' === $channel ? 'sub-1' : 'sub-1',
@@ -80,12 +80,12 @@ $sl_identity = static function ( string $channel, string $label, bool $federated
 	);
 };
 
-$sl_css      = sl_source( 'assets/css/smart-login.css' );
-$sl_css_code = (string) preg_replace( '#/\*.*?\*/#s', '', $sl_css );
+$ow_css      = ow_source( 'assets/css/omniwp.css' );
+$ow_css_code = (string) preg_replace( '#/\*.*?\*/#s', '', $ow_css );
 
 /*
  * The scale moved to its own file in 21.1, and this suite caught it — five
- * assertions went red the moment the tokens left `.smart-login`, which is the
+ * assertions went red the moment the tokens left `.omniwp`, which is the
  * boundary CLAUDE.md warns a rename crosses.
  *
  * The property being asserted has not changed: a token used but never declared
@@ -93,10 +93,10 @@ $sl_css_code = (string) preg_replace( '#/\*.*?\*/#s', '', $sl_css );
  * declaration lives has. So this reads the token file, and the rest of the
  * suite keeps reading the stylesheet it was written against.
  */
-$sl_tokens_code = (string) preg_replace( '#/\*.*?\*/#s', '', sl_source( 'assets/css/smart-login-tokens.css' ) );
+$ow_tokens_code = (string) preg_replace( '#/\*.*?\*/#s', '', ow_source( 'assets/css/omniwp-tokens.css' ) );
 
 // ---------------------------------------------------------------------
-sl_section( 'Rule 1 — the provider\'s own mark, wherever the provider is named (17.1)' );
+ow_section( 'Rule 1 — the provider\'s own mark, wherever the provider is named (17.1)' );
 
 /*
  * LoginProviderInterface::icon_svg() has been on the interface since Phase 12,
@@ -104,36 +104,36 @@ sl_section( 'Rule 1 — the provider\'s own mark, wherever the provider is named
  * the sign-in screen. The account card names a provider in two places and draws
  * a mark in neither.
  */
-$sl_linked_row = $sl_render(
+$ow_linked_row = $ow_render(
 	'partials/linked-identities',
 	array(
-		'sl_identities' => array( $sl_identity( 'google', 'Google', true ) ),
-		'sl_can_unlink' => true,
-		'sl_redirect'   => 'https://example.test/my-account/',
+		'ow_identities' => array( $ow_identity( 'google', 'Google', true ) ),
+		'ow_can_unlink' => true,
+		'ow_redirect'   => 'https://example.test/my-account/',
 	)
 );
 
-sl_assert(
+ow_assert(
 	'a linked provider row draws the provider\'s mark',
-	false !== strpos( $sl_linked_row, '<svg' ),
+	false !== strpos( $ow_linked_row, '<svg' ),
 	'The asset exists and has since Phase 12. A row reading "Google" in the site\'s body font is the plugin declining to use what it already ships.'
 );
 
-$sl_google = ( new ProviderRegistry() )->get( 'google' );
+$ow_google = ( new ProviderRegistry() )->get( 'google' );
 
-$sl_invitation = $sl_render(
+$ow_invitation = $ow_render(
 	'partials/account/providers',
 	array(
-		'sl_identities'     => array(),
-		'sl_can_unlink'     => false,
-		'sl_redirect'       => 'https://example.test/my-account/',
-		'sl_link_providers' => null === $sl_google ? array() : array( $sl_google ),
+		'ow_identities'     => array(),
+		'ow_can_unlink'     => false,
+		'ow_redirect'       => 'https://example.test/my-account/',
+		'ow_link_providers' => null === $ow_google ? array() : array( $ow_google ),
 	)
 );
 
-sl_assert(
+ow_assert(
 	'the invitation to link draws it too',
-	false !== strpos( $sl_invitation, '<svg' ),
+	false !== strpos( $ow_invitation, '<svg' ),
 	'Same brand, same screen, two treatments — the sign-in card wears the mark and the account card does not.'
 );
 
@@ -145,10 +145,10 @@ sl_assert(
  * which a signed-in visitor never sees, along with the sentence explaining the
  * refusal. The control that starts on this page has to be able to end on it.
  */
-sl_assert(
+ow_assert(
 	'the invitation carries a return url back to the account page',
-	false !== strpos( $sl_invitation, 'redirect_to=https%3A%2F%2Fexample.test%2Fmy-account%2F' )
-		|| false !== strpos( $sl_invitation, 'redirect_to=https%3A//example.test/my-account/' ),
+	false !== strpos( $ow_invitation, 'redirect_to=https%3A%2F%2Fexample.test%2Fmy-account%2F' )
+		|| false !== strpos( $ow_invitation, 'redirect_to=https%3A//example.test/my-account/' ),
 	'start_url() was called with an empty return url, so a failure has nowhere to return to and lands on a screen the visitor cannot be on.'
 );
 
@@ -157,15 +157,15 @@ sl_assert(
  * handed channels no provider claims. Asserted here rather than left to a
  * fatal on a live page.
  */
-sl_assert(
+ow_assert(
 	'a channel no provider claims renders no mark and no error',
 	false === strpos(
-		$sl_render(
+		$ow_render(
 			'partials/linked-identities',
 			array(
-				'sl_identities' => array( $sl_identity( 'google', 'Google', true ), $sl_identity( 'phone', 'Số điện thoại', false, true ) ),
-				'sl_can_unlink' => true,
-				'sl_redirect'   => 'https://example.test/my-account/',
+				'ow_identities' => array( $ow_identity( 'google', 'Google', true ), $ow_identity( 'phone', 'Số điện thoại', false, true ) ),
+				'ow_can_unlink' => true,
+				'ow_redirect'   => 'https://example.test/my-account/',
 			)
 		),
 		'render failed'
@@ -174,7 +174,7 @@ sl_assert(
 );
 
 // ---------------------------------------------------------------------
-sl_section( 'Rule 2 — the account surface reads the scale (17.2)' );
+ow_section( 'Rule 2 — the account surface reads the scale (17.2)' );
 
 /*
  * The region is located by its section comments. The marker assertion comes
@@ -182,22 +182,22 @@ sl_section( 'Rule 2 — the account surface reads the scale (17.2)' );
  * empty string and turn it green while measuring nothing — 16.0 shipped a
  * variant of that mistake and it is the reason this paragraph exists.
  */
-$sl_region_start = strpos( $sl_css, '/* ---------- Account surface ----------' );
-$sl_region_end   = strpos( $sl_css, '/* ---------- Small screens ---------- */' );
+$ow_region_start = strpos( $ow_css, '/* ---------- Account surface ----------' );
+$ow_region_end   = strpos( $ow_css, '/* ---------- Small screens ---------- */' );
 
-sl_assert(
+ow_assert(
 	'the account-surface region is findable',
-	false !== $sl_region_start && false !== $sl_region_end && $sl_region_end > $sl_region_start,
+	false !== $ow_region_start && false !== $ow_region_end && $ow_region_end > $ow_region_start,
 	'This rule reads a named span of the stylesheet. If the section comments move, the rule must fail rather than quietly measure nothing.'
 );
 
-$sl_region = ( false !== $sl_region_start && false !== $sl_region_end && $sl_region_end > $sl_region_start )
-	? substr( $sl_css, $sl_region_start, $sl_region_end - $sl_region_start )
+$ow_region = ( false !== $ow_region_start && false !== $ow_region_end && $ow_region_end > $ow_region_start )
+	? substr( $ow_css, $ow_region_start, $ow_region_end - $ow_region_start )
 	: '';
 
 // Comments carry prose full of measurements — "a 460px strip", "34px". A rule
 // that reads prose changes colour when somebody rewords a comment.
-$sl_region_code = (string) preg_replace( '#/\*.*?\*/#s', '', $sl_region );
+$ow_region_code = (string) preg_replace( '#/\*.*?\*/#s', '', $ow_region );
 
 /*
  * Spacing and type only. `min-width`, `max-width`, `flex-basis`, `min-height`
@@ -205,30 +205,30 @@ $sl_region_code = (string) preg_replace( '#/\*.*?\*/#s', '', $sl_region );
  * minimum button are decisions about one component, and forcing them onto a
  * six-step scale would be the rule inventing a requirement nobody made.
  */
-$sl_scaled_props = 'margin|margin-top|margin-right|margin-bottom|margin-left|padding|padding-top|padding-right|padding-bottom|padding-left|gap|row-gap|column-gap|font-size';
+$ow_scaled_props = 'margin|margin-top|margin-right|margin-bottom|margin-left|padding|padding-top|padding-right|padding-bottom|padding-left|gap|row-gap|column-gap|font-size';
 
-preg_match_all( '/(?<![-\w])(' . $sl_scaled_props . ')\s*:\s*([^;{}]*\d+px[^;{}]*)/', $sl_region_code, $sl_literals, PREG_SET_ORDER );
+preg_match_all( '/(?<![-\w])(' . $ow_scaled_props . ')\s*:\s*([^;{}]*\d+px[^;{}]*)/', $ow_region_code, $ow_literals, PREG_SET_ORDER );
 
-$sl_offenders = array();
+$ow_offenders = array();
 
-foreach ( $sl_literals as $sl_literal ) {
-	$sl_offenders[] = trim( $sl_literal[1] ) . ': ' . trim( $sl_literal[2] );
+foreach ( $ow_literals as $ow_literal ) {
+	$ow_offenders[] = trim( $ow_literal[1] ) . ': ' . trim( $ow_literal[2] );
 }
 
-sl_assert(
+ow_assert(
 	'no spacing or type literal survives in the account surface',
-	array() === $sl_offenders,
+	array() === $ow_offenders,
 	sprintf(
 		'%d literal(s). Six colour tokens and nothing else is why this card carries nine font sizes, ten spacing values and two negative margins that exist to cancel a distance the component above them emitted. → %s',
-		count( $sl_offenders ),
-		implode( ' | ', array_slice( $sl_offenders, 0, 8 ) )
+		count( $ow_offenders ),
+		implode( ' | ', array_slice( $ow_offenders, 0, 8 ) )
 	)
 );
 
-foreach ( array( '--sl-space-1', '--sl-space-6', '--sl-fs-xs', '--sl-fs-xl', '--sl-radius-card' ) as $sl_token ) {
-	sl_assert(
-		sprintf( 'the scale declares %s', $sl_token ),
-		(bool) preg_match( '/' . preg_quote( $sl_token, '/' ) . '\s*:/', $sl_tokens_code ),
+foreach ( array( '--sl-space-1', '--sl-space-6', '--sl-fs-xs', '--sl-fs-xl', '--sl-radius-card' ) as $ow_token ) {
+	ow_assert(
+		sprintf( 'the scale declares %s', $ow_token ),
+		(bool) preg_match( '/' . preg_quote( $ow_token, '/' ) . '\s*:/', $ow_tokens_code ),
 		'A token used but never declared resolves to nothing, and the property silently drops.'
 	);
 }
@@ -236,62 +236,62 @@ foreach ( array( '--sl-space-1', '--sl-space-6', '--sl-fs-xs', '--sl-fs-xl', '--
 /*
  * The measurement behind finding 2, expressed as the property rather than as
  * the number: .sl-input declares a line-height and .sl-btn does not, so the
- * button beside it inherits 1.5 from .smart-login and the two controls in one
+ * button beside it inherits 1.5 from .omniwp and the two controls in one
  * grid row are different heights. align-items:center hides that; it does not
  * remove it.
  */
-$sl_btn_block = '';
+$ow_btn_block = '';
 
-if ( preg_match( '/(?<![-\w.])\.sl-btn\s*\{([^{}]*)\}/s', $sl_css_code, $sl_btn_match ) ) {
-	$sl_btn_block = $sl_btn_match[1];
+if ( preg_match( '/(?<![-\w.])\.sl-btn\s*\{([^{}]*)\}/s', $ow_css_code, $ow_btn_match ) ) {
+	$ow_btn_block = $ow_btn_match[1];
 }
 
-sl_assert(
+ow_assert(
 	'the button declares the line-height its neighbour does',
-	'' !== $sl_btn_block && (bool) preg_match( '/line-height\s*:/', $sl_btn_block ),
-	'.sl-input is padding 12 + line-height 1.4; .sl-btn is padding 13 and whatever .smart-login happens to set. They share a grid row in the contact editor.'
+	'' !== $ow_btn_block && (bool) preg_match( '/line-height\s*:/', $ow_btn_block ),
+	'.sl-input is padding 12 + line-height 1.4; .sl-btn is padding 13 and whatever .omniwp happens to set. They share a grid row in the contact editor.'
 );
 
 // ---------------------------------------------------------------------
-sl_section( 'Rule 3 — width intent is carried by the element (17.3)' );
+ow_section( 'Rule 3 — width intent is carried by the element (17.3)' );
 
 /*
  * The subject of a selector is its last class. A block whose subject is
  * .sl-btn, whose selector names something else as well, and which sets
  * width: auto, is a button whose width depends on where it was put.
  */
-$sl_ancestor_width = array();
+$ow_ancestor_width = array();
 
-if ( preg_match_all( '/([^{}]+)\{([^{}]*)\}/s', $sl_css_code, $sl_blocks, PREG_SET_ORDER ) ) {
-	foreach ( $sl_blocks as $sl_block ) {
-		$sl_selector = trim( $sl_block[1] );
+if ( preg_match_all( '/([^{}]+)\{([^{}]*)\}/s', $ow_css_code, $ow_blocks, PREG_SET_ORDER ) ) {
+	foreach ( $ow_blocks as $ow_block ) {
+		$ow_selector = trim( $ow_block[1] );
 
-		if ( ! preg_match( '/(?<![-\w])width\s*:\s*auto/', $sl_block[2] ) ) {
+		if ( ! preg_match( '/(?<![-\w])width\s*:\s*auto/', $ow_block[2] ) ) {
 			continue;
 		}
 
-		foreach ( explode( ',', $sl_selector ) as $sl_part ) {
-			$sl_part = trim( $sl_part );
+		foreach ( explode( ',', $ow_selector ) as $ow_part ) {
+			$ow_part = trim( $ow_part );
 
-			if ( ! preg_match( '/\.sl-btn[a-zA-Z0-9_-]*\s*$/', $sl_part ) ) {
+			if ( ! preg_match( '/\.sl-btn[a-zA-Z0-9_-]*\s*$/', $ow_part ) ) {
 				continue;
 			}
 
-			if ( preg_match( '/^\.sl-btn[a-zA-Z0-9_-]*$/', $sl_part ) ) {
+			if ( preg_match( '/^\.sl-btn[a-zA-Z0-9_-]*$/', $ow_part ) ) {
 				continue;
 			}
 
-			$sl_ancestor_width[] = $sl_part;
+			$ow_ancestor_width[] = $ow_part;
 		}
 	}
 }
 
-sort( $sl_ancestor_width );
+sort( $ow_ancestor_width );
 
-sl_assert(
+ow_assert(
 	'no ancestor decides how wide a button is',
-	array() === $sl_ancestor_width,
-	'.sl-btn declares width:100% as its base, so every inline use takes it back — keyed on where the button sits rather than on what it is. A modifier on the element is the same fix with the knowledge in the markup. → ' . implode( ', ', $sl_ancestor_width )
+	array() === $ow_ancestor_width,
+	'.sl-btn declares width:100% as its base, so every inline use takes it back — keyed on where the button sits rather than on what it is. A modifier on the element is the same fix with the knowledge in the markup. → ' . implode( ', ', $ow_ancestor_width )
 );
 
 /*
@@ -310,45 +310,45 @@ sl_assert(
  * satisfy a rule that was measuring the wrong thing — and it stays red on all
  * three halves for the defect it is actually about.
  */
-$sl_row_partials = array(
+$ow_row_partials = array(
 	'templates/partials/account/contact.php',
 	'templates/partials/account/providers.php',
 	'templates/partials/linked-identities.php',
 );
 
-$sl_without_action = array();
-$sl_other_vocab    = array();
+$ow_without_action = array();
+$ow_other_vocab    = array();
 
-foreach ( $sl_row_partials as $sl_partial ) {
-	$sl_body = sl_source( $sl_partial );
+foreach ( $ow_row_partials as $ow_partial ) {
+	$ow_body = ow_source( $ow_partial );
 
-	if ( false === strpos( $sl_body, 'sl-action' ) ) {
-		$sl_without_action[] = $sl_partial;
+	if ( false === strpos( $ow_body, 'sl-action' ) ) {
+		$ow_without_action[] = $ow_partial;
 	}
 
-	if ( false !== strpos( $sl_body, 'sl-link--button' ) ) {
-		$sl_other_vocab[] = $sl_partial;
+	if ( false !== strpos( $ow_body, 'sl-link--button' ) ) {
+		$ow_other_vocab[] = $ow_partial;
 	}
 }
 
-sl_assert(
+ow_assert(
 	'every partial that draws a row draws its actions with one class',
-	array() === $sl_without_action,
-	'Đổi, Bỏ liên kết and Liên kết are one class of action — a small control acting on the row it sits in. → ' . implode( ', ', $sl_without_action )
+	array() === $ow_without_action,
+	'Đổi, Bỏ liên kết and Liên kết are one class of action — a small control acting on the row it sits in. → ' . implode( ', ', $ow_without_action )
 );
 
-sl_assert(
+ow_assert(
 	'and no second control vocabulary survives beside it',
-	array() === $sl_other_vocab,
-	'One shape or three; there is no version of this where both are true. → ' . implode( ', ', $sl_other_vocab )
+	array() === $ow_other_vocab,
+	'One shape or three; there is no version of this where both are true. → ' . implode( ', ', $ow_other_vocab )
 );
 
 // The invitation is the third weight, and the loudest: a full-width outline
 // button under a list of rows, left over from the two-list geometry 16.3
 // removed. A provider that is not linked yet is a row like the ones above it.
-sl_assert(
+ow_assert(
 	'the invitation to link is a row, not a block',
-	false === strpos( sl_source( 'templates/partials/account/providers.php' ), 'sl-btn' ),
+	false === strpos( ow_source( 'templates/partials/account/providers.php' ), 'sl-btn' ),
 	'"Google · chưa liên kết · Liên kết" is the same shape as every other way in listed above it.'
 );
 
@@ -366,38 +366,38 @@ sl_assert(
  * hide its own text — which is 16.0's rule 3 ("every input the plugin renders is
  * styled by the plugin") pointed at a different property.
  */
-$sl_hiding_classes = array();
+$ow_hiding_classes = array();
 
-foreach ( sl_plugin_sources() as $sl_relative => $sl_contents ) {
-	if ( 0 !== strpos( $sl_relative, 'templates/' ) ) {
+foreach ( ow_plugin_sources() as $ow_relative => $ow_contents ) {
+	if ( 0 !== strpos( $ow_relative, 'templates/' ) ) {
 		continue;
 	}
 
-	if ( preg_match_all( '/\b(screen-reader-text|sr-only|visually-hidden)\b/', $sl_contents, $sl_found ) ) {
-		foreach ( $sl_found[1] as $sl_class ) {
-			$sl_hiding_classes[ $sl_class ] = true;
+	if ( preg_match_all( '/\b(screen-reader-text|sr-only|visually-hidden)\b/', $ow_contents, $ow_found ) ) {
+		foreach ( $ow_found[1] as $ow_class ) {
+			$ow_hiding_classes[ $ow_class ] = true;
 		}
 	}
 }
 
-$sl_undeclared_hiding = array();
+$ow_undeclared_hiding = array();
 
-foreach ( array_keys( $sl_hiding_classes ) as $sl_class ) {
-	if ( ! preg_match( '/\.' . preg_quote( $sl_class, '/' ) . '(?![a-zA-Z0-9_-])/', $sl_css_code ) ) {
-		$sl_undeclared_hiding[] = '.' . $sl_class;
+foreach ( array_keys( $ow_hiding_classes ) as $ow_class ) {
+	if ( ! preg_match( '/\.' . preg_quote( $ow_class, '/' ) . '(?![a-zA-Z0-9_-])/', $ow_css_code ) ) {
+		$ow_undeclared_hiding[] = '.' . $ow_class;
 	}
 }
 
-sl_assert(
+ow_assert(
 	'the plugin does not rely on the theme to hide its own text',
-	array() === $sl_undeclared_hiding,
-	'Used in three templates since 8.4, declared in none of them. A theme that does not carry the class renders "(bắt buộc)" beside the label it was meant to explain. → ' . implode( ', ', $sl_undeclared_hiding )
+	array() === $ow_undeclared_hiding,
+	'Used in three templates since 8.4, declared in none of them. A theme that does not carry the class renders "(bắt buộc)" beside the label it was meant to explain. → ' . implode( ', ', $ow_undeclared_hiding )
 );
 
 // ---------------------------------------------------------------------
-sl_section( 'Rule 4 — the address the card names is the address it writes (17.4)' );
+ow_section( 'Rule 4 — the address the card names is the address it writes (17.4)' );
 
-$GLOBALS['sl_user_meta'] = array();
+$GLOBALS['ow_user_meta'] = array();
 
 AddressFields::save_for_user(
 	7,
@@ -410,56 +410,56 @@ AddressFields::save_for_user(
 	)
 );
 
-$sl_written = $GLOBALS['sl_user_meta'][7] ?? array();
+$ow_written = $GLOBALS['ow_user_meta'][7] ?? array();
 
 foreach ( array(
 	'shipping_state'                => '01',
 	'shipping_city'                 => 'Phường Cầu Giấy',
 	'shipping_country'              => 'VN',
 	'shipping_address_1'            => '12 Trần Duy Hưng',
-	'smartlogin_shipping_ward_code' => '00076',
-) as $sl_key => $sl_expected ) {
-	sl_check( sprintf( 'save_for_user writes %s', $sl_key ), $sl_expected, $sl_written[ $sl_key ] ?? null );
+	'OmniWP_shipping_ward_code' => '00076',
+) as $ow_key => $ow_expected ) {
+	ow_check( sprintf( 'save_for_user writes %s', $ow_key ), $ow_expected, $ow_written[ $ow_key ] ?? null );
 }
 
 // The half that stops the rule above from being satisfied by a writer that
 // forgot billing. Both address books, not one swapped for the other.
-sl_check( 'and still writes billing_state', '01', $sl_written['billing_state'] ?? null );
-sl_check( 'and still writes billing_address_1', '12 Trần Duy Hưng', $sl_written['billing_address_1'] ?? null );
+ow_check( 'and still writes billing_state', '01', $ow_written['billing_state'] ?? null );
+ow_check( 'and still writes billing_address_1', '12 Trần Duy Hưng', $ow_written['billing_address_1'] ?? null );
 
 // billing stays the single source of truth; shipping is its mirror. Two readers
 // of one fact is the drift this project keeps finding.
-$sl_address_source = sl_source( 'includes/Address/class-address-fields.php' );
+$ow_address_source = ow_source( 'includes/Address/class-address-fields.php' );
 
-sl_assert(
+ow_assert(
 	'billing remains the only side that is read back',
-	false === strpos( sl_method_body( $sl_address_source, 'get_for_user' ), 'shipping_' )
-		&& false === strpos( sl_method_body( $sl_address_source, 'is_complete' ), 'shipping_' ),
+	false === strpos( ow_method_body( $ow_address_source, 'get_for_user' ), 'shipping_' )
+		&& false === strpos( ow_method_body( $ow_address_source, 'is_complete' ), 'shipping_' ),
 	'A mirror that is also read is not a mirror, it is a second source of truth waiting to disagree.'
 );
 
-$sl_address_card = $sl_render(
+$ow_address_card = $ow_render(
 	'partials/account/address',
 	array(
-		'sl_values'   => array(
+		'ow_values'   => array(
 			'province_code' => '01',
 			'province_name' => 'Thành phố Hà Nội',
 			'ward_code'     => '00076',
 			'ward_name'     => 'Phường Cầu Giấy',
 			'street'        => '12 Trần Duy Hưng',
 		),
-		'sl_required' => false,
+		'ow_required' => false,
 	)
 );
 
-sl_assert(
+ow_assert(
 	'the card stops claiming a relationship it does not implement',
-	false === strpos( $sl_address_card, 'sửa cả hai' ),
+	false === strpos( $ow_address_card, 'sửa cả hai' ),
 	'WooCommerce\'s Addresses tab holds two addresses. "Sửa ở đây là sửa cả hai" was false for every customer who had ever saved a separate shipping address.'
 );
 
 // ---------------------------------------------------------------------
-sl_section( 'Rule 5 — a password write records when it happened (17.6)' );
+ow_section( 'Rule 5 — a password write records when it happened (17.6)' );
 
 /*
  * A companion rule over the writers rather than an assertion about a hook.
@@ -475,7 +475,7 @@ sl_section( 'Rule 5 — a password write records when it happened (17.6)' );
  * the exception is written down here rather than the meta being set and the
  * sentence hedged.
  */
-sl_require_companion(
+ow_require_companion(
 	'every file that writes a chosen password records the change',
 	"/wp_set_password\(|'user_pass'\s*=>/",
 	'/record_password_change\(/',
@@ -483,208 +483,208 @@ sl_require_companion(
 	array( 'includes/Auth/class-account-provisioner.php' )
 );
 
-$sl_security_meta = 'SmartLogin\\Security\\SecurityMeta';
+$ow_security_meta = 'OmniWP\\Security\\SecurityMeta';
 
-sl_assert(
+ow_assert(
 	'SecurityMeta owns the key, the write and the phrasing',
-	class_exists( $sl_security_meta ),
+	class_exists( $ow_security_meta ),
 	'One class, so the meta key and the sentence that renders it cannot drift apart.'
 );
 
-if ( class_exists( $sl_security_meta ) ) {
-	$GLOBALS['sl_user_meta'] = array();
+if ( class_exists( $ow_security_meta ) ) {
+	$GLOBALS['ow_user_meta'] = array();
 
-	sl_check(
+	ow_check(
 		'an account with no stored timestamp describes nothing',
 		'',
-		$sl_security_meta::describe_password_age( 7 )
+		$ow_security_meta::describe_password_age( 7 )
 	);
 
-	$sl_security_meta::record_password_change( 7 );
+	$ow_security_meta::record_password_change( 7 );
 
-	sl_assert(
+	ow_assert(
 		'a change recorded now reads as today',
-		'' !== $sl_security_meta::describe_password_age( 7 ),
+		'' !== $ow_security_meta::describe_password_age( 7 ),
 		'The row shows the age or it shows nothing. There is no third state, and "chưa rõ" is the truth for every account that exists today.'
 	);
 
 	// Buckets asserted separately, not as one "something is returned": 11.1
 	// shipped a fallback chain as a no-op with its tests passing.
-	$GLOBALS['sl_user_meta'][7]['_smartlogin_password_changed_at'] = gmdate( 'Y-m-d H:i:s', time() - ( 95 * DAY_IN_SECONDS ) );
+	$GLOBALS['ow_user_meta'][7]['_OmniWP_password_changed_at'] = gmdate( 'Y-m-d H:i:s', time() - ( 95 * DAY_IN_SECONDS ) );
 
-	sl_assert(
+	ow_assert(
 		'three months ago reads in months',
-		false !== strpos( $sl_security_meta::describe_password_age( 7 ), 'tháng' ),
-		'Got: ' . $sl_security_meta::describe_password_age( 7 )
+		false !== strpos( $ow_security_meta::describe_password_age( 7 ), 'tháng' ),
+		'Got: ' . $ow_security_meta::describe_password_age( 7 )
 	);
 
-	$GLOBALS['sl_user_meta'][7]['_smartlogin_password_changed_at'] = gmdate( 'Y-m-d H:i:s', time() - ( 5 * DAY_IN_SECONDS ) );
+	$GLOBALS['ow_user_meta'][7]['_OmniWP_password_changed_at'] = gmdate( 'Y-m-d H:i:s', time() - ( 5 * DAY_IN_SECONDS ) );
 
-	sl_assert(
+	ow_assert(
 		'five days ago reads in days',
-		false !== strpos( $sl_security_meta::describe_password_age( 7 ), 'ngày' ),
-		'Got: ' . $sl_security_meta::describe_password_age( 7 )
+		false !== strpos( $ow_security_meta::describe_password_age( 7 ), 'ngày' ),
+		'Got: ' . $ow_security_meta::describe_password_age( 7 )
 	);
 }
 
-$GLOBALS['sl_user_meta'] = array();
+$GLOBALS['ow_user_meta'] = array();
 
 // ---------------------------------------------------------------------
-sl_section( 'Rule 6 — the notice states the reason it already has (17.5)' );
+ow_section( 'Rule 6 — the notice states the reason it already has (17.5)' );
 
-$sl_reasons = ProfileCompletionService::onboarding_reasons();
-$sl_reason  = (string) ( $sl_reasons['address'] ?? '' );
+$ow_reasons = ProfileCompletionService::onboarding_reasons();
+$ow_reason  = (string) ( $ow_reasons['address'] ?? '' );
 
-$sl_notice = $sl_render(
+$ow_notice = $ow_render(
 	'partials/account/status',
 	array(
-		'sl_status'   => array(
+		'ow_status'   => array(
 			'complete'            => false,
 			'required_missing'    => array( array( 'key' => 'address', 'label' => 'Địa chỉ' ) ),
 			'recommended_missing' => array(),
 			'total'               => 6,
 			'done'                => 5,
 		),
-		'sl_pending'  => array(),
-		'sl_welcome'  => false,
-		'sl_edit_url' => 'https://example.test/my-account/edit-account/',
+		'ow_pending'  => array(),
+		'ow_welcome'  => false,
+		'ow_edit_url' => 'https://example.test/my-account/edit-account/',
 	)
 );
 
-sl_assert(
+ow_assert(
 	'the reason renders beside the thing it is a reason for',
-	'' !== $sl_reason && false !== strpos( $sl_notice, esc_html( $sl_reason ) ),
+	'' !== $ow_reason && false !== strpos( $ow_notice, esc_html( $ow_reason ) ),
 	'The box currently renders implode() of the labels — on a live page, "Địa chỉ, Ngày sinh". The sentence that makes each of those worth filling in has been written and translated since Phase 8, and one screen reads it.'
 );
 
-sl_assert(
+ow_assert(
 	'and it is not a second copy of that sentence',
-	'' !== $sl_reason && false === strpos( sl_source( 'templates/partials/account/status.php' ), $sl_reason ),
+	'' !== $ow_reason && false === strpos( ow_source( 'templates/partials/account/status.php' ), $ow_reason ),
 	'8.4 removed a second source of truth from this exact block. Copying the string back in is how it returns.'
 );
 
 // An item with no reason must still render: `email` deliberately has none, and
 // inventing one here would be the copy drifting from where it lives.
-$sl_no_reason = $sl_render(
+$ow_no_reason = $ow_render(
 	'partials/account/status',
 	array(
-		'sl_status'   => array(
+		'ow_status'   => array(
 			'complete'            => false,
 			'required_missing'    => array( array( 'key' => 'email', 'label' => 'Email' ) ),
 			'recommended_missing' => array(),
 			'total'               => 6,
 			'done'                => 5,
 		),
-		'sl_pending'  => array(),
-		'sl_welcome'  => false,
-		'sl_edit_url' => '',
+		'ow_pending'  => array(),
+		'ow_welcome'  => false,
+		'ow_edit_url' => '',
 	)
 );
 
-sl_assert(
+ow_assert(
 	'an item with no reason still renders its label',
-	false !== strpos( $sl_no_reason, 'Email' ),
+	false !== strpos( $ow_no_reason, 'Email' ),
 	'A template that renders only what it has a reason for drops the item that most needs stating.'
 );
 
 // ---------------------------------------------------------------------
-sl_section( 'Rule 7 — the fraction has a denominator, and one owner (17.7)' );
+ow_section( 'Rule 7 — the fraction has a denominator, and one owner (17.7)' );
 
-$GLOBALS['sl_user_meta'] = array();
+$GLOBALS['ow_user_meta'] = array();
 
-$sl_service = new ProfileCompletionService();
-$sl_status  = $sl_service->status( 7 );
+$ow_service = new ProfileCompletionService();
+$ow_status  = $ow_service->status( 7 );
 
-sl_assert(
+ow_assert(
 	'status() reports how many fields were asked for',
-	isset( $sl_status['total'], $sl_status['done'] ) && is_int( $sl_status['total'] ) && is_int( $sl_status['done'] ),
+	isset( $ow_status['total'], $ow_status['done'] ) && is_int( $ow_status['total'] ) && is_int( $ow_status['done'] ),
 	'"Hoàn thiện 4/6" needs a denominator, and the denominator moves with five settings. Anywhere but here means re-deriving those five lookups in a template.'
 );
 
 Settings::update( array( 'profile.dob' => false ) );
-$sl_without_dob = ( new ProfileCompletionService() )->status( 7 );
+$ow_without_dob = ( new ProfileCompletionService() )->status( 7 );
 Settings::update( array( 'profile.dob' => true ) );
-$sl_with_dob = ( new ProfileCompletionService() )->status( 7 );
+$ow_with_dob = ( new ProfileCompletionService() )->status( 7 );
 
-sl_assert(
+ow_assert(
 	'the denominator moves when the settings move',
-	( $sl_with_dob['total'] ?? 0 ) === ( $sl_without_dob['total'] ?? 0 ) + 1,
+	( $ow_with_dob['total'] ?? 0 ) === ( $ow_without_dob['total'] ?? 0 ) + 1,
 	sprintf(
 		'A denominator that is secretly a constant passes every other assertion in this section. Got %s without dob, %s with.',
-		var_export( $sl_without_dob['total'] ?? null, true ),
-		var_export( $sl_with_dob['total'] ?? null, true )
+		var_export( $ow_without_dob['total'] ?? null, true ),
+		var_export( $ow_with_dob['total'] ?? null, true )
 	)
 );
 
-sl_forbid_pattern(
+ow_forbid_pattern(
 	'no template counts the missing fields for itself',
-	'/count\(\s*\$sl_(required|optional|status)/',
+	'/count\(\s*\$ow_(required|optional|status)/',
 	array(),
 	'The rule that decides a field applies already runs in status(). Counting anywhere else is a second implementation of five settings lookups.'
 );
 
 // ---------------------------------------------------------------------
-sl_section( 'Rule 8 — each card names itself with its own mark (17.8)' );
+ow_section( 'Rule 8 — each card names itself with its own mark (17.8)' );
 
-$sl_section_args = array(
+$ow_section_args = array(
 	'profile'  => array(
-		'sl_user'   => new WP_User( 7, 'Nguyễn Như' ),
-		'sl_gender' => 'female',
-		'sl_dob'    => '05/10/1994',
+		'ow_user'   => new WP_User( 7, 'Nguyễn Như' ),
+		'ow_gender' => 'female',
+		'ow_dob'    => '05/10/1994',
 	),
 	'contact'  => array(
-		'sl_user'       => new WP_User( 7, 'Nguyễn Như' ),
-		'sl_phone'      => '84969789475',
-		'sl_synthetic'  => false,
-		'sl_pending'    => array(),
-		'sl_otp_length' => 6,
-		'sl_providers'  => array(
-			'sl_identities'     => array( $sl_identity( 'google', 'Google', true ) ),
-			'sl_can_unlink'     => true,
-			'sl_redirect'       => 'https://example.test/my-account/',
-			'sl_link_providers' => array(),
+		'ow_user'       => new WP_User( 7, 'Nguyễn Như' ),
+		'ow_phone'      => '84969789475',
+		'ow_synthetic'  => false,
+		'ow_pending'    => array(),
+		'ow_otp_length' => 6,
+		'ow_providers'  => array(
+			'ow_identities'     => array( $ow_identity( 'google', 'Google', true ) ),
+			'ow_can_unlink'     => true,
+			'ow_redirect'       => 'https://example.test/my-account/',
+			'ow_link_providers' => array(),
 		),
 	),
 	'address'  => array(
-		'sl_values'   => array(
+		'ow_values'   => array(
 			'province_code' => '01',
 			'province_name' => 'Thành phố Hà Nội',
 			'ward_code'     => '00076',
 			'ward_name'     => 'Phường Cầu Giấy',
 			'street'        => '12 Trần Duy Hưng',
 		),
-		'sl_required' => false,
+		'ow_required' => false,
 	),
-	'password' => array( 'sl_has_contact' => true ),
+	'password' => array( 'ow_has_contact' => true ),
 );
 
-$sl_marks = array();
+$ow_marks = array();
 
-foreach ( $sl_section_args as $sl_name => $sl_args ) {
-	$sl_html = $sl_render( 'partials/account/' . $sl_name, $sl_args );
+foreach ( $ow_section_args as $ow_name => $ow_args ) {
+	$ow_html = $ow_render( 'partials/account/' . $ow_name, $ow_args );
 
-	if ( preg_match( '/<span class="sl-card__icon"[^>]*>(.*?)<\/span>/s', $sl_html, $sl_mark ) ) {
-		$sl_marks[ $sl_name ] = trim( $sl_mark[1] );
+	if ( preg_match( '/<span class="sl-card__icon"[^>]*>(.*?)<\/span>/s', $ow_html, $ow_mark ) ) {
+		$ow_marks[ $ow_name ] = trim( $ow_mark[1] );
 	}
 }
 
-sl_check( 'every card draws a mark', 4, count( $sl_marks ) );
+ow_check( 'every card draws a mark', 4, count( $ow_marks ) );
 
-sl_assert(
+ow_assert(
 	'and no two cards draw the same one',
-	4 === count( array_unique( $sl_marks ) ),
+	4 === count( array_unique( $ow_marks ) ),
 	sprintf(
 		'Four identical marks distinguish nothing — they are a slot that was never filled. Distinct values: %d. → %s',
-		count( array_unique( $sl_marks ) ),
-		implode( ' | ', array_unique( $sl_marks ) )
+		count( array_unique( $ow_marks ) ),
+		implode( ' | ', array_unique( $ow_marks ) )
 	)
 );
 
-sl_require_single_template(
+ow_require_single_template(
 	'the mark is written in one template',
 	'/class="sl-card__icon"/',
 	'Four partials each carrying their own span is the four-way drift FieldRegistry was rewritten to make unrepresentable. One array declares the label and the mark together.'
 );
 
 // ---------------------------------------------------------------------
-sl_summary( 'Account card' );
+ow_summary( 'Account card' );

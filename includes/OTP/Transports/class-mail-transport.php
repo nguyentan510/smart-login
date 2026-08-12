@@ -3,17 +3,17 @@
  * Deliver OTP by email through wp_mail(), so any SMTP plugin already
  * configured on the site handles transport.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\OTP\Transports;
+namespace OmniWP\OTP\Transports;
 
-use SmartLogin\Identity\UserManager;
-use SmartLogin\Mail\MailLayout;
-use SmartLogin\Mail\MailRegistry;
-use SmartLogin\Mail\MailStructure;
-use SmartLogin\OTP\Placeholders;
-use SmartLogin\Settings;
+use OmniWP\Identity\UserManager;
+use OmniWP\Mail\MailLayout;
+use OmniWP\Mail\MailRegistry;
+use OmniWP\Mail\MailStructure;
+use OmniWP\OTP\Placeholders;
+use OmniWP\Settings;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
@@ -29,7 +29,7 @@ class MailTransport implements TransportInterface, ReportsUnavailability {
 	}
 
 	public function unavailable_message(): string {
-		return __( 'Kênh email chưa được cấu hình. Liên hệ quản trị viên.', 'smart-login' );
+		return __( 'Kênh email chưa được cấu hình. Liên hệ quản trị viên.', 'omniwp' );
 	}
 
 	/**
@@ -37,19 +37,19 @@ class MailTransport implements TransportInterface, ReportsUnavailability {
 	 */
 	public function send( string $destination, string $code, array $ctx ) {
 		if ( ! $this->is_available() ) {
-			return new WP_Error( 'smart_login_email_off', __( 'Kênh email đang tắt.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_email_off', __( 'Kênh email đang tắt.', 'omniwp' ) );
 		}
 
 		if ( ! is_email( $destination ) ) {
-			return new WP_Error( 'smart_login_bad_email', __( 'Địa chỉ email không hợp lệ.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_bad_email', __( 'Địa chỉ email không hợp lệ.', 'omniwp' ) );
 		}
 
 		// Placeholder addresses can never receive mail; failing loudly here beats
 		// generating a bounce and a user waiting for a code that will never come.
 		if ( UserManager::is_synthetic_email( $destination ) ) {
 			return new WP_Error(
-				'smart_login_synthetic_email',
-				__( 'Tài khoản này chưa có email thật. Vui lòng dùng số điện thoại.', 'smart-login' )
+				'OMNIWP_synthetic_email',
+				__( 'Tài khoản này chưa có email thật. Vui lòng dùng số điện thoại.', 'omniwp' )
 			);
 		}
 
@@ -103,7 +103,7 @@ class MailTransport implements TransportInterface, ReportsUnavailability {
 		 * @param array  $ctx
 		 */
 		$mail = (array) apply_filters(
-			'smart_login_otp_email',
+			'omniwp_otp_email',
 			array(
 				'subject' => $subject,
 				'body'    => $body,
@@ -126,8 +126,8 @@ class MailTransport implements TransportInterface, ReportsUnavailability {
 
 		if ( ! $sent ) {
 			return new WP_Error(
-				'smart_login_mail_failed',
-				__( 'Không gửi được email xác thực. Vui lòng thử lại sau ít phút.', 'smart-login' )
+				'OMNIWP_mail_failed',
+				__( 'Không gửi được email xác thực. Vui lòng thử lại sau ít phút.', 'omniwp' )
 			);
 		}
 

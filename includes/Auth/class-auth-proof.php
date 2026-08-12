@@ -10,12 +10,12 @@
  * This is the smallest change that closes a real gap: before it, any code path
  * holding a WP_User could mint a login cookie.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth;
+namespace OmniWP\Auth;
 
-use SmartLogin\Identity\VerifiedClaim;
+use OmniWP\Identity\VerifiedClaim;
 use WP_User;
 
 defined( 'ABSPATH' ) || exit;

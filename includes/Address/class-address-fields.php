@@ -5,27 +5,27 @@
  * Used by the profile form and the [smart_address] shortcode. WooCommerce's own
  * screens go through WooAddress instead, because Woo owns the markup there.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Address;
+namespace OmniWP\Address;
 
-use SmartLogin\Frontend\Assets;
-use SmartLogin\Frontend\TemplateLoader;
-use SmartLogin\Identity\ProfileSeeder;
-use SmartLogin\Settings;
+use OmniWP\Frontend\Assets;
+use OmniWP\Frontend\TemplateLoader;
+use OmniWP\Identity\ProfileSeeder;
+use OmniWP\Settings;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
 
 class AddressFields {
 
-	const FIELD_PROVINCE = 'smartlogin_province_code';
-	const FIELD_WARD     = 'smartlogin_ward_code';
-	const FIELD_STREET   = 'smartlogin_address_1';
+	const FIELD_PROVINCE = 'OmniWP_province_code';
+	const FIELD_WARD     = 'OmniWP_ward_code';
+	const FIELD_STREET   = 'OmniWP_address_1';
 
 	/** Ward code is kept alongside Woo's name-based billing_city. */
-	const META_WARD_CODE = 'smartlogin_ward_code';
+	const META_WARD_CODE = 'OmniWP_ward_code';
 
 	/**
 	 * The same, for the shipping side.
@@ -34,7 +34,7 @@ class AddressFields {
 	 * checkout's shipping fields. Naming it here in 17.4 gives the two halves one
 	 * owner, rather than a constant on one side and a string literal on the other.
 	 */
-	const META_SHIPPING_WARD_CODE = 'smartlogin_shipping_ward_code';
+	const META_SHIPPING_WARD_CODE = 'OmniWP_shipping_ward_code';
 
 	/**
 	 * Current address of a user, in the shape the template expects.
@@ -117,7 +117,7 @@ class AddressFields {
 
 		if ( $empty ) {
 			if ( $required ) {
-				return new WP_Error( 'smart_login_address_required', __( 'Vui lòng chọn địa chỉ.', 'smart-login' ) );
+				return new WP_Error( 'OMNIWP_address_required', __( 'Vui lòng chọn địa chỉ.', 'omniwp' ) );
 			}
 
 			return array(
@@ -130,25 +130,25 @@ class AddressFields {
 		}
 
 		if ( '' === $province_code ) {
-			return new WP_Error( 'smart_login_no_province', __( 'Vui lòng chọn Tỉnh/Thành phố.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_no_province', __( 'Vui lòng chọn Tỉnh/Thành phố.', 'omniwp' ) );
 		}
 
 		$province = AddressRepository::find_province( $province_code );
 
 		if ( ! $province ) {
-			return new WP_Error( 'smart_login_bad_province', __( 'Tỉnh/Thành phố không hợp lệ.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_bad_province', __( 'Tỉnh/Thành phố không hợp lệ.', 'omniwp' ) );
 		}
 
 		if ( '' === $ward_code ) {
-			return new WP_Error( 'smart_login_no_ward', __( 'Vui lòng chọn Phường/Xã.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_no_ward', __( 'Vui lòng chọn Phường/Xã.', 'omniwp' ) );
 		}
 
 		$ward = AddressRepository::find_ward( $ward_code, $province_code );
 
 		if ( ! $ward ) {
 			return new WP_Error(
-				'smart_login_ward_mismatch',
-				__( 'Phường/Xã không thuộc Tỉnh/Thành phố đã chọn. Vui lòng chọn lại.', 'smart-login' )
+				'OMNIWP_ward_mismatch',
+				__( 'Phường/Xã không thuộc Tỉnh/Thành phố đã chọn. Vui lòng chọn lại.', 'omniwp' )
 			);
 		}
 
@@ -224,7 +224,7 @@ class AddressFields {
 		 * @param int   $user_id
 		 * @param array $clean
 		 */
-		do_action( 'smart_login_address_saved', $user_id, $clean );
+		do_action( 'OMNIWP_address_saved', $user_id, $clean );
 	}
 
 	/**

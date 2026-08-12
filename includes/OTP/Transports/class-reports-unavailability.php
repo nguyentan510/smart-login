@@ -3,7 +3,7 @@
  * A transport that can say, in its own words, why it is not usable.
  *
  * Separate from TransportInterface, and optional, for a compatibility reason
- * rather than a stylistic one: `smart_login_otp_transports` is published API and
+ * rather than a stylistic one: `OMNIWP_otp_transports` is published API and
  * the router's own docblock promises that adding a transport means implementing
  * TransportInterface "and nothing else". Adding a fourth required method would
  * fatal every transport a site wrote against that promise — including this
@@ -17,10 +17,10 @@
  * had not been asked to do anything. A fixed list of ids cannot describe an open
  * registry; only the transport itself can.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\OTP\Transports;
+namespace OmniWP\OTP\Transports;
 
 defined( 'ABSPATH' ) || exit;
 

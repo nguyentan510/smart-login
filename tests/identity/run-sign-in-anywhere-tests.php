@@ -12,15 +12,15 @@
  * Five of them describe code that does not exist yet. Each one asserts its
  * subject was **found** before counting anything, so narrowing a rule to nothing
  * reports PENDING rather than passing vacuously — the failure mode 10.0's
- * PENDING rows were written to avoid, and the reason `sl_pending()` exists.
+ * PENDING rows were written to avoid, and the reason `ow_pending()` exists.
  *
  * Rule 9 is here because the defect it forbids was in the first draft of this
- * plan: `?smart_login_step=` already existed and the plan was adding `#login` as
+ * plan: `?OMNIWP_step=` already existed and the plan was adding `#login` as
  * a second, weaker vocabulary for it.
  *
  * Run with:  php tests/identity/run-sign-in-anywhere-tests.php
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 require __DIR__ . '/../stubs.php';
@@ -30,11 +30,11 @@ require __DIR__ . '/../harness.php';
 // Rule 7 renders a real fragment, so the suite needs the template stubs and a
 // visitor who is not signed in — the dialog's whole subject is somebody who is
 // not.
-$GLOBALS['sl_logged_in'] = false;
+$GLOBALS['ow_logged_in'] = false;
 
-use SmartLogin\Frontend\Flow;
+use OmniWP\Frontend\Flow;
 
-$sl_sources = sl_plugin_sources();
+$ow_sources = ow_plugin_sources();
 
 /**
  * The steps a visitor may ask for by URL.
@@ -44,7 +44,7 @@ $sl_sources = sl_plugin_sources();
  *
  * @return string[]
  */
-$sl_public_steps = static function (): array {
+$ow_public_steps = static function (): array {
 	$reflection = new ReflectionClass( Flow::class );
 
 	foreach ( $reflection->getReflectionConstants() as $constant ) {
@@ -59,8 +59,8 @@ $sl_public_steps = static function (): array {
 /**
  * Source of a file that may not exist yet, by path.
  */
-$sl_file = static function ( string $relative ) use ( $sl_sources ): string {
-	return $sl_sources[ $relative ] ?? sl_source( $relative );
+$ow_file = static function ( string $relative ) use ( $ow_sources ): string {
+	return $ow_sources[ $relative ] ?? ow_source( $relative );
 };
 
 /**
@@ -72,12 +72,12 @@ $sl_file = static function ( string $relative ) use ( $sl_sources ): string {
  * comment, and the dialog shell's header explains what a nested `<form>` does to
  * the form around it.
  *
- * `sl_method_body()` in the harness already strips comments for exactly this
+ * `ow_method_body()` in the harness already strips comments for exactly this
  * reason — "a rule that reads prose is a rule that goes green when somebody
  * rewords a comment", and this is the same defect pointing the other way. There
  * was no file-level equivalent; this is it.
  */
-$sl_code = static function ( string $source ): string {
+$ow_code = static function ( string $source ): string {
 	if ( '' === $source ) {
 		return '';
 	}
@@ -97,7 +97,7 @@ $sl_code = static function ( string $source ): string {
 };
 
 // ---------------------------------------------------------------------------
-sl_section( 'Rule 1 — every public step is reachable over REST (19.1, 19.2)' );
+ow_section( 'Rule 1 — every public step is reachable over REST (19.1, 19.2)' );
 // ---------------------------------------------------------------------------
 
 /*
@@ -106,18 +106,18 @@ sl_section( 'Rule 1 — every public step is reachable over REST (19.1, 19.2)' )
  * UX — exists only on the HTML path, so a client that is not an HTML form
  * cannot start the flow at all.
  */
-$sl_rest  = $sl_file( 'includes/Frontend/class-rest-controller.php' );
-$sl_steps = $sl_public_steps();
+$ow_rest  = $ow_file( 'includes/Frontend/class-rest-controller.php' );
+$ow_steps = $ow_public_steps();
 
-sl_assert(
+ow_assert(
 	'Flow::PUBLIC_STEPS is readable, so the rule has a subject',
-	array() !== $sl_steps,
+	array() !== $ow_steps,
 	'Reflection found no PUBLIC_STEPS on Flow. The rule below would pass for want of anything to check.'
 );
 
-sl_assert(
+ow_assert(
 	'the REST controller registers an identify route',
-	(bool) preg_match( "/'identify'\s*=>/", $sl_rest ),
+	(bool) preg_match( "/'identify'\s*=>/", $ow_rest ),
 	'Finding 3: routes are register/verify/resend/login/forgot/reset. Identifier-first has no JSON path.'
 );
 
@@ -130,16 +130,16 @@ sl_assert(
  * that a route existed because an array key was spelled the same way. Caught in
  * the run that landed 19.1, which is what these rules are for.
  */
-if ( array() !== $sl_steps ) {
-	sl_assert(
+if ( array() !== $ow_steps ) {
+	ow_assert(
 		'the REST controller can render every public step',
-		(bool) preg_match( '/function\s+handle_step\s*\(/', $sl_rest ),
-		'19.2 adds the fragment route. Steps needing cover: ' . implode( ', ', $sl_steps )
+		(bool) preg_match( '/function\s+handle_step\s*\(/', $ow_rest ),
+		'19.2 adds the fragment route. Steps needing cover: ' . implode( ', ', $ow_steps )
 	);
 }
 
 // ---------------------------------------------------------------------------
-sl_section( 'Rule 2 — one decision, not two (19.1)' );
+ow_section( 'Rule 2 — one decision, not two (19.1)' );
 // ---------------------------------------------------------------------------
 
 /*
@@ -151,19 +151,19 @@ sl_section( 'Rule 2 — one decision, not two (19.1)' );
  * soon as one method somewhere mentions the engine, which is precisely the
  * failure being guarded against.
  */
-$sl_form_controller = $sl_file( 'includes/Frontend/class-form-controller.php' );
+$ow_form_controller = $ow_file( 'includes/Frontend/class-form-controller.php' );
 
-sl_assert(
+ow_assert(
 	'FormController::handle_identify() was found, so the rule has a subject',
-	'' !== sl_method_body( $sl_form_controller, 'handle_identify' ),
+	'' !== ow_method_body( $ow_form_controller, 'handle_identify' ),
 	'Without a body to read, the delegation checks below would pass vacuously.'
 );
 
-foreach ( array( 'handle_identify', 'handle_login', 'handle_verify_otp', 'handle_forgot' ) as $sl_handler ) {
-	$sl_body = sl_method_body( $sl_form_controller, $sl_handler );
+foreach ( array( 'handle_identify', 'handle_login', 'handle_verify_otp', 'handle_forgot' ) as $ow_handler ) {
+	$ow_body = ow_method_body( $ow_form_controller, $ow_handler );
 
-	if ( '' === $sl_body ) {
-		sl_pending( 'FormController::' . $sl_handler . '() delegates to the flow engine', 'method not found' );
+	if ( '' === $ow_body ) {
+		ow_pending( 'FormController::' . $ow_handler . '() delegates to the flow engine', 'method not found' );
 		continue;
 	}
 
@@ -178,21 +178,21 @@ foreach ( array( 'handle_identify', 'handle_login', 'handle_verify_otp', 'handle
 	 * and after 19.1 exactly one method in the class is allowed to say it:
 	 * apply(), which is applying somebody else's decision.
 	 */
-	sl_assert(
-		'FormController::' . $sl_handler . '() asks the flow engine',
-		false !== strpos( $sl_body, 'engine()->' ),
+	ow_assert(
+		'FormController::' . $ow_handler . '() asks the flow engine',
+		false !== strpos( $ow_body, 'engine()->' ),
 		'19.1 moves the decision into FlowEngine so both controllers ask one implementation.'
 	);
 
-	sl_assert(
-		'FormController::' . $sl_handler . '() decides nothing itself',
-		false === strpos( $sl_body, 'Flow::set(' ) && false === strpos( $sl_body, 'Notices::' ),
+	ow_assert(
+		'FormController::' . $ow_handler . '() decides nothing itself',
+		false === strpos( $ow_body, 'Flow::set(' ) && false === strpos( $ow_body, 'Notices::' ),
 		'A handler that picks its own step is a second copy of the state machine, whatever it delegates alongside.'
 	);
 }
 
 // ---------------------------------------------------------------------------
-sl_section( 'Rule 3 — in place means in place (19.5)' );
+ow_section( 'Rule 3 — in place means in place (19.5)' );
 // ---------------------------------------------------------------------------
 
 /*
@@ -201,28 +201,28 @@ sl_section( 'Rule 3 — in place means in place (19.5)' );
  * profile_url() falls back to admin_url( 'profile.php' ) without WooCommerce.
  * Register from a blog post today and you land in wp-admin.
  */
-$sl_context   = $sl_file( 'includes/Auth/class-auth-context.php' );
-$sl_redirector = $sl_file( 'includes/Auth/class-post-auth-redirector.php' );
+$ow_context   = $ow_file( 'includes/Auth/class-auth-context.php' );
+$ow_redirector = $ow_file( 'includes/Auth/class-post-auth-redirector.php' );
 
-$sl_has_in_place = (bool) preg_match( '/in_place/', $sl_context );
+$ow_has_in_place = (bool) preg_match( '/in_place/', $ow_context );
 
-sl_assert(
+ow_assert(
 	'AuthContext carries whether the flow owns its own surface',
-	$sl_has_in_place,
+	$ow_has_in_place,
 	'19.5 adds in_place. It is a fact about the request, which is what AuthContext is for.'
 );
 
-if ( ! $sl_has_in_place ) {
-	sl_pending(
+if ( ! $ow_has_in_place ) {
+	ow_pending(
 		'a new user authenticated in place is not handed a redirect to profile_url()',
 		'AuthContext::$in_place'
 	);
 } else {
-	$sl_redirect_body = sl_method_body( $sl_redirector, 'redirect' );
+	$ow_redirect_body = ow_method_body( $ow_redirector, 'redirect' );
 
-	sl_assert(
+	ow_assert(
 		'PostAuthRedirector::redirect() reads it',
-		'' !== $sl_redirect_body && false !== strpos( $sl_redirect_body, 'in_place' ),
+		'' !== $ow_redirect_body && false !== strpos( $ow_redirect_body, 'in_place' ),
 		'The new-user branch must not reach profile_url() when the flow renders its own surface.'
 	);
 
@@ -239,12 +239,12 @@ if ( ! $sl_has_in_place ) {
 	 * falling back to wp-admin. So the second assertion below is the literal
 	 * finding: registering from a blog post landed people in wp-admin.
 	 */
-	$sl_new_user = static function ( bool $in_place ): \SmartLogin\Auth\AuthResult {
-		$GLOBALS['sl_user_meta'] = array();
+	$ow_new_user = static function ( bool $in_place ): \OmniWP\Auth\AuthResult {
+		$GLOBALS['ow_user_meta'] = array();
 
-		return new \SmartLogin\Auth\AuthResult(
+		return new \OmniWP\Auth\AuthResult(
 			7,
-			new \SmartLogin\Auth\AuthContext(
+			new \OmniWP\Auth\AuthContext(
 				array(
 					'auth_method' => 'otp',
 					'user_id'     => 7,
@@ -256,26 +256,26 @@ if ( ! $sl_has_in_place ) {
 		);
 	};
 
-	$sl_page_url  = ( new \SmartLogin\Auth\PostAuthRedirector() )->redirect( $sl_new_user( false ), 'https://example.test/san-pham/ao-thun/' );
-	$sl_place_url = ( new \SmartLogin\Auth\PostAuthRedirector() )->redirect( $sl_new_user( true ), 'https://example.test/san-pham/ao-thun/' );
+	$ow_page_url  = ( new \OmniWP\Auth\PostAuthRedirector() )->redirect( $ow_new_user( false ), 'https://example.test/san-pham/ao-thun/' );
+	$ow_place_url = ( new \OmniWP\Auth\PostAuthRedirector() )->redirect( $ow_new_user( true ), 'https://example.test/san-pham/ao-thun/' );
 
-	sl_assert(
+	ow_assert(
 		'a page-hosted registration still goes where it always did',
-		false !== strpos( $sl_page_url, 'smartlogin_welcome=1' ),
-		'19.5 must not change the shortcode path. Got: ' . $sl_page_url
+		false !== strpos( $ow_page_url, 'OmniWP_welcome=1' ),
+		'19.5 must not change the shortcode path. Got: ' . $ow_page_url
 	);
 
-	sl_check( 'an in-place registration is given no destination at all', '', $sl_place_url );
+	ow_check( 'an in-place registration is given no destination at all', '', $ow_place_url );
 
-	sl_assert(
+	ow_assert(
 		'and never one inside wp-admin',
-		false === strpos( $sl_place_url, 'wp-admin' ),
-		'Finding 1: profile_url() falls back to admin_url( profile.php ) without WooCommerce, and the page path proves it by returning ' . $sl_page_url
+		false === strpos( $ow_place_url, 'wp-admin' ),
+		'Finding 1: profile_url() falls back to admin_url( profile.php ) without WooCommerce, and the page path proves it by returning ' . $ow_page_url
 	);
 }
 
 // ---------------------------------------------------------------------------
-sl_section( 'Rule 4 — no nonce in cacheable markup (19.3)' );
+ow_section( 'Rule 4 — no nonce in cacheable markup (19.3)' );
 // ---------------------------------------------------------------------------
 
 /*
@@ -286,28 +286,28 @@ sl_section( 'Rule 4 — no nonce in cacheable markup (19.3)' );
  * The subject is the footer hook. Until something registers one there is nothing
  * to check, and saying so is the point of PENDING.
  */
-$sl_footer_files = array();
+$ow_footer_files = array();
 
-foreach ( $sl_sources as $sl_relative => $sl_contents ) {
-	if ( preg_match( "/add_action\(\s*'wp_footer'/", $sl_contents ) ) {
-		$sl_footer_files[] = $sl_relative;
+foreach ( $ow_sources as $ow_relative => $ow_contents ) {
+	if ( preg_match( "/add_action\(\s*'wp_footer'/", $ow_contents ) ) {
+		$ow_footer_files[] = $ow_relative;
 	}
 }
 
-if ( array() === $sl_footer_files ) {
-	sl_pending( 'nothing hooked to wp_footer emits RequestGuard::fields()', 'no wp_footer hook exists yet' );
+if ( array() === $ow_footer_files ) {
+	ow_pending( 'nothing hooked to wp_footer emits RequestGuard::fields()', 'no wp_footer hook exists yet' );
 } else {
-	foreach ( $sl_footer_files as $sl_relative ) {
-		sl_assert(
-			$sl_relative . ' emits no nonce into the footer',
-			! preg_match( '/RequestGuard::fields|wp_nonce_field/', $sl_sources[ $sl_relative ] ),
+	foreach ( $ow_footer_files as $ow_relative ) {
+		ow_assert(
+			$ow_relative . ' emits no nonce into the footer',
+			! preg_match( '/RequestGuard::fields|wp_nonce_field/', $ow_sources[ $ow_relative ] ),
 			'Decision 1: the dialog fetches its markup so the nonce is minted per request, never cached.'
 		);
 	}
 }
 
 // ---------------------------------------------------------------------------
-sl_section( 'Rule 5 — no duplicate ids when a page holds two copies (19.3)' );
+ow_section( 'Rule 5 — no duplicate ids when a page holds two copies (19.3)' );
 // ---------------------------------------------------------------------------
 
 /*
@@ -317,30 +317,30 @@ sl_section( 'Rule 5 — no duplicate ids when a page holds two copies (19.3)' );
  * focus. Shipped since the template was written; the dialog only makes it
  * reachable.
  */
-$sl_form_auth = $sl_code( $sl_file( 'templates/form-auth.php' ) );
+$ow_form_auth = $ow_code( $ow_file( 'templates/form-auth.php' ) );
 
-sl_assert(
+ow_assert(
 	'templates/form-auth.php was found, so the rule has a subject',
-	'' !== $sl_form_auth,
+	'' !== $ow_form_auth,
 	'Without the template there is nothing to scope.'
 );
 
-if ( '' !== $sl_form_auth ) {
-	sl_assert(
+if ( '' !== $ow_form_auth ) {
+	ow_assert(
 		'the identify template scopes its ids',
-		! preg_match( '/id="sl-identity"/', $sl_form_auth ),
+		! preg_match( '/id="sl-identity"/', $ow_form_auth ),
 		'A literal id cannot appear twice on one page. 19.3 gives every id in this template a render-scoped prefix.'
 	);
 
-	sl_assert(
+	ow_assert(
 		'the identify template does not claim focus in markup',
-		! preg_match( '/\bautofocus\b/', $sl_form_auth ),
+		! preg_match( '/\bautofocus\b/', $ow_form_auth ),
 		'Two autofocus controls is one too many. The dialog applies focus on open instead.'
 	);
 }
 
 // ---------------------------------------------------------------------------
-sl_section( 'Rule 6 — the shell is outside every form (19.3)' );
+ow_section( 'Rule 6 — the shell is outside every form (19.3)' );
 // ---------------------------------------------------------------------------
 
 /*
@@ -348,20 +348,20 @@ sl_section( 'Rule 6 — the shell is outside every form (19.3)' );
  * closes the *outer* form and silently disables everything after it — the defect
  * where "Lưu thay đổi" had no form to submit and pressing it did nothing.
  */
-$sl_dialog_template = $sl_code( $sl_file( 'templates/login-dialog.php' ) );
+$ow_dialog_template = $ow_code( $ow_file( 'templates/login-dialog.php' ) );
 
-if ( '' === $sl_dialog_template ) {
-	sl_pending( 'the dialog shell contains no nested form', 'templates/login-dialog.php' );
+if ( '' === $ow_dialog_template ) {
+	ow_pending( 'the dialog shell contains no nested form', 'templates/login-dialog.php' );
 } else {
-	sl_assert(
+	ow_assert(
 		'the dialog shell contains no <form>',
-		! preg_match( '/<form\b/', $sl_dialog_template ),
+		! preg_match( '/<form\b/', $ow_dialog_template ),
 		'The shell is a container. Forms arrive inside the fetched fragment, after the page has closed its own.'
 	);
 }
 
 // ---------------------------------------------------------------------------
-sl_section( 'Rule 7 — the fragment does not link into the API (19.2)' );
+ow_section( 'Rule 7 — the fragment does not link into the API (19.2)' );
 // ---------------------------------------------------------------------------
 
 /*
@@ -370,17 +370,17 @@ sl_section( 'Rule 7 — the fragment does not link into the API (19.2)' );
  * rendered over REST emits links into the API unless the renderer is given the
  * host page explicitly.
  */
-$sl_flow = $sl_file( 'includes/Frontend/class-flow.php' );
+$ow_flow = $ow_file( 'includes/Frontend/class-flow.php' );
 
-sl_assert(
+ow_assert(
 	'Flow::url() was found, so the rule has a subject',
-	'' !== sl_method_body( $sl_flow, 'url' ),
+	'' !== ow_method_body( $ow_flow, 'url' ),
 	'Without the method there is nothing to give a base to.'
 );
 
-sl_assert(
+ow_assert(
 	'Flow can be told which page it is rendering for',
-	(bool) preg_match( '/function\s+(set_base|base)\s*\(/', $sl_flow ),
+	(bool) preg_match( '/function\s+(set_base|base)\s*\(/', $ow_flow ),
 	'19.2 adds a render context. Without it every step link in a fetched fragment points at /wp-json/.'
 );
 
@@ -393,96 +393,96 @@ sl_assert(
  * `/my-account/` for "the current request", so a fragment that ignored its base
  * would say so out loud.
  */
-if ( class_exists( \SmartLogin\Frontend\FragmentRenderer::class ) ) {
-	$sl_host     = 'https://example.test/san-pham/ao-thun/';
-	$sl_fragment = sl_capture(
-		static function () use ( $sl_host ) {
-			$GLOBALS['sl_rendered'] = ( new \SmartLogin\Frontend\FragmentRenderer() )->render(
+if ( class_exists( \OmniWP\Frontend\FragmentRenderer::class ) ) {
+	$ow_host     = 'https://example.test/san-pham/ao-thun/';
+	$ow_fragment = ow_capture(
+		static function () use ( $ow_host ) {
+			$GLOBALS['ow_rendered'] = ( new \OmniWP\Frontend\FragmentRenderer() )->render(
 				Flow::STEP_IDENTIFY,
-				$sl_host,
-				$sl_host
+				$ow_host,
+				$ow_host
 			);
 		}
 	);
 
-	$sl_html = (string) ( $GLOBALS['sl_rendered']['html'] ?? '' );
+	$ow_html = (string) ( $GLOBALS['ow_rendered']['html'] ?? '' );
 
-	sl_assert(
+	ow_assert(
 		'a fragment renders at all',
-		null === $sl_fragment['error'] && '' !== $sl_html,
-		'render failed: ' . (string) $sl_fragment['error']
+		null === $ow_fragment['error'] && '' !== $ow_html,
+		'render failed: ' . (string) $ow_fragment['error']
 	);
 
-	sl_assert(
+	ow_assert(
 		'a fragment carries the host page, not the API',
-		'' !== $sl_html && false === strpos( $sl_html, '/wp-json/' ),
+		'' !== $ow_html && false === strpos( $ow_html, '/wp-json/' ),
 		'Finding 8: Flow::url() computes links against the current request, which inside REST is the API URL.'
 	);
 
-	sl_assert(
+	ow_assert(
 		'a fragment returns the visitor to the page they were on',
-		false !== strpos( $sl_html, 'value="' . $sl_host . '"' ),
+		false !== strpos( $ow_html, 'value="' . $ow_host . '"' ),
 		'redirect_to must be the host page. form-auth.php read $_GET directly until 19.2.'
 	);
 
-	sl_assert(
+	ow_assert(
 		'a fragment does not offer the current request as a destination',
-		false === strpos( $sl_html, '/my-account/' ),
+		false === strpos( $ow_html, '/my-account/' ),
 		'The stub answers /my-account/ for "the current request". Seeing it means the base was ignored.'
 	);
 } else {
-	sl_pending( 'a fragment carries the host page, not the API', 'includes/Frontend/class-fragment-renderer.php' );
+	ow_pending( 'a fragment carries the host page, not the API', 'includes/Frontend/class-fragment-renderer.php' );
 }
 
 // ---------------------------------------------------------------------------
-sl_section( 'Rule 8 — the trigger degrades (19.4)' );
+ow_section( 'Rule 8 — the trigger degrades (19.4)' );
 // ---------------------------------------------------------------------------
 
-$sl_launcher = $sl_file( 'assets/js/smart-login-launcher.js' );
+$ow_launcher = $ow_file( 'assets/js/omniwp-launcher.js' );
 
-if ( '' === $sl_launcher ) {
-	sl_pending( 'the launcher resolves #login to the canonical query form', 'assets/js/smart-login-launcher.js' );
-	sl_pending( 'a blocked script leaves a working link to the sign-in page', 'assets/js/smart-login-launcher.js' );
+if ( '' === $ow_launcher ) {
+	ow_pending( 'the launcher resolves #login to the canonical query form', 'assets/js/omniwp-launcher.js' );
+	ow_pending( 'a blocked script leaves a working link to the sign-in page', 'assets/js/omniwp-launcher.js' );
 } else {
-	sl_assert(
+	ow_assert(
 		'the launcher resolves the hash to the canonical step parameter',
-		false !== strpos( $sl_launcher, 'smart_login_step' ),
+		false !== strpos( $ow_launcher, 'OMNIWP_step' ),
 		'Decision 4: the query parameter is canonical because it is the only form the server can see.'
 	);
 }
 
 // ---------------------------------------------------------------------------
-sl_section( 'Rule 9 — one vocabulary (19.4)' );
+ow_section( 'Rule 9 — one vocabulary (19.4)' );
 // ---------------------------------------------------------------------------
 
 /*
  * Finding 11, and the defect this rule exists to prevent was in the first draft
- * of this plan. `?smart_login_step=` already existed, was already allowlisted
+ * of this plan. `?OMNIWP_step=` already existed, was already allowlisted
  * against PUBLIC_STEPS and was already generated by Flow::url(). Adding a second
  * list of step names in JavaScript is how the two drift.
  */
-if ( '' === $sl_launcher ) {
-	sl_pending( 'no step allowlist is restated in JavaScript', 'assets/js/smart-login-launcher.js' );
+if ( '' === $ow_launcher ) {
+	ow_pending( 'no step allowlist is restated in JavaScript', 'assets/js/omniwp-launcher.js' );
 } else {
-	$sl_restated = 0;
+	$ow_restated = 0;
 
-	foreach ( $sl_steps as $sl_step ) {
-		if ( preg_match( "/['\"]" . preg_quote( $sl_step, '/' ) . "['\"]/", $sl_launcher ) ) {
-			++$sl_restated;
+	foreach ( $ow_steps as $ow_step ) {
+		if ( preg_match( "/['\"]" . preg_quote( $ow_step, '/' ) . "['\"]/", $ow_launcher ) ) {
+			++$ow_restated;
 		}
 	}
 
 	// One is the alias map's target and is expected; a full copy of the list is
 	// the second source of truth this rule forbids.
-	sl_assert(
+	ow_assert(
 		'the launcher does not restate PUBLIC_STEPS',
-		$sl_restated < count( $sl_steps ),
-		'Localize the allowlist from PHP. Found ' . $sl_restated . ' of ' . count( $sl_steps ) . ' step names hard-coded.'
+		$ow_restated < count( $ow_steps ),
+		'Localize the allowlist from PHP. Found ' . $ow_restated . ' of ' . count( $ow_steps ) . ' step names hard-coded.'
 	);
 }
 
 // ---------------------------------------------------------------------------
-sl_section( 'Rule 10 — no link is rewritten (19.8)' );
+ow_section( 'Rule 10 — no link is rewritten (19.8)' );
 // ---------------------------------------------------------------------------
 
 /*
@@ -491,18 +491,18 @@ sl_section( 'Rule 10 — no link is rewritten (19.8)' );
  * ordinary link the theme wrote. A plugin that rewrote href would own a failure
  * mode where its own script is the only thing keeping the site's login working.
  */
-if ( '' === $sl_launcher ) {
-	sl_pending( 'the launcher never assigns to href', 'assets/js/smart-login-launcher.js' );
+if ( '' === $ow_launcher ) {
+	ow_pending( 'the launcher never assigns to href', 'assets/js/omniwp-launcher.js' );
 } else {
-	sl_assert(
+	ow_assert(
 		'the launcher never assigns to href',
-		! preg_match( '/\.href\s*=|setAttribute\(\s*[\'"]href/', $sl_launcher ),
+		! preg_match( '/\.href\s*=|setAttribute\(\s*[\'"]href/', $ow_launcher ),
 		'19.8 intercepts clicks. Rewriting href is what makes a captured link unable to survive a script failure.'
 	);
 }
 
 // ---------------------------------------------------------------------------
-sl_section( 'Rule 11 — one session writer, and it fires wp_login (19.9)' );
+ow_section( 'Rule 11 — one session writer, and it fires wp_login (19.9)' );
 // ---------------------------------------------------------------------------
 
 /*
@@ -515,30 +515,30 @@ sl_section( 'Rule 11 — one session writer, and it fires wp_login (19.9)' );
  * checked is worth a rule the day somebody notices it holds. It is also what
  * stops 19.9 being satisfied by deleting the thing it depends on.
  */
-$sl_writers = array();
+$ow_writers = array();
 
-foreach ( $sl_sources as $sl_relative => $sl_contents ) {
-	if ( 0 !== strpos( $sl_relative, 'includes/' ) ) {
+foreach ( $ow_sources as $ow_relative => $ow_contents ) {
+	if ( 0 !== strpos( $ow_relative, 'includes/' ) ) {
 		continue;
 	}
 
-	if ( preg_match( '/wp_set_auth_cookie\s*\(/', $sl_contents ) ) {
-		$sl_writers[] = $sl_relative;
+	if ( preg_match( '/wp_set_auth_cookie\s*\(/', $ow_contents ) ) {
+		$ow_writers[] = $ow_relative;
 	}
 }
 
-sl_check( 'exactly one file mints a session', 1, count( $sl_writers ) );
+ow_check( 'exactly one file mints a session', 1, count( $ow_writers ) );
 
-foreach ( $sl_writers as $sl_relative ) {
-	sl_assert(
-		$sl_relative . ' fires wp_login',
-		(bool) preg_match( "/do_action\(\s*'wp_login'/", $sl_sources[ $sl_relative ] ),
+foreach ( $ow_writers as $ow_relative ) {
+	ow_assert(
+		$ow_relative . ' fires wp_login',
+		(bool) preg_match( "/do_action\(\s*'wp_login'/", $ow_sources[ $ow_relative ] ),
 		"WooCommerce's guest-cart merge hangs off this action. Without it the cart silently stops merging."
 	);
 }
 
 // ---------------------------------------------------------------------------
-sl_section( 'Rule 12 — the provider round trip comes home (19.6)' );
+ow_section( 'Rule 12 — the provider round trip comes home (19.6)' );
 // ---------------------------------------------------------------------------
 
 /*
@@ -552,33 +552,33 @@ sl_section( 'Rule 12 — the provider round trip comes home (19.6)' );
  * a marker applied unconditionally would reopen the dialog for every visitor
  * who ever used Google, including on the page path.
  */
-$sl_host_page = 'https://example.test/san-pham/ao-thun/';
+$ow_host_page = 'https://example.test/san-pham/ao-thun/';
 
-$sl_plain  = \SmartLogin\Auth\ProviderAuthController::start_url( 'google', $sl_host_page );
-$sl_placed = \SmartLogin\Auth\ProviderAuthController::start_url( 'google', $sl_host_page, false, true );
+$ow_plain  = \OmniWP\Auth\ProviderAuthController::start_url( 'google', $ow_host_page );
+$ow_placed = \OmniWP\Auth\ProviderAuthController::start_url( 'google', $ow_host_page, false, true );
 
-sl_assert(
+ow_assert(
 	'a start url carries the page the visitor was on',
-	false !== strpos( rawurldecode( $sl_plain ), $sl_host_page ),
-	'form-auth.php passes Flow::redirect_to(), which for a fragment is the host page. Got: ' . $sl_plain
+	false !== strpos( rawurldecode( $ow_plain ), $ow_host_page ),
+	'form-auth.php passes Flow::redirect_to(), which for a fragment is the host page. Got: ' . $ow_plain
 );
 
-sl_assert(
+ow_assert(
 	'a dialog stamps the return url so the round trip can reopen it',
-	false !== strpos( rawurldecode( $sl_placed ), \SmartLogin\Auth\ProviderAuthController::IN_PLACE_ARG ),
+	false !== strpos( rawurldecode( $ow_placed ), \OmniWP\Auth\ProviderAuthController::IN_PLACE_ARG ),
 	'Without the marker a new member returns to the account page instead of the page they left.'
 );
 
-sl_assert(
+ow_assert(
 	'a page-hosted button stamps nothing',
-	false === strpos( rawurldecode( $sl_plain ), \SmartLogin\Auth\ProviderAuthController::IN_PLACE_ARG ),
+	false === strpos( rawurldecode( $ow_plain ), \OmniWP\Auth\ProviderAuthController::IN_PLACE_ARG ),
 	'The marker must be conditional. Applied always, it would reopen a dialog on the sign-in page too.'
 );
 
-sl_check(
+ow_check(
 	'an off-site return url is still refused',
 	false,
-	false !== strpos( \SmartLogin\Auth\ProviderAuthController::start_url( 'google', 'https://evil.test/', false, true ), 'evil.test' )
+	false !== strpos( \OmniWP\Auth\ProviderAuthController::start_url( 'google', 'https://evil.test/', false, true ), 'evil.test' )
 );
 
 /*
@@ -587,15 +587,15 @@ sl_check(
  * has watched a rename cross an untested boundary six times, and two names for
  * "this member has just registered" is how a seventh starts.
  */
-sl_assert(
+ow_assert(
 	'the reopen flag is the one a finished registration already writes',
-	false !== strpos( $sl_file( 'includes/Auth/class-provider-auth-controller.php' ), 'smartlogin_welcome' )
-		&& false !== strpos( $sl_file( 'includes/Frontend/class-login-dialog.php' ), 'smartlogin_welcome' ),
+	false !== strpos( $ow_file( 'includes/Auth/class-provider-auth-controller.php' ), 'OmniWP_welcome' )
+		&& false !== strpos( $ow_file( 'includes/Frontend/class-login-dialog.php' ), 'OmniWP_welcome' ),
 	'PostAuthRedirector and Shortcodes::is_welcome_request() already use it.'
 );
 
 // ---------------------------------------------------------------------------
-sl_section( 'Rule 13 — capture is bounded, and reversible (19.8)' );
+ow_section( 'Rule 13 — capture is bounded, and reversible (19.8)' );
 // ---------------------------------------------------------------------------
 
 /*
@@ -607,62 +607,61 @@ sl_section( 'Rule 13 — capture is bounded, and reversible (19.8)' );
  * This rule asserts the other half — that the list is *named*, not guessed, and
  * that switching it off restores today's behaviour exactly.
  */
-$sl_dialog_php = $sl_file( 'includes/Frontend/class-login-dialog.php' );
-$sl_launcher_js = $sl_file( 'assets/js/smart-login-launcher.js' );
+$ow_dialog_php = $ow_file( 'includes/Frontend/class-login-dialog.php' );
+$ow_launcher_js = $ow_file( 'assets/js/omniwp-launcher.js' );
 
-sl_assert(
+ow_assert(
 	'the captured list is resolved in PHP, not guessed in JavaScript',
-	false !== strpos( $sl_dialog_php, 'captured_urls' )
-		&& false !== strpos( $sl_launcher_js, 'data.captured' ),
+	false !== strpos( $ow_dialog_php, 'captured_urls' )
+		&& false !== strpos( $ow_launcher_js, 'data.captured' ),
 	'A URL the plugin cannot name is a URL it must not claim.'
 );
 
-sl_assert(
+ow_assert(
 	'nothing matches on link text',
-	! preg_match( '/textContent|innerText/', $sl_launcher_js ),
+	! preg_match( '/textContent|innerText/', $ow_launcher_js ),
 	'A heuristic over link text fires on an article about signing in. Named URLs only — that is the sub-phase\'s Not-in-scope line.'
 );
 
-sl_assert(
+ow_assert(
 	'a wp-login.php action is refused',
-	false !== strpos( $sl_launcher_js, "searchParams.get( 'action' )" ),
+	false !== strpos( $ow_launcher_js, "searchParams.get( 'action' )" ),
 	'wp-login.php?action=logout is not a sign-in, and capturing it traps somebody trying to leave.'
 );
 
-sl_assert(
+ow_assert(
 	'an opt-out attribute is honoured',
-	false !== strpos( $sl_launcher_js, 'data-no-smart-login' ),
+	false !== strpos( $ow_launcher_js, 'data-no-omniwp' ),
 	'One attribute has to be enough for a site that wants one link left alone.'
 );
 
 /*
- * And the off switch, driven rather than read. `smart_login_capture_links`
+ * And the off switch, driven rather than read. `OMNIWP_capture_links`
  * returning an empty array must leave the launcher with nothing to match, which
  * is what "restores today's behaviour exactly" means.
  */
-add_filter(
-	'smart_login_capture_links',
+add_filter( 'omniwp_capture_links',
 	static function (): array {
 		return array();
 	}
 );
 
-sl_check(
+ow_check(
 	'the filter switches capture off entirely',
 	array(),
-	\SmartLogin\Frontend\LoginDialog::captured_urls()
+	\OmniWP\Frontend\LoginDialog::captured_urls()
 );
 
-remove_all_filters( 'smart_login_capture_links' );
+remove_all_filters( 'omniwp_capture_links' );
 
-sl_assert(
+ow_assert(
 	'and the list is non-empty by default',
-	array() !== \SmartLogin\Frontend\LoginDialog::captured_urls(),
+	array() !== \OmniWP\Frontend\LoginDialog::captured_urls(),
 	'A capture that is off by default is a feature nobody receives, which was the alternative this declined.'
 );
 
 // ---------------------------------------------------------------------------
-sl_section( 'Rule 14 — one heading per screen (19.10)' );
+ow_section( 'Rule 14 — one heading per screen (19.10)' );
 // ---------------------------------------------------------------------------
 
 /*
@@ -676,47 +675,47 @@ sl_section( 'Rule 14 — one heading per screen (19.10)' );
  * pass while the condition was wrong. Every step gets the same check, because
  * the one that regresses will be a step somebody adds later.
  */
-if ( class_exists( \SmartLogin\Frontend\FragmentRenderer::class ) ) {
-	$sl_host  = 'https://example.test/san-pham/ao-thun/';
-	$sl_titles = array();
+if ( class_exists( \OmniWP\Frontend\FragmentRenderer::class ) ) {
+	$ow_host  = 'https://example.test/san-pham/ao-thun/';
+	$ow_titles = array();
 
-	foreach ( array( Flow::STEP_IDENTIFY, Flow::STEP_FORGOT ) as $sl_step ) {
-		$sl_capture = sl_capture(
-			static function () use ( $sl_step, $sl_host ) {
-				$GLOBALS['sl_fragment'] = ( new \SmartLogin\Frontend\FragmentRenderer() )->render( $sl_step, $sl_host, $sl_host );
+	foreach ( array( Flow::STEP_IDENTIFY, Flow::STEP_FORGOT ) as $ow_step ) {
+		$ow_capture = ow_capture(
+			static function () use ( $ow_step, $ow_host ) {
+				$GLOBALS['ow_fragment'] = ( new \OmniWP\Frontend\FragmentRenderer() )->render( $ow_step, $ow_host, $ow_host );
 			}
 		);
 
-		$sl_markup = (string) ( $GLOBALS['sl_fragment']['html'] ?? '' );
-		$sl_name   = (string) ( $GLOBALS['sl_fragment']['title'] ?? '' );
+		$ow_markup = (string) ( $GLOBALS['ow_fragment']['html'] ?? '' );
+		$ow_name   = (string) ( $GLOBALS['ow_fragment']['title'] ?? '' );
 
-		if ( '' === $sl_markup ) {
-			sl_pending( 'the ' . $sl_step . ' fragment draws no heading of its own', 'render returned nothing' );
+		if ( '' === $ow_markup ) {
+			ow_pending( 'the ' . $ow_step . ' fragment draws no heading of its own', 'render returned nothing' );
 			continue;
 		}
 
-		sl_assert(
-			'the ' . $sl_step . ' fragment draws no <h2> of its own',
-			! preg_match( '/<h2\b/', $sl_markup ),
+		ow_assert(
+			'the ' . $ow_step . ' fragment draws no <h2> of its own',
+			! preg_match( '/<h2\b/', $ow_markup ),
 			'The shell already drew one, and it is the dialog\'s accessible name. Two is one too many for a screen reader before it is one too many for a designer.'
 		);
 
-		$sl_titles[] = $sl_name;
+		$ow_titles[] = $ow_name;
 	}
 
-	sl_assert(
+	ow_assert(
 		'the dialog title is short enough to be a title',
-		'' !== ( $sl_titles[0] ?? '' ) && mb_strlen( $sl_titles[0] ) <= 20,
-		'Got: "' . ( $sl_titles[0] ?? '' ) . '"'
+		'' !== ( $ow_titles[0] ?? '' ) && mb_strlen( $ow_titles[0] ) <= 20,
+		'Got: "' . ( $ow_titles[0] ?? '' ) . '"'
 	);
 
-	sl_check( 'and it is the one the screen was asked for', 'Đăng nhập', $sl_titles[0] ?? '' );
+	ow_check( 'and it is the one the screen was asked for', 'Đăng nhập', $ow_titles[0] ?? '' );
 } else {
-	sl_pending( 'a fragment draws no heading of its own', 'includes/Frontend/class-fragment-renderer.php' );
+	ow_pending( 'a fragment draws no heading of its own', 'includes/Frontend/class-fragment-renderer.php' );
 }
 
 // ---------------------------------------------------------------------------
-sl_section( 'Rule 15 — the plugin makes no promises of its own (19.11)' );
+ow_section( 'Rule 15 — the plugin makes no promises of its own (19.11)' );
 // ---------------------------------------------------------------------------
 
 /*
@@ -729,23 +728,23 @@ sl_section( 'Rule 15 — the plugin makes no promises of its own (19.11)' );
  * empty row is the state every install starts in, and the template suite cannot
  * check it there because "renders nothing" fails its produces-markup rule.
  */
-$sl_benefits_default = sl_capture(
+$ow_benefits_default = ow_capture(
 	static function (): void {
-		\SmartLogin\Frontend\TemplateLoader::output( 'partials/dialog-benefits' );
+		\OmniWP\Frontend\TemplateLoader::output( 'partials/dialog-benefits' );
 	}
 );
 
-sl_check( 'the benefits row is empty until a site fills it', '', trim( $sl_benefits_default['html'] ) );
+ow_check( 'the benefits row is empty until a site fills it', '', trim( $ow_benefits_default['html'] ) );
 
-sl_assert(
+ow_assert(
 	'and it renders without a notice when empty',
-	null === $sl_benefits_default['error'] && array() === $sl_benefits_default['warnings'],
-	(string) $sl_benefits_default['error'] . ' ' . implode( ' | ', $sl_benefits_default['warnings'] )
+	null === $ow_benefits_default['error'] && array() === $ow_benefits_default['warnings'],
+	(string) $ow_benefits_default['error'] . ' ' . implode( ' | ', $ow_benefits_default['warnings'] )
 );
 
-$sl_benefits_filled = sl_capture(
+$ow_benefits_filled = ow_capture(
 	static function (): void {
-		\SmartLogin\Frontend\TemplateLoader::output(
+		\OmniWP\Frontend\TemplateLoader::output(
 			'partials/dialog-benefits',
 			array(
 				'benefits' => array(
@@ -759,14 +758,14 @@ $sl_benefits_filled = sl_capture(
 	}
 );
 
-sl_assert(
+ow_assert(
 	'and it renders when a site does',
-	false !== strpos( $sl_benefits_filled['html'], 'sl-benefit__label' ),
+	false !== strpos( $ow_benefits_filled['html'], 'sl-benefit__label' ),
 	'A slot nobody can fill is a slot that should not exist.'
 );
 
 // ---------------------------------------------------------------------------
-sl_section( 'Rule 16 — a fragment never needs a script the dialog cannot load (19.12)' );
+ow_section( 'Rule 16 — a fragment never needs a script the dialog cannot load (19.12)' );
 // ---------------------------------------------------------------------------
 
 /*
@@ -785,23 +784,23 @@ sl_section( 'Rule 16 — a fragment never needs a script the dialog cannot load 
  * instead of being found on a screenshot, which is how all three of 19.10, 19.11
  * and this one were found.
  */
-$sl_welcome_page = 'https://example.test/san-pham/ao-thun/';
+$ow_welcome_page = 'https://example.test/san-pham/ao-thun/';
 
 // The welcome screen is the one authenticated step the dialog draws, so the
 // visitor rule 7 needs (signed out) is the wrong one here. Restored below.
-$sl_signed_out                 = $GLOBALS['sl_logged_in'];
-$GLOBALS['sl_logged_in']       = true;
-$GLOBALS['sl_current_user_id'] = 7;
+$ow_signed_out                 = $GLOBALS['ow_logged_in'];
+$GLOBALS['ow_logged_in']       = true;
+$GLOBALS['ow_current_user_id'] = 7;
 
-$sl_welcome = sl_capture(
-	static function () use ( $sl_welcome_page ): void {
-		$GLOBALS['sl_welcome_fragment'] = ( new \SmartLogin\Frontend\FragmentRenderer() )->render(
+$ow_welcome = ow_capture(
+	static function () use ( $ow_welcome_page ): void {
+		$GLOBALS['ow_welcome_fragment'] = ( new \OmniWP\Frontend\FragmentRenderer() )->render(
 			Flow::STEP_ONBOARD,
-			$sl_welcome_page,
-			$sl_welcome_page,
+			$ow_welcome_page,
+			$ow_welcome_page,
 			array(
 				'user_id'  => 7,
-				'redirect' => $sl_welcome_page,
+				'redirect' => $ow_welcome_page,
 				// Supplied rather than derived, so the rule describes the picker
 				// and not ProfileCompletionService's idea of what is missing.
 				'fields'   => array(
@@ -816,14 +815,14 @@ $sl_welcome = sl_capture(
 	}
 );
 
-$GLOBALS['sl_logged_in'] = $sl_signed_out;
+$GLOBALS['ow_logged_in'] = $ow_signed_out;
 
-$sl_welcome_html = (string) ( $GLOBALS['sl_welcome_fragment']['html'] ?? '' );
+$ow_welcome_html = (string) ( $GLOBALS['ow_welcome_fragment']['html'] ?? '' );
 
-sl_assert(
+ow_assert(
 	'the welcome fragment renders the address picker',
-	null === $sl_welcome['error'] && false !== strpos( $sl_welcome_html, 'data-sl-address' ),
-	'render failed: ' . (string) $sl_welcome['error']
+	null === $ow_welcome['error'] && false !== strpos( $ow_welcome_html, 'data-sl-address' ),
+	'render failed: ' . (string) $ow_welcome['error']
 );
 
 /*
@@ -831,70 +830,70 @@ sl_assert(
  * because on the server there is nothing to choose from until a province is
  * picked — which is precisely why the script is not optional here.
  */
-sl_assert(
+ow_assert(
 	'and the picker arrives inert, so its script is not optional',
-	(bool) preg_match( '/data-sl-ward[^>]*\bdisabled\b/s', $sl_welcome_html ),
+	(bool) preg_match( '/data-sl-ward[^>]*\bdisabled\b/s', $ow_welcome_html ),
 	'If the ward select were usable without JavaScript this rule would be about nothing.'
 );
 
-$sl_contract  = \SmartLogin\Frontend\LoginDialog::contract();
-$sl_dialog_js = $sl_file( 'assets/js/smart-login-dialog.js' );
-$sl_address_js = $sl_file( 'assets/js/address.js' );
+$ow_contract  = \OmniWP\Frontend\LoginDialog::contract();
+$ow_dialog_js = $ow_file( 'assets/js/omniwp-dialog.js' );
+$ow_address_js = $ow_file( 'assets/js/address.js' );
 
-sl_assert(
+ow_assert(
 	'the dialog can fetch the address picker script',
-	false !== strpos( (string) wp_json_encode( $sl_contract ), 'address.js' ),
+	false !== strpos( (string) wp_json_encode( $ow_contract ), 'address.js' ),
 	'The contract names four assets and none of them is address.js, so nothing on the dialog path ever loads it.'
 );
 
-sl_assert(
+ow_assert(
 	'one array owns the picker configuration',
-	method_exists( \SmartLogin\Frontend\Assets::class, 'address_config' ),
-	'`SmartLoginAddress` is localized onto a handle the dialog never enqueues. Two builders for one config is how the two drift.'
+	method_exists( \OmniWP\Frontend\Assets::class, 'address_config' ),
+	'`OmniWPAddress` is localized onto a handle the dialog never enqueues. Two builders for one config is how the two drift.'
 );
 
-if ( method_exists( \SmartLogin\Frontend\Assets::class, 'address_config' ) ) {
-	sl_check(
+if ( method_exists( \OmniWP\Frontend\Assets::class, 'address_config' ) ) {
+	ow_check(
 		'and the dialog carries exactly that array',
-		\SmartLogin\Frontend\Assets::address_config(),
-		(array) ( $sl_contract['address'] ?? array() )
+		\OmniWP\Frontend\Assets::address_config(),
+		(array) ( $ow_contract['address'] ?? array() )
 	);
 }
 
-sl_assert(
+ow_assert(
 	'the address picker can enhance markup that arrives late',
-	(bool) preg_match( '/window\.SmartLogin\w*Enhance\s*=/', $sl_address_js ),
+	(bool) preg_match( '/window\.OmniWP\w*Enhance\s*=/', $ow_address_js ),
 	'address.js initialises on DOMContentLoaded and exports nothing. The dialog paints long after it.'
 );
 
 /*
- * Every hook, not this one. `SmartLoginEnhance` was created in 19.3 for markup
+ * Every hook, not this one. `OmniWPEnhance` was created in 19.3 for markup
  * that arrives late and `address.js` simply never joined it; a rule that names
  * only the file we just fixed would not have caught that, and will not catch the
  * next one.
  */
-$sl_enhancers = array();
+$ow_enhancers = array();
 
-foreach ( (array) glob( SMART_LOGIN_DIR . 'assets/js/*.js' ) as $sl_script ) {
-	if ( preg_match_all( '/window\.(SmartLogin\w*Enhance)\s*=/', (string) file_get_contents( $sl_script ), $sl_found ) ) {
-		$sl_enhancers = array_merge( $sl_enhancers, $sl_found[1] );
+foreach ( (array) glob( OMNIWP_DIR . 'assets/js/*.js' ) as $ow_script ) {
+	if ( preg_match_all( '/window\.(OmniWP\w*Enhance)\s*=/', (string) file_get_contents( $ow_script ), $ow_found ) ) {
+		$ow_enhancers = array_merge( $ow_enhancers, $ow_found[1] );
 	}
 }
 
-$sl_enhancers = array_unique( $sl_enhancers );
+$ow_enhancers = array_unique( $ow_enhancers );
 
-sl_assert(
+ow_assert(
 	'the plugin exposes at least one enhancement hook, so the loop has a subject',
-	array() !== $sl_enhancers,
+	array() !== $ow_enhancers,
 	'Without one, the check below would pass for want of anything to walk.'
 );
 
-foreach ( $sl_enhancers as $sl_hook ) {
-	sl_assert(
-		'the dialog calls ' . $sl_hook . '() when it paints',
-		false !== strpos( $sl_dialog_js, $sl_hook ),
+foreach ( $ow_enhancers as $ow_hook ) {
+	ow_assert(
+		'the dialog calls ' . $ow_hook . '() when it paints',
+		false !== strpos( $ow_dialog_js, $ow_hook ),
 		'A hook nothing calls is a fragment rendered with the enhancement silently missing — the defect 19.12 is.'
 	);
 }
 
-sl_summary( 'Sign-in anywhere' );
+ow_summary( 'Sign-in anywhere' );

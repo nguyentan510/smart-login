@@ -18,16 +18,16 @@
  * sync on change, so it is self-correcting rather than stale, and it must remain
  * deliverable.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Identity;
+namespace OmniWP\Identity;
 
 defined( 'ABSPATH' ) || exit;
 
 final class OpaqueLogin {
 
-	const PREFIX = 'sl_';
+	const PREFIX = 'ow_';
 
 	/** Bytes of entropy. 12 bytes → 24 hex characters → 27 with the prefix. */
 	const BYTES = 12;

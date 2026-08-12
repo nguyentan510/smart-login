@@ -56,7 +56,7 @@
 		<!--
 			Template variables are function-scoped locals inside an included file,
 			not globals, so a per-file prefix buys nothing. Template variables that
-			ARE at risk of collision already carry the sl_ prefix by convention.
+			ARE at risk of collision already carry the ow_ prefix by convention.
 		-->
 		<exclude name="WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound"/>
 
@@ -130,7 +130,7 @@
 	<rule ref="WordPress.WP.I18n">
 		<properties>
 			<property name="text_domain" type="array">
-				<element value="smart-login"/>
+				<element value="omniwp"/>
 			</property>
 		</properties>
 	</rule>
@@ -138,10 +138,10 @@
 	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
 		<properties>
 			<property name="prefixes" type="array">
-				<element value="smart_login"/>
-				<element value="smartlogin"/>
-				<element value="SMART_LOGIN"/>
-				<element value="SmartLogin"/>
+				<element value="OMNIWP"/>
+				<element value="OmniWP"/>
+				<element value="OMNIWP"/>
+				<element value="OmniWP"/>
 			</property>
 		</properties>
 		<!--

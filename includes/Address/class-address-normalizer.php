@@ -5,10 +5,10 @@
  * Everything here is pure string work with no dependency on the `intl`
  * extension, so it behaves identically on every host.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Address;
+namespace OmniWP\Address;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -176,6 +176,10 @@ class AddressNormalizer {
 		$text = preg_replace( '/[^a-z0-9]+/', ' ', $text );
 
 		return trim( preg_replace( '/\s+/', ' ', (string) $text ) );
+	}
+
+	public static function normalize( string $text ): string {
+		return self::slug( $text );
 	}
 
 	/**

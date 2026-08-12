@@ -6,14 +6,14 @@
  * Only functions the tested classes actually call are defined here. Anything
  * missing will fail loudly rather than silently returning null.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 define( 'ABSPATH', __DIR__ . '/' );
-define( 'SMART_LOGIN_VERSION', '1.0.1' );
-define( 'SMART_LOGIN_DIR', dirname( __DIR__ ) . '/' );
-define( 'SMART_LOGIN_URL', 'https://example.test/wp-content/plugins/smart-login/' );
-define( 'SMART_LOGIN_BASENAME', 'smart-login/smart-login.php' );
+define( 'OMNIWP_VERSION', '1.0.1' );
+define( 'OMNIWP_DIR', dirname( __DIR__ ) . '/' );
+define( 'OMNIWP_URL', 'https://example.test/wp-content/plugins/omniwp/' );
+define( 'OMNIWP_BASENAME', 'omniwp/omniwp.php' );
 define( 'HOUR_IN_SECONDS', 3600 );
 define( 'ARRAY_A', 'ARRAY_A' );
 define( 'ARRAY_N', 'ARRAY_N' );
@@ -21,30 +21,42 @@ define( 'OBJECT', 'OBJECT' );
 define( 'MINUTE_IN_SECONDS', 60 );
 define( 'DAY_IN_SECONDS', 86400 );
 
-$GLOBALS['sl_options'] = array();
-$GLOBALS['sl_transients'] = array();
-$GLOBALS['sl_transient_delete_fail'] = false;
-$GLOBALS['sl_http_requests'] = array();
+$GLOBALS['ow_options'] = array();
+$GLOBALS['ow_transients'] = array();
+$GLOBALS['ow_transient_delete_fail'] = false;
+$GLOBALS['ow_http_requests'] = array();
 
 function get_option( $name, $default = false ) {
-	return $GLOBALS['sl_options'][ $name ] ?? $default;
+	return $GLOBALS['ow_options'][ $name ] ?? $default;
 }
 
 function update_option( $name, $value, $autoload = null ) {
-	$GLOBALS['sl_options'][ $name ] = $value;
+	$GLOBALS['ow_options'][ $name ] = $value;
 	return true;
 }
 
 function delete_option( $name ) {
-	unset( $GLOBALS['sl_options'][ $name ] );
+	unset( $GLOBALS['ow_options'][ $name ] );
 	return true;
 }
 
 /** Every mail the plugin tried to send, so a test can count them. */
-$GLOBALS['sl_mails'] = array();
+$GLOBALS['ow_mails']     = array();
+$GLOBALS['ow_post_meta'] = array();
+
+function get_post_meta( $post_id, $key = '', $single = false ) {
+	$val = $GLOBALS['ow_post_meta'][ $post_id ][ $key ] ?? '';
+	return $single ? $val : array( $val );
+}
+
+function update_post_meta( $post_id, $key, $value ) {
+	$GLOBALS['ow_post_meta'][ $post_id ][ $key ] = $value;
+	return true;
+}
+
 
 function wp_mail( $to, $subject, $message, $headers = '', $attachments = array() ) {
-	$GLOBALS['sl_mails'][] = array(
+	$GLOBALS['ow_mails'][] = array(
 		'to'      => $to,
 		'subject' => $subject,
 		'message' => $message,
@@ -54,24 +66,24 @@ function wp_mail( $to, $subject, $message, $headers = '', $attachments = array()
 }
 
 function set_transient( $name, $value, $expiration ) {
-	$GLOBALS['sl_transients'][ $name ] = $value;
+	$GLOBALS['ow_transients'][ $name ] = $value;
 	return true;
 }
 
 function get_transient( $name ) {
-	return $GLOBALS['sl_transients'][ $name ] ?? false;
+	return $GLOBALS['ow_transients'][ $name ] ?? false;
 }
 
 function delete_transient( $name ) {
-	if ( $GLOBALS['sl_transient_delete_fail'] ) {
+	if ( $GLOBALS['ow_transient_delete_fail'] ) {
 		return false;
 	}
 
-	if ( ! array_key_exists( $name, $GLOBALS['sl_transients'] ) ) {
+	if ( ! array_key_exists( $name, $GLOBALS['ow_transients'] ) ) {
 		return false;
 	}
 
-	unset( $GLOBALS['sl_transients'][ $name ] );
+	unset( $GLOBALS['ow_transients'][ $name ] );
 	return true;
 }
 
@@ -84,10 +96,10 @@ function delete_transient( $name ) {
  * exactly as the old stub did, which is what keeps the four suites that load
  * this file unaffected.
  */
-$GLOBALS['sl_filters'] = array();
+$GLOBALS['ow_filters'] = array();
 
 function add_filter( $hook, $callback, $priority = 10, $accepted_args = 1 ) {
-	$GLOBALS['sl_filters'][ $hook ][] = array(
+	$GLOBALS['ow_filters'][ $hook ][] = array(
 		'cb'   => $callback,
 		'args' => max( 1, (int) $accepted_args ),
 	);
@@ -97,11 +109,11 @@ function add_filter( $hook, $callback, $priority = 10, $accepted_args = 1 ) {
 
 function remove_all_filters( $hook = '' ) {
 	if ( '' === $hook ) {
-		$GLOBALS['sl_filters'] = array();
+		$GLOBALS['ow_filters'] = array();
 		return true;
 	}
 
-	unset( $GLOBALS['sl_filters'][ $hook ] );
+	unset( $GLOBALS['ow_filters'][ $hook ] );
 
 	return true;
 }
@@ -117,13 +129,13 @@ function add_action( $hook, $callback, $priority = 10, $accepted_args = 1 ) {
 }
 
 function remove_filter( $hook, $callback, $priority = 10 ) {
-	if ( empty( $GLOBALS['sl_filters'][ $hook ] ) ) {
+	if ( empty( $GLOBALS['ow_filters'][ $hook ] ) ) {
 		return false;
 	}
 
-	foreach ( $GLOBALS['sl_filters'][ $hook ] as $index => $filter ) {
+	foreach ( $GLOBALS['ow_filters'][ $hook ] as $index => $filter ) {
 		if ( $filter['cb'] == $callback ) { // phpcs:ignore WordPress.PHP.StrictComparisons -- array callables compare by value.
-			unset( $GLOBALS['sl_filters'][ $hook ][ $index ] );
+			unset( $GLOBALS['ow_filters'][ $hook ][ $index ] );
 
 			return true;
 		}
@@ -149,11 +161,11 @@ function __return_false() {
 }
 
 function has_filter( $hook, $callback = false ) {
-	return ! empty( $GLOBALS['sl_filters'][ $hook ] );
+	return ! empty( $GLOBALS['ow_filters'][ $hook ] );
 }
 
 function apply_filters( $hook, $value, ...$args ) {
-	foreach ( $GLOBALS['sl_filters'][ $hook ] ?? array() as $filter ) {
+	foreach ( $GLOBALS['ow_filters'][ $hook ] ?? array() as $filter ) {
 		$params = array_slice( array_merge( array( $value ), $args ), 0, $filter['args'] );
 		$value  = call_user_func_array( $filter['cb'], $params );
 	}
@@ -161,22 +173,22 @@ function apply_filters( $hook, $value, ...$args ) {
 	return $value;
 }
 
-$GLOBALS['sl_user_meta'] = array();
+$GLOBALS['ow_user_meta'] = array();
 
 function get_user_meta( $user_id, $key = '', $single = false ) {
-	$value = $GLOBALS['sl_user_meta'][ (int) $user_id ][ $key ] ?? '';
+	$value = $GLOBALS['ow_user_meta'][ (int) $user_id ][ $key ] ?? '';
 
 	return $single ? $value : ( '' === $value ? array() : array( $value ) );
 }
 
 function update_user_meta( $user_id, $key, $value ) {
-	$GLOBALS['sl_user_meta'][ (int) $user_id ][ $key ] = $value;
+	$GLOBALS['ow_user_meta'][ (int) $user_id ][ $key ] = $value;
 
 	return true;
 }
 
 function delete_user_meta( $user_id, $key ) {
-	unset( $GLOBALS['sl_user_meta'][ (int) $user_id ][ $key ] );
+	unset( $GLOBALS['ow_user_meta'][ (int) $user_id ][ $key ] );
 
 	return true;
 }
@@ -188,10 +200,10 @@ function delete_user_meta( $user_id, $key ) {
  * id, which is everything the identity code needs from this direction, and a
  * WP_User class here would collide with the richer one in template-stubs.php.
  */
-$GLOBALS['sl_users_by_email'] = array();
+$GLOBALS['ow_users_by_email'] = array();
 
 function email_exists( $email ) {
-	return $GLOBALS['sl_users_by_email'][ strtolower( (string) $email ) ] ?? false;
+	return $GLOBALS['ow_users_by_email'][ strtolower( (string) $email ) ] ?? false;
 }
 
 /**
@@ -200,10 +212,10 @@ function email_exists( $email ) {
  * Recorded rather than executed: the assertions that need it are about whether a
  * write happened and in what order, not about what WordPress would store.
  */
-$GLOBALS['sl_user_updates'] = array();
+$GLOBALS['ow_user_updates'] = array();
 
 function wp_update_user( $data ) {
-	$GLOBALS['sl_user_updates'][] = (array) $data;
+	$GLOBALS['ow_user_updates'][] = (array) $data;
 
 	return (int) ( ( (array) $data )['ID'] ?? 0 );
 }
@@ -405,27 +417,27 @@ function current_time( $type, $gmt = false ) {
  *
  * A 500 by default, which is what makes the captcha guard rail meaningful and
  * what every suite written before 10.3 assumes. A test that needs a different
- * answer assigns to $GLOBALS['sl_http_response'] and puts it back, so the
+ * answer assigns to $GLOBALS['ow_http_response'] and puts it back, so the
  * unset default behaves exactly as the fixed 500 always did.
  */
-function sl_stub_http_response() {
-	return $GLOBALS['sl_http_response'] ?? array(
+function ow_stub_http_response() {
+	return $GLOBALS['ow_http_response'] ?? array(
 		'response' => array( 'code' => 500 ),
 		'body'     => 'gateway failure',
 	);
 }
 
 function wp_remote_request( $url, $args ) {
-	$GLOBALS['sl_http_requests'][] = array(
+	$GLOBALS['ow_http_requests'][] = array(
 		'url'  => $url,
 		'args' => $args,
 	);
 
-	return sl_stub_http_response();
+	return ow_stub_http_response();
 }
 
 /**
- * Delegates, so anything asserting on $GLOBALS['sl_http_requests'] sees POSTs too.
+ * Delegates, so anything asserting on $GLOBALS['ow_http_requests'] sees POSTs too.
  *
  * The default response is a 500, which is what makes the captcha guard rail
  * meaningful: verify_token() has to read that as "no" rather than as "carry on".
@@ -465,7 +477,7 @@ function wp_remote_retrieve_body( $response ) {
  * logic lives in PHP rather than in the query. Anything that depends on real SQL
  * semantics belongs in the integration gate, not here.
  */
-class SmartLoginStubWpdb {
+class OmniWPStubWpdb {
 
 	public $prefix = 'wp_';
 	public $users = 'wp_users';
@@ -485,37 +497,37 @@ class SmartLoginStubWpdb {
 	}
 
 	public function get_var( $query = null ) {
-		return $GLOBALS['sl_wpdb_var'] ?? null;
+		return $GLOBALS['ow_wpdb_var'] ?? null;
 	}
 
 	public function get_row( $query = null, $output = null ) {
-		return $GLOBALS['sl_wpdb_row'] ?? null;
+		return $GLOBALS['ow_wpdb_row'] ?? null;
 	}
 
 	public function get_results( $query = null, $output = null ) {
-		return $GLOBALS['sl_wpdb_results'] ?? array();
+		return $GLOBALS['ow_wpdb_results'] ?? array();
 	}
 
 	public function get_col( $query = null, $index = 0 ) {
-		return $GLOBALS['sl_wpdb_col'] ?? array();
+		return $GLOBALS['ow_wpdb_col'] ?? array();
 	}
 
 	public function insert( $table, $data, $format = null ) {
 		$this->writes[] = array( 'op' => 'insert', 'table' => $table, 'data' => $data );
 
-		return $GLOBALS['sl_wpdb_insert_result'] ?? 1;
+		return $GLOBALS['ow_wpdb_insert_result'] ?? 1;
 	}
 
 	public function update( $table, $data, $where, $format = null, $where_format = null ) {
 		$this->writes[] = array( 'op' => 'update', 'table' => $table, 'data' => $data );
 
-		return $GLOBALS['sl_wpdb_update_result'] ?? 1;
+		return $GLOBALS['ow_wpdb_update_result'] ?? 1;
 	}
 
 	public function delete( $table, $where, $where_format = null ) {
 		$this->writes[] = array( 'op' => 'delete', 'table' => $table, 'where' => $where );
 
-		return $GLOBALS['sl_wpdb_delete_result'] ?? 1;
+		return $GLOBALS['ow_wpdb_delete_result'] ?? 1;
 	}
 
 	public function query( $query ) {
@@ -533,7 +545,7 @@ class SmartLoginStubWpdb {
 	}
 }
 
-$GLOBALS['wpdb'] = new SmartLoginStubWpdb();
+$GLOBALS['wpdb'] = new OmniWPStubWpdb();
 
 class WP_Error {
 
@@ -567,15 +579,15 @@ function is_wp_error( $thing ) {
 // Autoload the plugin classes.
 spl_autoload_register(
 	static function ( $class ) {
-		if ( 0 !== strpos( $class, 'SmartLogin\\' ) ) {
+		if ( 0 !== strpos( $class, 'OmniWP\\' ) ) {
 			return;
 		}
 
-		$relative = substr( $class, strlen( 'SmartLogin\\' ) );
+		$relative = substr( $class, strlen( 'OmniWP\\' ) );
 		$parts    = explode( '\\', $relative );
 		$short    = array_pop( $parts );
 		$kebab    = strtolower( preg_replace( '/(?<!^)([A-Z])/', '-$1', $short ) );
-		$file     = SMART_LOGIN_DIR . 'includes/' . ( $parts ? implode( '/', $parts ) . '/' : '' ) . 'class-' . $kebab . '.php';
+		$file     = OMNIWP_DIR . 'includes/' . ( $parts ? implode( '/', $parts ) . '/' : '' ) . 'class-' . $kebab . '.php';
 
 		if ( is_readable( $file ) ) {
 			require_once $file;

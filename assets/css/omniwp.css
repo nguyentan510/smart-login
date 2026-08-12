@@ -1,0 +1,1625 @@
+/**
+ * OmniWP Front-end Styles
+ * Scoped under .omniwp so nothing leaks into the theme.
+ *
+ * @package OmniWP
+ */
+
+.omniwp:not(.omniwp--account):not(.sl-hub) {
+	max-width: 460px;
+	margin: 0 auto;
+}
+
+.omniwp {
+	box-sizing: border-box;
+	padding: 8px 0 32px;
+	color: var(--sl-text);
+	font-size: var(--sl-fs-md);
+	line-height: 1.5;
+}
+
+
+
+.omniwp *,
+.omniwp *::before,
+.omniwp *::after {
+	box-sizing: inherit;
+}
+
+/* ---------- Typography ---------- */
+
+.sl-title {
+	margin: 0 0 var(--sl-space-5);
+	font-size: var(--sl-fs-xl);
+	font-weight: 600;
+	text-align: center;
+}
+
+.omniwp--signup .sl-title,
+.omniwp--otp .sl-title {
+	text-align: left;
+}
+
+.sl-title__accent {
+	color: var(--sl-accent);
+}
+
+/* ---------- Step indicator ---------- */
+
+.sl-steps {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin: 0 0 var(--sl-space-6);
+	padding: 0;
+	list-style: none;
+}
+
+.sl-step {
+	display: flex;
+	flex: 1;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	position: relative;
+	color: var(--sl-muted);
+	font-size: var(--sl-fs-xs);
+	text-align: center;
+}
+
+/* The connector sits behind the dots rather than between list items, so the
+   row keeps working when a label wraps onto two lines. */
+.sl-step + .sl-step::before {
+	content: "";
+	position: absolute;
+	top: 11px;
+	right: 50%;
+	left: -50%;
+	height: 2px;
+	background: var(--sl-border);
+}
+
+.sl-step.is-done + .sl-step::before,
+.sl-step.is-current::before {
+	background: var(--sl-accent);
+}
+
+.sl-step__dot {
+	position: relative;
+	z-index: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	border: 2px solid var(--sl-border);
+	border-radius: 50%;
+	background: #fff;
+	font-size: var(--sl-fs-xs);
+	font-weight: 600;
+	line-height: 1;
+}
+
+.sl-step.is-current .sl-step__dot,
+.sl-step.is-done .sl-step__dot {
+	border-color: var(--sl-accent);
+	background: var(--sl-accent);
+	color: #fff;
+}
+
+.sl-step.is-current .sl-step__label {
+	color: var(--sl-text);
+	font-weight: 600;
+}
+
+/* ---------- Entry screen ---------- */
+
+.omniwp--identify,
+.omniwp--password,
+.omniwp--signup {
+	max-width: 460px;
+}
+
+.sl-input--lg {
+	padding: 15px 16px;
+	font-size: 17px;
+}
+
+/* What the visitor typed on step 1, echoed back so the password screen has a
+   subject. Not a form field — there is nothing to edit here, only to correct. */
+.sl-identity-chip {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sl-space-3);
+	margin: 0 0 var(--sl-space-5);
+	padding: 11px 14px;
+	border: 1px solid var(--sl-border);
+	border-radius: var(--sl-radius);
+	background: #f7f8fa;
+	font-size: var(--sl-fs-md);
+}
+
+.sl-identity-chip__value {
+	font-weight: 600;
+	word-break: break-all;
+}
+
+.sl-terms-note {
+	margin-top: 18px;
+	text-align: center;
+}
+
+.sl-login-options {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--sl-space-4);
+	margin-bottom: var(--sl-space-4);
+	font-size: var(--sl-fs-sm);
+}
+
+.sl-login-options .sl-remember {
+	margin-bottom: 0;
+}
+
+.sl-lead {
+	margin: 0 0 var(--sl-space-6);
+	color: var(--sl-text);
+}
+
+/*
+ * Scoped to the entry screen on purpose. .sl-lead is shared by eight templates,
+ * and in several of them it carries something consequential — "Phiên đăng ký đã
+ * hết hạn" is a lead, not a caption. Greying the class outright would quiet
+ * those along with this one. Here the lead is a single instruction sitting above
+ * the field that carries it out, so it should read as support for the input
+ * rather than compete with it.
+ */
+.omniwp--identify .sl-lead {
+	margin-bottom: var(--sl-space-5);
+	color: var(--sl-muted);
+	font-size: 14px;
+}
+
+.sl-dest {
+	color: var(--sl-accent);
+	white-space: nowrap;
+}
+
+.sl-hint,
+.sl-muted {
+	color: var(--sl-muted);
+	font-size: var(--sl-fs-sm);
+}
+
+/* ---------- Fields ---------- */
+
+.sl-field {
+	position: relative;
+	margin-bottom: var(--sl-space-4);
+	border: 0;
+	padding: 0;
+}
+
+/* 13px muted grey was under the contrast floor against white and read as
+   placeholder text rather than a label. Full text colour, one size up. */
+.sl-label {
+	display: block;
+	margin-bottom: 6px;
+	color: var(--sl-text);
+	font-size: 14px;
+	font-weight: 500;
+}
+
+/* Why a field is worth filling in, directly under its label. Onboarding leans
+   on this: "Ngày sinh" is a demand, "để nhận ưu đãi sinh nhật" is an offer.
+
+   The -3px this carried was cancelling part of the label's own bottom margin,
+   arrived at by trying numbers. Both margins are stated now, which is the same
+   correction .sl-card__note gets in 17.2 and for the same reason. */
+.sl-hint--reason {
+	margin: 0 0 var(--sl-space-2);
+}
+
+.sl-required {
+	color: var(--sl-accent);
+}
+
+.sl-input {
+	width: 100%;
+	padding: 12px 14px;
+	border: 1px solid var(--sl-border);
+	border-radius: var(--sl-radius);
+	background: #fff;
+	font-size: var(--sl-fs-md);
+	line-height: 1.4;
+	color: var(--sl-text);
+}
+
+.sl-input:focus {
+	outline: 2px solid rgba(227, 6, 19, 0.35);
+	outline-offset: 1px;
+	border-color: var(--sl-accent);
+}
+
+.sl-input-wrap {
+	position: relative;
+	min-width: 0;
+}
+
+.sl-field--password .sl-input {
+	padding-right: 46px;
+}
+
+/* Padding counted inside the box, declared on each component instead of
+   inherited. `.omniwp *` above sets `box-sizing: inherit`, but that is one
+   class of specificity — a single theme rule on `input[type="password"]`
+   outranks it, and then `width: 100%` plus whatever padding the component
+   carries pushes it out through the card's own padding. Stating it here, and
+   capping the width, makes the blow-out unrepresentable whatever the theme
+   resets.
+
+   The class is repeated on purpose: `.omniwp .sl-input` alone loses to a
+   theme rule like `.woocommerce-account input[type="password"]`, and load order
+   between the theme and this stylesheet is not ours to guarantee. Repeating it
+   buys the specificity without an `!important` and without new markup.
+
+   Written for `.sl-input` alone in 8.4, on the reasoning that the password
+   fields showed it worst. Every full-width component had the same exposure and
+   two others were living with it: `.sl-btn`, which is what put the unlink
+   confirmation through the side of its panel, and `.sl-combo__input`, which
+   nobody had reported. The sign-in card suite asserts the property now instead
+   of this comment predicting it — a rule that names the class of defect rather
+   than the instance that was seen. */
+.omniwp .sl-input.sl-input,
+.omniwp .sl-btn.sl-btn,
+.omniwp .sl-combo__input.sl-combo__input {
+	box-sizing: border-box;
+	max-width: 100%;
+}
+
+.sl-toggle-password {
+	position: absolute;
+	top: 50%;
+	right: 8px;
+	transform: translateY(-50%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--sl-muted);
+	cursor: pointer;
+}
+
+.sl-toggle-password:hover {
+	color: var(--sl-text);
+}
+
+.sl-field--radio {
+	display: flex;
+	gap: var(--sl-space-6);
+	margin-bottom: var(--sl-space-4);
+}
+
+.sl-radio,
+.sl-remember,
+.sl-terms {
+	display: flex;
+	align-items: flex-start;
+	gap: var(--sl-space-2);
+	cursor: pointer;
+}
+
+.sl-remember,
+.sl-terms {
+	margin-bottom: var(--sl-space-4);
+	font-size: var(--sl-fs-sm);
+	color: var(--sl-muted);
+}
+
+.sl-terms span {
+	text-align: center;
+}
+
+.omniwp--signup .sl-terms span {
+	text-align: left;
+}
+
+#sl-password-guidance {
+	margin: -10px 0 16px;
+}
+
+.sl-input[aria-invalid="true"] {
+	border-color: #b42318;
+}
+
+.sl-input[aria-invalid="true"]:focus {
+	outline-color: rgba(180, 35, 24, 0.28);
+}
+
+/*
+ * Text for a screen reader and for nothing else.
+ *
+ * `.screen-reader-text` is a *theme* convention. WordPress declares it in
+ * wp-admin and in the block library; nothing guarantees it on the front end of
+ * an arbitrary theme. Three templates have used it since 8.4 — the required
+ * marker's "(bắt buộc)", the step indicator's position, and since 17.3 the
+ * provider name on "Liên kết" — and on a theme that does not carry the class
+ * the profile card reads "Họ tên * (bắt buộc)" in the label itself.
+ *
+ * Found by looking at the rendered page, not by any suite. Scoped under
+ * `.omniwp` so a theme that *does* declare it keeps its own.
+ *
+ * clip-path rather than `display: none` or `visibility: hidden`, both of which
+ * take the text out of the accessibility tree — which is the opposite of the
+ * point.
+ */
+.omniwp .screen-reader-text {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	border: 0;
+	overflow: hidden;
+	clip-path: inset(50%);
+	white-space: nowrap;
+}
+
+/* Honeypot: off-screen but not display:none, which some bots skip. */
+.omniwp .omniwp-hp {
+	position: absolute !important;
+	left: -9999px !important;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+}
+
+/* ---------- Buttons ---------- */
+
+/* The line-height is the whole point of this rule changing in 17.2.
+   `.sl-input` declares padding 12 and line-height 1.4; this declared padding 13
+   and no line-height at all. The two share one grid row in the contact editor
+   (`.sl-contact-row`), where `align-items: center` hid the difference rather
+   than removing it.
+
+   Not inheritance: a `button` gets `line-height: normal` from the UA stylesheet,
+   which outranks the 1.5 on `.omniwp`. Measured at 45px against the input's
+   47 — the button was the *shorter* of the two, which is the opposite of what
+   reading the file predicted. Declaring both properties makes them equal by
+   construction rather than by argument: 12 + 12 + 15 × 1.4 + 2 borders, on each
+   side. */
+.sl-btn {
+	display: block;
+	width: 100%;
+	margin-bottom: var(--sl-space-3);
+	padding: var(--sl-space-3) var(--sl-space-4);
+	border: 1px solid transparent;
+	border-radius: var(--sl-radius);
+	font-size: var(--sl-fs-md);
+	line-height: 1.4;
+	font-weight: 600;
+	text-align: center;
+	text-decoration: none;
+	cursor: pointer;
+	transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sl-btn--primary {
+	background: var(--sl-accent);
+	color: #fff;
+}
+
+.sl-btn--primary:hover:not(:disabled) {
+	background: var(--sl-accent-dark);
+	color: #fff;
+}
+
+.sl-btn--primary:disabled {
+	background: #e5e7eb;
+	color: #9ca3af;
+	cursor: not-allowed;
+}
+
+.sl-btn--outline {
+	background: #fff;
+	border-color: var(--sl-accent);
+	color: var(--sl-accent);
+}
+
+.sl-btn--outline:hover {
+	background: rgba(227, 6, 19, 0.06);
+	color: var(--sl-accent);
+}
+
+/* "Để sau" on the welcome screen. Quiet, but a real button at full width —
+   an opt-out hidden in small print is not an opt-out. */
+.sl-btn--ghost {
+	background: none;
+	border-color: transparent;
+	color: var(--sl-muted);
+	font-weight: 500;
+}
+
+.sl-btn--ghost:hover {
+	background: #f3f4f6;
+	color: var(--sl-text);
+}
+
+.sl-btn--block {
+	display: block;
+	width: 100%;
+}
+
+/*
+ * Width is a property of the button, not of what it was put inside.
+ *
+ * Three rules used to take `width: 100%` back from an ancestor selector — the
+ * save bar, the unlink panel and the contact row — so identical markup was a
+ * block in one place and inline in another with nothing in the markup saying
+ * which.
+ *
+ * The base keeps `width: 100%` deliberately: 20 of the 27 `.sl-btn` in
+ * `templates/` want it, and inverting would mean editing 18 call sites across
+ * the sign-in screens Phase 16 has just settled, to shorten the minority case.
+ * What moves is where the exception is written down.
+ */
+.sl-btn--inline {
+	display: inline-block;
+	width: auto;
+	margin-bottom: 0;
+}
+
+/* The recovery route on the password screen. Same door as Quên mật khẩu was, one
+   click closer, so it sits quietly under the primary action instead of competing
+   with it — which is why it reuses --ghost rather than earning a variant. */
+.sl-form--recover {
+	margin-top: 14px;
+	text-align: center;
+}
+
+.sl-form.is-submitting .sl-btn--primary {
+	opacity: 0.72;
+	cursor: progress;
+}
+
+.sl-links {
+	margin: 0 0 var(--sl-space-4);
+	text-align: center;
+}
+
+.sl-link {
+	color: var(--sl-accent);
+	text-decoration: none;
+}
+
+.sl-link:hover {
+	text-decoration: underline;
+}
+
+.sl-link--button {
+	border: 0;
+	padding: 0;
+	background: none;
+	font: inherit;
+	cursor: pointer;
+}
+
+.sl-link--button:disabled {
+	color: var(--sl-muted);
+	cursor: default;
+	text-decoration: none;
+}
+
+/*
+ * The plugin draws its own focus ring, for the same reason it declares
+ * `.screen-reader-text`: a theme carrying `*:focus { outline: none }` removes
+ * the browser's, and a keyboard user then has no idea where they are.
+ *
+ * `.sl-input` has had one since Phase 8 and its neighbours had none — the plugin
+ * had already decided not to trust themes for one property and had not for the
+ * other. Found by 18.4's keyboard pass, which is the first time anybody looked.
+ *
+ * `:focus-visible`, not `:focus`: a mouse click on a button should not leave a
+ * ring behind it, and every browser this plugin supports knows the difference.
+ */
+.omniwp .sl-btn:focus-visible,
+.omniwp .sl-action:focus-visible,
+.omniwp .sl-link:focus-visible {
+	outline: 2px solid var(--sl-accent);
+	outline-offset: 2px;
+	border-radius: var(--sl-radius);
+}
+
+/* ---------- Divider ---------- */
+
+.sl-divider {
+	display: flex;
+	align-items: center;
+	gap: var(--sl-space-3);
+	margin: var(--sl-space-5) 0;
+	color: var(--sl-muted);
+	font-size: var(--sl-fs-sm);
+}
+
+.sl-divider::before,
+.sl-divider::after {
+	content: "";
+	flex: 1;
+	height: 1px;
+	background: var(--sl-border);
+}
+
+.sl-provider-buttons {
+	display: grid;
+	gap: 10px;
+	margin-bottom: 18px;
+}
+
+.omniwp--identify .sl-provider-buttons {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/*
+ * The unpaired button takes the whole row.
+ *
+ * The pair layout is the default because two providers is the shape this screen
+ * was designed around. But the count is not fixed, and with one provider the
+ * two-column track left a half-width button beside an empty space — which reads
+ * as a control that failed to load rather than the only one there is.
+ *
+ * `:last-child:nth-child(odd)` is the odd one out in any count, so this needs no
+ * edit when a provider is added or removed: one spans, two split, three go two
+ * plus a full-width third. Nothing here names a provider, so the next one to
+ * arrive or leave gets the right layout without anybody editing this file.
+ */
+.omniwp--identify .sl-provider-buttons > :last-child:nth-child(odd) {
+	grid-column: 1 / -1;
+}
+
+/*
+ * Both provider buttons are white and outlined, never filled. The primary call
+ * to action directly above them is a solid red block; two more solid blocks
+ * under it would give the screen three competing focal points and no hierarchy.
+ * Outlined keeps each brand's own colour without any of them out-shouting the
+ * button that most visitors will actually press.
+ *
+ * The base values are Google's, because Google's are the only ones prescribed:
+ * #FFFFFF surface, #1F1F1F label, #747775 border, weight 500, 40px minimum
+ * height. A provider with its own prescribed colours overrides them below.
+ */
+.sl-btn--provider {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	min-height: 44px;
+	margin-bottom: 0;
+	padding: 11px 16px;
+	border-color: #747775;
+	background: #fff;
+	color: #1f1f1f;
+	font-size: 14px;
+	font-weight: 500;
+}
+
+.sl-btn--provider:hover {
+	background: #f7f8f8;
+	color: #1f1f1f;
+}
+
+/* A box the mark sits in, not a badge drawn around it. The circle and the
+   1px currentColor border that used to be here existed to contain a letter —
+   around a real logo they read as a frame nobody designed, and currentColor
+   would have repainted the logo to match the label. */
+.sl-provider-icon {
+	display: inline-flex;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+}
+
+/* The svg carries its own width/height so a mark that needs a little more room
+   can ask for it — a bubble with a wordmark inside closes up at 18px. Bounded
+   here so no mark can grow past the button. */
+.sl-provider-icon svg {
+	display: block;
+	max-width: 20px;
+	max-height: 20px;
+}
+
+/* A mark inside a text control lines up with the text rather than becoming a
+   block of its own. `.sl-btn` is display:block with centred text, so the box
+   above — inline-flex — flows inline with the label it belongs to. Inside a
+   `.sl-row` no rule is needed at all: the row is already a flex container with
+   its own gap, which is why the mark is a sibling of the label there and a
+   child of the control here. */
+.sl-btn .sl-provider-icon {
+	margin-right: var(--sl-space-2);
+	vertical-align: -4px;
+}
+
+/* .sl-contact-grid and the grey bordered box that .sl-contact-verification used
+   to carry both belonged to the pre-8.4 design, where two OTP panels sat open
+   on the page permanently. The panels are rows now, inside a card that already
+   provides the border and the background, so a second box around each one was
+   drawing a frame inside a frame. The block's spacing rules live with the rest
+   of the account layout, further down. */
+
+.sl-contact-row {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	gap: 10px;
+	align-items: center;
+}
+
+/* The button carries .sl-btn--inline; this only says how narrow it may get
+   before the label wraps, which is a fact about this two-column row. */
+.sl-contact-row .sl-btn {
+	min-width: 112px;
+}
+
+.sl-contact-confirm {
+	margin-top: var(--sl-space-3);
+}
+
+.sl-contact-actions {
+	display: flex;
+	align-items: center;
+	gap: var(--sl-space-2);
+	margin-top: var(--sl-space-1);
+}
+
+.sl-action-sep {
+	color: var(--sl-muted);
+	font-size: var(--sl-fs-xs);
+	user-select: none;
+}
+
+.sl-contact-status {
+	min-height: 20px;
+	margin: var(--sl-space-2) 0 0;
+	font-size: var(--sl-fs-sm);
+}
+
+.sl-contact-status.is-error {
+	color: var(--sl-accent);
+}
+
+.sl-contact-status.is-success {
+	color: #15803d;
+}
+
+@media (max-width: 520px) {
+	.sl-contact-row {
+		grid-template-columns: 1fr;
+	}
+
+	.sl-contact-row .sl-btn {
+		width: 100%;
+	}
+}
+
+/* ---------- OTP ---------- */
+
+.sl-otp-boxes {
+	display: flex;
+	gap: 10px;
+	margin: 28px 0 18px;
+}
+
+.sl-otp-digit {
+	flex: 1;
+	min-width: 0;
+	padding: var(--sl-space-2) 0;
+	border: 0;
+	border-bottom: 2px solid var(--sl-text);
+	background: none;
+	font-size: 22px;
+	text-align: center;
+	color: var(--sl-text);
+	border-radius: 0;
+}
+
+.sl-otp-digit:focus {
+	outline: none;
+	border-bottom-color: var(--sl-accent);
+}
+
+.sl-countdown {
+	margin: 0 0 var(--sl-space-6);
+	font-size: 14px;
+}
+
+.sl-countdown__value {
+	color: var(--sl-accent);
+	font-weight: 600;
+}
+
+.sl-countdown__value.is-expired {
+	color: var(--sl-muted);
+}
+
+.sl-resend {
+	margin-top: var(--sl-space-1);
+	font-size: var(--sl-fs-sm);
+	text-align: center;
+	color: var(--sl-muted);
+}
+
+/* ---------- Address picker ---------- */
+
+.sl-combo {
+	position: relative;
+}
+
+/* The native select stays in the form so it is still what gets submitted. */
+.sl-combo__native {
+	display: none;
+}
+
+.sl-combo__input {
+	width: 100%;
+}
+
+.sl-combo__input:disabled {
+	background: #f3f4f6;
+	color: var(--sl-muted);
+	cursor: not-allowed;
+}
+
+.sl-combo__list {
+	position: absolute;
+	z-index: 50;
+	top: calc(100% + 2px);
+	left: 0;
+	right: 0;
+	max-height: 260px;
+	margin: 0;
+	padding: var(--sl-space-1) 0;
+	overflow-y: auto;
+	list-style: none;
+	background: #fff;
+	border: 1px solid var(--sl-border);
+	border-radius: var(--sl-radius);
+	box-shadow: 0 6px 20px rgba(16, 24, 40, 0.12);
+}
+
+.sl-combo__option {
+	padding: 9px 14px;
+	margin: 0;
+	cursor: pointer;
+	font-size: 14px;
+	line-height: 1.4;
+}
+
+.sl-combo__option:hover,
+.sl-combo__option.is-active {
+	background: rgba(227, 6, 19, 0.08);
+}
+
+.sl-combo__primary {
+	font-weight: 500;
+}
+
+.sl-combo__secondary {
+	color: var(--sl-muted);
+	font-size: var(--sl-fs-sm);
+}
+
+.sl-combo__empty {
+	padding: 10px 14px;
+	color: var(--sl-muted);
+	font-size: 14px;
+}
+
+.sl-separator {
+	margin: var(--sl-space-6) 0;
+	border: 0;
+	border-top: 1px solid var(--sl-border);
+}
+
+/* WooCommerce renders its own field wrappers; keep the dropdown on top. */
+.woocommerce form .form-row .sl-combo__list {
+	z-index: 100;
+}
+
+/* ---------- Notices ---------- */
+
+.sl-notices {
+	margin-bottom: var(--sl-space-4);
+}
+
+.sl-notice {
+	margin-bottom: 10px;
+	padding: 10px 14px;
+	border-left: 3px solid var(--sl-border);
+	border-radius: 4px;
+	background: #f6f7f9;
+	font-size: 14px;
+}
+
+.sl-notice p {
+	margin: 6px 0;
+}
+
+.sl-notice--error {
+	border-left-color: var(--sl-accent);
+	background: #fdeced;
+	color: #8c1119;
+}
+
+.sl-notice--success {
+	border-left-color: #128a4c;
+	background: #e8f6ee;
+	color: #0f6b3c;
+}
+
+.sl-notice--warning {
+	border-left-color: #d98613;
+	background: #fdf3e3;
+	color: #8a5a0c;
+}
+
+.sl-notice--info {
+	border-left-color: #2563eb;
+	background: #eaf1fe;
+	color: #1c4bb8;
+}
+
+/* How much of the profile is filled in. The number is beside the bar and not
+   inside it: a bar on its own is a shape, and "4/6" is the statement. */
+.sl-progress {
+	display: flex;
+	align-items: center;
+	gap: var(--sl-space-3);
+	margin-bottom: var(--sl-space-4);
+}
+
+.sl-progress__track {
+	flex: 1 1 auto;
+	height: 6px;
+	border-radius: 999px;
+	background: var(--sl-border);
+	overflow: hidden;
+}
+
+.sl-progress__fill {
+	display: block;
+	height: 100%;
+	border-radius: inherit;
+	background: var(--sl-accent);
+}
+
+.sl-progress__count {
+	flex: 0 0 auto;
+	color: var(--sl-muted);
+	font-size: var(--sl-fs-sm);
+	white-space: nowrap;
+}
+
+/* What is missing, and why it is worth giving.
+
+   This block rendered `implode( ', ', … labels )` until 17.5 — on a live page,
+   a box containing the words "Địa chỉ, Ngày sinh". The label is a demand; the
+   reason beside it is an offer, which is the same argument `.sl-hint--reason`
+   carries on the onboarding form. No bullets: the list is the shape, and a
+   marker in a coloured notice is one ornament too many. */
+.sl-missing {
+	margin: var(--sl-space-2) 0;
+	padding: 0;
+	list-style: none;
+}
+
+.sl-missing__item {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: var(--sl-space-1) var(--sl-space-2);
+	padding: var(--sl-space-1) 0;
+}
+
+.sl-missing__label {
+	font-weight: 600;
+}
+
+/* Inherits the notice's colour rather than going muted grey: a reason set in
+   the palette's --sl-muted inside a warning box reads as disabled text. */
+.sl-missing__reason {
+	font-size: var(--sl-fs-sm);
+	opacity: 0.85;
+}
+
+/* -------------------------------------------------------------------
+ * Minimal & Lightweight Suggestion Chips Strip (Non-intrusive)
+ * ------------------------------------------------------------------- */
+.sl-suggest-strip {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 8px 12px;
+	padding: 8px 14px;
+	background: #f8fafc;
+	border: 1px solid var(--sl-border, #e2e8f0);
+	border-radius: var(--sl-radius-card, 5px);
+	margin-bottom: var(--sl-space-4, 16px);
+	font-size: 0.84rem;
+	transition: all 0.2s ease;
+}
+
+.sl-suggest-strip--info {
+	background: #f0f7ff;
+	border-color: #dbeafe;
+}
+
+.sl-suggest-strip--warning {
+	background: #fffdf5;
+	border-color: #fef08a;
+}
+
+.sl-suggest-strip__lead {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-weight: 600;
+	color: #334155;
+	flex-shrink: 0;
+}
+
+.sl-suggest-strip__icon {
+	font-size: 0.95rem;
+	line-height: 1;
+}
+
+.sl-suggest-strip__label {
+	font-size: 0.82rem;
+	color: #334155;
+}
+
+.sl-suggest-strip__chips {
+	display: inline-flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 6px;
+	flex: 1 1 auto;
+}
+
+.sl-suggest-chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 3px 10px;
+	background: #ffffff;
+	border: 1px solid #cbd5e1;
+	border-radius: 20px;
+	color: #1e293b;
+	text-decoration: none;
+	font-size: 0.8rem;
+	font-weight: 500;
+	line-height: 1.4;
+	transition: all 0.15s ease;
+	cursor: pointer;
+}
+
+.sl-suggest-chip:hover {
+	background: #ffffff;
+	border-color: var(--sl-accent, #2563eb);
+	color: var(--sl-accent, #2563eb);
+	box-shadow: 0 2px 6px rgba(37, 99, 235, 0.12);
+	transform: translateY(-1px);
+}
+
+.sl-suggest-chip__icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: #64748b;
+}
+
+.sl-suggest-chip:hover .sl-suggest-chip__icon {
+	color: var(--sl-accent, #2563eb);
+}
+
+.sl-suggest-chip__icon svg {
+	width: 13px;
+	height: 13px;
+}
+
+.sl-suggest-chip__add {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 15px;
+	height: 15px;
+	border-radius: 50%;
+	background: #f1f5f9;
+	color: #64748b;
+	font-size: 0.72rem;
+	font-weight: 700;
+	margin-left: 2px;
+	transition: all 0.15s ease;
+}
+
+.sl-suggest-chip:hover .sl-suggest-chip__add {
+	background: var(--sl-accent, #2563eb);
+	color: #ffffff;
+}
+
+.sl-suggest-strip__meta {
+	display: inline-flex;
+	align-items: center;
+	margin-left: auto;
+	flex-shrink: 0;
+}
+
+.sl-suggest-strip__ratio {
+	font-size: 0.75rem;
+	font-weight: 700;
+	color: #64748b;
+	background: #e2e8f0;
+	padding: 2px 8px;
+	border-radius: var(--sl-radius, 5px);
+}
+
+.sl-suggest-strip--info .sl-suggest-strip__ratio {
+	background: #dbeafe;
+	color: #1d4ed8;
+}
+
+.sl-suggest-strip--warning .sl-suggest-strip__ratio {
+	background: #fef08a;
+	color: #854d0e;
+}
+
+.sl-notice--compact {
+	padding: 8px 14px;
+	margin-bottom: 16px;
+	font-size: 0.84rem;
+	border-radius: var(--sl-radius, 5px);
+}
+
+/* ---------- Success screen ---------- */
+
+.omniwp--done {
+	text-align: center;
+}
+
+.sl-congrats-label {
+	margin: var(--sl-space-3) 0 var(--sl-space-2);
+	color: #128a4c;
+	font-size: var(--sl-fs-sm);
+	font-weight: 700;
+	letter-spacing: 0.06em;
+}
+
+.sl-congrats-title {
+	margin: 0 0 28px;
+	color: #128a4c;
+	font-size: var(--sl-fs-xl);
+	font-weight: 600;
+}
+
+/* ---------- Welcome / onboarding ---------- */
+
+.omniwp--onboard {
+	max-width: 520px;
+}
+
+/* The celebration is a band at the top of the working screen rather than a
+   page of its own. It used to be a full screen that redirected itself after
+   six seconds; this keeps the moment and gives back the six seconds. */
+.sl-congrats {
+	margin-bottom: var(--sl-space-6);
+	padding: var(--sl-space-5) var(--sl-space-4) var(--sl-space-1);
+	border-radius: var(--sl-radius, 5px);
+	background: #eefaf3;
+	text-align: center;
+}
+
+.sl-congrats__mark {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
+	background: #128a4c;
+	color: #fff;
+}
+
+.sl-congrats .sl-congrats-label {
+	margin: 10px 0 6px;
+}
+
+.sl-congrats .sl-congrats-title {
+	margin-bottom: 18px;
+	font-size: 18px;
+}
+
+.sl-onboard-group {
+	margin-bottom: var(--sl-space-4);
+}
+
+.sl-onboard-actions {
+	margin-top: var(--sl-space-6);
+}
+
+.sl-onboard-email {
+	margin-top: var(--sl-space-1);
+	text-align: center;
+}
+
+/* ---------- Profile ---------- */
+
+.sl-profile-list {
+	margin: 0 0 var(--sl-space-5);
+	padding: 0;
+}
+
+.sl-profile-list dt {
+	margin-top: var(--sl-space-3);
+	color: var(--sl-muted);
+	font-size: var(--sl-fs-sm);
+}
+
+.sl-profile-list dd {
+	margin: 2px 0 0;
+	font-weight: 500;
+}
+
+/* ---------- Account surface ----------
+   The page inherited max-width:460px from .omniwp — a login-card width on
+   a profile page inside a full-width WooCommerce column, which is why the form
+   sat in a narrow strip misaligned with its own heading. */
+
+.omniwp--account {
+	max-width: 100%;
+	margin: 0;
+	padding-top: 0;
+}
+
+.sl-card {
+	margin: 0 0 var(--sl-space-4);
+	padding: var(--sl-space-4) var(--sl-space-5);
+	border: 1px solid var(--sl-border);
+	border-radius: var(--sl-radius-card);
+	background: #fff;
+}
+
+.sl-card__head {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sl-space-2);
+}
+
+.sl-card__title {
+	display: flex;
+	align-items: center;
+	gap: var(--sl-space-2);
+	margin: 0 0 var(--sl-space-4);
+	font-size: var(--sl-fs-lg);
+	font-weight: 600;
+}
+
+.sl-card__head .sl-card__title {
+	margin-bottom: 0;
+}
+
+.sl-card__head + * {
+	margin-top: var(--sl-space-4);
+}
+
+/* A slot for a mark, sized like the provider marks so the card has one glyph
+   size rather than two. It held a 10px text bullet until 17.8 — the same bullet
+   in all four cards, which is a slot that was never filled rather than a mark. */
+.sl-card__icon {
+	display: inline-flex;
+	flex: 0 0 auto;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	color: var(--sl-accent);
+}
+
+/* Declared, not subtracted. This was `margin-top: -8px`, which was cancelling
+   the theme's default paragraph margin plus part of the title's — a distance
+   nothing here controls, arrived at by trying numbers. Stating both margins
+   makes the note's position a property of the note. */
+.sl-card__note {
+	margin: 0 0 var(--sl-space-4);
+}
+
+.sl-grid-2 {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: 0 var(--sl-space-4);
+}
+
+.sl-static {
+	margin: 0;
+	padding: var(--sl-space-2) 0;
+	font-weight: 500;
+}
+
+/* ---------- Badges ---------- */
+
+/* 11px with line-height 1.6 was the fourth distinct size for "small text" in a
+   single card, beside the note's 12, the row label's 13 and the label's 14. It
+   is the scale's xs now, and the line-height comes down to keep the pill the
+   height it was in a 36px row. */
+.sl-badge {
+	display: inline-block;
+	padding: var(--sl-space-1) var(--sl-space-2);
+	border-radius: 999px;
+	font-size: var(--sl-fs-xs);
+	line-height: 1.3;
+	white-space: nowrap;
+}
+
+.sl-badge--verified {
+	background: #e8f6ee;
+	color: #0f6b3c;
+}
+
+/* Which of your ways in the account treats as primary. Moved onto the contact
+   row in 16.1, from the second list that used to carry it. */
+.sl-badge--primary {
+	background: #eaf1fe;
+	color: #1c4bb8;
+}
+
+/* `.sl-badge` sets a display, and an author display beats the user agent's
+   `[hidden] { display: none }`. Without this the badge JS unhides is visible
+   from the start, which is the opposite of what the attribute is there for. */
+.sl-badge[hidden] {
+	display: none;
+}
+
+/* Says out loud that this card does not wait for the submit button. A control
+   that takes effect immediately inside a form you must still submit is the
+   single most confusing thing about the screen this replaces. */
+.sl-badge--instant {
+	background: #eaf1fe;
+	color: #1c4bb8;
+}
+
+/* ---------- Row actions ----------
+   Đổi, Bỏ liên kết and Liên kết are one class of action: a small control that
+   acts on the row it sits in. Until 17.3 they were three — a link-styled
+   button, a <details> summary and a full-width outline anchor — at three
+   weights, in one card.
+
+   The *element* still varies, and has to: the unlink control is a <summary>
+   because it opens a password form and has to work with JavaScript off. What
+   stops varying is what it looks like and how much space it takes. */
+
+/* 24px is WCAG 2.2 AA (2.5.8), and the floor goes on the class rather than as
+   padding on the instance: padding makes the number depend on the word, and
+   "Đổi" is the shortest label this card has *today*, not the shortest it can
+   have. Measured at 20 × 32 before 18.3 — under the floor on the row a member
+   touches most often.
+
+   Not 44px. These are text controls in a dense list of rows, and a 44px floor
+   costs more row height than the control gains. */
+.sl-action {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--sl-space-1);
+	min-height: 32px;
+	min-width: 24px;
+	margin: 0;
+	padding: 0;
+	border: 0;
+	background: none;
+	color: var(--sl-accent);
+	font: inherit;
+	font-size: var(--sl-fs-sm);
+	line-height: 1.4;
+	text-align: left;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.sl-action:hover {
+	text-decoration: underline;
+}
+
+.sl-action:disabled {
+	color: var(--sl-muted);
+	cursor: default;
+	text-decoration: none;
+}
+
+/* A <summary> draws a disclosure triangle from the UA stylesheet. This control
+   reads as an action and opens a panel; the marker is the browser's idea of
+   what that means, at a size and position this card does not choose. */
+.sl-action--summary {
+	list-style: none;
+}
+
+.sl-action--summary::-webkit-details-marker {
+	display: none;
+}
+
+/* The rarest and most destructive control in the card, and it should not be the
+   most prominent thing in its row. Same argument 16.3 made about the size of
+   the confirmation button, applied to the control that opens it: quiet until
+   somebody goes looking, and unmistakable once they do. */
+.sl-action--danger {
+	color: var(--sl-muted);
+}
+
+.sl-action--danger:hover,
+.sl-action--danger:focus-visible {
+	color: var(--sl-accent);
+}
+
+/* ---------- Value rows ---------- */
+
+/* The row is only a line of content: label, value, badge, action. Separation and
+   rhythm belong to the block around it, because the editor that expands under a
+   row is part of the same block — a rule drawn on the row itself would cut the
+   value off from the editor that changes it. */
+.sl-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--sl-space-3);
+	min-height: 36px;
+}
+
+/* Separator between blocks, not on each one. `:first-of-type` cannot express
+   this: it counts element type, not class, and .sl-card__head is already the
+   first div in the card — so the first contact block was never matched and kept
+   a rule above it with nothing to separate it from. */
+.sl-contact-verification {
+	padding-bottom: var(--sl-space-3);
+}
+
+.sl-contact-verification + .sl-contact-verification {
+	padding-top: var(--sl-space-3);
+	border-top: 1px solid var(--sl-border);
+}
+
+.sl-row__label {
+	flex: 0 0 108px;
+	color: var(--sl-muted);
+	font-size: var(--sl-fs-sm);
+}
+
+.sl-row__value {
+	flex: 1 1 140px;
+	word-break: break-word;
+}
+
+.sl-contact-edit {
+	padding-top: var(--sl-space-3);
+}
+
+/* ---------- Linked identities ----------
+   Phase 6 shipped this markup with no CSS at all, so it rendered as a bulleted
+   list with a bare <details>. 8.4 gave it a grid of its own, and 16.3 takes that
+   grid away again: a second column geometry inside one card is why "Email" and
+   "Google" started their values at different x positions while the contact rows
+   above them shared a 108px column. These rows are `.sl-row` now, and the only
+   rules left here are the ones about being a list item and about the
+   confirmation that opens inside one. */
+
+.sl-identities {
+	margin: 0;
+	padding: 0;
+}
+
+.sl-identity-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+/* Matches the rhythm `.sl-contact-verification` sets for the rows above, so the
+   card reads as one list rather than as two blocks that happen to touch. */
+.sl-identity {
+	padding: var(--sl-space-3) 0;
+	border-top: 1px solid var(--sl-border);
+}
+
+.sl-identity-note {
+	flex: 1 1 100%;
+	font-size: var(--sl-fs-xs);
+}
+
+.sl-identity-unlink summary {
+	cursor: pointer;
+	font-size: var(--sl-fs-sm);
+}
+
+.sl-identity-unlink[open] {
+	flex: 1 1 100%;
+	margin-top: var(--sl-space-2);
+	padding: var(--sl-space-3);
+	border: 1px solid var(--sl-border);
+	border-radius: var(--sl-radius);
+	background: var(--sl-surface-3);
+}
+
+/* The rarest and most destructive control in the card, and until 16.3 the
+   largest thing on the page — a full-width block heavier than the form's own
+   "Cập nhật". It confirms one row; it is sized like it. The width itself is
+   .sl-btn--inline on the element since 17.3; what is left here is the floor. */
+.sl-identity-unlink .sl-btn {
+	min-width: 180px;
+}
+
+.sl-btn--danger {
+	border-color: var(--sl-accent);
+	color: var(--sl-accent);
+}
+
+/* Since 17.3 this is a list of rows continuing the one above it, not a block
+   of buttons under it — .sl-identity already draws the separator between each
+   pair, so a border here would draw a second one over the first. */
+.sl-link-providers {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+/* ---------- Disclosure ---------- */
+
+.sl-disclosure__summary {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: var(--sl-space-3);
+	cursor: pointer;
+	font-weight: 500;
+}
+
+.sl-disclosure__body {
+	margin-top: var(--sl-space-4);
+}
+
+/* ---------- Save bar ----------
+   The form is long enough that a button at the end of the document means
+   scrolling past everything to save anything. */
+
+/* Thinner than a card on purpose. This one is pinned to the bottom of the
+   viewport, so every pixel it takes is a pixel of the form nobody can see —
+   which is the opposite of what a save bar is for. One step down on the
+   padding and the gap, and its buttons are a size smaller than the ones inside
+   the cards. */
+.sl-savebar {
+	position: sticky;
+	bottom: 0;
+	z-index: 20;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--sl-space-2);
+	margin: 0;
+	padding: var(--sl-space-2) var(--sl-space-3);
+	border: 1px solid var(--sl-border);
+	border-radius: var(--sl-radius-card);
+	background: #fff;
+}
+
+/* Scoped to the bar rather than a new global size: `.sl-btn` is the size it is
+   because of the sign-in screens, where it is the only thing on the page and a
+   47px target is right. Here it is a persistent overlay. 8 + 8 + 13 × 1.4 + 2
+   borders ≈ 36px, comfortably over the 24px floor rule 3 pins. */
+.sl-savebar .sl-btn {
+	padding: var(--sl-space-2) var(--sl-space-3);
+	font-size: var(--sl-fs-sm);
+}
+
+/* The warning takes the room, the buttons take what is left and sit together at
+   the end. `margin-left: auto` on the first button is what pushes the pair
+   right, and it only works because both buttons are `--inline` — 17.3 removed
+   the `width: auto` this rule used to carry and did not add the modifier to the
+   two templates, so the submit went back to `width: 100%`, wrapped onto its own
+   line and squeezed the warning to 0×0. Measured: bar 97px tall, state 0 wide,
+   the "Có thay đổi chưa lưu" text unreachable. */
+.sl-savebar__state {
+	flex: 1 1 auto;
+	margin: 0;
+}
+
+.sl-savebar .sl-btn:not(.sl-btn--ghost) {
+	min-width: 132px;
+}
+
+.sl-savebar .sl-btn--ghost {
+	min-width: 72px;
+	margin-left: auto;
+}
+
+/* The unsaved warning: amber rather than the brand red, because nothing has
+   gone wrong — the visitor has typed something and not saved it yet, and a red
+   panel for that is the same overclaim as an error notice for a hint. */
+.sl-savebar__warn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 auto;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	background: #d98613;
+	color: #fff;
+	font-size: var(--sl-fs-xs);
+	font-weight: 700;
+	line-height: 1;
+}
+
+.sl-savebar__state:not([hidden]) {
+	display: flex;
+	align-items: center;
+	gap: var(--sl-space-2);
+	color: #8a5a0c;
+	font-size: var(--sl-fs-sm);
+}
+
+.sl-savebar.is-dirty {
+	border-color: var(--sl-accent);
+}
+
+.sl-savebar.is-dirty .sl-savebar__state {
+	color: var(--sl-accent);
+}
+
+/* ---------- Small screens ---------- */
+
+@media (max-width: 480px) {
+	.sl-card {
+		padding: var(--sl-space-3);
+	}
+
+	.sl-row__label {
+		flex-basis: 100%;
+	}
+
+	.sl-savebar .sl-btn {
+		width: 100%;
+		margin-left: 0;
+	}
+
+	.omniwp {
+		padding-left: var(--sl-space-4);
+		padding-right: var(--sl-space-4);
+	}
+
+	.sl-otp-boxes {
+		gap: 6px;
+	}
+
+	.sl-otp-digit {
+		font-size: 18px;
+	}
+
+	.omniwp--identify .sl-provider-buttons {
+		grid-template-columns: 1fr;
+	}
+
+	.sl-login-options {
+		align-items: center;
+	}
+
+	/* Numbers stay, words go: three wrapped labels cost more vertical space
+	   than the progress they communicate is worth on a phone. */
+	.sl-step__label {
+		display: none;
+	}
+}
+
+

@@ -8,10 +8,10 @@
  * to pass — so "no session without proof" is enforced by the type system rather
  * than by remembering to check.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth;
+namespace OmniWP\Auth;
 
 use WP_Error;
 use WP_User;
@@ -25,7 +25,7 @@ final class SessionIssuer {
 	 */
 	public function issue( AuthProof $proof, WP_User $user, AuthContext $context, bool $remember = true ) {
 		if ( $user->ID <= 0 ) {
-			return new WP_Error( 'smart_login_no_user', __( 'Không tìm thấy tài khoản.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_no_user', __( 'Không tìm thấy tài khoản.', 'omniwp' ) );
 		}
 
 		// Proof bound to a specific account must be proof about THIS account.
@@ -33,8 +33,8 @@ final class SessionIssuer {
 		// when they prove a subject that predates the user row (registration).
 		if ( $proof->user_id() > 0 && $proof->user_id() !== (int) $user->ID ) {
 			return new WP_Error(
-				'smart_login_proof_mismatch',
-				__( 'Phiên xác thực không hợp lệ.', 'smart-login' )
+				'OMNIWP_proof_mismatch',
+				__( 'Phiên xác thực không hợp lệ.', 'omniwp' )
 			);
 		}
 

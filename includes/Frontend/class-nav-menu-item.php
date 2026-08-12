@@ -18,12 +18,12 @@
  * Two entry points producing two markups is the drift this phase is organised
  * against, applied to placement instead of to menu contents.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Frontend;
+namespace OmniWP\Frontend;
 
-use SmartLogin\Settings;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 

@@ -2,12 +2,12 @@
 /**
  * Client fingerprint helpers (IP, user agent).
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Security;
+namespace OmniWP\Security;
 
-use SmartLogin\Settings;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -107,7 +107,7 @@ class Client {
 		 *
 		 * @param string[] $cidrs
 		 */
-		return array_values( (array) apply_filters( 'smart_login_trusted_proxy_cidrs', $cidrs ) );
+		return array_values( (array) apply_filters( 'omniwp_trusted_proxy_cidrs', $cidrs ) );
 	}
 
 	/**
@@ -132,12 +132,12 @@ class Client {
 		 * does, deliberately: the guard rail asks that no configuration make a
 		 * header trusted from an unverified peer, and an escape hatch that can
 		 * reopen the hole is not an escape hatch. Managed deployments pair it with
-		 * `smart_login_trusted_proxy_cidrs`.
+		 * `OMNIWP_trusted_proxy_cidrs`.
 		 *
 		 * @param bool $trust
 		 */
 		$enabled = (bool) apply_filters(
-			'smart_login_trust_proxy_headers',
+			'omniwp_trust_proxy_headers',
 			Settings::is_on( 'security.trust_proxy' )
 		);
 

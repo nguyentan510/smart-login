@@ -13,19 +13,19 @@
  * an administrator-editable body is a signature over something the administrator
  * can accidentally make unparseable.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\OTP\Transports;
+namespace OmniWP\OTP\Transports;
 
 defined( 'ABSPATH' ) || exit;
 
 final class EnvelopeSigner {
 
-	const SIGNATURE_HEADER = 'X-Smart-Login-Signature';
-	const TIMESTAMP_HEADER = 'X-Smart-Login-Timestamp';
-	const DELIVERY_HEADER  = 'X-Smart-Login-Delivery';
-	const EVENT_HEADER     = 'X-Smart-Login-Event';
+	const SIGNATURE_HEADER = 'X-omniwp-Signature';
+	const TIMESTAMP_HEADER = 'X-omniwp-Timestamp';
+	const DELIVERY_HEADER  = 'X-omniwp-Delivery';
+	const EVENT_HEADER     = 'X-omniwp-Event';
 
 	/**
 	 * Build the body and the headers that authenticate it.
@@ -79,7 +79,7 @@ final class EnvelopeSigner {
 	 *
 	 * The rule this enforces was written on `AutomationEndpoint::post()` and is
 	 * shared verbatim rather than reimplemented: a configured
-	 * `X-Smart-Login-Signature` would otherwise silently disable the only control
+	 * `X-omniwp-Signature` would otherwise silently disable the only control
 	 * that makes a signed endpoint safe to point anywhere.
 	 *
 	 * @param array<string,string> $signed_headers Headers the signature produced.
@@ -110,6 +110,6 @@ final class EnvelopeSigner {
 			. "  .createHmac('sha256', SECRET)\n"
 			. "  .update(rawBody)          // the raw string, not the parsed object\n"
 			. "  .digest('hex');\n"
-			. "crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(headers['x-smart-login-signature']));";
+			. "crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(headers['x-omniwp-signature']));";
 	}
 }

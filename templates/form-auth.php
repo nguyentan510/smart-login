@@ -7,23 +7,23 @@
  * guessing wrong cost them a retyped form and an error message. The server
  * resolves the identifier and picks the branch.
  *
- * Override at yourtheme/smart-login/form-auth.php.
+ * Override at yourtheme/omniwp/form-auth.php.
  *
  * @var array  $notices
  * @var string $mode      login|register — wording only, never which form shows.
  * @var string $terms_url
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-use SmartLogin\Auth\ProviderAuthController;
-use SmartLogin\Auth\Providers\ProviderRegistry;
-use SmartLogin\Auth\RegisterHandler;
-use SmartLogin\Frontend\Flow;
-use SmartLogin\Frontend\ProviderMark;
-use SmartLogin\Frontend\TemplateLoader;
-use SmartLogin\Security\RequestGuard;
-use SmartLogin\Settings;
+use OmniWP\Auth\ProviderAuthController;
+use OmniWP\Auth\Providers\ProviderRegistry;
+use OmniWP\Auth\RegisterHandler;
+use OmniWP\Frontend\Flow;
+use OmniWP\Frontend\ProviderMark;
+use OmniWP\Frontend\TemplateLoader;
+use OmniWP\Security\RequestGuard;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -33,11 +33,11 @@ defined( 'ABSPATH' ) || exit;
  * the dialog, where the query string belongs to the API request. `Flow` knows
  * which, and validates either way.
  */
-$sl_redirect  = Flow::redirect_to();
-$sl_providers = ( new ProviderRegistry() )->available();
-$sl_register  = 'register' === ( $mode ?? 'login' );
-$sl_phone     = Settings::phone_enabled();
-$sl_email     = Settings::email_enabled();
+$ow_redirect  = Flow::redirect_to();
+$ow_providers = ( new ProviderRegistry() )->available();
+$ow_register  = 'register' === ( $mode ?? 'login' );
+$ow_phone     = Settings::phone_enabled();
+$ow_email     = Settings::email_enabled();
 
 /*
  * Scoped, not literal — since 19.3.
@@ -52,16 +52,16 @@ $sl_email     = Settings::email_enabled();
  * and the dialog applies focus on open — which is the only place that knows
  * whether the visitor is looking at this form or at the page behind it.
  */
-$sl_identity_id = wp_unique_id( 'sl-identity-' );
+$ow_identity_id = wp_unique_id( 'sl-identity-' );
 
 /*
  * Whether a dialog is rendering this, which the provider round trip has to
  * know: Google is a full-page navigation either way, so the return has to
  * remember to come back here and reopen. See ProviderAuthController's marker.
  */
-$sl_in_dialog = '' !== Flow::base();
+$ow_in_dialog = '' !== Flow::base();
 ?>
-<div class="smart-login smart-login--identify<?php echo $sl_in_dialog ? ' smart-login--in-dialog' : ''; ?>">
+<div class="omniwp omniwp--identify<?php echo $ow_in_dialog ? ' omniwp--in-dialog' : ''; ?>">
 
 	<?php
 	/*
@@ -74,9 +74,9 @@ $sl_in_dialog = '' !== Flow::base();
 	TemplateLoader::output(
 		'partials/screen-title',
 		array(
-			'text' => $sl_register
-				? __( 'Tạo tài khoản', 'smart-login' )
-				: __( 'Đăng nhập hoặc đăng ký', 'smart-login' ),
+			'text' => $ow_register
+				? __( 'Tạo tài khoản', 'omniwp' )
+				: __( 'Đăng nhập hoặc đăng ký', 'omniwp' ),
 		)
 	);
 	?>
@@ -98,14 +98,14 @@ $sl_in_dialog = '' !== Flow::base();
 	?>
 	<p class="sl-lead">
 		<?php
-		if ( $sl_in_dialog ) {
-			esc_html_e( 'Vui lòng đăng nhập để hưởng những đặc quyền dành cho thành viên.', 'smart-login' );
-		} elseif ( $sl_phone && ! $sl_email ) {
-			esc_html_e( 'Nhập số điện thoại để tiếp tục.', 'smart-login' );
-		} elseif ( $sl_email && ! $sl_phone ) {
-			esc_html_e( 'Nhập email để tiếp tục.', 'smart-login' );
+		if ( $ow_in_dialog ) {
+			esc_html_e( 'Vui lòng đăng nhập để hưởng những đặc quyền dành cho thành viên.', 'omniwp' );
+		} elseif ( $ow_phone && ! $ow_email ) {
+			esc_html_e( 'Nhập số điện thoại để tiếp tục.', 'omniwp' );
+		} elseif ( $ow_email && ! $ow_phone ) {
+			esc_html_e( 'Nhập email để tiếp tục.', 'omniwp' );
 		} else {
-			esc_html_e( 'Nhập số điện thoại hoặc email để tiếp tục.', 'smart-login' );
+			esc_html_e( 'Nhập số điện thoại hoặc email để tiếp tục.', 'omniwp' );
 		}
 		?>
 	</p>
@@ -114,7 +114,7 @@ $sl_in_dialog = '' !== Flow::base();
 	// Only in the dialog: on a page the surrounding content is the site's own
 	// argument for signing up, and repeating it inside the form would be the
 	// plugin talking over the page it was placed on.
-	if ( $sl_in_dialog ) {
+	if ( $ow_in_dialog ) {
 		TemplateLoader::output( 'partials/dialog-benefits' );
 	}
 	?>
@@ -123,9 +123,9 @@ $sl_in_dialog = '' !== Flow::base();
 
 	<form method="post" class="sl-form sl-form--identify">
 		<?php RequestGuard::fields( 'identify' ); ?>
-		<?php echo \SmartLogin\Security\Captcha::field_html(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts. ?>
-		<input type="hidden" name="smart_login_action" value="identify" />
-		<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $sl_redirect ); ?>" />
+		<?php echo \OmniWP\Security\Captcha::field_html(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts. ?>
+		<input type="hidden" name="OMNIWP_action" value="identify" />
+		<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $ow_redirect ); ?>" />
 
 		<div class="sl-field">
 			<?php
@@ -140,15 +140,15 @@ $sl_in_dialog = '' !== Flow::base();
 			 * the same job.
 			 */
 			?>
-			<label class="sl-label<?php echo $sl_in_dialog ? ' sl-label--sr' : ''; ?>" for="<?php echo esc_attr( $sl_identity_id ); ?>">
+			<label class="sl-label<?php echo $ow_in_dialog ? ' sl-label--sr' : ''; ?>" for="<?php echo esc_attr( $ow_identity_id ); ?>">
 				<?php echo esc_html( RegisterHandler::identifier_label() ); ?>
 				<span class="sl-required">*</span>
 			</label>
 			<input
-				<?php if ( $sl_email && ! $sl_phone ) : ?>
+				<?php if ( $ow_email && ! $ow_phone ) : ?>
 					type="email"
 					inputmode="email"
-				<?php elseif ( $sl_phone && ! $sl_email ) : ?>
+				<?php elseif ( $ow_phone && ! $ow_email ) : ?>
 					type="tel"
 					inputmode="tel"
 				<?php else : ?>
@@ -156,23 +156,23 @@ $sl_in_dialog = '' !== Flow::base();
 					inputmode="text"
 				<?php endif; ?>
 				class="sl-input sl-input--lg"
-				id="<?php echo esc_attr( $sl_identity_id ); ?>"
+				id="<?php echo esc_attr( $ow_identity_id ); ?>"
 				name="identity"
 				value="<?php echo esc_attr( Flow::old( 'identity' ) ); ?>"
 				<?php
-				$sl_placeholder = $sl_phone ? __( '0969 789 475', 'smart-login' ) : __( 'ban@example.com', 'smart-login' );
+				$ow_placeholder = $ow_phone ? __( '0969 789 475', 'omniwp' ) : __( 'ban@example.com', 'omniwp' );
 
-				if ( $sl_in_dialog ) {
+				if ( $ow_in_dialog ) {
 					// The hidden label's words, so the field is never unlabelled
 					// on screen even though the <label> is only for the reader.
-					$sl_placeholder = sprintf(
+					$ow_placeholder = sprintf(
 						/* translators: %s: identifier label, e.g. "Số điện thoại hoặc Email". */
-						__( 'Nhập %s', 'smart-login' ),
+						__( 'Nhập %s', 'omniwp' ),
 						mb_strtolower( RegisterHandler::identifier_label() )
 					);
 				}
 				?>
-				placeholder="<?php echo esc_attr( $sl_placeholder ); ?>"
+				placeholder="<?php echo esc_attr( $ow_placeholder ); ?>"
 				autocomplete="username"
 				autocapitalize="none"
 				autocorrect="off"
@@ -182,11 +182,11 @@ $sl_in_dialog = '' !== Flow::base();
 		</div>
 
 		<button type="submit" class="sl-btn sl-btn--primary sl-btn--block">
-			<?php esc_html_e( 'Tiếp tục', 'smart-login' ); ?>
+			<?php esc_html_e( 'Tiếp tục', 'omniwp' ); ?>
 		</button>
 	</form>
 
-	<?php if ( ! empty( $sl_providers ) ) : ?>
+	<?php if ( ! empty( $ow_providers ) ) : ?>
 		<?php
 		/*
 		 * Just "Hoặc". The divider used to read "Hoặc tiếp tục nhanh với" directly
@@ -196,13 +196,13 @@ $sl_in_dialog = '' !== Flow::base();
 		 * branding guidelines permit, and inventing a shorter one is not an option.
 		 */
 		?>
-		<div class="sl-divider"><span><?php esc_html_e( 'Hoặc', 'smart-login' ); ?></span></div>
+		<div class="sl-divider"><span><?php esc_html_e( 'Hoặc', 'omniwp' ); ?></span></div>
 		<div class="sl-provider-buttons">
-			<?php foreach ( $sl_providers as $sl_provider ) : ?>
+			<?php foreach ( $ow_providers as $ow_provider ) : ?>
 				<a
-					class="sl-btn sl-btn--provider sl-btn--<?php echo esc_attr( $sl_provider->id() ); ?>"
-					href="<?php echo esc_url( ProviderAuthController::start_url( $sl_provider->id(), $sl_redirect, false, $sl_in_dialog ) ); ?>"
-					data-sl-provider="<?php echo esc_attr( $sl_provider->id() ); ?>"
+					class="sl-btn sl-btn--provider sl-btn--<?php echo esc_attr( $ow_provider->id() ); ?>"
+					href="<?php echo esc_url( ProviderAuthController::start_url( $ow_provider->id(), $ow_redirect, false, $ow_in_dialog ) ); ?>"
+					data-sl-provider="<?php echo esc_attr( $ow_provider->id() ); ?>"
 					data-sl-provider-mode="login"
 				>
 					<?php
@@ -210,12 +210,12 @@ $sl_in_dialog = '' !== Flow::base();
 					 * The provider owns its mark; ProviderMark only places it. The box,
 					 * the filter and the escaping decision moved there in 17.1, when the
 					 * account card became the second caller — this was the only place
-					 * that applied `smart_login_provider_icon_svg`, so a site filtering
+					 * that applied `OMNIWP_provider_icon_svg`, so a site filtering
 					 * it would have got a mark on one screen and not the other.
 					 */
-					ProviderMark::output_for_provider( $sl_provider );
+					ProviderMark::output_for_provider( $ow_provider );
 					?>
-					<span><?php echo esc_html( $sl_provider->label() ); ?></span>
+					<span><?php echo esc_html( $ow_provider->label() ); ?></span>
 				</a>
 			<?php endforeach; ?>
 		</div>
@@ -226,8 +226,8 @@ $sl_in_dialog = '' !== Flow::base();
 			<?php
 			printf(
 				/* translators: %s: linked terms and conditions label. */
-				wp_kses_post( __( 'Khi tiếp tục, bạn đồng ý với %s.', 'smart-login' ) ),
-				'<a class="sl-link" href="' . esc_url( $terms_url ) . '" target="_blank" rel="noopener">' . esc_html__( 'các điều khoản áp dụng', 'smart-login' ) . '</a>'
+				wp_kses_post( __( 'Khi tiếp tục, bạn đồng ý với %s.', 'omniwp' ) ),
+				'<a class="sl-link" href="' . esc_url( $terms_url ) . '" target="_blank" rel="noopener">' . esc_html__( 'các điều khoản áp dụng', 'omniwp' ) . '</a>'
 			);
 			?>
 		</p>

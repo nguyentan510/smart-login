@@ -2,16 +2,16 @@
 /**
  * Table creation, upgrades and scheduled maintenance.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin;
+namespace OmniWP;
 
 defined( 'ABSPATH' ) || exit;
 
 class Installer {
 
-	const DB_VERSION_OPTION = 'smart_login_db_version';
+	const DB_VERSION_OPTION = 'OMNIWP_db_version';
 
 	/**
 	 * Where an upgrade leaves a message it could not act on by itself.
@@ -19,10 +19,11 @@ class Installer {
 	 * Not a transient. A notice that expires is a notice nobody read, and the
 	 * configurations this records are ones a human has to decide about.
 	 */
-	const MIGRATION_NOTICE_OPTION = 'smart_login_migration_notices';
-	const CLEANUP_HOOK            = 'smart_login_cleanup';
+	const MIGRATION_NOTICE_OPTION = 'OMNIWP_migration_notices';
+	const CLEANUP_HOOK            = 'OMNIWP_cleanup';
 
 	public static function activate(): void {
+		self::migrate_legacy_data();
 		self::install_tables();
 
 		if ( false === get_option( Settings::OPTION, false ) ) {
@@ -33,10 +34,10 @@ class Installer {
 			wp_schedule_event( time() + HOUR_IN_SECONDS, 'daily', self::CLEANUP_HOOK );
 		}
 
-		update_option( self::DB_VERSION_OPTION, SMART_LOGIN_DB_VERSION );
+		update_option( self::DB_VERSION_OPTION, OMNIWP_DB_VERSION );
 
 		// Endpoints registered by the Woo integration need fresh rewrite rules.
-		set_transient( 'smart_login_flush_rewrite', 1, MINUTE_IN_SECONDS );
+		set_transient( 'OMNIWP_flush_rewrite', 1, MINUTE_IN_SECONDS );
 	}
 
 	public static function deactivate(): void {
@@ -64,14 +65,54 @@ class Installer {
 	 * nobody is watching.
 	 */
 	public static function maybe_upgrade(): void {
-		if ( get_option( self::DB_VERSION_OPTION ) === SMART_LOGIN_DB_VERSION ) {
+		if ( get_option( self::DB_VERSION_OPTION ) === OMNIWP_DB_VERSION ) {
 			return;
 		}
 
 		self::install_tables();
 		self::forget_unshipped_providers();
 		self::migrate_automation_delivery();
-		update_option( self::DB_VERSION_OPTION, SMART_LOGIN_DB_VERSION );
+		update_option( self::DB_VERSION_OPTION, OMNIWP_DB_VERSION );
+	}
+
+	/**
+	 * Migrate legacy Smart Login options and database tables to OmniWP.
+	 */
+	public static function migrate_legacy_data(): void {
+		global $wpdb;
+
+		// 1. Migrate settings option if omniwp_settings does not exist yet.
+		if ( false === get_option( Settings::OPTION, false ) ) {
+			$legacy = get_option( 'smart_login_settings', false );
+			if ( false === $legacy ) {
+				$legacy = get_option( 'smart_login_options', false );
+			}
+
+			if ( is_array( $legacy ) && ! empty( $legacy ) ) {
+				add_option( Settings::OPTION, array_merge( Settings::defaults(), $legacy ) );
+			}
+		}
+
+		// 2. Migrate legacy database tables wp_sl_* to wp_ow_*
+		$table_pairs = array(
+			'sl_otp'              => 'ow_otp',
+			'sl_audit'            => 'ow_audit',
+			'sl_identities'       => 'ow_identities',
+			'sl_identity_history' => 'ow_identity_history',
+			'sl_addresses'        => 'ow_addresses',
+		);
+
+		foreach ( $table_pairs as $old_suffix => $new_suffix ) {
+			$old_table = $wpdb->prefix . $old_suffix;
+			$new_table = $wpdb->prefix . $new_suffix;
+
+			$old_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $old_table ) ) === $old_table;
+			$new_exists = $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $new_table ) ) === $new_table;
+
+			if ( $old_exists && ! $new_exists ) {
+				$wpdb->query( "RENAME TABLE {$old_table} TO {$new_table}" );
+			}
+		}
 	}
 
 	/**
@@ -117,7 +158,7 @@ class Installer {
 			// project once — a hook rewriting a setting it was not asked about.
 			$notices['route_phone'] = __(
 				'Smart Login: cài đặt <code>delivery.route_phone</code> đang trỏ tới endpoint automation nhưng endpoint đó chưa được cấu hình, nên mã gửi tới số điện thoại chưa từng đi được. Cách định tuyến này không còn nữa — hãy vào tab Kênh SMS và chọn nhà cung cấp.',
-				'smart-login'
+				'omniwp'
 			);
 		} elseif ( 'automation' === (string) ( $settings['delivery']['route_phone'] ?? '' )
 			&& GatewayPresets::ENVELOPE_SIGNED !== (string) ( $settings['sms']['preset'] ?? '' ) ) {
@@ -149,7 +190,7 @@ class Installer {
 			// decision; saying which setting stopped meaning anything is.
 			$notices['route_email'] = __(
 				'Smart Login: cài đặt <code>delivery.route_email</code> đang gửi mã email qua endpoint automation, và cách gửi này không còn nữa. Mã gửi tới email sẽ đi qua <code>wp_mail()</code>. Nếu bạn cần một bên thứ ba gửi email, hãy cấu hình một plugin SMTP.',
-				'smart-login'
+				'omniwp'
 			);
 		}
 
@@ -170,7 +211,7 @@ class Installer {
 	 * too, and it needs no edit to be.
 	 */
 	private static function forget_unshipped_providers(): void {
-		$shipped  = array_keys( \SmartLogin\Auth\Providers\ProviderCredentials::PROVIDERS );
+		$shipped  = array_keys( \OmniWP\Auth\Providers\ProviderCredentials::PROVIDERS );
 		$settings = get_option( Settings::OPTION, array() );
 		$blocks   = is_array( $settings ) && isset( $settings['providers'] ) && is_array( $settings['providers'] )
 			? $settings['providers']
@@ -184,7 +225,7 @@ class Installer {
 				continue;
 			}
 
-			\SmartLogin\Security\SecretBox::forget( \SmartLogin\Auth\Providers\ProviderCredentials::SECRET_OPTION, (string) $key );
+			\OmniWP\Security\SecretBox::forget( \OmniWP\Auth\Providers\ProviderCredentials::SECRET_OPTION, (string) $key );
 			unset( $settings['providers'][ $key ] );
 			$changed = true;
 		}
@@ -196,22 +237,22 @@ class Installer {
 
 	public static function otp_table(): string {
 		global $wpdb;
-		return $wpdb->prefix . 'smartlogin_otp';
+		return $wpdb->prefix . 'OmniWP_otp';
 	}
 
 	public static function audit_table(): string {
 		global $wpdb;
-		return $wpdb->prefix . 'smartlogin_audit';
+		return $wpdb->prefix . 'OmniWP_audit';
 	}
 
 	public static function identities_table(): string {
 		global $wpdb;
-		return $wpdb->prefix . 'smartlogin_identities';
+		return $wpdb->prefix . 'OmniWP_identities';
 	}
 
 	public static function identity_history_table(): string {
 		global $wpdb;
-		return $wpdb->prefix . 'smartlogin_identity_history';
+		return $wpdb->prefix . 'OmniWP_identity_history';
 	}
 
 	/**

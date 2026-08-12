@@ -12,26 +12,26 @@
  * @var bool   $disabled
  * @var bool   $autofocus
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-use SmartLogin\Frontend\IconSet;
+use OmniWP\Frontend\IconSet;
 
 defined( 'ABSPATH' ) || exit;
 
-$sl_id           = $id ?? 'sl-' . $name;
-$sl_required     = $required ?? true;
-$sl_autocomplete = $autocomplete ?? ( 'password' === $name ? 'current-password' : 'new-password' );
-$sl_minlength    = isset( $minlength ) ? max( 0, (int) $minlength ) : 0;
-$sl_describedby  = isset( $describedby ) ? trim( (string) $describedby ) : '';
-$sl_disabled     = ! empty( $disabled );
-$sl_autofocus    = ! empty( $autofocus );
+$ow_id           = $id ?? 'sl-' . $name;
+$ow_required     = $required ?? true;
+$ow_autocomplete = $autocomplete ?? ( 'password' === $name ? 'current-password' : 'new-password' );
+$ow_minlength    = isset( $minlength ) ? max( 0, (int) $minlength ) : 0;
+$ow_describedby  = isset( $describedby ) ? trim( (string) $describedby ) : '';
+$ow_disabled     = ! empty( $disabled );
+$ow_autofocus    = ! empty( $autofocus );
 ?>
 <div class="sl-field sl-field--password">
-	<label class="sl-label" for="<?php echo esc_attr( $sl_id ); ?>">
+	<label class="sl-label" for="<?php echo esc_attr( $ow_id ); ?>">
 		<?php echo esc_html( $label ); ?>
 		<?php
-		if ( $sl_required ) :
+		if ( $ow_required ) :
 			?>
 			<span class="sl-required">*</span><?php endif; ?>
 	</label>
@@ -39,22 +39,22 @@ $sl_autofocus    = ! empty( $autofocus );
 		<input
 			type="password"
 			class="sl-input"
-			id="<?php echo esc_attr( $sl_id ); ?>"
+			id="<?php echo esc_attr( $ow_id ); ?>"
 			name="<?php echo esc_attr( $name ); ?>"
-			autocomplete="<?php echo esc_attr( $sl_autocomplete ); ?>"
+			autocomplete="<?php echo esc_attr( $ow_autocomplete ); ?>"
 			<?php
-			if ( $sl_minlength > 0 ) :
+			if ( $ow_minlength > 0 ) :
 				?>
-				minlength="<?php echo esc_attr( $sl_minlength ); ?>"<?php endif; ?>
+				minlength="<?php echo esc_attr( $ow_minlength ); ?>"<?php endif; ?>
 			<?php
-			if ( '' !== $sl_describedby ) :
+			if ( '' !== $ow_describedby ) :
 				?>
-				aria-describedby="<?php echo esc_attr( $sl_describedby ); ?>"<?php endif; ?>
-			<?php echo $sl_disabled ? 'disabled' : ''; ?>
-			<?php echo $sl_required ? 'required' : ''; ?>
-			<?php echo $sl_autofocus ? 'autofocus' : ''; ?>
+				aria-describedby="<?php echo esc_attr( $ow_describedby ); ?>"<?php endif; ?>
+			<?php echo $ow_disabled ? 'disabled' : ''; ?>
+			<?php echo $ow_required ? 'required' : ''; ?>
+			<?php echo $ow_autofocus ? 'autofocus' : ''; ?>
 		/>
-		<button type="button" class="sl-toggle-password" aria-label="<?php esc_attr_e( 'Hiện mật khẩu', 'smart-login' ); ?>" data-target="<?php echo esc_attr( $sl_id ); ?>">
+		<button type="button" class="sl-toggle-password" aria-label="<?php esc_attr_e( 'Hiện mật khẩu', 'omniwp' ); ?>" data-target="<?php echo esc_attr( $ow_id ); ?>">
 			<?php echo IconSet::get( 'eye' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- IconSet returns fixed markup from a closed set; nothing here comes from input. ?>
 		</button>
 	</div>

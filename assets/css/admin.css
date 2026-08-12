@@ -2,29 +2,29 @@
  * Smart Login — admin styles.
  */
 
-.smart-login-admin .form-table code {
+.omniwp-admin .form-table code {
 	font-size: 12px;
 }
 
-.smart-login-admin .sl-headers-table {
+.omniwp-admin .sl-headers-table {
 	max-width: 820px;
 	margin-bottom: 6px;
 }
 
-.smart-login-admin .sl-headers-table td {
+.omniwp-admin .sl-headers-table td {
 	padding: 4px 8px;
 }
 
-.smart-login-admin .sl-tokens {
+.omniwp-admin .sl-tokens {
 	max-width: 820px;
 }
 
-.smart-login-admin .sl-tokens td {
+.omniwp-admin .sl-tokens td {
 	padding: 5px 8px;
 	font-size: 13px;
 }
 
-.smart-login-admin .sl-tester {
+.omniwp-admin .sl-tester {
 	max-width: 820px;
 	padding: 12px 16px;
 	border: 1px solid #dcdcde;
@@ -32,7 +32,7 @@
 	background: #fff;
 }
 
-.smart-login-admin .sl-test-result {
+.omniwp-admin .sl-test-result {
 	margin-top: 12px;
 	padding: 12px 14px;
 	border-radius: 3px;
@@ -40,17 +40,17 @@
 	font-size: 13px;
 }
 
-.smart-login-admin .sl-test-result.is-ok {
+.omniwp-admin .sl-test-result.is-ok {
 	border-left: 4px solid #00a32a;
 	background: #edfaef;
 }
 
-.smart-login-admin .sl-test-result.is-error {
+.omniwp-admin .sl-test-result.is-error {
 	border-left: 4px solid #d63638;
 	background: #fcf0f1;
 }
 
-.smart-login-admin .sl-test-result h4 {
+.omniwp-admin .sl-test-result h4 {
 	margin: 12px 0 4px;
 	font-size: 12px;
 	text-transform: uppercase;
@@ -58,7 +58,7 @@
 	color: #50575e;
 }
 
-.smart-login-admin .sl-test-result pre {
+.omniwp-admin .sl-test-result pre {
 	margin: 0;
 	padding: 10px;
 	max-height: 220px;
@@ -72,17 +72,17 @@
 	word-break: break-all;
 }
 
-.smart-login-admin .sl-test-meta {
+.omniwp-admin .sl-test-meta {
 	margin: 0 0 6px;
 	color: #50575e;
 }
 
-.smart-login-admin .sl-provider-intro {
+.omniwp-admin .sl-provider-intro {
 	max-width: 1040px;
 	margin: 12px 0 18px;
 }
 
-.smart-login-admin .sl-provider-grid {
+.omniwp-admin .sl-provider-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(440px, 1fr));
 	gap: 18px;
@@ -90,7 +90,7 @@
 	margin-top: 18px;
 }
 
-.smart-login-admin .sl-provider-card {
+.omniwp-admin .sl-provider-card {
 	border: 1px solid #c3c4c7;
 	border-radius: 6px;
 	background: #fff;
@@ -98,7 +98,7 @@
 	overflow: hidden;
 }
 
-.smart-login-admin .sl-provider-card__header {
+.omniwp-admin .sl-provider-card__header {
 	display: flex;
 	align-items: flex-start;
 	justify-content: space-between;
@@ -108,17 +108,17 @@
 }
 
 /* The switch leads the title side; the badge keeps the far side to itself. */
-.smart-login-admin .sl-provider-card__header > div {
+.omniwp-admin .sl-provider-card__header > div {
 	margin-right: auto;
 }
 
-.smart-login-admin .sl-provider-switch {
+.omniwp-admin .sl-provider-switch {
 	flex: 0 0 auto;
 	margin-top: 2px;
 }
 
 /* A policy that governs every card, above every card. */
-.smart-login-admin .sl-provider-policy {
+.omniwp-admin .sl-provider-policy {
 	max-width: 1120px;
 	margin: 18px 0 0;
 	padding: 4px 18px 8px;
@@ -127,26 +127,26 @@
 	background: #fff;
 }
 
-.smart-login-admin .sl-provider-policy h3 {
+.omniwp-admin .sl-provider-policy h3 {
 	margin: 14px 0 0;
 	font-size: 14px;
 }
 
-.smart-login-admin .sl-provider-policy .form-table th {
+.omniwp-admin .sl-provider-policy .form-table th {
 	width: 220px;
 }
 
-.smart-login-admin .sl-provider-card__header h3,
-.smart-login-admin .sl-provider-card__header p {
+.omniwp-admin .sl-provider-card__header h3,
+.omniwp-admin .sl-provider-card__header p {
 	margin: 0;
 }
 
-.smart-login-admin .sl-provider-card__header p {
+.omniwp-admin .sl-provider-card__header p {
 	margin-top: 5px;
 	color: #646970;
 }
 
-.smart-login-admin .sl-provider-status {
+.omniwp-admin .sl-provider-status {
 	display: inline-flex;
 	align-items: center;
 	flex: 0 0 auto;
@@ -156,23 +156,23 @@
 	font-weight: 600;
 }
 
-.smart-login-admin .sl-provider-status.is-ready {
+.omniwp-admin .sl-provider-status.is-ready {
 	color: #006b1b;
 	background: #edfaef;
 }
 
-.smart-login-admin .sl-provider-status.is-missing {
+.omniwp-admin .sl-provider-status.is-missing {
 	color: #8a2424;
 	background: #fcf0f1;
 }
 
 /* Configured but switched off: not an error, and deliberately not green. */
-.smart-login-admin .sl-provider-status.is-idle {
+.omniwp-admin .sl-provider-status.is-idle {
 	color: #8a5700;
 	background: #fcf5e6;
 }
 
-.smart-login-admin .sl-provider-tabs {
+.omniwp-admin .sl-provider-tabs {
 	display: flex;
 	gap: 22px;
 	padding: 0 20px;
@@ -180,93 +180,93 @@
 	background: #f6f7f7;
 }
 
-.smart-login-admin .sl-provider-tabs .button-link {
+.omniwp-admin .sl-provider-tabs .button-link {
 	padding: 12px 1px 10px;
 	border-bottom: 3px solid transparent;
 	text-decoration: none;
 	font-weight: 600;
 }
 
-.smart-login-admin .sl-provider-tabs .button-link.is-active {
+.omniwp-admin .sl-provider-tabs .button-link.is-active {
 	border-bottom-color: #2271b1;
 	color: #135e96;
 }
 
-.smart-login-admin .sl-provider-panel {
+.omniwp-admin .sl-provider-panel {
 	padding: 4px 20px 14px;
 }
 
-.smart-login-admin .sl-provider-panel[hidden] {
+.omniwp-admin .sl-provider-panel[hidden] {
 	display: none;
 }
 
-.smart-login-admin .sl-provider-panel .form-table {
+.omniwp-admin .sl-provider-panel .form-table {
 	margin-top: 0;
 }
 
-.smart-login-admin .sl-provider-panel .form-table th {
+.omniwp-admin .sl-provider-panel .form-table th {
 	width: 155px;
 }
 
-.smart-login-admin .sl-provider-panel input[readonly] {
+.omniwp-admin .sl-provider-panel input[readonly] {
 	background: #f6f7f7;
 }
 
-.smart-login-admin .sl-provider-clear-secret {
+.omniwp-admin .sl-provider-clear-secret {
 	display: block;
 	margin-top: 10px;
 	color: #8a2424;
 }
 
-.smart-login-admin .sl-provider-docs {
+.omniwp-admin .sl-provider-docs {
 	padding-top: 18px;
 	line-height: 1.55;
 }
 
-.smart-login-admin .sl-provider-docs h4 {
+.omniwp-admin .sl-provider-docs h4 {
 	margin: 0 0 10px;
 	font-size: 15px;
 }
 
-.smart-login-admin .sl-provider-docs ol {
+.omniwp-admin .sl-provider-docs ol {
 	margin: 0 0 18px 22px;
 }
 
-.smart-login-admin .sl-provider-docs li {
+.omniwp-admin .sl-provider-docs li {
 	margin-bottom: 8px;
 }
 
 /* ---------- Mail message list ---------- */
 
-.smart-login-admin .sl-mail-surface {
+.omniwp-admin .sl-mail-surface {
 	max-width: 1120px;
 }
 
-.smart-login-admin .sl-mail-list {
+.omniwp-admin .sl-mail-list {
 	margin-bottom: 18px;
 }
 
-.smart-login-admin .sl-mail-list td {
+.omniwp-admin .sl-mail-list td {
 	vertical-align: middle;
 }
 
-.smart-login-admin .sl-mail-list tr.is-open {
+.omniwp-admin .sl-mail-list tr.is-open {
 	box-shadow: inset 3px 0 0 #2271b1;
 }
 
-.smart-login-admin .sl-mail-open {
+.omniwp-admin .sl-mail-open {
 	text-decoration: none;
 }
 
-.smart-login-admin .sl-mail-switch {
+.omniwp-admin .sl-mail-switch {
 	margin-right: 8px;
 }
 
-.smart-login-admin .sl-mail-when {
+.omniwp-admin .sl-mail-when {
 	color: #646970;
 }
 
-.smart-login-admin .sl-mail-state {
+.omniwp-admin .sl-mail-state {
 	display: inline-block;
 	padding: 3px 9px;
 	border-radius: 999px;
@@ -275,17 +275,17 @@
 	white-space: nowrap;
 }
 
-.smart-login-admin .sl-mail-state.is-custom {
+.omniwp-admin .sl-mail-state.is-custom {
 	color: #8a5700;
 	background: #fcf5e6;
 }
 
-.smart-login-admin .sl-mail-state.is-inherited {
+.omniwp-admin .sl-mail-state.is-inherited {
 	color: #50575e;
 	background: #f0f0f1;
 }
 
-.smart-login-admin .sl-mail-panel {
+.omniwp-admin .sl-mail-panel {
 	padding: 4px 20px 12px;
 	border: 1px solid #dcdcde;
 	border-radius: 6px;
@@ -293,34 +293,34 @@
 	margin-bottom: 14px;
 }
 
-.smart-login-admin .sl-mail-panel[hidden] {
+.omniwp-admin .sl-mail-panel[hidden] {
 	display: none;
 }
 
-.smart-login-admin .sl-mail-panel h3 {
+.omniwp-admin .sl-mail-panel h3 {
 	margin-bottom: 0;
 }
 
-.smart-login-admin .sl-mail-panel .form-table th {
+.omniwp-admin .sl-mail-panel .form-table th {
 	width: 200px;
 }
 
-.smart-login-admin .sl-mail-actions {
+.omniwp-admin .sl-mail-actions {
 	margin: 6px 0 0;
 	font-size: 12px;
 }
 
-.smart-login-admin .sl-mail-actions .button-link {
+.omniwp-admin .sl-mail-actions .button-link {
 	text-decoration: none;
 }
 
-.smart-login-admin .sl-mail-actions .sl-mail-revert {
+.omniwp-admin .sl-mail-actions .sl-mail-revert {
 	color: #8a2424;
 }
 
 /* ---------- Readiness overview ---------- */
 
-.smart-login-admin .sl-readiness-banner {
+.omniwp-admin .sl-readiness-banner {
 	margin: 16px 0;
 	padding: 16px 20px;
 	border-left: 4px solid #6b7280;
@@ -328,88 +328,88 @@
 	background: #fff;
 }
 
-.smart-login-admin .sl-readiness-banner h2 {
+.omniwp-admin .sl-readiness-banner h2 {
 	margin: 0 0 4px;
 	font-size: 16px;
 }
 
-.smart-login-admin .sl-readiness-banner p {
+.omniwp-admin .sl-readiness-banner p {
 	margin: 0;
 	color: #50575e;
 }
 
-.smart-login-admin .sl-readiness-banner.is-ready {
+.omniwp-admin .sl-readiness-banner.is-ready {
 	border-left-color: #128a4c;
 }
 
-.smart-login-admin .sl-readiness-banner.is-blocked {
+.omniwp-admin .sl-readiness-banner.is-blocked {
 	border-left-color: #b42318;
 }
 
-.smart-login-admin .sl-readiness {
+.omniwp-admin .sl-readiness {
 	max-width: 900px;
 }
 
 /* The glyph is decorative — the row also carries a screen-reader status label,
    so the state does not depend on colour or on the symbol alone. */
-.smart-login-admin .sl-readiness__mark {
+.omniwp-admin .sl-readiness__mark {
 	width: 34px;
 	font-size: 16px;
 	font-weight: 700;
 	text-align: center;
 }
 
-.smart-login-admin .sl-readiness__row.is-ok .sl-readiness__mark {
+.omniwp-admin .sl-readiness__row.is-ok .sl-readiness__mark {
 	color: #128a4c;
 }
 
-.smart-login-admin .sl-readiness__row.is-fail .sl-readiness__mark {
+.omniwp-admin .sl-readiness__row.is-fail .sl-readiness__mark {
 	color: #b42318;
 }
 
-.smart-login-admin .sl-readiness__row.is-warn .sl-readiness__mark {
+.omniwp-admin .sl-readiness__row.is-warn .sl-readiness__mark {
 	color: #8a5a0c;
 }
 
-.smart-login-admin .sl-readiness__row.is-off .sl-readiness__mark {
+.omniwp-admin .sl-readiness__row.is-off .sl-readiness__mark {
 	color: #9ca3af;
 }
 
-.smart-login-admin .sl-readiness__label {
+.omniwp-admin .sl-readiness__label {
 	width: 190px;
 }
 
-.smart-login-admin .sl-readiness__detail {
+.omniwp-admin .sl-readiness__detail {
 	color: #50575e;
 }
 
-.smart-login-admin .sl-readiness__action {
+.omniwp-admin .sl-readiness__action {
 	width: 190px;
 	text-align: right;
 }
 
 @media screen and (max-width: 782px) {
-	.smart-login-admin .sl-provider-grid {
+	.omniwp-admin .sl-provider-grid {
 		grid-template-columns: 1fr;
 	}
 
-	.smart-login-admin .sl-readiness__label,
-	.smart-login-admin .sl-readiness__action {
+	.omniwp-admin .sl-readiness__label,
+	.omniwp-admin .sl-readiness__action {
 		width: auto;
 	}
 
-	.smart-login-admin .sl-provider-card__header {
+	.omniwp-admin .sl-provider-card__header {
 		flex-direction: column;
 	}
 
-	.smart-login-admin .sl-provider-panel .form-table th {
+	.omniwp-admin .sl-provider-panel .form-table th {
 		width: auto;
 	}
 }
 
 /* ---------- Values a preset produced ---------- */
 
-.smart-login-admin .sl-derived {
+.omniwp-admin .sl-derived {
 	max-width: 900px;
 	margin: 0 0 18px;
 	padding: 10px 14px;
@@ -418,51 +418,51 @@
 	background: #f6f7f7;
 }
 
-.smart-login-admin .sl-derived summary {
+.omniwp-admin .sl-derived summary {
 	cursor: pointer;
 	font-weight: 600;
 }
 
-.smart-login-admin .sl-derived .form-table {
+.omniwp-admin .sl-derived .form-table {
 	margin-top: 0;
 }
 
-.smart-login-admin .sl-derived input[readonly] {
+.omniwp-admin .sl-derived input[readonly] {
 	background: #fff;
 	color: #50575e;
 }
 
 /* ---------- Guide Screen 2-column Layout (1:3 ratio) ---------- */
 
-.smart-login-admin.sl-guide-page {
+.omniwp-admin.sl-guide-page {
 	max-width: 1280px;
 	margin-top: 15px;
 }
 
-.smart-login-admin .sl-guide-header {
+.omniwp-admin .sl-guide-header {
 	margin-bottom: 20px;
 }
 
-.smart-login-admin .sl-guide-header h1 {
+.omniwp-admin .sl-guide-header h1 {
 	font-size: 23px;
 	font-weight: 400;
 	margin: 0 0 8px;
 }
 
-.smart-login-admin .sl-guide-lead {
+.omniwp-admin .sl-guide-lead {
 	font-size: 14px;
 	color: #50575e;
 	margin: 0;
 }
 
-.smart-login-admin .sl-guide-layout {
+.omniwp-admin .sl-guide-layout {
 	display: grid;
 	grid-template-columns: 260px 1fr;
 	gap: 24px;
 	align-items: start;
 }
 
-.smart-login-admin .sl-guide-toc__inner {
+.omniwp-admin .sl-guide-toc__inner {
 	position: sticky;
 	top: 45px;
 	background: #fff;
@@ -472,7 +472,7 @@
 	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-.smart-login-admin .sl-guide-toc h3 {
+.omniwp-admin .sl-guide-toc h3 {
 	margin: 0 0 12px 0;
 	padding-bottom: 8px;
 	border-bottom: 1px solid #f0f0f1;
@@ -483,13 +483,13 @@
 	color: #1d2327;
 }
 
-.smart-login-admin .sl-guide-toc__nav {
+.omniwp-admin .sl-guide-toc__nav {
 	display: flex;
 	flex-direction: column;
 	gap: 3px;
 }
 
-.smart-login-admin .sl-guide-toc__link {
+.omniwp-admin .sl-guide-toc__link {
 	display: flex;
 	align-items: center;
 	gap: 8px;
@@ -502,43 +502,43 @@
 	transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.smart-login-admin .sl-guide-toc__link .dashicons {
+.omniwp-admin .sl-guide-toc__link .dashicons {
 	font-size: 16px;
 	width: 16px;
 	height: 16px;
 	color: #646970;
 }
 
-.smart-login-admin .sl-guide-toc__link:hover {
+.omniwp-admin .sl-guide-toc__link:hover {
 	background: #f6f7f7;
 	color: #2271b1;
 }
 
-.smart-login-admin .sl-guide-toc__link:hover .dashicons {
+.omniwp-admin .sl-guide-toc__link:hover .dashicons {
 	color: #2271b1;
 }
 
-.smart-login-admin .sl-guide-toc__link.active {
+.omniwp-admin .sl-guide-toc__link.active {
 	background: #f0f6fc;
 	color: #2271b1;
 	font-weight: 600;
 }
 
-.smart-login-admin .sl-guide-toc__link.active .dashicons {
+.omniwp-admin .sl-guide-toc__link.active .dashicons {
 	color: #2271b1;
 }
 
-.smart-login-admin .sl-guide-content {
+.omniwp-admin .sl-guide-content {
 	display: flex;
 	flex-direction: column;
 	gap: 24px;
 }
 
-.smart-login-admin .sl-guide-section {
+.omniwp-admin .sl-guide-section {
 	scroll-margin-top: 50px;
 }
 
-.smart-login-admin .sl-guide-card {
+.omniwp-admin .sl-guide-card {
 	background: #fff;
 	border: 1px solid #c3c4c7;
 	border-radius: 6px;
@@ -546,7 +546,7 @@
 	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-.smart-login-admin .sl-guide-card h2 {
+.omniwp-admin .sl-guide-card h2 {
 	margin-top: 0;
 	padding-bottom: 10px;
 	border-bottom: 1px solid #f0f0f1;
@@ -554,11 +554,11 @@
 }
 
 @media screen and (max-width: 960px) {
-	.smart-login-admin .sl-guide-layout {
+	.omniwp-admin .sl-guide-layout {
 		grid-template-columns: 1fr;
 	}
 
-	.smart-login-admin .sl-guide-toc__inner {
+	.omniwp-admin .sl-guide-toc__inner {
 		position: static;
 	}
 }

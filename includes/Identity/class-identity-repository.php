@@ -1,6 +1,6 @@
 <?php
 /**
- * Persistence for smartlogin_identities — the authorization index.
+ * Persistence for OmniWP_identities — the authorization index.
  *
  * This table answers exactly one question: which user owns a given
  * (channel, subject) right now. `UNIQUE KEY subject_owner` is what makes the
@@ -13,12 +13,12 @@
  * account-takeover defect unrepresentable. Pairing them here means no caller can
  * forget.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Identity;
+namespace OmniWP\Identity;
 
-use SmartLogin\Installer;
+use OmniWP\Installer;
 
 defined( 'ABSPATH' ) || exit;
 

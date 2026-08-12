@@ -1,0 +1,198 @@
+/**
+ * OmniWP Base & Resets
+ * Standardized Buttons, Inputs, Form Controls, and Box Sizing.
+ *
+ * @package OmniWP
+ */
+
+/* Universal Box Sizing Reset for OmniWP Components */
+.omniwp,
+.sl-dialog,
+.sl-account,
+.sl-hub,
+.sl-slide-cart,
+.sl-checkout-page-wrap,
+.sl-cart-page-wrap,
+.sl-address-modal {
+	box-sizing: border-box;
+}
+
+.omniwp *,
+.omniwp *::before,
+.omniwp *::after,
+.sl-dialog *,
+.sl-dialog *::before,
+.sl-dialog *::after,
+.sl-account *,
+.sl-account *::before,
+.sl-account *::after,
+.sl-hub *,
+.sl-hub *::before,
+.sl-hub *::after,
+.sl-slide-cart *,
+.sl-slide-cart *::before,
+.sl-slide-cart *::after,
+.sl-checkout-page-wrap *,
+.sl-checkout-page-wrap *::before,
+.sl-checkout-page-wrap *::after {
+	box-sizing: border-box;
+}
+
+/* Defensive List Reset against Theme Overrides */
+.sl-account__list,
+.sl-hub-nav,
+.sl-account-nav,
+ul.sl-account__list,
+ul.sl-hub-nav,
+ul.sl-account-nav {
+	list-style: none !important;
+	list-style-type: none !important;
+	margin: 0 !important;
+	padding: 0 !important;
+}
+
+.sl-account__item,
+.sl-hub-nav__item,
+.sl-account-nav__item,
+li.sl-account__item,
+li.sl-hub-nav__item,
+li.sl-account-nav__item {
+	list-style: none !important;
+	list-style-type: none !important;
+	margin: 0 !important;
+	padding: 0 !important;
+}
+
+.sl-account__item::before,
+.sl-hub-nav__item::before,
+.sl-account-nav__item::before,
+li.sl-account__item::before,
+li.sl-hub-nav__item::before,
+li.sl-account-nav__item::before {
+	content: none !important;
+	display: none !important;
+}
+
+/* Base Buttons System */
+.sl-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--sl-space-2, 8px);
+	padding: 10px 18px;
+	border: 1px solid transparent;
+	border-radius: var(--sl-radius, 5px);
+	font-size: var(--sl-fs-md, 15px);
+	line-height: 1.4;
+	font-weight: 600;
+	text-align: center;
+	text-decoration: none;
+	cursor: pointer;
+	box-sizing: border-box;
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+	font-family: inherit;
+	outline: none;
+	box-shadow: none;
+}
+
+.sl-btn:focus-visible {
+	box-shadow: var(--sl-shadow-focus);
+}
+
+.sl-btn--primary {
+	background: var(--sl-accent, #e30613);
+	color: #ffffff;
+	border-color: transparent;
+}
+
+.sl-btn--primary:hover:not(:disabled) {
+	background: var(--sl-accent-dark, #c00410);
+	color: #ffffff;
+}
+
+.sl-btn--outline {
+	background: #ffffff;
+	border-color: var(--sl-border, #d9dde5);
+	color: var(--sl-text, #1f2430);
+}
+
+.sl-btn--outline:hover:not(:disabled) {
+	background: var(--sl-surface-2, #f7f8fa);
+	border-color: var(--sl-muted, #6b7280);
+	color: var(--sl-text, #1f2430);
+}
+
+.sl-btn--ghost {
+	background: transparent;
+	border-color: transparent;
+	color: var(--sl-muted, #6b7280);
+}
+
+.sl-btn--ghost:hover:not(:disabled) {
+	background: var(--sl-surface-2, #f7f8fa);
+	color: var(--sl-text, #1f2430);
+}
+
+.sl-btn--block {
+	display: flex;
+	width: 100%;
+}
+
+.sl-btn--lg {
+	padding: 12px 24px;
+	font-size: var(--sl-fs-lg, 16px);
+	font-weight: 700;
+	min-height: 46px;
+	border-radius: var(--sl-radius, 5px);
+}
+
+.sl-btn--sm {
+	padding: 6px 12px;
+	font-size: var(--sl-fs-sm, 13px);
+	min-height: 32px;
+	border-radius: var(--sl-radius, 5px);
+}
+
+.sl-btn:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+/* Base Form Controls */
+.sl-label {
+	display: block;
+	margin-bottom: var(--sl-space-1, 4px);
+	font-size: var(--sl-fs-sm, 13px);
+	font-weight: 600;
+	color: var(--sl-text, #1f2430);
+}
+
+.sl-input,
+.sl-select,
+.sl-textarea {
+	width: 100%;
+	border: 1px solid var(--sl-border, #d9dde5);
+	border-radius: var(--sl-radius, 5px);
+	padding: 9px 12px;
+	font-size: var(--sl-fs-md, 15px);
+	line-height: 1.4;
+	color: var(--sl-text, #1f2430);
+	background-color: #ffffff;
+	box-sizing: border-box;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+	font-family: inherit;
+	outline: none;
+	box-shadow: none;
+}
+
+.sl-input:focus,
+.sl-select:focus,
+.sl-textarea:focus {
+	border-color: var(--sl-accent, #e30613);
+	box-shadow: var(--sl-shadow-focus);
+}
+
+.sl-input::placeholder,
+.sl-textarea::placeholder {
+	color: var(--sl-muted, #6b7280);
+}

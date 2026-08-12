@@ -2,19 +2,19 @@
 /**
  * Resolves provider credentials from deployment constants or encrypted options.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth\Providers;
+namespace OmniWP\Auth\Providers;
 
-use SmartLogin\Security\SecretBox;
-use SmartLogin\Settings;
+use OmniWP\Security\SecretBox;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
 final class ProviderCredentials {
 
-	const SECRET_OPTION = 'smart_login_provider_secrets';
+	const SECRET_OPTION = 'OMNIWP_provider_secrets';
 
 	/**
 	 * Kept for anything still reading it. The cipher itself moved to SecretBox in
@@ -35,9 +35,9 @@ final class ProviderCredentials {
 	 */
 	const PROVIDERS = array(
 		'google' => array(
-			'id'       => 'SMART_LOGIN_GOOGLE_CLIENT_ID',
-			'secret'   => 'SMART_LOGIN_GOOGLE_CLIENT_SECRET',
-			'redirect' => 'SMART_LOGIN_GOOGLE_REDIRECT_URI',
+			'id'       => 'OMNIWP_GOOGLE_CLIENT_ID',
+			'secret'   => 'OMNIWP_GOOGLE_CLIENT_SECRET',
+			'redirect' => 'OMNIWP_GOOGLE_REDIRECT_URI',
 			'setting'  => 'providers.google.client_id',
 		),
 	);
@@ -78,7 +78,7 @@ final class ProviderCredentials {
 			return $external;
 		}
 
-		return admin_url( 'admin-post.php?action=smart_login_provider_callback&provider=' . $provider );
+		return admin_url( 'admin-post.php?action=OMNIWP_provider_callback&provider=' . $provider );
 	}
 
 	public static function is_configured( string $provider ): bool {

@@ -16,13 +16,13 @@
  *   - **It never carries the code.** `otp.sent` says a code went out, to a
  *     masked destination, for an intent. Not what the code was.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\OTP\Transports;
+namespace OmniWP\OTP\Transports;
 
-use SmartLogin\Security\AuditLog;
-use SmartLogin\Settings;
+use OmniWP\Security\AuditLog;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -117,7 +117,7 @@ class EventBus {
 		 * @param string $event
 		 * @param array  $meta
 		 */
-		$envelope = (array) apply_filters( 'smart_login_bus_envelope', $envelope, $event, $meta );
+		$envelope = (array) apply_filters( 'OMNIWP_bus_envelope', $envelope, $event, $meta );
 
 		$envelope['event'] = $event;
 		unset( $envelope['code'] );

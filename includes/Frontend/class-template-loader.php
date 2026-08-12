@@ -1,18 +1,18 @@
 <?php
 /**
  * Loads templates, letting the active theme override any of them by putting a
- * file of the same name in `yourtheme/smart-login/`.
+ * file of the same name in `yourtheme/omniwp/`.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Frontend;
+namespace OmniWP\Frontend;
 
 defined( 'ABSPATH' ) || exit;
 
 class TemplateLoader {
 
-	const THEME_DIR = 'smart-login';
+	const THEME_DIR = 'omniwp';
 
 	/**
 	 * Absolute path to the template that should be used for $name.
@@ -24,14 +24,14 @@ class TemplateLoader {
 		$found = locate_template( array( self::THEME_DIR . '/' . $file ) );
 
 		if ( ! $found ) {
-			$found = SMART_LOGIN_DIR . 'templates/' . $file;
+			$found = OMNIWP_DIR . 'templates/' . $file;
 		}
 
 		/**
 		 * @param string $found
 		 * @param string $name
 		 */
-		return (string) apply_filters( 'smart_login_locate_template', $found, $name );
+		return (string) apply_filters( 'OMNIWP_locate_template', $found, $name );
 	}
 
 	/**
@@ -53,7 +53,7 @@ class TemplateLoader {
 		 * @param array  $args
 		 * @param string $template_name
 		 */
-		$args = (array) apply_filters( 'smart_login_template_args', $args, $template_name );
+		$args = (array) apply_filters( 'OMNIWP_template_args', $args, $template_name );
 
 		// phpcs:ignore WordPress.PHP.DontExtract -- templates expect named variables.
 		extract( $args, EXTR_SKIP );

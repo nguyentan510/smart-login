@@ -8,10 +8,10 @@
  * being asked to derive the posture themselves. The numbers stay editable under
  * "Tuỳ chỉnh" for the site that genuinely needs a seventh combination.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin;
+namespace OmniWP;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -25,8 +25,8 @@ final class OtpPresets {
 	public static function all(): array {
 		$presets = array(
 			'balanced'   => array(
-				'label'  => __( 'Cân bằng — khuyến nghị', 'smart-login' ),
-				'detail' => __( 'Mã 6 số, hiệu lực 5 phút, tối đa 5 mã mỗi số mỗi giờ.', 'smart-login' ),
+				'label'  => __( 'Cân bằng — khuyến nghị', 'omniwp' ),
+				'detail' => __( 'Mã 6 số, hiệu lực 5 phút, tối đa 5 mã mỗi số mỗi giờ.', 'omniwp' ),
 				'values' => array(
 					'otp.length'                   => 6,
 					'otp.ttl'                      => 300,
@@ -37,8 +37,8 @@ final class OtpPresets {
 				),
 			),
 			'strict'     => array(
-				'label'  => __( 'Chặt — ưu tiên an toàn', 'smart-login' ),
-				'detail' => __( 'Mã hết hạn sau 2 phút và giới hạn gửi thấp hơn. Giảm chi phí SMS, nhưng người dùng chậm tay sẽ phải xin mã mới.', 'smart-login' ),
+				'label'  => __( 'Chặt — ưu tiên an toàn', 'omniwp' ),
+				'detail' => __( 'Mã hết hạn sau 2 phút và giới hạn gửi thấp hơn. Giảm chi phí SMS, nhưng người dùng chậm tay sẽ phải xin mã mới.', 'omniwp' ),
 				'values' => array(
 					'otp.length'                   => 6,
 					'otp.ttl'                      => 120,
@@ -49,8 +49,8 @@ final class OtpPresets {
 				),
 			),
 			'relaxed'    => array(
-				'label'  => __( 'Thoáng — ưu tiên thuận tiện', 'smart-login' ),
-				'detail' => __( 'Mã sống 10 phút và cho gửi lại nhiều hơn. Dễ dùng hơn ở nơi sóng yếu, đổi lại hoá đơn SMS cao hơn.', 'smart-login' ),
+				'label'  => __( 'Thoáng — ưu tiên thuận tiện', 'omniwp' ),
+				'detail' => __( 'Mã sống 10 phút và cho gửi lại nhiều hơn. Dễ dùng hơn ở nơi sóng yếu, đổi lại hoá đơn SMS cao hơn.', 'omniwp' ),
 				'values' => array(
 					'otp.length'                   => 6,
 					'otp.ttl'                      => 600,
@@ -61,8 +61,8 @@ final class OtpPresets {
 				),
 			),
 			self::CUSTOM => array(
-				'label'  => __( 'Tuỳ chỉnh', 'smart-login' ),
-				'detail' => __( 'Tự đặt từng giá trị bên dưới.', 'smart-login' ),
+				'label'  => __( 'Tuỳ chỉnh', 'omniwp' ),
+				'detail' => __( 'Tự đặt từng giá trị bên dưới.', 'omniwp' ),
 				'values' => array(),
 			),
 		);
@@ -72,7 +72,7 @@ final class OtpPresets {
 		 *
 		 * @param array $presets
 		 */
-		return (array) apply_filters( 'smart_login_otp_presets', $presets );
+		return (array) apply_filters( 'OMNIWP_otp_presets', $presets );
 	}
 
 	/**

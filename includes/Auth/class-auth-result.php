@@ -2,10 +2,10 @@
 /**
  * Result returned after a WordPress session is issued.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth;
+namespace OmniWP\Auth;
 
 defined( 'ABSPATH' ) || exit;
 

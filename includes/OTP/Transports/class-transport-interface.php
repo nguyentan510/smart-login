@@ -8,10 +8,10 @@
  * "channel" before this refactor, which is why one of them is a transport now.
  * See docs/identity-model.md §6.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\OTP\Transports;
+namespace OmniWP\OTP\Transports;
 
 use WP_Error;
 

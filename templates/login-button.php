@@ -7,7 +7,7 @@
  * click and never touches the href. When no page hosts the flow,
  * `Flow::login_url()` is '' and the fragment stands in.
  *
- * Override at yourtheme/smart-login/login-button.php
+ * Override at yourtheme/omniwp/login-button.php
  *
  * @var string $label
  * @var string $step
@@ -15,27 +15,27 @@
  * @var string $class
  * @var bool   $collapse Hide the text below the breakpoint, leaving the icon.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-use SmartLogin\Frontend\IconSet;
+use OmniWP\Frontend\IconSet;
 
 defined( 'ABSPATH' ) || exit;
 
-$sl_classes = 'sl-account-btn';
+$ow_classes = 'sl-account-btn';
 
 if ( ! empty( $collapse ) ) {
-	$sl_classes .= ' sl-account-btn--collapse';
+	$ow_classes .= ' sl-account-btn--collapse';
 }
 
 if ( '' !== (string) $class ) {
-	$sl_classes .= ' ' . $class;
+	$ow_classes .= ' ' . $class;
 }
 ?>
 <a
-	class="<?php echo esc_attr( $sl_classes ); ?>"
+	class="<?php echo esc_attr( $ow_classes ); ?>"
 	href="<?php echo esc_url( $href ); ?>"
-	data-smart-login="<?php echo esc_attr( $step ); ?>"
+	data-omniwp="<?php echo esc_attr( $step ); ?>"
 >
 	<span class="sl-account-btn__icon" aria-hidden="true">
 		<?php echo IconSet::get( 'user' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- fixed markup from a closed set. ?>

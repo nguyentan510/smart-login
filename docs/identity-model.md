@@ -13,10 +13,10 @@ encode this document are intentionally red. See `docs/refactor-plan.md`.
 The pre-refactor codebase held the answer to "who is this person?" in eight
 places at once:
 
-`wp_users.user_login`, `wp_users.user_email`, `usermeta.smartlogin_phone`,
-`usermeta.smartlogin_*_verified_at`, `usermeta.smartlogin_synthetic_email`,
+`wp_users.user_login`, `wp_users.user_email`, `usermeta.OmniWP_phone`,
+`usermeta.OmniWP_*_verified_at`, `usermeta.OmniWP_synthetic_email`,
 `usermeta.billing_phone` / `billing_email`,
-`wp_smart_login_external_identities`, `usermeta.smartlogin_known_devices`.
+`wp_OMNIWP_external_identities`, `usermeta.OmniWP_known_devices`.
 
 No single one was declared authoritative. Three separate defects traced back to
 that, not to three independent mistakes:
@@ -42,9 +42,9 @@ works to the identifiers that lack it.
 
 ### Invariant 1 — one source of truth for "who"
 
-> Only the `smartlogin_identities` table answers the question *"which user owns
+> Only the `OmniWP_identities` table answers the question *"which user owns
 > this subject?"*. Not `user_login`, not `user_email`, not user meta, not
-> `smartlogin_identity_history`.
+> `OmniWP_identity_history`.
 
 Enforced by three independent mechanisms, because one is not enough:
 
@@ -105,7 +105,7 @@ permanently stale the moment a user changes their phone.
 Therefore:
 
 ```
-user_login  =  'sl_' + 24 hex characters      generated once, never changes,
+user_login  =  'ow_' + 24 hex characters      generated once, never changes,
                                              never displayed as an identifier,
                                              never typed by a human
 ```
@@ -116,7 +116,7 @@ self-correcting rather than permanently stale, and it must stay real for mail
 delivery. Core resolving an email to a user is therefore acceptable — the
 directory holds the same fact.
 
-**Accepted cost.** The WordPress Users list shows `sl_9f2c…` instead of a phone
+**Accepted cost.** The WordPress Users list shows `ow_9f2c…` instead of a phone
 number. Mitigated by `display_name` (already the full name) plus an "Định danh
 chính" column and a `user_search_columns` hook so support staff can still search
 by phone. Roughly 20 lines, specified in Phase 3.
@@ -125,11 +125,11 @@ by phone. Roughly 20 lines, specified in Phase 3.
 
 ## 4. Schema
 
-`SMART_LOGIN_DB_VERSION` moves from `2` to `3`. `wp_smart_login_external_identities`
+`OMNIWP_DB_VERSION` moves from `2` to `3`. `wp_OMNIWP_external_identities`
 is dropped; federated providers are no longer a special case.
 
 ```sql
-wp_smartlogin_identities              -- authorization index: who owns what NOW
+wp_OmniWP_identities              -- authorization index: who owns what NOW
   id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT
   user_id      BIGINT UNSIGNED NOT NULL
   channel      VARCHAR(32)     NOT NULL   -- phone | email | google | zalo | …
@@ -143,7 +143,7 @@ wp_smartlogin_identities              -- authorization index: who owns what NOW
   UNIQUE KEY  subject_owner (channel, subject)
   KEY         user_channel  (user_id, channel)
 
-wp_smartlogin_identity_history        -- the old frame: append-only, never authenticates
+wp_OmniWP_identity_history        -- the old frame: append-only, never authenticates
   id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT
   user_id      BIGINT UNSIGNED NOT NULL
   channel      VARCHAR(32)     NOT NULL

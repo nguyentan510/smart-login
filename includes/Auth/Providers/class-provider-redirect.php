@@ -2,10 +2,10 @@
 /**
  * Safe result of starting an external provider flow.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth\Providers;
+namespace OmniWP\Auth\Providers;
 
 defined( 'ABSPATH' ) || exit;
 

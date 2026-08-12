@@ -9,8 +9,8 @@
  *
  * What will live here, and why none of it can live in the pure suite:
  *
- *   1. (21.5) a page hosting only `[smart_login_button]` has the button
- *      stylesheet among its enqueued styles, and does not have smart-login.css.
+ *   1. (21.5) a page hosting only `[OMNIWP_button]` has the button
+ *      stylesheet among its enqueued styles, and does not have omniwp.css.
  *      This is finding 1's rule. An enqueue is precisely the class of defect a
  *      fixture reports as fine — `Assets::maybe_enqueue()` hangs off
  *      `is_singular()` and a real query.
@@ -27,39 +27,39 @@
  * exists to avoid — four gates once missed a fatal that only a real WordPress
  * could show.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 declare( strict_types=1 );
 
-$wp_root     = rtrim( (string) getenv( 'SMART_LOGIN_WP_ROOT' ), "\\/" );
-$plugin_root = rtrim( (string) getenv( 'SMART_LOGIN_PLUGIN_ROOT' ), "\\/" );
+$wp_root     = rtrim( (string) getenv( 'OMNIWP_WP_ROOT' ), "\\/" );
+$plugin_root = rtrim( (string) getenv( 'OMNIWP_PLUGIN_ROOT' ), "\\/" );
 
 $blocked = static function ( string $message ): never {
-	echo "SMART_LOGIN_ACCOUNT_MENU_INTEGRATION_BLOCKED\n";
+	echo "OMNIWP_ACCOUNT_MENU_INTEGRATION_BLOCKED\n";
 	echo 'reason=' . $message . "\n";
 	exit( 2 );
 };
 
 $failed = static function ( string $message ): never {
-	echo "SMART_LOGIN_ACCOUNT_MENU_INTEGRATION_FAILED\n";
+	echo "OMNIWP_ACCOUNT_MENU_INTEGRATION_FAILED\n";
 	echo 'reason=' . $message . "\n";
 	exit( 1 );
 };
 
 if ( '' === $wp_root || ! is_file( $wp_root . DIRECTORY_SEPARATOR . 'wp-settings.php' ) ) {
-	$blocked( 'SMART_LOGIN_WP_ROOT must point to a WordPress public root' );
+	$blocked( 'OMNIWP_WP_ROOT must point to a WordPress public root' );
 }
 
-if ( '' === $plugin_root || ! is_file( $plugin_root . DIRECTORY_SEPARATOR . 'smart-login.php' ) ) {
-	$blocked( 'SMART_LOGIN_PLUGIN_ROOT must point to the current plugin source' );
+if ( '' === $plugin_root || ! is_file( $plugin_root . DIRECTORY_SEPARATOR . 'omniwp.php' ) ) {
+	$blocked( 'OMNIWP_PLUGIN_ROOT must point to the current plugin source' );
 }
 
 define( 'WP_USE_THEMES', false );
 
 require $wp_root . DIRECTORY_SEPARATOR . 'wp-load.php';
 
-if ( ! class_exists( \SmartLogin\Frontend\Shortcodes::class ) ) {
+if ( ! class_exists( \OmniWP\Frontend\Shortcodes::class ) ) {
 	$blocked( 'the plugin is not active on this install' );
 }
 
@@ -92,7 +92,7 @@ $page_id = wp_insert_post(
 		'post_type'    => 'page',
 		'post_status'  => 'publish',
 		'post_title'   => 'Smart Login button gate',
-		'post_content' => '[smart_login_button]',
+		'post_content' => '[OMNIWP_button]',
 	)
 );
 
@@ -104,7 +104,7 @@ $cleanup = static function () use ( $page_id ): void {
 	wp_delete_post( $page_id, true );
 };
 
-$assets = new \SmartLogin\Frontend\Assets();
+$assets = new \OmniWP\Frontend\Assets();
 
 $GLOBALS['wp_query'] = new WP_Query( array( 'page_id' => $page_id ) );
 $GLOBALS['wp_the_query'] = $GLOBALS['wp_query'];
@@ -116,8 +116,8 @@ $assets->maybe_enqueue();
 $enqueued = wp_styles()->queue;
 
 $check(
-	'a page with only [smart_login_button] enqueues the button stylesheet',
-	in_array( \SmartLogin\Frontend\Assets::BUTTON_HANDLE, $enqueued, true ),
+	'a page with only [OMNIWP_button] enqueues the button stylesheet',
+	in_array( \OmniWP\Frontend\Assets::BUTTON_HANDLE, $enqueued, true ),
 	'queue: ' . implode( ', ', $enqueued )
 );
 
@@ -127,7 +127,7 @@ $check(
  */
 $check(
 	'and does not drag in the sign-in form stylesheet',
-	! in_array( \SmartLogin\Frontend\Assets::HANDLE, $enqueued, true ),
+	! in_array( \OmniWP\Frontend\Assets::HANDLE, $enqueued, true ),
 	'queue: ' . implode( ', ', $enqueued )
 );
 
@@ -137,11 +137,11 @@ $check(
  * order.
  */
 ob_start();
-wp_print_styles( array( \SmartLogin\Frontend\Assets::BUTTON_HANDLE ) );
+wp_print_styles( array( \OmniWP\Frontend\Assets::BUTTON_HANDLE ) );
 $printed = (string) ob_get_clean();
 
-$token_at  = strpos( $printed, 'smart-login-tokens.css' );
-$button_at = strpos( $printed, 'smart-login-button.css' );
+$token_at  = strpos( $printed, 'omniwp-tokens.css' );
+$button_at = strpos( $printed, 'omniwp-button.css' );
 
 $check(
 	'the token stylesheet is printed, and before the button',
@@ -171,7 +171,7 @@ $check(
 	'a stored string could not do this'
 );
 
-$menu = \SmartLogin\Frontend\AccountMenu::items( get_current_user_id() );
+$menu = \OmniWP\Frontend\AccountMenu::items( get_current_user_id() );
 $tail = end( $menu ) ?: array();
 
 $check(
@@ -210,7 +210,7 @@ $check(
 	'decision 11: a plugin may default to being invisible, not to editing the theme'
 );
 
-\SmartLogin\Settings::update( array( 'account_menu.nav_location' => 'sl-gate-location' ) );
+\OmniWP\Settings::update( array( 'account_menu.nav_location' => 'sl-gate-location' ) );
 
 $injected = (string) apply_filters( 'wp_nav_menu_items', $theme_items, $args_wanted );
 $elsewhere = (string) apply_filters( 'wp_nav_menu_items', $theme_items, $args_other );
@@ -238,7 +238,7 @@ $check(
  * producing two markups is the drift this phase is organised against, and
  * placement is where it would reappear.
  */
-$from_shortcode = ( new \SmartLogin\Frontend\Shortcodes() )->render_button( array() );
+$from_shortcode = ( new \OmniWP\Frontend\Shortcodes() )->render_button( array() );
 $inner          = (string) preg_replace( '#^.*<li class="menu-item sl-account-item">(.*)</li>\s*$#s', '$1', $injected );
 
 $check(
@@ -252,7 +252,7 @@ $check(
  * exists. Simulated by asking for a location the theme never registered, which
  * is the same state from the filter's point of view.
  */
-\SmartLogin\Settings::update( array( 'account_menu.nav_location' => 'gone-with-the-old-theme' ) );
+\OmniWP\Settings::update( array( 'account_menu.nav_location' => 'gone-with-the-old-theme' ) );
 
 $check(
 	'a stale location injects nothing and warns about nothing',
@@ -260,7 +260,7 @@ $check(
 	'themes get switched; a stale option is not an error condition'
 );
 
-\SmartLogin\Settings::update( array( 'account_menu.nav_location' => '' ) );
+\OmniWP\Settings::update( array( 'account_menu.nav_location' => '' ) );
 
 $cleanup();
 
@@ -270,5 +270,5 @@ if ( $failures ) {
 	$failed( implode( '; ', $failures ) );
 }
 
-echo "SMART_LOGIN_ACCOUNT_MENU_INTEGRATION_OK\n";
+echo "OMNIWP_ACCOUNT_MENU_INTEGRATION_OK\n";
 exit( 0 );

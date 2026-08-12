@@ -8,26 +8,26 @@
  * same fields shown to a stranger. There is one password box, not two — the
  * show/hide toggle does what a confirmation field was there to do.
  *
- * Override at yourtheme/smart-login/form-signup.php
+ * Override at yourtheme/omniwp/form-signup.php
  *
  * @var array  $notices
  * @var string $grant
  * @var string $terms_url
  * @var int    $min_password
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-use SmartLogin\Frontend\Flow;
-use SmartLogin\Frontend\TemplateLoader;
-use SmartLogin\Security\RequestGuard;
+use OmniWP\Frontend\Flow;
+use OmniWP\Frontend\TemplateLoader;
+use OmniWP\Security\RequestGuard;
 
 defined( 'ABSPATH' ) || exit;
 
-$sl_grant = (string) ( $grant ?? '' );
-$sl_min   = max( 6, (int) ( $min_password ?? 8 ) );
+$ow_grant = (string) ( $grant ?? '' );
+$ow_min   = max( 6, (int) ( $min_password ?? 8 ) );
 ?>
-<div class="smart-login smart-login--signup">
+<div class="omniwp omniwp--signup">
 
 	<?php
 	TemplateLoader::output(
@@ -35,36 +35,36 @@ $sl_min   = max( 6, (int) ( $min_password ?? 8 ) );
 		array(
 			'current' => 3,
 			'labels'  => array(
-				__( 'Số điện thoại', 'smart-login' ),
-				__( 'Xác thực', 'smart-login' ),
-				__( 'Thông tin', 'smart-login' ),
+				__( 'Số điện thoại', 'omniwp' ),
+				__( 'Xác thực', 'omniwp' ),
+				__( 'Thông tin', 'omniwp' ),
 			),
 		)
 	);
 	?>
 
-	<?php TemplateLoader::output( 'partials/screen-title', array( 'text' => __( 'Gần xong rồi!', 'smart-login' ) ) ); ?>
-	<p class="sl-lead"><?php esc_html_e( 'Chúng tôi đã xác thực được bạn. Chỉ còn hai thông tin nữa là tài khoản sẵn sàng.', 'smart-login' ); ?></p>
+	<?php TemplateLoader::output( 'partials/screen-title', array( 'text' => __( 'Gần xong rồi!', 'omniwp' ) ) ); ?>
+	<p class="sl-lead"><?php esc_html_e( 'Chúng tôi đã xác thực được bạn. Chỉ còn hai thông tin nữa là tài khoản sẵn sàng.', 'omniwp' ); ?></p>
 
 	<?php TemplateLoader::output( 'partials/notices', array( 'notices' => $notices ) ); ?>
 
-	<?php if ( '' === $sl_grant ) : ?>
+	<?php if ( '' === $ow_grant ) : ?>
 
-		<p class="sl-lead"><?php esc_html_e( 'Phiên đăng ký đã hết hạn. Vui lòng thực hiện lại.', 'smart-login' ); ?></p>
+		<p class="sl-lead"><?php esc_html_e( 'Phiên đăng ký đã hết hạn. Vui lòng thực hiện lại.', 'omniwp' ); ?></p>
 		<a class="sl-btn sl-btn--outline" href="<?php echo esc_url( Flow::url( Flow::STEP_IDENTIFY ) ); ?>">
-			<?php esc_html_e( 'Bắt đầu lại', 'smart-login' ); ?>
+			<?php esc_html_e( 'Bắt đầu lại', 'omniwp' ); ?>
 		</a>
 
 	<?php else : ?>
 
 		<form method="post" class="sl-form sl-form--signup">
 			<?php RequestGuard::fields( 'signup' ); ?>
-			<input type="hidden" name="smart_login_action" value="signup" />
-			<input type="hidden" name="grant" value="<?php echo esc_attr( $sl_grant ); ?>" />
+			<input type="hidden" name="OMNIWP_action" value="signup" />
+			<input type="hidden" name="grant" value="<?php echo esc_attr( $ow_grant ); ?>" />
 
 			<div class="sl-field">
 				<label class="sl-label" for="sl-full-name">
-					<?php esc_html_e( 'Họ và tên', 'smart-login' ); ?>
+					<?php esc_html_e( 'Họ và tên', 'omniwp' ); ?>
 					<span class="sl-required">*</span>
 				</label>
 				<input
@@ -84,10 +84,10 @@ $sl_min   = max( 6, (int) ( $min_password ?? 8 ) );
 				'partials/password-field',
 				array(
 					'name'         => 'password',
-					'label'        => __( 'Mật khẩu', 'smart-login' ),
+					'label'        => __( 'Mật khẩu', 'omniwp' ),
 					'id'           => 'sl-reg-password',
 					'autocomplete' => 'new-password',
-					'minlength'    => $sl_min,
+					'minlength'    => $ow_min,
 					'describedby'  => 'sl-password-guidance',
 				)
 			);
@@ -96,8 +96,8 @@ $sl_min   = max( 6, (int) ( $min_password ?? 8 ) );
 				<?php
 				printf(
 					/* translators: %d: minimum password length. */
-					esc_html__( 'Ít nhất %d ký tự. Bấm vào biểu tượng con mắt để kiểm tra lại.', 'smart-login' ),
-					(int) $sl_min
+					esc_html__( 'Ít nhất %d ký tự. Bấm vào biểu tượng con mắt để kiểm tra lại.', 'omniwp' ),
+					(int) $ow_min
 				);
 				?>
 			</p>
@@ -109,18 +109,18 @@ $sl_min   = max( 6, (int) ( $min_password ?? 8 ) );
 						<?php
 						printf(
 							/* translators: %s: linked terms and conditions label. */
-							wp_kses_post( __( 'Tôi đồng ý với %s.', 'smart-login' ) ),
-							'<a class="sl-link" href="' . esc_url( $terms_url ) . '" target="_blank" rel="noopener">' . esc_html__( 'các điều khoản áp dụng', 'smart-login' ) . '</a>'
+							wp_kses_post( __( 'Tôi đồng ý với %s.', 'omniwp' ) ),
+							'<a class="sl-link" href="' . esc_url( $terms_url ) . '" target="_blank" rel="noopener">' . esc_html__( 'các điều khoản áp dụng', 'omniwp' ) . '</a>'
 						);
 						?>
 					<?php else : ?>
-						<?php esc_html_e( 'Tôi đồng ý với các điều khoản áp dụng.', 'smart-login' ); ?>
+						<?php esc_html_e( 'Tôi đồng ý với các điều khoản áp dụng.', 'omniwp' ); ?>
 					<?php endif; ?>
 				</span>
 			</label>
 
 			<button type="submit" class="sl-btn sl-btn--primary sl-btn--block">
-				<?php esc_html_e( 'Hoàn tất đăng ký', 'smart-login' ); ?>
+				<?php esc_html_e( 'Hoàn tất đăng ký', 'omniwp' ); ?>
 			</button>
 		</form>
 

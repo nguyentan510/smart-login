@@ -6,24 +6,24 @@
  * and response, with secrets and the code itself masked. This is what turns a
  * gateway integration from guesswork into a five-minute job.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Admin;
+namespace OmniWP\Admin;
 
-use SmartLogin\Identity\Channels\MailChannel;
-use SmartLogin\Identity\Phone;
-use SmartLogin\OTP\Transports\AutomationEndpoint;
-use SmartLogin\OTP\Transports\MailTransport;
-use SmartLogin\OTP\Transports\TransportRouter;
-use SmartLogin\OTP\Transports\WebhookTransport;
+use OmniWP\Identity\Channels\MailChannel;
+use OmniWP\Identity\Phone;
+use OmniWP\OTP\Transports\AutomationEndpoint;
+use OmniWP\OTP\Transports\MailTransport;
+use OmniWP\OTP\Transports\TransportRouter;
+use OmniWP\OTP\Transports\WebhookTransport;
 
 defined( 'ABSPATH' ) || exit;
 
 class WebhookTester {
 
-	const NONCE  = 'smart_login_test';
-	const ACTION = 'smart_login_test_channel';
+	const NONCE  = 'OMNIWP_test';
+	const ACTION = 'OMNIWP_test_channel';
 
 	public function register(): void {
 		add_action( 'wp_ajax_' . self::ACTION, array( $this, 'handle' ) );
@@ -31,7 +31,7 @@ class WebhookTester {
 
 	public function handle(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_send_json_error( array( 'message' => __( 'Bạn không có quyền thực hiện thao tác này.', 'smart-login' ) ), 403 );
+			wp_send_json_error( array( 'message' => __( 'Bạn không có quyền thực hiện thao tác này.', 'omniwp' ) ), 403 );
 		}
 
 		check_ajax_referer( self::NONCE, 'nonce' );
@@ -43,7 +43,7 @@ class WebhookTester {
 		$destination = isset( $_POST['destination'] ) ? sanitize_text_field( wp_unslash( $_POST['destination'] ) ) : '';
 
 		if ( '' === trim( $destination ) ) {
-			wp_send_json_error( array( 'message' => __( 'Vui lòng nhập số điện thoại hoặc email nhận thử.', 'smart-login' ) ) );
+			wp_send_json_error( array( 'message' => __( 'Vui lòng nhập số điện thoại hoặc email nhận thử.', 'omniwp' ) ) );
 		}
 
 		// A throwaway code: this never touches the OTP table, so it cannot be
@@ -89,7 +89,7 @@ class WebhookTester {
 
 		if ( ! $endpoint->is_configured() ) {
 			wp_send_json_error(
-				array( 'message' => __( 'Endpoint chưa có URL hoặc chưa có khoá ký. Hãy lưu cấu hình trước.', 'smart-login' ) )
+				array( 'message' => __( 'Endpoint chưa có URL hoặc chưa có khoá ký. Hãy lưu cấu hình trước.', 'omniwp' ) )
 			);
 		}
 
@@ -114,7 +114,7 @@ class WebhookTester {
 			wp_send_json_error(
 				array(
 					/* translators: %d: HTTP status code. */
-					'message'  => sprintf( __( 'Endpoint trả về HTTP %d.', 'smart-login' ), $status ),
+					'message'  => sprintf( __( 'Endpoint trả về HTTP %d.', 'omniwp' ), $status ),
 					'status'   => $status,
 					'response' => substr( (string) wp_remote_retrieve_body( $response ), 0, 500 ),
 				)
@@ -124,7 +124,7 @@ class WebhookTester {
 		wp_send_json_success(
 			array(
 				'ok'      => true,
-				'message' => __( 'Endpoint đã nhận gói tin đã ký. Kiểm tra phía nhận để xác nhận chữ ký khớp.', 'smart-login' ),
+				'message' => __( 'Endpoint đã nhận gói tin đã ký. Kiểm tra phía nhận để xác nhận chữ ký khớp.', 'omniwp' ),
 			)
 		);
 	}
@@ -133,7 +133,7 @@ class WebhookTester {
 		$canonical = Phone::normalize( $destination );
 
 		if ( '' === $canonical ) {
-			wp_send_json_error( array( 'message' => __( 'Số điện thoại không hợp lệ.', 'smart-login' ) ) );
+			wp_send_json_error( array( 'message' => __( 'Số điện thoại không hợp lệ.', 'omniwp' ) ) );
 		}
 
 		if ( ! Phone::is_valid( $canonical ) ) {
@@ -141,7 +141,7 @@ class WebhookTester {
 				array(
 					'message' => sprintf(
 						/* translators: %s: normalised number. */
-						__( 'Số %s không khớp đầu số hợp lệ. Kiểm tra lại mã quốc gia trong tab Chung.', 'smart-login' ),
+						__( 'Số %s không khớp đầu số hợp lệ. Kiểm tra lại mã quốc gia trong tab Chung.', 'omniwp' ),
 						$canonical
 					),
 				)
@@ -151,7 +151,7 @@ class WebhookTester {
 		$channel = new WebhookTransport();
 
 		if ( ! $channel->is_available() ) {
-			wp_send_json_error( array( 'message' => __( 'Kênh SMS chưa bật hoặc chưa chọn nhà cung cấp. Hãy lưu cấu hình trước.', 'smart-login' ) ) );
+			wp_send_json_error( array( 'message' => __( 'Kênh SMS chưa bật hoặc chưa chọn nhà cung cấp. Hãy lưu cấu hình trước.', 'omniwp' ) ) );
 		}
 
 		$result = $channel->dispatch( $canonical, $code, $ctx );
@@ -165,7 +165,7 @@ class WebhookTester {
 			'message'     => $result['ok']
 				? sprintf(
 					/* translators: 1: normalised number, 2: duration in ms. */
-					__( 'Gửi thành công tới %1$s (%2$dms). Kiểm tra điện thoại của bạn.', 'smart-login' ),
+					__( 'Gửi thành công tới %1$s (%2$dms). Kiểm tra điện thoại của bạn.', 'omniwp' ),
 					$canonical,
 					$result['duration_ms']
 				)
@@ -181,13 +181,13 @@ class WebhookTester {
 
 	private function test_email( string $destination, string $code, array $ctx ): void {
 		if ( ! is_email( $destination ) ) {
-			wp_send_json_error( array( 'message' => __( 'Địa chỉ email không hợp lệ.', 'smart-login' ) ) );
+			wp_send_json_error( array( 'message' => __( 'Địa chỉ email không hợp lệ.', 'omniwp' ) ) );
 		}
 
 		$channel = new MailTransport();
 
 		if ( ! $channel->is_available() ) {
-			wp_send_json_error( array( 'message' => __( 'Kênh email đang tắt. Hãy bật và lưu cấu hình trước.', 'smart-login' ) ) );
+			wp_send_json_error( array( 'message' => __( 'Kênh email đang tắt. Hãy bật và lưu cấu hình trước.', 'omniwp' ) ) );
 		}
 
 		$sent = $channel->send( $destination, $code, $ctx );
@@ -196,7 +196,7 @@ class WebhookTester {
 			wp_send_json_error(
 				array(
 					'message'  => $sent->get_error_message(),
-					'response' => __( 'wp_mail() trả về false. Nguyên nhân thường gặp: máy chủ chưa cấu hình SMTP.', 'smart-login' ),
+					'response' => __( 'wp_mail() trả về false. Nguyên nhân thường gặp: máy chủ chưa cấu hình SMTP.', 'omniwp' ),
 				)
 			);
 		}
@@ -206,7 +206,7 @@ class WebhookTester {
 				'ok'      => true,
 				'message' => sprintf(
 					/* translators: %s: email address. */
-					__( 'Đã chuyển email cho WordPress gửi tới %s. Kiểm tra hộp thư (kể cả mục Spam).', 'smart-login' ),
+					__( 'Đã chuyển email cho WordPress gửi tới %s. Kiểm tra hộp thư (kể cả mục Spam).', 'omniwp' ),
 					$destination
 				),
 			)

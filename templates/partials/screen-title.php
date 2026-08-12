@@ -16,14 +16,14 @@
  * `FragmentRenderer::title()` is the other half: it decides what the shell's
  * bar says per step, so the sentence exists once either way.
  *
- * Override at yourtheme/smart-login/partials/screen-title.php.
+ * Override at yourtheme/omniwp/partials/screen-title.php.
  *
  * @var string $text
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-use SmartLogin\Frontend\Flow;
+use OmniWP\Frontend\Flow;
 
 defined( 'ABSPATH' ) || exit;
 

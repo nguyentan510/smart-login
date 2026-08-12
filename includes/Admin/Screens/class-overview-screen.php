@@ -6,20 +6,20 @@
  * one place, before the settings rather than buried inside them, and that a red
  * row links straight to the control that fixes it.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Admin\Screens;
+namespace OmniWP\Admin\Screens;
 
-use SmartLogin\Admin\Readiness;
-use SmartLogin\Admin\SettingsPage;
+use OmniWP\Admin\Readiness;
+use OmniWP\Admin\SettingsPage;
 
 defined( 'ABSPATH' ) || exit;
 
 final class OverviewScreen {
 
 	/** admin-post action behind the "resume sending" button. */
-	const RESUME_ACTION = 'smart_login_resume_sending';
+	const RESUME_ACTION = 'OMNIWP_resume_sending';
 
 	public function register(): void {
 		add_action( 'admin_post_' . self::RESUME_ACTION, array( $this, 'handle_resume' ) );
@@ -36,16 +36,16 @@ final class OverviewScreen {
 	 */
 	public function handle_resume(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'Bạn không có quyền thực hiện việc này.', 'smart-login' ) );
+			wp_die( esc_html__( 'Bạn không có quyền thực hiện việc này.', 'omniwp' ) );
 		}
 
 		check_admin_referer( self::RESUME_ACTION );
 
-		\SmartLogin\Security\RateLimiter::resume();
+		\OmniWP\Security\RateLimiter::resume();
 
 		wp_safe_redirect(
 			add_query_arg(
-				'sl_resumed',
+				'ow_resumed',
 				'1',
 				admin_url( 'admin.php?page=' . SettingsPage::SLUG )
 			)
@@ -57,16 +57,16 @@ final class OverviewScreen {
 		$readiness = new Readiness();
 		$checks    = $readiness->checks();
 		$ready     = $readiness->is_ready();
-		$halted    = ( new \SmartLogin\Security\RateLimiter() )->halted_for();
+		$halted    = ( new \OmniWP\Security\RateLimiter() )->halted_for();
 		?>
-		<div class="wrap smart-login-admin">
-			<h1><?php esc_html_e( 'Smart Login', 'smart-login' ); ?></h1>
+		<div class="wrap omniwp-admin">
+			<h1><?php esc_html_e( 'OmniWP', 'omniwp' ); ?></h1>
 
 			<?php SettingsPage::nav( SettingsPage::OVERVIEW ); ?>
 
-			<?php if ( isset( $_GET['sl_resumed'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification ?>
+			<?php if ( isset( $_GET['ow_resumed'] ) ) : // phpcs:ignore WordPress.Security.NonceVerification ?>
 				<div class="notice notice-success is-dismissible">
-					<p><?php esc_html_e( 'Đã mở lại việc gửi mã.', 'smart-login' ); ?></p>
+					<p><?php esc_html_e( 'Đã mở lại việc gửi mã.', 'omniwp' ); ?></p>
 				</div>
 			<?php endif; ?>
 
@@ -76,7 +76,7 @@ final class OverviewScreen {
 						<?php
 						printf(
 							/* translators: %d: minutes remaining. */
-							esc_html__( 'Việc gửi mã đang tạm dừng vì chạm trần toàn site. Tự mở lại sau %d phút.', 'smart-login' ),
+							esc_html__( 'Việc gửi mã đang tạm dừng vì chạm trần toàn site. Tự mở lại sau %d phút.', 'omniwp' ),
 							(int) max( 1, ceil( $halted / MINUTE_IN_SECONDS ) )
 						);
 						?>
@@ -86,10 +86,10 @@ final class OverviewScreen {
 						<?php wp_nonce_field( self::RESUME_ACTION ); ?>
 						<p>
 							<button type="submit" class="button button-primary">
-								<?php esc_html_e( 'Mở lại việc gửi mã', 'smart-login' ); ?>
+								<?php esc_html_e( 'Mở lại việc gửi mã', 'omniwp' ); ?>
 							</button>
 							<span class="description">
-								<?php esc_html_e( 'Chỉ làm việc này khi bạn đã xem nhật ký và tin rằng lưu lượng vừa rồi là thật.', 'smart-login' ); ?>
+								<?php esc_html_e( 'Chỉ làm việc này khi bạn đã xem nhật ký và tin rằng lưu lượng vừa rồi là thật.', 'omniwp' ); ?>
 							</span>
 						</p>
 					</form>
@@ -98,11 +98,11 @@ final class OverviewScreen {
 
 			<div class="sl-readiness-banner <?php echo $ready ? 'is-ready' : 'is-blocked'; ?>">
 				<?php if ( $ready ) : ?>
-					<h2><?php esc_html_e( 'Sẵn sàng hoạt động', 'smart-login' ); ?></h2>
-					<p><?php esc_html_e( 'Người dùng có thể đăng ký và đăng nhập ngay bây giờ.', 'smart-login' ); ?></p>
+					<h2><?php esc_html_e( 'Sẵn sàng hoạt động', 'omniwp' ); ?></h2>
+					<p><?php esc_html_e( 'Người dùng có thể đăng ký và đăng nhập ngay bây giờ.', 'omniwp' ); ?></p>
 				<?php else : ?>
-					<h2><?php esc_html_e( 'Chưa chạy được', 'smart-login' ); ?></h2>
-					<p><?php esc_html_e( 'Những mục màu đỏ bên dưới đang chặn luồng đăng nhập. Sửa xong là dùng được.', 'smart-login' ); ?></p>
+					<h2><?php esc_html_e( 'Chưa chạy được', 'omniwp' ); ?></h2>
+					<p><?php esc_html_e( 'Những mục màu đỏ bên dưới đang chặn luồng đăng nhập. Sửa xong là dùng được.', 'omniwp' ); ?></p>
 				<?php endif; ?>
 			</div>
 
@@ -123,7 +123,7 @@ final class OverviewScreen {
 								</a>
 							<?php else : ?>
 								<a class="button-link" href="<?php echo esc_url( $check['action'] ); ?>">
-									<?php esc_html_e( 'Xem', 'smart-login' ); ?>
+									<?php esc_html_e( 'Xem', 'omniwp' ); ?>
 								</a>
 							<?php endif; ?>
 						</td>
@@ -158,16 +158,16 @@ final class OverviewScreen {
 	private static function status_label( string $status ): string {
 		switch ( $status ) {
 			case Readiness::OK:
-				return __( 'Đạt', 'smart-login' );
+				return __( 'Đạt', 'omniwp' );
 
 			case Readiness::FAIL:
-				return __( 'Đang chặn', 'smart-login' );
+				return __( 'Đang chặn', 'omniwp' );
 
 			case Readiness::WARN:
-				return __( 'Cảnh báo', 'smart-login' );
+				return __( 'Cảnh báo', 'omniwp' );
 
 			default:
-				return __( 'Không dùng', 'smart-login' );
+				return __( 'Không dùng', 'omniwp' );
 		}
 	}
 }

@@ -2,22 +2,22 @@
 /**
  * One source of truth for onboarding and profile completeness.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth;
+namespace OmniWP\Auth;
 
-use SmartLogin\Address\AddressFields;
-use SmartLogin\Identity\UserManager;
-use SmartLogin\Settings;
+use OmniWP\Address\AddressFields;
+use OmniWP\Identity\UserManager;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
 final class ProfileCompletionService {
 
-	const META_SEEN      = '_smartlogin_onboarding_seen_at';
-	const META_SOURCE    = '_smartlogin_onboarding_source';
-	const META_NOTICE    = '_smartlogin_profile_notice_version';
+	const META_SEEN      = '_OmniWP_onboarding_seen_at';
+	const META_SOURCE    = '_OmniWP_onboarding_source';
+	const META_NOTICE    = '_OmniWP_profile_notice_version';
 	const NOTICE_VERSION = '1';
 
 	/**
@@ -41,10 +41,11 @@ final class ProfileCompletionService {
 	 */
 	public static function onboarding_reasons(): array {
 		return array(
-			'full_name' => __( 'Để chúng tôi biết xưng hô với bạn thế nào', 'smart-login' ),
-			'address'   => __( 'Để đơn hàng được giao đúng nơi, không phải nhập lại mỗi lần', 'smart-login' ),
-			'dob'       => __( 'Để nhận ưu đãi vào dịp sinh nhật', 'smart-login' ),
-			'gender'    => __( 'Để gợi ý sản phẩm hợp với bạn hơn', 'smart-login' ),
+			'full_name' => __( 'Để chúng tôi biết xưng hô với bạn thế nào', 'omniwp' ),
+			'email'     => __( 'Để nhận hóa đơn điện tử và chương trình khuyến mãi đặc quyền', 'omniwp' ),
+			'address'   => __( 'Để đơn hàng được giao đúng nơi, không phải nhập lại mỗi lần', 'omniwp' ),
+			'dob'       => __( 'Để nhận ưu đãi vào dịp sinh nhật', 'omniwp' ),
+			'gender'    => __( 'Để gợi ý sản phẩm hợp với bạn hơn', 'omniwp' ),
 		);
 	}
 
@@ -91,7 +92,7 @@ final class ProfileCompletionService {
 			'done'                => $done,
 		);
 
-		return (array) apply_filters( 'smart_login_profile_status', $status, $user_id );
+		return (array) apply_filters( 'OMNIWP_profile_status', $status, $user_id );
 	}
 
 	/**
@@ -116,7 +117,7 @@ final class ProfileCompletionService {
 
 		$fields[] = array(
 			'key'                   => 'full_name',
-			'label'                 => __( 'Họ và tên', 'smart-login' ),
+			'label'                 => __( 'Họ và tên', 'omniwp' ),
 			'required'              => true,
 			'verification_required' => false,
 			'missing'               => '' === trim( (string) $user->display_name )
@@ -126,7 +127,7 @@ final class ProfileCompletionService {
 		if ( ! Settings::is_on( 'profile.email_optional' ) ) {
 			$fields[] = array(
 				'key'                   => 'email',
-				'label'                 => __( 'Email', 'smart-login' ),
+				'label'                 => __( 'Email', 'omniwp' ),
 				'required'              => true,
 				'verification_required' => true,
 				'missing'               => UserManager::is_synthetic_email( (string) $user->user_email ),
@@ -147,7 +148,7 @@ final class ProfileCompletionService {
 		if ( Settings::is_on( 'address.required_in_profile' ) || Settings::is_on( 'address.enabled' ) ) {
 			$fields[] = array(
 				'key'                   => 'address',
-				'label'                 => __( 'Địa chỉ nhận hàng', 'smart-login' ),
+				'label'                 => __( 'Địa chỉ nhận hàng', 'omniwp' ),
 				'required'              => Settings::is_on( 'address.required_in_profile' ),
 				'verification_required' => false,
 				'missing'               => ! AddressFields::is_complete( $user_id )
@@ -158,7 +159,7 @@ final class ProfileCompletionService {
 		if ( Settings::is_on( 'profile.dob' ) ) {
 			$fields[] = array(
 				'key'                   => 'dob',
-				'label'                 => __( 'Ngày sinh', 'smart-login' ),
+				'label'                 => __( 'Ngày sinh', 'omniwp' ),
 				'required'              => false,
 				'verification_required' => false,
 				'missing'               => ! get_user_meta( $user_id, UserManager::META_DOB, true ),
@@ -168,7 +169,7 @@ final class ProfileCompletionService {
 		if ( Settings::is_on( 'profile.gender' ) ) {
 			$fields[] = array(
 				'key'                   => 'gender',
-				'label'                 => __( 'Giới tính', 'smart-login' ),
+				'label'                 => __( 'Giới tính', 'omniwp' ),
 				'required'              => false,
 				'verification_required' => false,
 				'missing'               => ! get_user_meta( $user_id, UserManager::META_GENDER, true ),
@@ -214,7 +215,7 @@ final class ProfileCompletionService {
 		 * @param array $fields
 		 * @param int   $user_id
 		 */
-		$fields = (array) apply_filters( 'smart_login_onboarding_fields', array_values( $fields ), $user_id );
+		$fields = (array) apply_filters( 'OMNIWP_onboarding_fields', array_values( $fields ), $user_id );
 
 		return array_slice( $fields, 0, self::ONBOARDING_LIMIT );
 	}

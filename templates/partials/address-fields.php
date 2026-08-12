@@ -6,54 +6,54 @@
  * searchable comboboxes; the selects stay in the form and remain the value
  * that gets submitted, so nothing depends on JavaScript being present.
  *
- * Override at yourtheme/smart-login/partials/address-fields.php
+ * Override at yourtheme/omniwp/partials/address-fields.php
  *
  * @var array $values       province_code, province_name, ward_code, ward_name, street
  * @var bool  $required
  * @var array $provinces    code => [name, short, type]
  * @var array $wards        code => [name, type]  (only for the selected province)
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-use SmartLogin\Address\AddressFields;
+use OmniWP\Address\AddressFields;
 
 defined( 'ABSPATH' ) || exit;
 
-$sl_uid = wp_unique_id( 'sl-addr-' );
-$sl_req = ! empty( $required );
+$ow_uid = wp_unique_id( 'sl-addr-' );
+$ow_req = ! empty( $required );
 ?>
 <div class="sl-address" data-sl-address>
 
 	<div class="sl-field">
-		<label class="sl-label" for="<?php echo esc_attr( $sl_uid ); ?>-province">
-			<?php esc_html_e( 'Tỉnh/Thành phố', 'smart-login' ); ?>
+		<label class="sl-label" for="<?php echo esc_attr( $ow_uid ); ?>-province">
+			<?php esc_html_e( 'Tỉnh/Thành phố', 'omniwp' ); ?>
 			<?php
-			if ( $sl_req ) :
+			if ( $ow_req ) :
 				?>
 				<span class="sl-required">*</span><?php endif; ?>
 		</label>
 		<select
 			class="sl-input sl-address__province"
-			id="<?php echo esc_attr( $sl_uid ); ?>-province"
+			id="<?php echo esc_attr( $ow_uid ); ?>-province"
 			name="<?php echo esc_attr( AddressFields::FIELD_PROVINCE ); ?>"
 			data-sl-province
-			<?php echo $sl_req ? 'required' : ''; ?>
+			<?php echo $ow_req ? 'required' : ''; ?>
 		>
-			<option value=""><?php esc_html_e( '— Chọn Tỉnh/Thành phố —', 'smart-login' ); ?></option>
-			<?php foreach ( $provinces as $sl_code => $sl_province ) : ?>
-				<option value="<?php echo esc_attr( $sl_code ); ?>" <?php selected( $values['province_code'], (string) $sl_code ); ?>>
-					<?php echo esc_html( $sl_province['name'] ); ?>
+			<option value=""><?php esc_html_e( '— Chọn Tỉnh/Thành phố —', 'omniwp' ); ?></option>
+			<?php foreach ( $provinces as $ow_code => $ow_province ) : ?>
+				<option value="<?php echo esc_attr( $ow_code ); ?>" <?php selected( $values['province_code'], (string) $ow_code ); ?>>
+					<?php echo esc_html( $ow_province['name'] ); ?>
 				</option>
 			<?php endforeach; ?>
 		</select>
 	</div>
 
 	<div class="sl-field">
-		<label class="sl-label" for="<?php echo esc_attr( $sl_uid ); ?>-ward">
-			<?php esc_html_e( 'Phường/Xã', 'smart-login' ); ?>
+		<label class="sl-label" for="<?php echo esc_attr( $ow_uid ); ?>-ward">
+			<?php esc_html_e( 'Phường/Xã', 'omniwp' ); ?>
 			<?php
-			if ( $sl_req ) :
+			if ( $ow_req ) :
 				?>
 				<span class="sl-required">*</span><?php endif; ?>
 		</label>
@@ -64,40 +64,40 @@ $sl_req = ! empty( $required );
 		 * rather than as waiting. The hint is tied to the control through
 		 * aria-describedby so it is not only a visual explanation.
 		 */
-		$sl_ward_waiting = empty( $wards );
+		$ow_ward_waiting = empty( $wards );
 		?>
 		<select
 			class="sl-input sl-address__ward"
-			id="<?php echo esc_attr( $sl_uid ); ?>-ward"
+			id="<?php echo esc_attr( $ow_uid ); ?>-ward"
 			name="<?php echo esc_attr( AddressFields::FIELD_WARD ); ?>"
 			data-sl-ward
-			<?php echo $sl_req ? 'required' : ''; ?>
-			<?php echo $sl_ward_waiting ? 'disabled aria-describedby="' . esc_attr( $sl_uid ) . '-ward-hint"' : ''; ?>
+			<?php echo $ow_req ? 'required' : ''; ?>
+			<?php echo $ow_ward_waiting ? 'disabled aria-describedby="' . esc_attr( $ow_uid ) . '-ward-hint"' : ''; ?>
 		>
-			<option value=""><?php esc_html_e( '— Chọn Phường/Xã —', 'smart-login' ); ?></option>
-			<?php foreach ( $wards as $sl_code => $sl_ward ) : ?>
-				<option value="<?php echo esc_attr( $sl_code ); ?>" <?php selected( $values['ward_code'], (string) $sl_code ); ?>>
-					<?php echo esc_html( $sl_ward['name'] ); ?>
+			<option value=""><?php esc_html_e( '— Chọn Phường/Xã —', 'omniwp' ); ?></option>
+			<?php foreach ( $wards as $ow_code => $ow_ward ) : ?>
+				<option value="<?php echo esc_attr( $ow_code ); ?>" <?php selected( $values['ward_code'], (string) $ow_code ); ?>>
+					<?php echo esc_html( $ow_ward['name'] ); ?>
 				</option>
 			<?php endforeach; ?>
 		</select>
 
-		<?php if ( $sl_ward_waiting ) : ?>
-			<p class="sl-hint" id="<?php echo esc_attr( $sl_uid ); ?>-ward-hint" data-sl-ward-hint>
-				<?php esc_html_e( 'Chọn Tỉnh/Thành phố trước để hiện danh sách Phường/Xã.', 'smart-login' ); ?>
+		<?php if ( $ow_ward_waiting ) : ?>
+			<p class="sl-hint" id="<?php echo esc_attr( $ow_uid ); ?>-ward-hint" data-sl-ward-hint>
+				<?php esc_html_e( 'Chọn Tỉnh/Thành phố trước để hiện danh sách Phường/Xã.', 'omniwp' ); ?>
 			</p>
 		<?php endif; ?>
 
 		<noscript>
 			<p class="sl-hint">
-				<?php esc_html_e( 'Trình duyệt đang tắt JavaScript: hãy chọn Tỉnh/Thành phố và bấm Cập nhật trước, sau đó danh sách Phường/Xã sẽ hiện ra để bạn chọn tiếp.', 'smart-login' ); ?>
+				<?php esc_html_e( 'Trình duyệt đang tắt JavaScript: hãy chọn Tỉnh/Thành phố và bấm Cập nhật trước, sau đó danh sách Phường/Xã sẽ hiện ra để bạn chọn tiếp.', 'omniwp' ); ?>
 			</p>
 		</noscript>
 	</div>
 
 	<div class="sl-field">
-		<label class="sl-label" for="<?php echo esc_attr( $sl_uid ); ?>-street">
-			<?php esc_html_e( 'Số nhà, tên đường', 'smart-login' ); ?>
+		<label class="sl-label" for="<?php echo esc_attr( $ow_uid ); ?>-street">
+			<?php esc_html_e( 'Số nhà, tên đường', 'omniwp' ); ?>
 		</label>
 		<?php
 		/*
@@ -114,10 +114,10 @@ $sl_req = ! empty( $required );
 		<input
 			type="text"
 			class="sl-input"
-			id="<?php echo esc_attr( $sl_uid ); ?>-street"
+			id="<?php echo esc_attr( $ow_uid ); ?>-street"
 			name="<?php echo esc_attr( AddressFields::FIELD_STREET ); ?>"
 			value="<?php echo esc_attr( $values['street'] ); ?>"
-			placeholder="<?php esc_attr_e( 'Ví dụ: 12 Trần Duy Hưng', 'smart-login' ); ?>"
+			placeholder="<?php esc_attr_e( 'Ví dụ: 12 Trần Duy Hưng', 'omniwp' ); ?>"
 			autocomplete="address-line1"
 		/>
 	</div>

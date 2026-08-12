@@ -8,14 +8,14 @@
  * can be perfectly healthy while being drained. Both instruments are needed and
  * neither substitutes for the other — see docs/abuse-boundary.md.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\OTP\Transports;
+namespace OmniWP\OTP\Transports;
 
-use SmartLogin\Mail\Mailer;
-use SmartLogin\Security\AuditLog;
-use SmartLogin\Settings;
+use OmniWP\Mail\Mailer;
+use OmniWP\Security\AuditLog;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -38,7 +38,7 @@ class CircuitBreaker {
 	 * failure modes point in opposite directions.
 	 */
 	private function key(): string {
-		return 'smart_login_breaker_' . $this->transport;
+		return 'OMNIWP_breaker_' . $this->transport;
 	}
 
 	private function threshold(): int {

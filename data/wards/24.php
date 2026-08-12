@@ -5,7 +5,7 @@
  * GENERATED FILE — do not edit by hand.
  * Regenerate with: php bin/build-address-data.php <source.json>
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 defined( 'ABSPATH' ) || exit;

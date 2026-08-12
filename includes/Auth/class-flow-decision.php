@@ -22,10 +22,10 @@
  * thing that decides whether somebody gets signed in is not a risk worth taking
  * to save an object.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth;
+namespace OmniWP\Auth;
 
 use WP_Error;
 

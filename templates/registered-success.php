@@ -1,39 +1,39 @@
 <?php
 /**
  * "CHÚC MỪNG" screen shown right after a successful registration.
- * Override at yourtheme/smart-login/registered-success.php
+ * Override at yourtheme/omniwp/registered-success.php
  *
  * @var array  $notices
  * @var string $redirect
  * @var int    $user_id
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-use SmartLogin\Frontend\TemplateLoader;
+use OmniWP\Frontend\TemplateLoader;
 
 defined( 'ABSPATH' ) || exit;
 
-$sl_site = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
+$ow_site = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
 ?>
-<div class="smart-login smart-login--done">
+<div class="omniwp omniwp--done">
 
 	<?php TemplateLoader::output( 'partials/notices', array( 'notices' => $notices ) ); ?>
 
-	<p class="sl-congrats-label"><?php esc_html_e( 'CHÚC MỪNG', 'smart-login' ); ?></p>
+	<p class="sl-congrats-label"><?php esc_html_e( 'CHÚC MỪNG', 'omniwp' ); ?></p>
 
 	<h2 class="sl-congrats-title">
 		<?php
 		printf(
 			/* translators: %s: site name. */
-			esc_html__( 'Bạn đã trở thành hội viên của %s!', 'smart-login' ),
-			esc_html( $sl_site )
+			esc_html__( 'Bạn đã trở thành hội viên của %s!', 'omniwp' ),
+			esc_html( $ow_site )
 		);
 		?>
 	</h2>
 
 	<a class="sl-btn sl-btn--primary sl-btn--block" href="<?php echo esc_url( $redirect ); ?>">
-		<?php esc_html_e( 'Tiếp tục', 'smart-login' ); ?>
+		<?php esc_html_e( 'Tiếp tục', 'omniwp' ); ?>
 	</a>
 </div>
 <?php

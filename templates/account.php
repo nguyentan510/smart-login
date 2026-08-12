@@ -9,35 +9,35 @@
  *
  * Rendered by the [smart_account] shortcode.
  *
- * Override at yourtheme/smart-login/account.php
+ * Override at yourtheme/omniwp/account.php
  *
- * @var \SmartLogin\Frontend\AccountForm $sl_form
+ * @var \OmniWP\Frontend\AccountForm $ow_form
  * @var array                            $notices
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-use SmartLogin\Frontend\DeferredForms;
-use SmartLogin\Frontend\FormController;
-use SmartLogin\Frontend\TemplateLoader;
+use OmniWP\Frontend\DeferredForms;
+use OmniWP\Frontend\FormController;
+use OmniWP\Frontend\TemplateLoader;
 
 defined( 'ABSPATH' ) || exit;
 
-if ( ! $sl_form->user() ) {
+if ( ! $ow_form->user() ) {
 	return;
 }
 ?>
-<div class="smart-login smart-login--account">
+<div class="omniwp omniwp--account">
 
 	<?php TemplateLoader::output( 'partials/notices', array( 'notices' => $notices ) ); ?>
 
-	<?php $sl_form->output_status(); ?>
+	<?php $ow_form->output_status(); ?>
 
 	<form class="sl-form" method="post" action="">
 
 		<?php
-		foreach ( $sl_form->sections() as $sl_section ) {
-			$sl_form->output_section( $sl_section );
+		foreach ( $ow_form->sections() as $ow_section ) {
+			$ow_form->output_section( $ow_section );
 		}
 		?>
 
@@ -46,11 +46,11 @@ if ( ! $sl_form->user() ) {
 				<span class="sl-savebar__warn" aria-hidden="true">!</span>
 				<span data-sl-savebar-text></span>
 			</p>
-			<?php wp_nonce_field( 'smart_login_save_profile' ); ?>
+			<?php wp_nonce_field( 'OMNIWP_save_profile' ); ?>
 			<input type="hidden" name="<?php echo esc_attr( FormController::ACTION_FIELD ); ?>" value="save_profile" />
 			<input type="hidden" name="_redirect" value="<?php echo esc_url( get_permalink() ?: home_url( '/' ) ); ?>" />
-			<button type="reset" class="sl-btn sl-btn--ghost sl-btn--inline" data-sl-savebar-cancel><?php esc_html_e( 'Huỷ', 'smart-login' ); ?></button>
-			<button type="submit" class="sl-btn sl-btn--primary sl-btn--inline"><?php esc_html_e( 'Lưu thay đổi', 'smart-login' ); ?></button>
+			<button type="reset" class="sl-btn sl-btn--ghost sl-btn--inline" data-sl-savebar-cancel><?php esc_html_e( 'Huỷ', 'omniwp' ); ?></button>
+			<button type="submit" class="sl-btn sl-btn--primary sl-btn--inline"><?php esc_html_e( 'Lưu thay đổi', 'omniwp' ); ?></button>
 		</div>
 	</form>
 	<?php

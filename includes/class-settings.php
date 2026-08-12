@@ -12,21 +12,21 @@
  * signatures it always had, so the thirty-odd files that consume settings only
  * ever saw their key strings change.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin;
+namespace OmniWP;
 
-use SmartLogin\Security\SecretBox;
+use OmniWP\Security\SecretBox;
 
 defined( 'ABSPATH' ) || exit;
 
 class Settings {
 
-	const OPTION = 'smart_login_settings';
+	const OPTION = 'OMNIWP_settings';
 
 	/** Hidden field naming the tab a save came from. */
-	const TAB_FIELD = '_sl_tab';
+	const TAB_FIELD = '_ow_tab';
 
 	/**
 	 * Where every `type => 'secret'` field is sealed, keyed by its registry path.
@@ -34,7 +34,7 @@ class Settings {
 	 * ProviderCredentials had the right shape already — one option, many keys, no
 	 * branch per key. This is that, applied to the registry.
 	 */
-	const SECRET_OPTION = 'smart_login_field_secrets';
+	const SECRET_OPTION = 'OMNIWP_field_secrets';
 
 	/** @var array|null Runtime cache, always in registry shape. */
 	private static $cache = null;
@@ -101,7 +101,7 @@ class Settings {
 		 * @param mixed  $value
 		 * @param string $path
 		 */
-		return apply_filters( 'smart_login_setting', $value, $path );
+		return apply_filters( 'OMNIWP_setting', $value, $path );
 	}
 
 	public static function get_int( string $path, int $fallback = 0 ): int {
@@ -187,7 +187,7 @@ class Settings {
 		 * registered as the setting's default — routes the write through `add_option()`,
 		 * which sanitises **again** (wp-includes/option.php:884 and :1111). The second
 		 * pass receives the first pass's output, and that output is registry-shaped, so it
-		 * carries no `_sl_tab`.
+		 * carries no `_ow_tab`.
 		 *
 		 * This used to fall through with an empty field list, leave `$clean` at the stored
 		 * values, and hand back exactly what was already in the database — discarding
@@ -234,7 +234,9 @@ class Settings {
 			 */
 			$raw = self::dig( $input, $path );
 
-			if ( null === $raw && ( ! $tab_named || 'checkbox' !== ( $field['type'] ?? '' ) ) ) {
+			$can_be_empty_on_tab = in_array( $field['type'] ?? '', array( 'checkbox', 'menu_items', 'headers' ), true );
+
+			if ( null === $raw && ( ! $tab_named || ! $can_be_empty_on_tab ) ) {
 				continue;
 			}
 
@@ -285,7 +287,7 @@ class Settings {
 			$submitted = (string) ( self::dig( $input, $path ) ?? '' );
 
 			// phpcs:ignore WordPress.Security.NonceVerification -- register_setting() has already verified.
-			$clear = ! empty( $_POST[ 'sl_clear_' . str_replace( '.', '_', $path ) ] );
+			$clear = ! empty( $_POST[ 'ow_clear_' . str_replace( '.', '_', $path ) ] );
 
 			if ( $clear ) {
 				self::store_secret( $path, '' );
@@ -466,7 +468,7 @@ class Settings {
 			$submitted = trim( (string) ( $input[ $fields['secret'] ] ?? '' ) );
 
 			if ( ! empty( $input[ $fields['clear'] ] ) ) {
-				\SmartLogin\Auth\Providers\ProviderCredentials::clear_secret( $provider );
+				\OmniWP\Auth\Providers\ProviderCredentials::clear_secret( $provider );
 			} elseif ( '' !== $submitted && self::secret_is_the_id( $provider, $fields['id'], $submitted, $input ) ) {
 				/*
 				 * Refused rather than stored, and the stored one is left alone.
@@ -481,13 +483,13 @@ class Settings {
 				if ( function_exists( 'add_settings_error' ) ) {
 					add_settings_error(
 						self::OPTION,
-						'smart_login_provider_secret',
-						__( 'Secret trùng với ID ứng dụng nên không được lưu. Hãy dán đúng App Secret Key từ trang quản lý ứng dụng — nó là một giá trị khác với App ID.', 'smart-login' ),
+						'OMNIWP_provider_secret',
+						__( 'Secret trùng với ID ứng dụng nên không được lưu. Hãy dán đúng App Secret Key từ trang quản lý ứng dụng — nó là một giá trị khác với App ID.', 'omniwp' ),
 						'error'
 					);
 				}
 			} elseif ( '' !== $submitted ) {
-				$stored = \SmartLogin\Auth\Providers\ProviderCredentials::store_secret(
+				$stored = \OmniWP\Auth\Providers\ProviderCredentials::store_secret(
 					$provider,
 					(string) $input[ $fields['secret'] ]
 				);
@@ -495,8 +497,8 @@ class Settings {
 				if ( ! $stored && function_exists( 'add_settings_error' ) ) {
 					add_settings_error(
 						self::OPTION,
-						'smart_login_provider_secret',
-						__( 'Không thể mã hóa secret của provider. Cấu hình cũ được giữ nguyên.', 'smart-login' ),
+						'OMNIWP_provider_secret',
+						__( 'Không thể mã hóa secret của provider. Cấu hình cũ được giữ nguyên.', 'omniwp' ),
 						'error'
 					);
 				}
@@ -522,7 +524,7 @@ class Settings {
 		$submitted_id = trim( (string) ( self::dig( $input, $id_path ) ?? '' ) );
 		$id           = '' !== $submitted_id
 			? $submitted_id
-			: trim( \SmartLogin\Auth\Providers\ProviderCredentials::client_id( $provider ) );
+			: trim( \OmniWP\Auth\Providers\ProviderCredentials::client_id( $provider ) );
 
 		return '' !== $id && hash_equals( $id, $secret );
 	}
@@ -589,7 +591,7 @@ class Settings {
 				return array_values(
 					array_intersect(
 						array_filter( array_map( 'strval', (array) $raw ) ),
-						\SmartLogin\Security\AuditLog::events()
+						\OmniWP\Security\AuditLog::events()
 					)
 				);
 
@@ -658,8 +660,8 @@ class Settings {
 		if ( function_exists( 'add_settings_error' ) ) {
 			add_settings_error(
 				self::OPTION,
-				'smart_login_https_required',
-				__( 'Endpoint phải dùng https://. Mã xác thực đi qua địa chỉ này nên không chấp nhận HTTP thường. Giá trị cũ được giữ nguyên.', 'smart-login' ),
+				'OMNIWP_https_required',
+				__( 'Endpoint phải dùng https://. Mã xác thực đi qua địa chỉ này nên không chấp nhận HTTP thường. Giá trị cũ được giữ nguyên.', 'omniwp' ),
 				'error'
 			);
 		}
@@ -793,8 +795,8 @@ class Settings {
 		}
 
 		$reserved = array(
-			\SmartLogin\Frontend\AccountMenu::KEY_ACCOUNT,
-			\SmartLogin\Frontend\AccountMenu::KEY_LOGOUT,
+			\OmniWP\Frontend\AccountMenu::KEY_ACCOUNT,
+			\OmniWP\Frontend\AccountMenu::KEY_LOGOUT,
 		);
 
 		$out  = array();
@@ -836,7 +838,7 @@ class Settings {
 				// Through IconSet, so a name outside the set becomes the
 				// fallback here rather than being stored and folded on every
 				// render. An icon that is not in the set cannot be written down.
-				'icon'  => \SmartLogin\Frontend\IconSet::sanitize( (string) ( $row['icon'] ?? '' ) ),
+				'icon'  => \OmniWP\Frontend\IconSet::sanitize( (string) ( $row['icon'] ?? '' ) ),
 				'url'   => $url,
 			);
 		}

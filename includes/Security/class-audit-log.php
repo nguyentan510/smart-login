@@ -4,13 +4,13 @@
  *
  * Never records OTP codes, passwords or full identifiers in the clear.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Security;
+namespace OmniWP\Security;
 
-use SmartLogin\Installer;
-use SmartLogin\Settings;
+use OmniWP\Installer;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -38,6 +38,7 @@ class AuditLog {
 	const IDENTITY_RETIRED       = 'identity_retired';
 	const CONTACT_PENDING        = 'contact_pending';
 	const CONTACT_VERIFIED       = 'contact_verified';
+	const CONTACT_CANCELLED      = 'contact_cancelled';
 	const AUTOMATION_BUS_FAILED  = 'automation_bus_failed';
 
 	/**
@@ -122,7 +123,7 @@ class AuditLog {
 		 * rather than discovered: turning the audit log off turns the bus off
 		 * too, because `may_write()` is never reached.
 		 */
-		( new \SmartLogin\OTP\Transports\EventBus() )->dispatch( $event, $identity_masked, $meta, $user_id );
+		( new \OmniWP\OTP\Transports\EventBus() )->dispatch( $event, $identity_masked, $meta, $user_id );
 
 		self::write( $event, $identity_masked, $meta, $user_id );
 	}
@@ -177,7 +178,7 @@ class AuditLog {
 			return true;
 		}
 
-		$key   = 'smart_login_audit_' . md5( $event . '|' . gmdate( 'YmdH' ) );
+		$key   = 'OMNIWP_audit_' . md5( $event . '|' . gmdate( 'YmdH' ) );
 		$count = (int) get_transient( $key );
 
 		set_transient( $key, $count + 1, HOUR_IN_SECONDS );

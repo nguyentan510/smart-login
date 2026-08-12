@@ -11,10 +11,10 @@
  * a subject with no current owner but a recorded past one resolves here, and the
  * decision table maps both `login` and `recover` on RETIRED to "no account".
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Identity;
+namespace OmniWP\Identity;
 
 defined( 'ABSPATH' ) || exit;
 

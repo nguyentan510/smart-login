@@ -12,12 +12,12 @@
  *
  * Nothing here ever updates or deletes. A wrong row is corrected by appending.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Identity;
+namespace OmniWP\Identity;
 
-use SmartLogin\Installer;
+use OmniWP\Installer;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -26,7 +26,7 @@ final class IdentityHistory {
 	/** Subject asserted but not yet proven. Reserved for step-up flows. */
 	const CLAIMED = 'claimed';
 
-	/** Proof succeeded and a row entered smartlogin_identities. */
+	/** Proof succeeded and a row entered OmniWP_identities. */
 	const VERIFIED = 'verified';
 
 	/** Ownership ended. This is what makes Resolution::RETIRED reachable. */

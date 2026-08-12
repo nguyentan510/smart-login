@@ -2,25 +2,25 @@
 /**
  * WordPress entry points for external provider redirects and callbacks.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth;
+namespace OmniWP\Auth;
 
-use SmartLogin\Auth\Providers\LoginProviderInterface;
-use SmartLogin\Auth\Providers\ProviderCredentials;
-use SmartLogin\Auth\Providers\ProviderIdentity;
-use SmartLogin\Auth\Providers\ProviderRegistry;
-use SmartLogin\Frontend\Flow;
-use SmartLogin\Frontend\Notices;
-use SmartLogin\Security\AuditLog;
+use OmniWP\Auth\Providers\LoginProviderInterface;
+use OmniWP\Auth\Providers\ProviderCredentials;
+use OmniWP\Auth\Providers\ProviderIdentity;
+use OmniWP\Auth\Providers\ProviderRegistry;
+use OmniWP\Frontend\Flow;
+use OmniWP\Frontend\Notices;
+use OmniWP\Security\AuditLog;
 
 defined( 'ABSPATH' ) || exit;
 
 final class ProviderAuthController {
 
 	/** Where a finished connection test leaves its result, per administrator. */
-	const TEST_RESULT_PREFIX = 'smart_login_provider_test_';
+	const TEST_RESULT_PREFIX = 'OMNIWP_provider_test_';
 
 	private ProviderRegistry $providers;
 	private OAuthTransactionStore $transactions;
@@ -31,10 +31,10 @@ final class ProviderAuthController {
 	}
 
 	public function register(): void {
-		add_action( 'admin_post_nopriv_smart_login_provider_start', array( $this, 'start' ) );
-		add_action( 'admin_post_smart_login_provider_start', array( $this, 'start' ) );
-		add_action( 'admin_post_nopriv_smart_login_provider_callback', array( $this, 'callback' ) );
-		add_action( 'admin_post_smart_login_provider_callback', array( $this, 'callback' ) );
+		add_action( 'admin_post_nopriv_OMNIWP_provider_start', array( $this, 'start' ) );
+		add_action( 'admin_post_OMNIWP_provider_start', array( $this, 'start' ) );
+		add_action( 'admin_post_nopriv_OMNIWP_provider_callback', array( $this, 'callback' ) );
+		add_action( 'admin_post_OMNIWP_provider_callback', array( $this, 'callback' ) );
 	}
 
 	/**
@@ -46,7 +46,7 @@ final class ProviderAuthController {
 	 * implement, and widening it would break every one of them for a fact only
 	 * this controller reads. `callback()` strips it before the url is used.
 	 */
-	const IN_PLACE_ARG = 'sl_place';
+	const IN_PLACE_ARG = 'ow_place';
 
 	/**
 	 * @param string $provider
@@ -65,26 +65,26 @@ final class ProviderAuthController {
 
 		$url = add_query_arg(
 			array(
-				'action'      => 'smart_login_provider_start',
+				'action'      => 'OMNIWP_provider_start',
 				'provider'    => $provider,
 				'redirect_to' => wp_validate_redirect( $return_url, '' ),
 				'linking'     => $linking ? '1' : '0',
 			),
 			admin_url( 'admin-post.php' )
 		);
-		return wp_nonce_url( $url, 'smart_login_provider_start_' . $provider );
+		return wp_nonce_url( $url, 'OMNIWP_provider_start_' . $provider );
 	}
 
 	/**
 	 * The same start URL, flagged as a diagnostic.
 	 *
 	 * It carries the identical nonce, because it is the identical entry point —
-	 * `start()` reads `sl_test` only after verifying that nonce, and pairs it
+	 * `start()` reads `ow_test` only after verifying that nonce, and pairs it
 	 * with a `manage_options` check, since this exchanges the site's own
 	 * credentials and is not a thing a visitor may cause.
 	 */
 	public static function test_url( string $provider ): string {
-		return add_query_arg( 'sl_test', '1', self::start_url( $provider ) );
+		return add_query_arg( 'ow_test', '1', self::start_url( $provider ) );
 	}
 
 	public function available(): array {
@@ -95,14 +95,14 @@ final class ProviderAuthController {
 		$provider_id = sanitize_key( wp_unslash( $_GET['provider'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification
 		// wp_verify_nonce() does its own validation; sanitising first would only
 		// risk altering the token before comparison.
-		if ( ! wp_verify_nonce( (string) wp_unslash( $_GET['_wpnonce'] ?? '' ), 'smart_login_provider_start_' . $provider_id ) ) { // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-			$this->fail( new \WP_Error( 'smart_login_bad_nonce', __( 'Phiên đăng nhập đã hết hạn. Vui lòng thử lại.', 'smart-login' ) ) );
+		if ( ! wp_verify_nonce( (string) wp_unslash( $_GET['_wpnonce'] ?? '' ), 'OMNIWP_provider_start_' . $provider_id ) ) { // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			$this->fail( new \WP_Error( 'OMNIWP_bad_nonce', __( 'Phiên đăng nhập đã hết hạn. Vui lòng thử lại.', 'omniwp' ) ) );
 		}
 		// A connection test, not a login. Administrators only — this exchanges the
 		// site's own credentials with the provider, which is not a thing a
 		// visitor may cause, and the nonce above is scoped to the provider rather
 		// than to the capability.
-		$is_test = ! empty( $_GET['sl_test'] ) && current_user_can( 'manage_options' ); // phpcs:ignore WordPress.Security.NonceVerification
+		$is_test = ! empty( $_GET['ow_test'] ) && current_user_can( 'manage_options' ); // phpcs:ignore WordPress.Security.NonceVerification
 
 		$provider = $is_test
 			? $this->test_provider( $provider_id )
@@ -112,7 +112,7 @@ final class ProviderAuthController {
 		// a login may not. `is_available()` is `enabled && configured`, so this is
 		// what keeps a disabled provider from ever creating a login transaction.
 		if ( ! $provider || ( ! $is_test && ! $provider->is_available() ) ) {
-			$this->fail( new \WP_Error( 'smart_login_provider_unavailable', __( 'Phương thức đăng nhập chưa sẵn sàng.', 'smart-login' ) ) );
+			$this->fail( new \WP_Error( 'OMNIWP_provider_unavailable', __( 'Phương thức đăng nhập chưa sẵn sàng.', 'omniwp' ) ) );
 		}
 		// wp_validate_redirect() returns '' for any host outside the allowed list,
 		// so $return_url cannot carry an off-site destination even though it comes
@@ -152,7 +152,7 @@ final class ProviderAuthController {
 		 * is the second lock on the same door.
 		 */
 		if ( ! $provider ) {
-			$this->fail( new \WP_Error( 'smart_login_provider_unavailable', __( 'Phương thức đăng nhập chưa sẵn sàng.', 'smart-login' ) ) );
+			$this->fail( new \WP_Error( 'OMNIWP_provider_unavailable', __( 'Phương thức đăng nhập chưa sẵn sàng.', 'omniwp' ) ) );
 		}
 		if ( ! empty( $_REQUEST['error'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
 			AuditLog::record(
@@ -163,7 +163,7 @@ final class ProviderAuthController {
 					'reason'   => 'cancelled',
 				)
 			);
-			$this->fail( new \WP_Error( 'smart_login_provider_cancelled', __( 'Đăng nhập qua nhà cung cấp đã bị hủy.', 'smart-login' ) ) );
+			$this->fail( new \WP_Error( 'OMNIWP_provider_cancelled', __( 'Đăng nhập qua nhà cung cấp đã bị hủy.', 'omniwp' ) ) );
 		}
 		$transaction = $this->transactions->consume( $state, $provider_id );
 		if ( is_wp_error( $transaction ) ) {
@@ -207,7 +207,7 @@ final class ProviderAuthController {
 				)
 			);
 			$this->fail(
-				new \WP_Error( 'smart_login_provider_unavailable', __( 'Phương thức đăng nhập chưa sẵn sàng.', 'smart-login' ) ),
+				new \WP_Error( 'OMNIWP_provider_unavailable', __( 'Phương thức đăng nhập chưa sẵn sàng.', 'omniwp' ) ),
 				$failure_return
 			);
 		}
@@ -264,7 +264,7 @@ final class ProviderAuthController {
 			 * The fourth refusal, which for a long time was the only silent one.
 			 *
 			 * The three branches above record; this one did not, and it is the
-			 * one a visitor actually meets — `smart_login_provider_conflict`,
+			 * one a visitor actually meets — `OMNIWP_provider_conflict`,
 			 * raised when the provider account is already linked to somebody
 			 * else. Three presses of "Liên kết" left an empty log and the
 			 * diagnosis had to be rebuilt against the database by hand.
@@ -297,9 +297,9 @@ final class ProviderAuthController {
 		$context->intended_url = $return_url;
 		$context->in_place     = $in_place;
 		$proof                 = AuthProof::from_oauth(
-			\SmartLogin\Identity\VerifiedClaim::from(
-				\SmartLogin\Identity\Claim::canonical( $identity->provider, $identity->subject ),
-				\SmartLogin\Identity\VerifiedClaim::PROOF_OAUTH
+			\OmniWP\Identity\VerifiedClaim::from(
+				\OmniWP\Identity\Claim::canonical( $identity->provider, $identity->subject ),
+				\OmniWP\Identity\VerifiedClaim::PROOF_OAUTH
 			),
 			(int) $resolved['user']->ID
 		);
@@ -324,13 +324,13 @@ final class ProviderAuthController {
 		 * the visitor has been at Google since it closed, so they go back to the
 		 * page they left carrying the flag that reopens it.
 		 *
-		 * `smartlogin_welcome=1` rather than a marker of this phase's own: it is
+		 * `OmniWP_welcome=1` rather than a marker of this phase's own: it is
 		 * already what a finished registration puts in a URL, already read by
 		 * `Shortcodes::is_welcome_request()`, and adding a second spelling of it
 		 * is the mistake rule 9 exists to prevent.
 		 */
 		if ( '' === $destination ) {
-			$destination = add_query_arg( 'smartlogin_welcome', '1', $context->intended_url );
+			$destination = add_query_arg( 'OmniWP_welcome', '1', $context->intended_url );
 		}
 
 		wp_safe_redirect( $destination );
@@ -360,7 +360,7 @@ final class ProviderAuthController {
 	 * construction is a provider that could be left there.
 	 *
 	 * Only the shipped class is rebuilt. A third-party provider from
-	 * `smart_login_providers` cannot be, because nothing guarantees its
+	 * `OMNIWP_providers` cannot be, because nothing guarantees its
 	 * constructor takes a store — so it simply has no test button, which is a
 	 * better failure than a test that silently signs somebody in.
 	 */
@@ -369,7 +369,7 @@ final class ProviderAuthController {
 
 		switch ( $provider_id ) {
 			case 'google':
-				return new \SmartLogin\Auth\Providers\GoogleProvider( $store );
+				return new \OmniWP\Auth\Providers\GoogleProvider( $store );
 
 			default:
 				return null;
@@ -426,7 +426,7 @@ final class ProviderAuthController {
 			5 * MINUTE_IN_SECONDS
 		);
 
-		wp_safe_redirect( admin_url( 'admin.php?page=smart-login&tab=providers' ) );
+		wp_safe_redirect( admin_url( 'admin.php?page=omniwp&tab=providers' ) );
 		exit;
 	}
 
@@ -452,8 +452,8 @@ final class ProviderAuthController {
 			$base = home_url( '/' );
 		}
 
-		$fallback = add_query_arg( 'smart_login_step', Flow::STEP_LOGIN, $base );
-		$filtered = (string) apply_filters( 'smart_login_provider_failure_redirect', $fallback );
+		$fallback = add_query_arg( 'OMNIWP_step', Flow::STEP_LOGIN, $base );
+		$filtered = (string) apply_filters( 'OMNIWP_provider_failure_redirect', $fallback );
 		$fallback = wp_validate_redirect( $filtered, $fallback );
 
 		return '' !== $return_url ? wp_validate_redirect( $return_url, $fallback ) : $fallback;

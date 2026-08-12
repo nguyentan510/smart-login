@@ -3,14 +3,14 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\n"
-"POT-Creation-Date: 2026-08-10 06:53+0000\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/omniwp\n"
+"POT-Creation-Date: 2026-08-10 07:31+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: bin/build-pot.php\n"
-"X-Domain: smart-login\n"
+"X-Domain: omniwp\n"
 
 #. translators: 1: identity channel, 2: transport id.
 #: includes/Admin/class-readiness.php:179
@@ -129,6 +129,17 @@ msgstr ""
 msgid "<code>yes</code> bắt buộc chọn, <code>no</code> cho phép bỏ trống."
 msgstr ""
 
+#: includes/Admin/class-smart-menu-meta-box.php:140
+#: includes/Admin/class-smart-menu-meta-box.php:142
+#: includes/Admin/class-smart-menu-metabox.php:132
+msgid "Add to Menu"
+msgstr ""
+
+#: includes/Admin/class-smart-menu-meta-box.php:42
+#: includes/Admin/class-smart-menu-metabox.php:35
+msgid "Auth Switcher linh hoạt"
+msgstr ""
+
 #: includes/Admin/Screens/class-guide-screen.php:335
 msgid "Ba bước để chạy được"
 msgstr ""
@@ -244,6 +255,11 @@ msgstr ""
 #: includes/Frontend/class-account-form.php:126
 #: includes/Frontend/class-icon-set.php:150
 msgid "Bảo mật"
+msgstr ""
+
+#: includes/Admin/class-smart-menu-meta-box.php:72
+#: includes/Admin/class-smart-menu-metabox.php:65
+msgid "Bảo mật & Mật khẩu"
 msgstr ""
 
 #: includes/class-field-registry.php:98
@@ -540,6 +556,10 @@ msgstr ""
 msgid "Chế độ DEV đang bật."
 msgstr ""
 
+#: includes/Admin/class-smart-menu-fields.php:61
+msgid "Chế độ hiển thị (Render Mode)"
+msgstr ""
+
 #: includes/class-field-registry.php:954
 msgid "Chế độ thích ứng chỉ hiện thử thách khi ngân sách đã tiêu quá nửa, kill switch vừa nổ, kênh gửi đang bị ngắt mạch, hoặc IP đó đã dùng quá nửa hạn mức tra cứu. Ngày thường khách không thấy gì — một captcha hiện lên vào thứ Ba yên ả là lỗi chuyển đổi, không phải biện pháp bảo mật."
 msgstr ""
@@ -573,6 +593,10 @@ msgstr ""
 msgid "Chỉ khi site đang bị ép"
 msgstr ""
 
+#: includes/Admin/class-smart-menu-fields.php:51
+msgid "Chỉ khách (Chưa đăng nhập)"
+msgstr ""
+
 #: includes/Admin/Screens/class-overview-screen.php:92
 msgid "Chỉ làm việc này khi bạn đã xem nhật ký và tin rằng lưu lượng vừa rồi là thật."
 msgstr ""
@@ -580,6 +604,10 @@ msgstr ""
 #: includes/Admin/class-readiness.php:106
 #: includes/class-field-registry.php:188
 msgid "Chỉ số điện thoại"
+msgstr ""
+
+#: includes/Admin/class-smart-menu-fields.php:52
+msgid "Chỉ thành viên (Đã đăng nhập)"
 msgstr ""
 
 #: includes/class-field-registry.php:330
@@ -887,7 +915,7 @@ msgid "Endpoint đã nhận gói tin đã ký. Kiểm tra phía nhận để xá
 msgstr ""
 
 #: includes/class-gateway-presets.php:87
-msgid "Envelope ký HMAC (chuẩn SmartLogin)"
+msgid "Envelope ký HMAC (chuẩn OmniWP)"
 msgstr ""
 
 #: includes/Admin/class-readiness.php:455
@@ -918,7 +946,7 @@ msgid "Giao diện email HTML"
 msgstr ""
 
 #: includes/class-field-registry.php:823
-msgid "Giao diện hiện tại không khai báo vị trí menu nào, nên chỉ có thể đặt nút bằng shortcode <code>[smart_login_button]</code>."
+msgid "Giao diện hiện tại không khai báo vị trí menu nào, nên chỉ có thể đặt nút bằng shortcode <code>[OMNIWP_button]</code>."
 msgstr ""
 
 #: includes/class-field-registry.php:929
@@ -1210,6 +1238,11 @@ msgstr ""
 
 #: includes/class-field-registry.php:52
 msgid "Hồ sơ & Địa chỉ"
+msgstr ""
+
+#: includes/Admin/class-smart-menu-meta-box.php:60
+#: includes/Admin/class-smart-menu-metabox.php:53
+msgid "Hồ sơ cá nhân"
 msgstr ""
 
 #: templates/partials/account/status.php:77
@@ -1558,13 +1591,17 @@ msgstr ""
 msgid "Link điều kiện áp dụng"
 msgstr ""
 
-#: includes/Admin/class-field-renderer.php:536
 #: templates/partials/account/providers.php:91
 msgid "Liên kết"
 msgstr ""
 
 #: includes/Auth/class-identity-link-service.php:194
 msgid "Liên kết này không thuộc về tài khoản của bạn."
+msgstr ""
+
+#: includes/Admin/class-smart-menu-meta-box.php:78
+#: includes/Admin/class-smart-menu-metabox.php:71
+msgid "Liên kết tài khoản"
 msgstr ""
 
 #: includes/Auth/class-account-provisioner.php:78
@@ -1918,7 +1955,7 @@ msgid "Nhà cung cấp đăng nhập không trả về định danh hợp lệ."
 msgstr ""
 
 #: includes/Admin/class-field-renderer.php:535
-msgid "Nhãn"
+msgid "Nhãn hiển thị"
 msgstr ""
 
 #: includes/Admin/Screens/class-guide-screen.php:344
@@ -2011,8 +2048,12 @@ msgstr ""
 msgid "Nâng cao"
 msgstr ""
 
+#: includes/Admin/class-smart-menu-meta-box.php:29
+msgid "Nút Tài khoản [OMNIWP_button]"
+msgstr ""
+
 #: includes/class-field-registry.php:822
-msgid "Nút sẽ xuất hiện ở cuối menu được chọn. Bạn vẫn có thể đặt thủ công bằng shortcode <code>[smart_login_button]</code>."
+msgid "Nút sẽ xuất hiện ở cuối menu được chọn. Bạn vẫn có thể đặt thủ công bằng shortcode <code>[OMNIWP_button]</code>."
 msgstr ""
 
 #: includes/Admin/Screens/class-guide-screen.php:113
@@ -2172,6 +2213,10 @@ msgstr ""
 msgid "Quyết định trường định danh trên màn hình đăng nhập/đăng ký."
 msgstr ""
 
+#: includes/Admin/class-smart-menu-fields.php:47
+msgid "Quyền hiển thị Smart Login"
+msgstr ""
+
 #: templates/form-forgot.php:19
 msgid "Quên mật khẩu"
 msgstr ""
@@ -2182,6 +2227,10 @@ msgstr ""
 
 #: includes/Admin/class-readiness.php:422
 msgid "Request này đến qua Cloudflare nhưng plugin đang bỏ qua header proxy, nên nhật ký ghi địa chỉ của CDN thay vì của khách."
+msgstr ""
+
+#: includes/Admin/class-smart-menu-fields.php:65
+msgid "Rich Account Dropdown (Phase 21)"
 msgstr ""
 
 #: includes/Admin/class-provider-cards.php:381
@@ -2220,6 +2269,11 @@ msgstr ""
 msgid "Secret trùng với ID ứng dụng nên không được lưu. Hãy dán đúng App Secret Key từ trang quản lý ứng dụng — nó là một giá trị khác với App ID."
 msgstr ""
 
+#: includes/Admin/class-smart-menu-meta-box.php:133
+#: includes/Admin/class-smart-menu-metabox.php:126
+msgid "Select All"
+msgstr ""
+
 #: includes/Admin/class-provider-cards.php:98
 msgid "Settings đã mã hóa"
 msgstr ""
@@ -2227,6 +2281,10 @@ msgstr ""
 #: includes/Admin/Screens/class-guide-screen.php:383
 #: includes/Admin/Screens/class-guide-screen.php:391
 msgid "Shortcode"
+msgstr ""
+
+#: includes/Admin/class-smart-menu-fields.php:64
+msgid "Simple Link (Liên kết đơn)"
 msgstr ""
 
 #: includes/class-field-registry.php:204
@@ -2248,7 +2306,12 @@ msgstr ""
 msgid "Smart Login"
 msgstr ""
 
-#: smart-login.php:55
+#: includes/Admin/class-smart-menu-meta-box.php:35
+#: includes/Admin/class-smart-menu-metabox.php:29
+msgid "Smart Login Popup"
+msgstr ""
+
+#: omniwp.php:55
 msgid "Smart Login yêu cầu PHP 8.0 trở lên. Plugin đang tạm dừng hoạt động."
 msgstr ""
 
@@ -2266,6 +2329,11 @@ msgstr ""
 
 #: includes/class-installer.php:118
 msgid "Smart Login: cài đặt <code>delivery.route_phone</code> đang trỏ tới endpoint automation nhưng endpoint đó chưa được cấu hình, nên mã gửi tới số điện thoại chưa từng đi được. Cách định tuyến này không còn nữa — hãy vào tab Kênh SMS và chọn nhà cung cấp."
+msgstr ""
+
+#: includes/Admin/class-smart-menu-meta-box.php:88
+#: includes/Admin/class-smart-menu-metabox.php:81
+msgid "Smart Menu"
 msgstr ""
 
 #: includes/OTP/class-placeholders.php:146
@@ -2408,6 +2476,10 @@ msgstr ""
 msgid "Sự kiện gửi kèm"
 msgstr ""
 
+#: includes/Admin/class-field-renderer.php:537
+msgid "Thao tác"
+msgstr ""
+
 #: includes/class-field-registry.php:752
 msgid "Thay form My Account"
 msgstr ""
@@ -2468,6 +2540,10 @@ msgstr ""
 
 #: includes/Admin/Screens/class-guide-screen.php:243
 msgid "Thêm một preset nhà cung cấp SMS."
+msgstr ""
+
+#: includes/Admin/class-field-renderer.php:584
+msgid "Thêm mục Menu mới"
 msgstr ""
 
 #: includes/class-field-registry.php:51
@@ -2579,6 +2655,11 @@ msgstr ""
 
 #: includes/Auth/Providers/class-google-provider.php:27
 msgid "Tiếp tục với Google"
+msgstr ""
+
+#: includes/Admin/class-smart-menu-meta-box.php:54
+#: includes/Admin/class-smart-menu-metabox.php:47
+msgid "Trang Tài khoản (Account Hub)"
 msgstr ""
 
 #: includes/Admin/Screens/class-guide-screen.php:192
@@ -2751,6 +2832,10 @@ msgstr ""
 #: includes/Frontend/class-fragment-renderer.php:165
 #: templates/form-auth.php:78
 msgid "Tạo tài khoản"
+msgstr ""
+
+#: includes/Admin/class-smart-menu-fields.php:50
+msgid "Tất cả mọi người"
 msgstr ""
 
 #: includes/Admin/Screens/class-settings-screen.php:451
@@ -2929,6 +3014,11 @@ msgstr ""
 msgid "Ví dụ: 12 Trần Duy Hưng"
 msgstr ""
 
+#: includes/Admin/class-field-renderer.php:562
+#: includes/Admin/class-field-renderer.php:602
+msgid "Ví dụ: Đơn hàng của tôi"
+msgstr ""
+
 #: includes/Admin/class-provider-cards.php:331
 msgid "Vòng đăng nhập chạy được. Không có tài khoản nào được tạo và không ai được đăng nhập — đây chỉ là phép thử."
 msgstr ""
@@ -3039,6 +3129,11 @@ msgstr ""
 msgid "Xác thực OTP"
 msgstr ""
 
+#: includes/Admin/class-field-renderer.php:573
+#: includes/Admin/class-field-renderer.php:613
+msgid "Xóa dòng này"
+msgstr ""
+
 #: includes/Admin/class-provider-cards.php:181
 msgid "Xóa secret đã lưu khi bấm Lưu thay đổi"
 msgstr ""
@@ -3102,6 +3197,11 @@ msgstr ""
 
 #: includes/class-field-registry.php:941
 msgid "hCaptcha"
+msgstr ""
+
+#: includes/Admin/class-field-renderer.php:569
+#: includes/Admin/class-field-renderer.php:609
+msgid "https://example.com/don-hang"
 msgstr ""
 
 #: includes/Security/class-security-meta.php:86
@@ -3328,6 +3428,10 @@ msgstr ""
 msgid "Đăng nhập & Đăng ký"
 msgstr ""
 
+#: includes/Frontend/class-smart-menu-renderer.php:70
+msgid "Đăng nhập / Đăng ký"
+msgstr ""
+
 #: includes/class-field-registry.php:186
 msgid "Đăng nhập bằng"
 msgstr ""
@@ -3358,12 +3462,22 @@ msgstr ""
 msgid "Đăng xuất"
 msgstr ""
 
+#: includes/Admin/class-smart-menu-meta-box.php:48
+#: includes/Admin/class-smart-menu-metabox.php:41
+msgid "Đăng xuất (Secure Logout)"
+msgstr ""
+
 #: includes/Frontend/class-icon-set.php:151
 msgid "Đơn hàng"
 msgstr ""
 
-#: includes/Admin/class-field-renderer.php:560
+#: includes/Admin/class-smart-menu-meta-box.php:66
+#: includes/Admin/class-smart-menu-metabox.php:59
 msgid "Đơn hàng của tôi"
+msgstr ""
+
+#: includes/Admin/class-field-renderer.php:536
+msgid "Đường dẫn (URL)"
 msgstr ""
 
 #: includes/class-field-registry.php:526

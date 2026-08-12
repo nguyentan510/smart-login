@@ -2,10 +2,10 @@
 /**
  * Provider-normalised identity. Tokens never live in this object.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth\Providers;
+namespace OmniWP\Auth\Providers;
 
 defined( 'ABSPATH' ) || exit;
 

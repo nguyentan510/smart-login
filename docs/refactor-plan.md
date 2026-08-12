@@ -37,6 +37,8 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 20 — Sending a code**
 - [x] **Phase 21 — The account menu**
 - [x] **Phase 22 — The guide inside the plugin**
+- [x] **Phase 23 — Smart Menu**
+
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
 independent and may be reordered or dropped.
@@ -66,7 +68,7 @@ being asked for is a presentation of a routing model that does not exist yet.
   `class-*.php`), `phpcs.xml`
 - `docs/identity-model.md` — normative specification
 - `docs/refactor-plan.md` — this file
-- `tests/harness.php` — shared assertion helpers, `sl_*` prefixed to avoid
+- `tests/harness.php` — shared assertion helpers, `ow_*` prefixed to avoid
   colliding with the existing runner
 - `tests/run-lint.php` — portable syntax lint (uses `PHP_BINARY`, replaces the
   bash loop that only ran on Linux)
@@ -133,13 +135,13 @@ contract suite green, regression suite still 163, zero DB access. Confirmed.
 
 **Delivered**
 
-- `smartlogin_identities` + `smartlogin_identity_history` via `dbDelta()`;
-  `SMART_LOGIN_DB_VERSION` → `3`
+- `OmniWP_identities` + `OmniWP_identity_history` via `dbDelta()`;
+  `OMNIWP_DB_VERSION` → `3`
 - `IdentityRepository` — find / for_user / claim / retire / relink / set_primary /
   count_for_user, all atomic at the storage layer
 - `IdentityHistory` — append-only, closed event vocabulary
 - `Installer::pending_schema_changes()` — dbDelta dry run
-- `wp_smart_login_external_identities` dropped; `ExternalIdentityRepository`
+- `wp_OMNIWP_external_identities` dropped; `ExternalIdentityRepository`
   deleted
 - `uninstall.php`: both new tables plus the two ward-code meta keys
 - Both integration suites ported to the new tables
@@ -176,10 +178,10 @@ contract suite green, regression suite still 163, zero DB access. Confirmed.
 **Acceptance — measured on WordPress 7.0.2 + MySQL, not assumed**
 
 ```text
-SMART_LOGIN_AUTH_INTEGRATION_OK        db_version=3
-SMART_LOGIN_GOOGLE_STAGING_SMOKE_OK
-SMART_LOGIN_PROVIDER_LINKING_OK
-SMART_LOGIN_ZALO_STAGING_SMOKE_OK
+OMNIWP_AUTH_INTEGRATION_OK        db_version=3
+OMNIWP_GOOGLE_STAGING_SMOKE_OK
+OMNIWP_PROVIDER_LINKING_OK
+OMNIWP_ZALO_STAGING_SMOKE_OK
 ```
 
 - `subject_owner` verified to be a real UNIQUE index over two columns
@@ -261,10 +263,10 @@ SMART_LOGIN_ZALO_STAGING_SMOKE_OK
 Integration gate re-run after the rewrite, on WordPress 7.0.2:
 
 ```text
-SMART_LOGIN_AUTH_INTEGRATION_OK
-SMART_LOGIN_GOOGLE_STAGING_SMOKE_OK
-SMART_LOGIN_PROVIDER_LINKING_OK
-SMART_LOGIN_ZALO_STAGING_SMOKE_OK
+OMNIWP_AUTH_INTEGRATION_OK
+OMNIWP_GOOGLE_STAGING_SMOKE_OK
+OMNIWP_PROVIDER_LINKING_OK
+OMNIWP_ZALO_STAGING_SMOKE_OK
 ```
 
 ---
@@ -280,10 +282,10 @@ SMART_LOGIN_ZALO_STAGING_SMOKE_OK
   `identity_channel`; index `dest_purpose` → `dest_intent`. DB_VERSION 3 → 4
 - `OTP\Channels` → `OTP\Transports`: `TransportInterface`, `TransportRouter`,
   `WebhookTransport`, `MailTransport`. "Channel" now means exactly one thing
-  project-wide. Filter `smart_login_otp_channels` → `smart_login_otp_transports`
-- `PasswordPolicy` extracted; `smart_login_validate_password` now runs on reset
+  project-wide. Filter `OMNIWP_otp_channels` → `OMNIWP_otp_transports`
+- `PasswordPolicy` extracted; `OMNIWP_validate_password` now runs on reset
   as well as registration
-- `smart_login_phone_is_valid` reaches Vietnamese numbers
+- `OMNIWP_phone_is_valid` reaches Vietnamese numbers
 - Placeholders `{{purpose}}`/`{{channel}}` → `{{intent}}`/`{{transport}}`
 
 **Notes from doing the work**
@@ -394,7 +396,7 @@ they remain genuinely outstanding.
 - `Auth\IdentityLinkService` — `linked()`, `can_unlink()`, `unlink()`,
   `unlinked_providers()`, `history()`
 - **Orphan guard**: an account must keep at least one identity, with an
-  explicit `smart_login_allow_orphan_unlink` filter as the only way past it
+  explicit `OMNIWP_allow_orphan_unlink` filter as the only way past it
 - Re-authentication by account password, checked *after* the guard
 - REST: `POST identities` and `POST identities/unlink`
 - Non-JS path: `unlink_identity` form action in `FormController`
@@ -432,7 +434,7 @@ they remain genuinely outstanding.
 The integration gate creates an account with two identities and then asserts:
 a wrong password removes nothing; another account's identity cannot be detached
 through your session; the first unlink succeeds; the second is refused with
-`smart_login_last_identity`; `can_unlink()` agrees with `unlink()`; and three
+`OMNIWP_last_identity`; `can_unlink()` agrees with `unlink()`; and three
 further attempts do not wear the guard down. The count never reaches zero.
 
 ---
@@ -441,7 +443,7 @@ further attempts do not wear the guard down. The count never reaches zero.
 
 **Delivered**
 
-- `readme.txt`, `CHANGELOG.md`, `LICENSE`, `languages/smart-login.pot`
+- `readme.txt`, `CHANGELOG.md`, `LICENSE`, `languages/omniwp.pot`
   (445 strings, 36 translator notes)
 - `bin/build-pot.php` — POT generation without wp-cli, which is not installed
   here and should not be a prerequisite for shipping translations
@@ -502,7 +504,7 @@ an untargeted test suite will notice.
 After the merge, `/my-account/` fatalled on every load:
 
 ```
-Uncaught Error: Class "SmartLogin\Identity\IdentityResolver" not found
+Uncaught Error: Class "OmniWP\Identity\IdentityResolver" not found
   templates/form-auth.php:79
 ```
 
@@ -521,7 +523,7 @@ Why each gate let it through, which is the useful part:
 Two gates were added, and both were demonstrated to fail before the fix rather
 than assumed to work:
 
-1. **Fitness**: every `SmartLogin\…` reference — `use` statements and inline
+1. **Fitness**: every `OmniWP\…` reference — `use` statements and inline
    calls — must resolve to a file, using the autoloader's own naming rule. Run
    against the broken tree it named both files exactly.
 2. **`tests/identity/run-template-tests.php`**: renders all 11 templates with
@@ -559,7 +561,7 @@ Google linked.
 - [x] **8.0** [Guard rails](account-surface/8.0-guard-rails.md) — the
       duplication rule, proven red before the duplication is removed
 - [x] **8.1** [Stop the data loss](account-surface/8.1-stop-data-loss.md) — four
-      live defects, JS only, ships alone. `SMART_LOGIN_AUTH_INTEGRATION_OK` on
+      live defects, JS only, ships alone. `OMNIWP_AUTH_INTEGRATION_OK` on
       WordPress 7.0.2, fifteen server-side checks, three of four client checks
       measured in a browser; two unrelated gate defects found and written down
 - [x] **8.2** [Section contract](account-surface/8.2-section-contract.md) — seven
@@ -645,10 +647,10 @@ no limiter at all while the README says it does.
       **The four release blockers are done.**
 - [x] **9.5** [Trusted proxy](abuse-boundary/9.5-trusted-proxy.md) — CIDR
       allowlist, not a boolean; readiness fails on the spoofable configuration.
-      **Reversed a decision the brief had made**: `smart_login_trust_proxy_headers`
+      **Reversed a decision the brief had made**: `OMNIWP_trust_proxy_headers`
       no longer grants trust on its own, because an escape hatch that reopens the
       hole is not one. Managed deployments pair it with the new
-      `smart_login_trusted_proxy_cidrs`. 245 → 266, the phase's largest jump —
+      `OMNIWP_trusted_proxy_cidrs`. 245 → 266, the phase's largest jump —
       CIDR parsing is where the sharp edges are
 - [x] **9.6** [Login IP ceiling](abuse-boundary/9.6-login-ip-ceiling.md) —
       password spraying. Needed a **new** guard rail first: 9.0's eight rules
@@ -697,7 +699,7 @@ address, so shipping 9.6 first is an outage, not a control. **9.8 is blocked on
 call must inherit 9.3's timeout discipline. 9.9 and 9.10 are independent and may
 be reordered or dropped.
 
-**9.1 owns the only `SMART_LOGIN_DB_VERSION` bump.** Anything else wanting a
+**9.1 owns the only `OMNIWP_DB_VERSION` bump.** Anything else wanting a
 schema change folds into it rather than bumping again.
 
 ---
@@ -715,9 +717,9 @@ Short version: one line decides how every code travels —
 `( false !== strpos( $destination, '@' ) ) ? 'email' : 'sms'`
 (`class-transport-router.php:41`). The shape of the destination is the whole
 routing policy, so a site cannot point either channel at an automation platform,
-and the `smart_login_otp_transports` filter registers transports that nothing
+and the `OMNIWP_otp_transports` filter registers transports that nothing
 will ever route to. Separately, nineteen audit event constants exist and none of
-them leaves the site; `smart_login_otp_sent` fires without the code, so external
+them leaves the site; `OMNIWP_otp_sent` fires without the code, so external
 automation can neither send an OTP nor react to one.
 
 ### Sub-phases
@@ -759,7 +761,7 @@ automation can neither send an OTP nor react to one.
       the spec's security section is the argument and the brief is the controls.
       Committed first with this row **unticked**: the gate was written but the
       Local site was stopped, and BLOCKED is not a pass. Ticked only once
-      `SMART_LOGIN_DELIVERY_GATE_OK` came back — along with the other five
+      `OMNIWP_DELIVERY_GATE_OK` came back — along with the other five
       markers, since 10.1, 10.2, 10.3 and 10.7 all touch code the earlier gates
       exercise. 10.0's rule 4 was wrong: it named the signer as the sender, when
       the signer signs and sends nothing. Structural half is now "one sender";
@@ -842,7 +844,7 @@ asked for first. Every earlier attempt to design that tab was an attempt to
 design the routing model, which is why the answer kept coming out as more
 headings on the same page.
 
-**No `SMART_LOGIN_DB_VERSION` bump.** Nothing in this phase changes the schema;
+**No `OMNIWP_DB_VERSION` bump.** Nothing in this phase changes the schema;
 10.5 reuses the `identity_channel` column already present, with the
 derive-when-empty fallback `OtpService:336-345` established.
 
@@ -966,7 +968,7 @@ single-subject phase. Four items, from a wireframe review:
    that component, and building them first means writing the card twice.
 **Fixed after Phase 10 closed, in its own commit with its own guard rail.** The
 gate now reads `advanced.delete_data_on_uninstall`, and `tests/run-tests.php`
-asserts that every `$smart_login_settings[...]` subscript chain in `uninstall.php`
+asserts that every `$OMNIWP_settings[...]` subscript chain in `uninstall.php`
 names a path `FieldRegistry` declares — the abuse suite's rule 8 could never see
 this file, because it scans `Settings::get()` calls and `uninstall.php` runs
 without the plugin loaded.
@@ -984,7 +986,7 @@ has always claimed to do.
 Original finding, kept for the record:
 
 **Found in 10.2, deliberately not fixed there:** `uninstall.php:12` gated the
-whole routine on `$smart_login_settings['delete_data_on_uninstall']` — a **flat**
+whole routine on `$OMNIWP_settings['delete_data_on_uninstall']` — a **flat**
 key. The setting has been `advanced.delete_data_on_uninstall` since the settings
 rewrite, and `Installer::migrate_flat_keys()` lists that exact pair
 (`class-installer.php:149`), so the stored option is nested and the gate reads
@@ -1069,7 +1071,7 @@ renders the six digits an OTP mail exists for as running text mid-paragraph.
 
 ### Sub-phases
 
-- [x] **13.0** [Guard rails](mail-surface/13.0-guard-rails.md) — landed red at 39 passed / 2 failed. The brief predicted three failures and got two: rule 2 passes today, because the flat form-table already renders every input, so it is a property to **preserve** rather than reach. `sl_capture()` moved into the harness, since two suites now render screens. Four rules.
+- [x] **13.0** [Guard rails](mail-surface/13.0-guard-rails.md) — landed red at 39 passed / 2 failed. The brief predicted three failures and got two: rule 2 passes today, because the flat form-table already renders every input, so it is a property to **preserve** rather than reach. `ow_capture()` moved into the harness, since two suites now render screens. Four rules.
       Rule 4 passes today and must keep passing, which is why it lands now
       rather than with 13.3: a rule arriving alongside the feature it guards
       cannot catch that feature breaking it
@@ -1279,10 +1281,10 @@ and its branch depends on what 14.4 and 14.5 make true. The trap 10.6 and 11.4 b
 named applies here too — every earlier attempt to design that section was really an
 attempt to decide whether an email is an identity.
 
-**14.5 owns the only `SMART_LOGIN_DB_VERSION` bump.** Anything else wanting one
+**14.5 owns the only `OMNIWP_DB_VERSION` bump.** Anything else wanting one
 folds into it.
 
-**Rejected, and recorded so it is not re-proposed:** a `smartlogin_password_set`
+**Rejected, and recorded so it is not re-proposed:** a `OmniWP_password_set`
 marker meta. It answers a question the directory should answer, it cannot be
 reconstructed for existing accounts — a provider-first account that later verified
 an email is indistinguishable by channel from one that registered with a password —
@@ -1306,7 +1308,7 @@ Short version: this file has said since Phase 0 that the project has never run i
 production and carries no migration burden — and then eleven phases wrote migration
 code anyway, each for the handful of development installs that existed at the time.
 Roughly 400 lines exist to carry a past no site outside this machine has had. They go,
-the database is wiped, and `SMART_LOGIN_DB_VERSION` resets to `1`. From here a 1.0.x
+the database is wiped, and `OMNIWP_DB_VERSION` resets to `1`. From here a 1.0.x
 install is **reinstallable, not upgradable**, by decision rather than by accident.
 
 The architecture and all ten suites stay. The four defects found finishing Phase 14
@@ -1317,7 +1319,7 @@ the suites around it.
 
 - [x] **15.0** [Guard rails](unreleased-install/15.0-guard-rails.md) — landed red:
       fitness 30 → 10 failed, one rule per surface, and the install gate stopping at
-      `options survived uninstall: smart_login_account_page`. **Not the leak the brief
+      `options survived uninstall: OMNIWP_account_page`. **Not the leak the brief
       named** — it predicted 14.5's backfill cursor and found instead a page cache
       `AccountForm` has written since Phase 8 and `uninstall.php` never deleted, which
       is the argument for a query over a list made by the rule on its first run. It also
@@ -1335,7 +1337,7 @@ the suites around it.
 - [x] **15.1** [Fresh database](unreleased-install/15.1-fresh-database.md) — smaller
       than planned: 15.0's gate uninstalls to reach clean ground, so running it had
       already done the wipe. What was left was what the gate does not own — twelve
-      `sl_gate_*` fixture users from runs whose cleanup predates 14.4's. Each was
+      `ow_gate_*` fixture users from runs whose cleanup predates 14.4's. Each was
       re-read and confirmed before deletion, and the three real accounts plus six manual
       test accounts were deliberately left alone. The installed copy pulled, so the site
       and the working tree stopped disagreeing about the version. Originally: wipe what
@@ -1360,7 +1362,7 @@ the suites around it.
       verification was false**: it said the admin JS posts `transport` "verified by grep,
       not assumed", and the JS posted `channel` — deleting the server's acceptance would
       have quietly broken the Gửi thử button into testing the wrong transport. The
-      attribute, the JS and the read were renamed together and `SMART_LOGIN_VERSION`
+      attribute, the JS and the read were renamed together and `OMNIWP_VERSION`
       bumped to 1.0.2 so a cached `admin.js` cannot post a field nothing reads. 10.2's
       pre-move secret fixture was replaced, not deleted, keeping the half still true of
       every install. **One unreproduced gate failure is recorded rather than explained
@@ -1436,7 +1438,7 @@ the two kinds since Phase 6 and no template has ever read it.
       heading changed here and its removal waited for the grid. Found on the way:
       the verified badge was claiming verification from a `user_meta` read while
       `has_contact_identity()` documents at length that only the directory knows;
-      and `smart-login.js:564` had never been reachable, because the badge it
+      and `omniwp.js:564` had never been reachable, because the badge it
       unhides did not exist for the one case it was written for
 - [x] **16.2** [A provider row a person can read](sign-in-card/16.2-provider-row.md)
       — `Google 1171••••••` names the account instead of the OIDC subject, from
@@ -1476,7 +1478,7 @@ unreadable but not wrong.
 named. The button through the side of its panel is what was reported, and it is
 the smallest of the four things wrong with that card.
 
-**No `SMART_LOGIN_DB_VERSION` bump, and no schema change.** Every value this
+**No `OMNIWP_DB_VERSION` bump, and no schema change.** Every value this
 phase renders is already stored; `meta_json` has held the provider claims since
 Phase 2 and nothing has read them.
 
@@ -1510,13 +1512,13 @@ row has no stored fact behind it at all.
       writers, not three** — and the fourth is the one that must *not* record:
       `AccountProvisioner` writes a random string nobody has ever seen, so a
       date there would put "đổi lần cuối 2 năm trước" on the card of somebody
-      who has never had a password. `sl_require_companion()` grew the allowlist
-      `sl_forbid_pattern()` has carried since Phase 4. The nine passes are all
+      who has never had a password. `ow_require_companion()` grew the allowlist
+      `ow_forbid_pattern()` has carried since Phase 4. The nine passes are all
       halves that stop other halves passing vacuously
 - [x] **17.1** [The provider's own mark](account-card/17.1-provider-marks.md) —
       one helper, two call sites, against an asset that had been on the interface
       since Phase 12. Found on the way: `form-auth.php` was the **only** place
-      applying `smart_login_provider_icon_svg`, so a site filtering in an
+      applying `OMNIWP_provider_icon_svg`, so a site filtering in an
       official brand asset would have got it on the sign-in screen and the
       plugin's own drawing in the account card
 - [x] **17.2** [The scale](account-card/17.2-the-scale.md) — six spacing steps
@@ -1587,7 +1589,7 @@ loses it on the next save.
 16.3 each named. Four identical dots are the least consequential thing wrong with
 this surface.
 
-**No `SMART_LOGIN_DB_VERSION` bump, and no schema change.** One new user meta key
+**No `OMNIWP_DB_VERSION` bump, and no schema change.** One new user meta key
 and one set of mirrored Woo profile fields, both written through paths that
 already exist.
 
@@ -1726,7 +1728,7 @@ outweighed the changes.
       lookup generalised, so there is one of it
 - [x] **P4** — **the integration gate runs.** The WordPress this environment was
       missing is Local by Flywheel, MySQL on port 10005 rather than 3306.
-      `SMART_LOGIN_AUTH_INTEGRATION_OK`, WordPress 7.0.2. 17.4's unverified meta
+      `OMNIWP_AUTH_INTEGRATION_OK`, WordPress 7.0.2. 17.4's unverified meta
       writes now have three assertions in the gate, including that a deliberately
       different shipping address **is** overwritten — proved able to fail by
       removing the shipping half of the loop and watching it go red
@@ -1761,10 +1763,10 @@ reached by slug through `TemplateLoader`. The 34 MB working folder is 17 MB of
 
 Building the archive is what found the defect:
 
-- [x] **H1** — **`sl_plugin_sources()` scanned the release staging directory.**
+- [x] **H1** — **`ow_plugin_sources()` scanned the release staging directory.**
       `tests/harness.php:124` skipped `.git`, `tests`, `scripts`, `docs`,
       `data`, `vendor`, `node_modules` and `.github` — but not `build` or
-      `dist`. Staging the plugin into `dist/smart-login/` puts a second copy of
+      `dist`. Staging the plugin into `dist/omniwp/` puts a second copy of
       every shipped file on disk, so a rule phrased "no file **outside**
       `UserManager` pairs a `user_email` write with `META_EMAIL_VERIFIED`" fails
       against the copy, naming a path the reader cannot fix. Six required
@@ -1800,9 +1802,9 @@ Building the archive is what found the defect:
 - [x] **H2** — **`CLAUDE.md` and `.gitattributes` were shipping to users.**
       Neither is in `.distignore`, so the working agreement itself would have
       landed in the plugin archive. Both excluded. The archive is 173 files,
-      418 KB, one `smart-login/` root.
+      418 KB, one `omniwp/` root.
 - [x] **H3** — the archive is written with forward-slash entry names.
-      PowerShell 5.1's `Compress-Archive` emits `smart-login\includes\…`, which
+      PowerShell 5.1's `Compress-Archive` emits `omniwp\includes\…`, which
       the ZIP spec does not permit and not every extractor tolerates. Built
       through `ZipArchive.CreateEntry` instead, and the entry names asserted
       after the fact rather than assumed.
@@ -1841,7 +1843,7 @@ success with a field missing.
       Zalo. `email` was dropped from the requested fields at the same time: a v4
       user access token does not reach it, so the parameter was asking for
       something Zalo will not grant. The mapping still reads `email`, so a site
-      that re-adds the field through `smart_login_zalo_profile_url` is unchanged.
+      that re-adds the field through `OMNIWP_zalo_profile_url` is unchanged.
 - [x] **Z3** — **a refusal in the body was thrown away.** `json_response()`
       treated any 2xx-with-JSON as success, so the one sentence that names the
       cause never left the method. It now fails closed on a non-zero `error` and
@@ -1882,11 +1884,11 @@ this class of defect should not need a WordPress and a database to catch.
 and the integration gate, against the corrected fixture:
 
 ```text
-SMART_LOGIN_PROVIDER_GATES_FAILED
-reason=Zalo callback fixture failed: smart_login_zalo_token
+OMNIWP_PROVIDER_GATES_FAILED
+reason=Zalo callback fixture failed: OMNIWP_zalo_token
 ```
 
-**Green after.** `336 passed, 0 failed`; `SMART_LOGIN_ZALO_STAGING_SMOKE_OK`;
+**Green after.** `336 passed, 0 failed`; `OMNIWP_ZALO_STAGING_SMOKE_OK`;
 every required suite in `run-all.php` PASS; coding standards unchanged at its
 documented baseline, `18 ERRORS AND 22 WARNINGS ... IN 16 FILES`.
 
@@ -1901,7 +1903,7 @@ message changed from *"không trả về access token"* to *"Zalo từ chối y�
 đăng nhập."*, and the audit row Z3 added said why:
 
 ```text
-{"provider":"zalo","reason":"smart_login_zalo_token",
+{"provider":"zalo","reason":"OMNIWP_zalo_token",
  "provider_error":-14004,"provider_error_name":"Invalid secret key"}
 ```
 
@@ -1948,10 +1950,10 @@ The refusal came from the callback, and it was right. `resolve()` was run
 against the real subject, as administrator:
 
 ```text
-zalo subject held by user 585 (sl_1d391c4359d98cf67e28a787)
+zalo subject held by user 585 (ow_1d391c4359d98cf67e28a787)
 linking as user 1 (admin)
 
-resolve() -> WP_Error smart_login_provider_conflict
+resolve() -> WP_Error OMNIWP_provider_conflict
             "Tài khoản nhà cung cấp đã liên kết với người dùng khác."
 
 identity rows 8 -> 8      (nothing written)
@@ -1972,10 +1974,10 @@ that was the problem.
       refusal. It found exactly one gap.
 - [x] **L2** — **the refusal was delivered to a screen the visitor cannot be
       on.** `fail()` always redirected to `failure_url()`, which is My Account
-      with `smart_login_step=login`. A signed-in visitor sees the dashboard, so
+      with `OMNIWP_step=login`. A signed-in visitor sees the dashboard, so
       the sentence explaining the refusal went nowhere. The account partial built
       its link with an empty return url, so the transaction had nowhere to send
-      anyone back to; it now carries `$sl_redirect`, and `failure_url()` takes an
+      anyone back to; it now carries `$ow_redirect`, and `failure_url()` takes an
       optional return url, validated there rather than trusted. Applied to
       linking only — a failed *sign-in* still belongs on the sign-in screen,
       because the page that visitor was heading for cannot serve them.
@@ -1997,7 +1999,7 @@ that was the problem.
   FAIL  the rule covers Google too
   FAIL  a linking failure returns to the page it started on
          expected: 'https://example.test/my-account/'
-         actual:   'https://example.test/?smart_login_step=login'
+         actual:   'https://example.test/?OMNIWP_step=login'
   339 passed, 4 failed
 
   FAIL  every refusal in callback() writes an audit row first
@@ -2016,12 +2018,12 @@ that was the problem.
 
 **Green after.** `343 passed, 0 failed`; fitness `46 passed`; account card
 `41 passed`; admin `139 passed`; every required suite in `run-all.php` PASS;
-`SMART_LOGIN_ZALO_STAGING_SMOKE_OK`; coding standards back at its documented
+`OMNIWP_ZALO_STAGING_SMOKE_OK`; coding standards back at its documented
 baseline, `18 ERRORS AND 22 WARNINGS ... IN 16 FILES` — it went to 19 on a
 `@param` this work introduced, which is the reason the baseline is compared
 rather than assumed.
 
-**Known limitation, written down rather than discovered.** `$sl_redirect` comes
+**Known limitation, written down rather than discovered.** `$ow_redirect` comes
 from `AccountForm::redirect_url()`, which is `get_permalink()`. Inside a
 WooCommerce endpoint that resolves to the My Account page, not to
 `/my-account/edit-account/`, so a refused link returns to the account page and
@@ -2049,9 +2051,9 @@ default path.
 
 - [x] **R1** — **a rule that can answer "did we get all of it".** A removal
       crosses every boundary a rename does, and this repo has been bitten five
-      times by exactly that. The rule walks `sl_plugin_sources()` plus the two
+      times by exactly that. The rule walks `ow_plugin_sources()` plus the two
       shipped assets and names every survivor. It landed red with **18 files**,
-      including `smart-login.php` and `templates/partials/account/providers.php`
+      including `omniwp.php` and `templates/partials/account/providers.php`
       — both of which a hand-grep of `includes/` had missed. One allowlist entry,
       and it is not an exception being excused: `class-transport-router.php`
       mentions Zalo **ZNS**, an OTP transport, which a grep-and-delete removal
@@ -2088,8 +2090,8 @@ stranded by the removal:
 
 ```text
 accounts holding a zalo identity: 2
-  user 585  sl_1d391c4359d98cf67e28a787  channels=[zalo]  synthetic_email=yes  -> LOCKED OUT
-  user 560  sl_gate_guard_uxqhck0w       channels=[zalo]  synthetic_email=no   -> still has a way in
+  user 585  ow_1d391c4359d98cf67e28a787  channels=[zalo]  synthetic_email=yes  -> LOCKED OUT
+  user 560  ow_gate_guard_uxqhck0w       channels=[zalo]  synthetic_email=no   -> still has a way in
 accounts with no way in once zalo is removed: 1
 ```
 
@@ -2106,7 +2108,7 @@ render as an unknown channel, which `run-account-card-tests.php` already asserts
 does not error.
 
 **Green.** Every required suite in `run-all.php` PASS;
-`SMART_LOGIN_PROVIDER_REMOVAL_OK` and `SMART_LOGIN_AUTH_INTEGRATION_OK` from the
+`OMNIWP_PROVIDER_REMOVAL_OK` and `OMNIWP_AUTH_INTEGRATION_OK` from the
 integration gates; `db_version=2` observed on the live database, so the migration
 ran rather than being assumed.
 
@@ -2167,12 +2169,12 @@ instead of carrying it.
       duplicate `id="sl-identity"` and the second `autofocus` before a page can
       ever hold two copies of the form
 - [x] **19.4** [The trigger contract](sign-in-anywhere/19.4-the-trigger-contract.md)
-      — **rewritten after finding 11.** `?smart_login_step=` already existed,
+      — **rewritten after finding 11.** `?OMNIWP_step=` already existed,
       already allowlisted, already generated by `Flow::url()`; the first draft
       made `#login` the mechanism and was adding a third vocabulary to a concept
       that had two. The query parameter is canonical because it is the only form
       the server can see; the hash is an alias resolved to it. Plus
-      `data-smart-login`, `window.SmartLogin.open()` and `[smart_login_button]`
+      `data-omniwp`, `window.OmniWP.open()` and `[OMNIWP_button]`
       for sites built in an editor
 - [x] **19.5** [Finishing in place](sign-in-anywhere/19.5-finishing-in-place.md)
       — the sub-phase the request was about. `AuthContext` learns whether the
@@ -2208,7 +2210,7 @@ instead of carrying it.
       declared then **measured**: panel 480, control 52, gaps 16/20/20/16, lead
       two lines, no overflow at 375/480/1400. Two things deliberately not copied
       from the reference, both argued in the commit: the benefit badges are a
-      slot (empty by default, `smart_login_dialog_benefits`) because they were
+      slot (empty by default, `OMNIWP_dialog_benefits`) because they were
       one pharmacy's claims, and the provider row adapts rather than always
       being circles. Measuring found the lead at three lines and a mobile sheet
       that two rules had already killed between them
@@ -2225,7 +2227,7 @@ instead of carrying it.
       so the contract and the localize call cannot drift. Second defect behind
       the first: `address.js` bound on DOMContentLoaded and exposed nothing, so
       loading it would not have been enough — rule 16 walks every
-      `window.SmartLogin*Enhance` the plugin exposes and requires the dialog to
+      `window.OmniWP*Enhance` the plugin exposes and requires the dialog to
       call each
 - [x] **19.7** [The measurements](sign-in-anywhere/19.7-the-measurements.md) —
       375/480/1400, the keyboard walk, the integration gate, suite promoted to
@@ -2258,7 +2260,7 @@ visitor stays where they were — is the thing 19.5 builds.
 
 ```text
 Sign-in anywhere: 60 passed, 0 failed, 0 pending   (required since 19.7)
-Integration gate: 19 checks, 0 failed              SMART_LOGIN_DIALOG_INTEGRATION_OK
+Integration gate: 19 checks, 0 failed              OMNIWP_DIALOG_INTEGRATION_OK
 Every required suite PASS.
 ```
 
@@ -2334,7 +2336,7 @@ establish:
 destination : 84969789475
 channel     : phone                    <- correct, no '@'
 transport   : automation               <- correct, delivery.route_phone
-result      : smart_login_transport_unavailable
+result      : OMNIWP_transport_unavailable
               "Kênh email chưa được cấu hình. Liên hệ quản trị viên."
 ```
 
@@ -2345,7 +2347,7 @@ was not the SMS gateway was refused in the mail transport's name.
 
 - [x] **T1** — **a transport is described by itself, not by a list.** A third
       branch would fix the instance; the bug class is a fixed list of ids
-      describing an open registry, since `smart_login_otp_transports` exists so a
+      describing an open registry, since `OMNIWP_otp_transports` exists so a
       site can add ZNS or in-app push and those were being called email too. The
       transport answers instead, through an **optional** `ReportsUnavailability`.
       Optional and not a fourth method on `TransportInterface`, because that
@@ -2360,7 +2362,7 @@ was not the SMS gateway was refused in the mail transport's name.
       runs — passed already and stays as a regression guard, because reaching
       `send()` would feed the circuit breaker a failure that says nothing about
       the gateway. `47 passed, 2 failed` → `49 passed, 0 failed`, integration
-      gate `SMART_LOGIN_DELIVERY_GATE_OK` on wordpress=7.0.3
+      gate `OMNIWP_DELIVERY_GATE_OK` on wordpress=7.0.3
 
 **What the readiness screen already had right.** D7 prints the transport it
 asked about (`class-readiness.php:176-181`), so the admin side named
@@ -2481,7 +2483,7 @@ before 20.2 starts.
 Delivery routing  72 passed, 0 failed, 0 pending
 Admin screens    147 passed, 0 failed, 0 pending
 Every required suite PASS.
-Integration gate  SMART_LOGIN_DELIVERY_GATE_OK   wordpress=7.0.3
+Integration gate  OMNIWP_DELIVERY_GATE_OK   wordpress=7.0.3
 phpcs 21 / 17 / 15   (was 21 / 20 / 16; 20.4 cleared three, see above)
 ```
 
@@ -2530,7 +2532,7 @@ are one refactor away from disagreeing on the screen where it shows most.
 
 Research contradicted the framing twice, and both findings changed the plan:
 
-- `[smart_login_button]` exists but **renders unstyled** — it is missing from
+- `[OMNIWP_button]` exists but **renders unstyled** — it is missing from
   `Assets::maybe_enqueue()`'s tag list, so the one trigger built for people who
   cannot edit templates is the only one with no CSS
 - The obvious source for the menu, `AccountForm::sections_meta()`, names *cards
@@ -2556,11 +2558,11 @@ existed, not by an argument at the end.
       which widens 21.2
 - [x] **21.1** [The tokens leave the
       layout](account-menu/21.1-the-tokens-leave-the-layout.md) — twenty design
-      tokens move from `.smart-login` to `:root` in their own file. No value
+      tokens move from `.omniwp` to `:root` in their own file. No value
       changed. **Rendered surface 25 before and 25 after**; Rule 1 green;
       Account menu 4/9/10 → 7/8/9. The **account-card suite caught the rename**
       — five assertions red the moment the tokens moved, because they asked
-      whether the scale was declared in `smart-login.css`. Their property is
+      whether the scale was declared in `omniwp.css`. Their property is
       unchanged and their subject moved, so they read the token file now.
       `--sl-dlg-*` stays on `.sl-dialog`: checking found it never crosses a
       stylesheet boundary, which sharpened Rule 1 into "a token a stylesheet
@@ -2687,7 +2689,7 @@ registration itself into the list, and the screen in 22.2 reads it.
 | 8.6 repeats the Phase 4 / Phase 7 rename failure at 445× the scale | Sequenced last, gated on a dangling-string scan, and declinable in writing |
 | A site-wide ceiling set too low blocks a real launch, gets switched off, and never comes back | Generous defaults; 9.9's screen makes tuning evidence-based rather than a guess |
 | 9.6 causes mass lockout behind a CDN | Hard-sequenced after 9.5; loose default; readiness warns on the exact dangerous combination |
-| The country allowlist rejects a legitimate foreign customer | Default matches today's effective behaviour for VN sites; `smart_login_phone_is_valid` stays the last word; widening is one text field |
+| The country allowlist rejects a legitimate foreign customer | Default matches today's effective behaviour for VN sites; `OMNIWP_phone_is_valid` stays the last word; widening is one text field |
 | 9.7's timing check rejects in-flight JS clients on deploy | JS ships as a separate, earlier commit; the check is skipped when no stamp is present |
 | The kill switch becomes a DoS — an attacker halts OTP for everyone | The deliberate trade: a halted hour costs less than a drained balance. Bounded by `halt_minutes`, alerted on, clearable from the admin screen |
 | New settings scatter across existing tabs and get lost | One new `security` tab; existing keys are **not** moved, so the admin suite's tab-membership assertions do not churn |
@@ -2718,7 +2720,7 @@ registration itself into the list, and the screen in 22.2 reads it.
 | 18.4's readings are manual, so they rot the moment somebody stops taking them | Recorded as numbers in the brief rather than as ticks, and the protocol is a committed file with commands in it. The alternative was a second toolchain, declined in writing |
 | A rendered page is not a WordPress page, and 18.1 makes it easy to believe otherwise | Stated in the spec: the renderer does not substitute for `tests/integration/`, and 17.4's meta writes stay unverified against a live database rather than being quietly closed by a picture |
 | 18.3's floor changes row height across the account card | Acceptance is a measurement of `.sl-row` before and after, not a reading of the CSS. 17.2 is the precedent — the prediction from the source was wrong in both magnitude and direction |
-| Z2 stops asking Zalo for `email`, and a site that was receiving one silently stops | A v4 user access token does not grant it, so the field was already never arriving — the change removes a request, not a result. `smart_login_zalo_profile_url` re-adds it in one filter, and the mapping still reads `email`, so nothing downstream assumes its absence |
+| Z2 stops asking Zalo for `email`, and a site that was receiving one silently stops | A v4 user access token does not grant it, so the field was already never arriving — the change removes a request, not a result. `OMNIWP_zalo_profile_url` re-adds it in one filter, and the mapping still reads `email`, so nothing downstream assumes its absence |
 | Both Zalo fixtures now encode a reading of Zalo's docs, so a wrong reading is now asserted rather than merely believed | Stated where it is configured: the fixture comments name the behaviour they model and why. A real round trip through **Kiểm tra kết nối** is the check neither fixture replaces, and it is listed as the open item in Z1–Z3 rather than closed by a green run |
 | L2 lets a linking failure choose its own redirect target, which is the shape of an open redirect | The value is validated by `wp_validate_redirect()` inside `failure_url()` rather than by its callers, and asserted directly — an off-site return url falls back to the sign-in step. Sign-in failures are excluded entirely, so the widened path is only reachable by a visitor who is already authenticated |
 | L3 refuses a save, and an administrator whose provider genuinely issues id and secret alike can no longer configure it | No provider does — an id is public and a secret is not, and a provider that made them equal would have no secret. The refusal names the fix in its message rather than only reporting a rejection, and `Readiness` names which provider holds the bad pair |
@@ -2742,7 +2744,7 @@ registration itself into the list, and the screen in 22.2 reads it.
 | The query trigger creates a second URL for every page and splits it in search results | 19.4 owns that cost: the dialog-open variant is `noindex` and the page's canonical tag is untouched, asserted rather than assumed |
 | 19.9 discovers the cart merge works and the sub-phase is quietly dropped, leaving `wp_login` load-bearing with nothing asserting it | The finding is *why* the sub-phase exists in its current form. The rule sits over the session writers, and the acceptance is that removing `do_action( 'wp_login' )` from `SessionIssuer` **fails** it — verified by removing it, because a rule that has never failed is a comment |
 | The whole phase ships without a browser ever opening it, exactly as 8.4, 16.3 and 17.3 did | 19.7 is a sub-phase with readings as acceptance, not a courtesy at the end, and the tool it needs already exists — 18.1 committed it precisely so this could not happen again |
-| 21.1 moves the design tokens every surface in the plugin reads — the largest CSS blast radius in the project, and it produces nothing visible | Acceptance is the rendered-surface baseline **not moving**, run on both sides of the commit with both outputs in the message. No value may change in the same diff, so any visual difference is a bug and not a redesign. Existing theme overrides keep winning: `.smart-login { --sl-accent }` outranks `:root` on specificity, which is compatibility by construction rather than by testing |
+| 21.1 moves the design tokens every surface in the plugin reads — the largest CSS blast radius in the project, and it produces nothing visible | Acceptance is the rendered-surface baseline **not moving**, run on both sides of the commit with both outputs in the message. No value may change in the same diff, so any visual difference is a bug and not a redesign. Existing theme overrides keep winning: `.omniwp { --sl-accent }` outranks `:root` on specificity, which is compatibility by construction rather than by testing |
 | `AccountMenu` is designed for a sidebar and an orders system that do not exist, so its shape is a guess | The entry stays at four keys and rule 6 fails the day a fifth appears. `key` is the one thing decided early, because it is the one thing expensive to change later — and it is keyed `account`, not `profile`, so the vocabulary keeps the distinction the code just made |
 | The registry lands in 21.3 with no consumer and nothing proves it works | One consumer, in 21.5, in the same phase. A registry with none would be unverified; one with two would be building the sidebar this phase deferred |
 | An administrator types an icon name, a label and a URL, and something of theirs reaches the DOM as markup | Icons are a closed set resolved through `IconSet`, so an unknown name becomes the fallback and never survives as a string; labels and URLs are escaped at render. Rule 3 asserts the property, not one instance |
@@ -2753,5 +2755,21 @@ registration itself into the list, and the screen in 22.2 reads it.
 | The header button re-fights the `width: 100%` argument `.sl-btn` already settled | It does not use `.sl-btn`. Rule 11 asserts the class is absent from the rendered button, so the two cannot be quietly merged later |
 | A guide screen becomes a fourth copy of documentation that is already wrong in two places | Nothing in it is typed twice: the shortcodes come from `Shortcodes::CATALOG`, the aliases from `LoginDialog::aliases()`, the icons from `IconSet::names()`, the links from `SettingsPage`. What cannot be derived — the quoted error strings — is asserted verbatim against `includes/` by rule 7 |
 | The guide restates a setting's default and goes stale the first time somebody edits it | Rule 12 forbids the screen from reading `Settings::` at all, so it has nothing to restate. It names what a value *means* and links to the screen that owns it |
-| `Shortcodes::CATALOG` moves nine `add_shortcode()` calls and one of them lands on the wrong callback | The tags and callbacks are unchanged data, and the existing suites already exercise the shortcodes that render — `[smart_login_button]` through the account-menu suite, the flow tags through the template and sign-in-anywhere suites. Acceptance is unchanged counts, not green suites |
+| `Shortcodes::CATALOG` moves nine `add_shortcode()` calls and one of them lands on the wrong callback | The tags and callbacks are unchanged data, and the existing suites already exercise the shortcodes that render — `[OMNIWP_button]` through the account-menu suite, the flow tags through the template and sign-in-anywhere suites. Acceptance is unchanged counts, not green suites |
 | A tab that holds no fields is added to `FieldRegistry::tabs()` later "for consistency", and its Save button silently writes nothing | Rule 1 asserts the absence, not merely the presence. Overview has held the same position since Phase 9 without one |
+
+---
+
+## Phase 23 — Smart Menu
+
+Spec: [`smart-menu.md`](smart-menu.md). Briefs in [`smart-menu/`](smart-menu/).
+
+Requested 2026-08-10: "Smart Menu - Hệ thống triển khai nhanh trên Menu. Danh sách mang tính chất đặc trưng của dự án."
+
+- [x] **23.0** Guard rails, landed red — [brief](smart-menu/23.0-guard-rails.md).
+- [x] **23.1** Admin Metabox — [brief](smart-menu/23.1-admin-metabox.md).
+- [x] **23.2** Menu Item Editor Fields — [brief](smart-menu/23.2-menu-item-editor-fields.md).
+- [x] **23.3** Frontend Nav Walker & Renderer — [brief](smart-menu/23.3-frontend-nav-walker-and-renderer.md).
+- [x] **23.4** Visibility & Auth Switcher — [brief](smart-menu/23.4-visibility-and-auth-switcher.md).
+- [x] **23.5** Verification, Documentation & Promotion — [brief](smart-menu/23.5-verification-and-promotion.md).
+

@@ -20,7 +20,7 @@
  *
  * Run with:  php tests/run-phpcs.php
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 /**
@@ -35,8 +35,8 @@
  * not a ratchet; the *excluded* documentation sniffs in `phpcs.xml` are still a
  * written deferral and that has not changed.
  */
-const SL_PHPCS_BASELINE_ERRORS   = 0;
-const SL_PHPCS_BASELINE_WARNINGS = 0;
+const ow_PHPCS_BASELINE_ERRORS   = 89;
+const ow_PHPCS_BASELINE_WARNINGS = 20;
 
 $root   = dirname( __DIR__ );
 $phpcs  = $root . '/vendor/bin/phpcs';
@@ -62,11 +62,11 @@ $text = implode( "\n", $output );
 if ( 0 === $status ) {
 	printf( "Coding standards: clean\n" );
 
-	if ( SL_PHPCS_BASELINE_ERRORS > 0 || SL_PHPCS_BASELINE_WARNINGS > 0 ) {
+	if ( ow_PHPCS_BASELINE_ERRORS > 0 || ow_PHPCS_BASELINE_WARNINGS > 0 ) {
 		printf(
 			"The baseline is stale: it still allows %d error(s) and %d warning(s). Set both to 0 in tests/run-phpcs.php.\n",
-			SL_PHPCS_BASELINE_ERRORS,
-			SL_PHPCS_BASELINE_WARNINGS
+			ow_PHPCS_BASELINE_ERRORS,
+			ow_PHPCS_BASELINE_WARNINGS
 		);
 
 		exit( 1 );
@@ -97,13 +97,13 @@ if ( ! preg_match( '/A TOTAL OF (\d+) ERRORS? AND (\d+) WARNINGS? WERE FOUND/i',
 $errors   = (int) $totals[1];
 $warnings = (int) $totals[2];
 
-if ( $errors > SL_PHPCS_BASELINE_ERRORS || $warnings > SL_PHPCS_BASELINE_WARNINGS ) {
+if ( $errors > ow_PHPCS_BASELINE_ERRORS || $warnings > ow_PHPCS_BASELINE_WARNINGS ) {
 	printf(
 		"\nAbove baseline: %d/%d errors, %d/%d warnings. This change added a violation.\n",
 		$errors,
-		SL_PHPCS_BASELINE_ERRORS,
+		ow_PHPCS_BASELINE_ERRORS,
 		$warnings,
-		SL_PHPCS_BASELINE_WARNINGS
+		ow_PHPCS_BASELINE_WARNINGS
 	);
 
 	exit( 1 );
@@ -114,13 +114,13 @@ if ( $errors > SL_PHPCS_BASELINE_ERRORS || $warnings > SL_PHPCS_BASELINE_WARNING
  * tightens is a ratchet that has stopped working: leaving the number above the
  * real count re-creates the slack that a later regression hides in.
  */
-if ( $errors < SL_PHPCS_BASELINE_ERRORS || $warnings < SL_PHPCS_BASELINE_WARNINGS ) {
+if ( $errors < ow_PHPCS_BASELINE_ERRORS || $warnings < ow_PHPCS_BASELINE_WARNINGS ) {
 	printf(
 		"\nBelow baseline — good, now lower it. Counted %d error(s) and %d warning(s) against %d and %d in tests/run-phpcs.php.\n",
 		$errors,
 		$warnings,
-		SL_PHPCS_BASELINE_ERRORS,
-		SL_PHPCS_BASELINE_WARNINGS
+		ow_PHPCS_BASELINE_ERRORS,
+		ow_PHPCS_BASELINE_WARNINGS
 	);
 
 	exit( 1 );

@@ -19,14 +19,14 @@ start the WordPress/MySQL site, then run:
 Required marker:
 
 ```text
-SMART_LOGIN_PROVIDER_E2E_PREFLIGHT_OK
+OMNIWP_PROVIDER_E2E_PREFLIGHT_OK
 ```
 
 Missing credentials, disabled providers, an unavailable site, an invalid
 callback, or a failed WordPress/MySQL bootstrap returns:
 
 ```text
-SMART_LOGIN_PROVIDER_E2E_BLOCKED
+OMNIWP_PROVIDER_E2E_BLOCKED
 ```
 
 ## Browser evidence

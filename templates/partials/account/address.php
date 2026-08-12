@@ -15,31 +15,31 @@
  * The hardcoded "Quốc gia: Việt Nam" row is gone. A locked field carrying one
  * value communicates nothing and costs a row.
  *
- * Override at yourtheme/smart-login/partials/account/address.php
+ * Override at yourtheme/omniwp/partials/account/address.php
  *
- * @var array $sl_values
- * @var bool  $sl_required
+ * @var array $ow_values
+ * @var bool  $ow_required
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-use SmartLogin\Address\AddressFields;
-use SmartLogin\Frontend\TemplateLoader;
+use OmniWP\Address\AddressFields;
+use OmniWP\Frontend\TemplateLoader;
 
 defined( 'ABSPATH' ) || exit;
 
 ?>
 <section class="sl-card" id="sl-section-address">
-	<?php TemplateLoader::output( 'partials/account/card-head', array( 'sl_section' => 'address' ) ); ?>
+	<?php TemplateLoader::output( 'partials/account/card-head', array( 'ow_section' => 'address' ) ); ?>
 	<p class="sl-hint sl-card__note">
-		<?php esc_html_e( 'Địa chỉ này dùng cho cả đơn hàng và hoá đơn. Sửa ở đây là sửa luôn địa chỉ trong tab Địa chỉ.', 'smart-login' ); ?>
+		<?php esc_html_e( 'Địa chỉ này dùng cho cả đơn hàng và hoá đơn. Sửa ở đây là sửa luôn địa chỉ trong tab Địa chỉ.', 'omniwp' ); ?>
 	</p>
 
 	<?php
 	AddressFields::output(
 		array(
-			'values'   => $sl_values,
-			'required' => ! empty( $sl_required ),
+			'values'   => $ow_values,
+			'required' => ! empty( $ow_required ),
 		)
 	);
 	?>

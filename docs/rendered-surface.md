@@ -58,7 +58,7 @@ the password eye has an `aria-label`, and the gender radios are named by the
 ### 3. The row actions are below the minimum target size
 
 `.sl-action` declares `min-height: 32px` and **no `min-width`**
-(`smart-login.css`). Measured in a browser:
+(`omniwp.css`). Measured in a browser:
 
 | Control | Size |
 | --- | --- |

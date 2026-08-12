@@ -2,20 +2,20 @@
 /**
  * Front-end CSS/JS registration.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Frontend;
+namespace OmniWP\Frontend;
 
-use SmartLogin\Settings;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
 class Assets {
 
-	const HANDLE         = 'smart-login';
-	const ADDRESS_HANDLE = 'smart-login-address';
-	const CAPTCHA_HANDLE = 'smart-login-captcha';
+	const HANDLE         = 'omniwp';
+	const ADDRESS_HANDLE = 'omniwp-address';
+	const CAPTCHA_HANDLE = 'omniwp-captcha';
 
 	/**
 	 * The design tokens, split out in 21.1.
@@ -23,7 +23,8 @@ class Assets {
 	 * A dependency of every stylesheet that reads a `--sl-*`, so no caller has
 	 * to remember it and no second surface has to restate a colour.
 	 */
-	const TOKENS_HANDLE = 'smart-login-tokens';
+	const TOKENS_HANDLE = 'omniwp-tokens';
+	const BASE_HANDLE   = 'omniwp-base';
 
 	/**
 	 * The header button and its account menu, split out in 21.5.
@@ -33,7 +34,8 @@ class Assets {
 	 * token with them and nothing else — that is the cost the two-stage asset
 	 * split declined, and a header button must not quietly re-incur it.
 	 */
-	const BUTTON_HANDLE = 'smart-login-button';
+	const BUTTON_HANDLE = 'omniwp-button';
+	const HUB_HANDLE    = 'omniwp-account-hub';
 
 	public function register(): void {
 		add_action( 'wp_enqueue_scripts', array( $this, 'register_assets' ) );
@@ -48,17 +50,13 @@ class Assets {
 	 * unstyled form.
 	 */
 	public function maybe_enqueue(): void {
-		if ( ! is_singular() ) {
+		global $post;
+
+		if ( ! is_a( $post, 'WP_Post' ) ) {
 			return;
 		}
 
-		$post = get_post();
-
-		if ( ! $post || '' === (string) $post->post_content ) {
-			return;
-		}
-
-		foreach ( array( 'smart_auth', 'smart_login', 'smart_register', 'smart_verify_otp', 'smart_forgot_password', 'smart_profile' ) as $tag ) {
+		foreach ( array( 'omniwp_auth', 'smart_auth', 'omniwp', 'smart_login', 'omniwp_register', 'smart_register', 'omniwp_verify_otp', 'smart_verify_otp', 'omniwp_forgot_password', 'smart_forgot_password', 'omniwp_profile', 'smart_profile', 'omniwp_account', 'smart_account' ) as $tag ) {
 			if ( has_shortcode( $post->post_content, $tag ) ) {
 				self::enqueue();
 				return;
@@ -76,7 +74,7 @@ class Assets {
 		 * header button that arrives unstyled and then snaps into place is more
 		 * visible than a form doing the same.
 		 */
-		if ( has_shortcode( $post->post_content, 'smart_login_button' ) ) {
+		if ( has_shortcode( $post->post_content, 'omniwp_button' ) || has_shortcode( $post->post_content, 'smart_button' ) ) {
 			self::enqueue_button();
 		}
 	}
@@ -84,40 +82,75 @@ class Assets {
 	public function register_assets(): void {
 		wp_register_style(
 			self::TOKENS_HANDLE,
-			SMART_LOGIN_URL . 'assets/css/smart-login-tokens.css',
+			OMNIWP_URL . 'assets/css/omniwp-tokens.css',
 			array(),
-			SMART_LOGIN_VERSION
+			OMNIWP_VERSION
+		);
+
+		$primary_color = (string) Settings::get( 'branding.primary_color', '#e30613' );
+		$primary_hover = (string) Settings::get( 'branding.primary_hover', '#c00410' );
+		$text_color    = (string) Settings::get( 'branding.text_color', '#1f2430' );
+		$bg_color      = (string) Settings::get( 'branding.bg_color', '#ffffff' );
+		$border_radius = (string) Settings::get( 'branding.border_radius', '5px' );
+
+		$custom_css = ":root {\n";
+		if ( ! empty( $primary_color ) ) {
+			$custom_css .= "  --sl-accent: {$primary_color} !important;\n";
+		}
+		if ( ! empty( $primary_hover ) ) {
+			$custom_css .= "  --sl-accent-dark: {$primary_hover} !important;\n";
+		}
+		if ( ! empty( $text_color ) ) {
+			$custom_css .= "  --sl-text: {$text_color} !important;\n";
+		}
+		if ( ! empty( $bg_color ) ) {
+			$custom_css .= "  --sl-surface: {$bg_color} !important;\n";
+		}
+		if ( ! empty( $border_radius ) ) {
+			$custom_css .= "  --sl-radius: {$border_radius} !important;\n";
+			$custom_css .= "  --sl-radius-card: {$border_radius} !important;\n";
+			$custom_css .= "  --sl-radius-sm: {$border_radius} !important;\n";
+		}
+		$custom_css .= "}\n";
+
+		wp_add_inline_style( self::TOKENS_HANDLE, $custom_css );
+
+		wp_register_style(
+			self::BASE_HANDLE,
+			OMNIWP_URL . 'assets/css/omniwp-base.css',
+			array( self::TOKENS_HANDLE ),
+			OMNIWP_VERSION
 		);
 
 		wp_register_style(
 			self::HANDLE,
-			SMART_LOGIN_URL . 'assets/css/smart-login.css',
-			array( self::TOKENS_HANDLE ),
-			SMART_LOGIN_VERSION
+			OMNIWP_URL . 'assets/css/omniwp.css',
+			array( self::BASE_HANDLE ),
+			OMNIWP_VERSION
 		);
 
 		wp_register_style(
 			self::BUTTON_HANDLE,
-			SMART_LOGIN_URL . 'assets/css/smart-login-button.css',
-			array( self::TOKENS_HANDLE ),
-			SMART_LOGIN_VERSION
+			OMNIWP_URL . 'assets/css/omniwp-button.css',
+			array( self::BASE_HANDLE ),
+			OMNIWP_VERSION
 		);
 
 		// Manners, not mechanics: the menu already opens and closes without it.
 		// See the file header for what it adds and what it must never remove.
 		wp_register_script(
 			self::BUTTON_HANDLE,
-			SMART_LOGIN_URL . 'assets/js/smart-login-account.js',
+			OMNIWP_URL . 'assets/js/omniwp-account.js',
 			array(),
-			SMART_LOGIN_VERSION,
+			OMNIWP_VERSION,
 			true
 		);
 
 		wp_register_script(
 			self::HANDLE,
-			SMART_LOGIN_URL . 'assets/js/smart-login.js',
+			OMNIWP_URL . 'assets/js/omniwp.js',
 			array(),
-			SMART_LOGIN_VERSION,
+			OMNIWP_VERSION,
 			true
 		);
 
@@ -125,7 +158,7 @@ class Assets {
 			self::ADDRESS_HANDLE,
 			self::address_script(),
 			array(),
-			SMART_LOGIN_VERSION,
+			OMNIWP_VERSION,
 			true
 		);
 
@@ -134,38 +167,39 @@ class Assets {
 		// loads no third-party script at all, which is half the reason the mode
 		// exists: a captcha costs a request and a privacy footprint even when
 		// nobody looks at it.
-		$captcha_script = \SmartLogin\Security\Captcha::script_url();
+		$captcha_script = \OmniWP\Security\Captcha::script_url();
 
 		if ( '' !== $captcha_script ) {
 			wp_register_script( self::CAPTCHA_HANDLE, $captcha_script, array(), null, true ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion -- the provider versions its own endpoint.
 		}
 
-		wp_localize_script( self::ADDRESS_HANDLE, 'SmartLoginAddress', self::address_config() );
+		wp_localize_script( self::ADDRESS_HANDLE, 'OmniWPAddress', self::address_config() );
 
 		wp_localize_script(
 			self::HANDLE,
-			'SmartLoginData',
+			'OmniWPData',
 			array(
-				'restUrl'   => esc_url_raw( rest_url( 'smart-login/v1/' ) ),
+				'restUrl'   => esc_url_raw( rest_url( 'omniwp/v1/' ) ),
 				'nonce'     => wp_create_nonce( 'wp_rest' ),
 				// The same signed timestamp the HTML forms carry. Until it was
 				// sent, RequestGuard::verify_rest() had nothing to inspect on the
 				// JS path — it was not weak there, it was inert.
-				'stamp'     => \SmartLogin\Security\RequestGuard::stamp( 'rest' ),
+				'stamp'     => \OmniWP\Security\RequestGuard::stamp( 'rest' ),
 				'otpLength' => min( 8, max( 4, Settings::get_int( 'otp.length', 6 ) ) ),
 				'i18n'      => array(
-					'resend'      => __( 'Gửi lại', 'smart-login' ),
+					'resend'           => __( 'Gửi lại', 'omniwp' ),
 					/* translators: %d: seconds remaining before the code can be resent. */
-					'resendIn'    => __( 'Gửi lại sau %ds', 'smart-login' ),
-					'expired'     => __( 'Mã đã hết hạn', 'smart-login' ),
-					'sending'     => __( 'Đang gửi…', 'smart-login' ),
-					'showPass'    => __( 'Hiện mật khẩu', 'smart-login' ),
-					'hidePass'    => __( 'Ẩn mật khẩu', 'smart-login' ),
+					'resendIn'         => __( 'Gửi lại sau %ds', 'omniwp' ),
+					'expired'          => __( 'Mã đã hết hạn', 'omniwp' ),
+					'sending'          => __( 'Đang gửi…', 'omniwp' ),
+					'showPass'         => __( 'Hiện mật khẩu', 'omniwp' ),
+					'hidePass'         => __( 'Ẩn mật khẩu', 'omniwp' ),
 					/* translators: %s: masked phone number or email address. */
-					'contactSent' => __( 'Mã OTP đã được gửi tới %s.', 'smart-login' ),
-					'contactDone' => __( 'Thông tin liên hệ đã được xác thực.', 'smart-login' ),
-					'contactWait' => __( 'Đang xử lý…', 'smart-login' ),
-					'unsaved'     => __( 'Có thay đổi chưa lưu', 'smart-login' ),
+					'contactSent'      => __( 'Mã OTP đã được gửi tới %s.', 'omniwp' ),
+					'contactDone'      => __( 'Thông tin liên hệ đã được xác thực.', 'omniwp' ),
+					'contactCancelled' => __( 'Đã hủy yêu cầu xác thực.', 'omniwp' ),
+					'contactWait'      => __( 'Đang xử lý…', 'omniwp' ),
+					'unsaved'          => __( 'Có thay đổi chưa lưu', 'omniwp' ),
 				),
 			)
 		);
@@ -182,7 +216,7 @@ class Assets {
 	 * a payload instead of a list.
 	 */
 	public static function address_script(): string {
-		return SMART_LOGIN_URL . 'assets/js/address.js';
+		return OMNIWP_URL . 'assets/js/address.js';
 	}
 
 	/**
@@ -190,12 +224,12 @@ class Assets {
 	 */
 	public static function address_config(): array {
 		return array(
-			'restUrl' => esc_url_raw( rest_url( 'smart-login/v1/' ) ),
+			'restUrl' => esc_url_raw( rest_url( 'omniwp/v1/' ) ),
 			'i18n'    => array(
-				'chooseProvince' => __( 'Chọn Tỉnh/Thành phố', 'smart-login' ),
-				'chooseWard'     => __( 'Chọn Phường/Xã', 'smart-login' ),
-				'loading'        => __( 'Đang tải…', 'smart-login' ),
-				'noResults'      => __( 'Không tìm thấy', 'smart-login' ),
+				'chooseProvince' => __( 'Chọn Tỉnh/Thành phố', 'omniwp' ),
+				'chooseWard'     => __( 'Chọn Phường/Xã', 'omniwp' ),
+				'loading'        => __( 'Đang tải…', 'omniwp' ),
+				'noResults'      => __( 'Không tìm thấy', 'omniwp' ),
 			),
 		);
 	}

@@ -8,40 +8,40 @@
  * phone normalisation and the template placeholder engine, plus name splitting
  * and date-of-birth parsing.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 require __DIR__ . '/stubs.php';
 
-use SmartLogin\Address\AddressFields;
-use SmartLogin\Address\AddressNormalizer;
-use SmartLogin\Address\AddressRepository;
-use SmartLogin\Address\WooAddress;
-use SmartLogin\Auth\AuthContext;
-use SmartLogin\Auth\OAuthTransactionStore;
-use SmartLogin\Auth\PendingSession;
-use SmartLogin\Auth\ProviderAuthController;
-use SmartLogin\Auth\Providers\GoogleIdTokenVerifier;
-use SmartLogin\Auth\Providers\LoginProviderInterface;
-use SmartLogin\Auth\Providers\OAuthAuthorizationUrl;
-use SmartLogin\Auth\Providers\ProviderIdentity;
-use SmartLogin\Auth\Providers\ProviderCredentials;
-use SmartLogin\Auth\Providers\ProviderRedirect;
-use SmartLogin\Auth\Providers\ProviderRegistry;
-use SmartLogin\Identity\Phone;
-use SmartLogin\Identity\UserManager;
-use SmartLogin\OTP\Transports\TransportRouter;
-use SmartLogin\OTP\Transports\WebhookTransport;
-use SmartLogin\OTP\OtpRepository;
-use SmartLogin\OTP\OtpService;
-use SmartLogin\OTP\Placeholders;
-use SmartLogin\Installer;
-use SmartLogin\Security\AuditLog;
-use SmartLogin\Security\Captcha;
-use SmartLogin\Security\Client;
-use SmartLogin\Security\RateLimiter;
-use SmartLogin\Security\RequestGuard;
-use SmartLogin\Settings;
+use OmniWP\Address\AddressFields;
+use OmniWP\Address\AddressNormalizer;
+use OmniWP\Address\AddressRepository;
+use OmniWP\Address\WooAddress;
+use OmniWP\Auth\AuthContext;
+use OmniWP\Auth\OAuthTransactionStore;
+use OmniWP\Auth\PendingSession;
+use OmniWP\Auth\ProviderAuthController;
+use OmniWP\Auth\Providers\GoogleIdTokenVerifier;
+use OmniWP\Auth\Providers\LoginProviderInterface;
+use OmniWP\Auth\Providers\OAuthAuthorizationUrl;
+use OmniWP\Auth\Providers\ProviderIdentity;
+use OmniWP\Auth\Providers\ProviderCredentials;
+use OmniWP\Auth\Providers\ProviderRedirect;
+use OmniWP\Auth\Providers\ProviderRegistry;
+use OmniWP\Identity\Phone;
+use OmniWP\Identity\UserManager;
+use OmniWP\OTP\Transports\TransportRouter;
+use OmniWP\OTP\Transports\WebhookTransport;
+use OmniWP\OTP\OtpRepository;
+use OmniWP\OTP\OtpService;
+use OmniWP\OTP\Placeholders;
+use OmniWP\Installer;
+use OmniWP\Security\AuditLog;
+use OmniWP\Security\Captcha;
+use OmniWP\Security\Client;
+use OmniWP\Security\RateLimiter;
+use OmniWP\Security\RequestGuard;
+use OmniWP\Settings;
 
 $passed = 0;
 $failed = 0;
@@ -175,12 +175,12 @@ check( 'AuthContext canonicalises provider', 'google', $context->provider );
 check( 'AuthContext generates correlation id', 32, strlen( $context->correlation_id ) );
 
 $bad_google_token = ( new GoogleIdTokenVerifier() )->verify( 'not-a-jwt' );
-check( 'malformed Google ID token fails closed', 'smart_login_google_claims', $bad_google_token->get_error_code() );
+check( 'malformed Google ID token fails closed', 'OMNIWP_google_claims', $bad_google_token->get_error_code() );
 
 // ---------------------------------------------------------------------
 section( 'OAuth authorization URL safety' );
 
-$callback_url = 'http://localhost:10004/wp-admin/admin-post.php?action=smart_login_provider_callback&provider=google';
+$callback_url = 'http://localhost:10004/wp-admin/admin-post.php?action=OMNIWP_provider_callback&provider=google';
 $authorize_url = OAuthAuthorizationUrl::build(
 	'https://accounts.google.com/o/oauth2/v2/auth',
 	array(
@@ -194,7 +194,7 @@ parse_str( (string) parse_url( $authorize_url, PHP_URL_QUERY ), $authorize_query
 check( 'nested OAuth callback survives query parsing', $callback_url, $authorize_query['redirect_uri'] ?? '' );
 check( 'callback provider does not escape into OAuth query', false, array_key_exists( 'provider', $authorize_query ) );
 check( 'nested callback ampersand is RFC3986 encoded', true, false !== strpos( $authorize_url, '%26provider%3Dgoogle' ) );
-check( 'provider failures leave admin-post callback', 'https://example.test/?smart_login_step=login', ProviderAuthController::failure_url() );
+check( 'provider failures leave admin-post callback', 'https://example.test/?OMNIWP_step=login', ProviderAuthController::failure_url() );
 
 // ---------------------------------------------------------------------
 section( 'Provider credential storage' );
@@ -284,7 +284,7 @@ section( 'Where a provider failure returns to' );
  */
 check(
 	'a failure with no return url still reaches the sign-in step',
-	'https://example.test/?smart_login_step=login',
+	'https://example.test/?OMNIWP_step=login',
 	ProviderAuthController::failure_url()
 );
 check(
@@ -294,7 +294,7 @@ check(
 );
 check(
 	'an off-site return url is refused',
-	'https://example.test/?smart_login_step=login',
+	'https://example.test/?OMNIWP_step=login',
 	ProviderAuthController::failure_url( 'https://evil.test/collect' )
 );
 
@@ -373,8 +373,7 @@ check( 'a widened list does not weaken the Vietnamese prefix check', false, Phon
 // The documented escape hatch has to survive the new branch, in both
 // directions — a filter that can only tighten is not the last word.
 Settings::update( array( 'identity.allowed_country_codes' => '84' ) );
-add_filter(
-	'smart_login_phone_is_valid',
+add_filter( 'omniwp_phone_is_valid',
 	static function ( $valid, $canonical ) {
 		return 0 === strpos( $canonical, '254' ) ? true : $valid;
 	},
@@ -383,7 +382,7 @@ add_filter(
 );
 
 check( 'the filter can still admit a number the allowlist refused', true, Phone::is_valid( '254712345678' ) );
-remove_all_filters( 'smart_login_phone_is_valid' );
+remove_all_filters( 'omniwp_phone_is_valid' );
 
 Settings::update( array( 'identity.allowed_country_codes' => '' ) );
 
@@ -420,8 +419,8 @@ check( 'phone formatting variants share one lock key', 1, count( array_unique( $
 // ---------------------------------------------------------------------
 section( 'Captcha — adaptive means invisible on a quiet day (Phase 9.8)' );
 
-$GLOBALS['sl_transients'] = array();
-$GLOBALS['sl_options']    = $GLOBALS['sl_options'] ?? array();
+$GLOBALS['ow_transients'] = array();
+$GLOBALS['ow_options']    = $GLOBALS['ow_options'] ?? array();
 RateLimiter::resume();
 
 // Not configured: no challenge, whatever the mode says.
@@ -471,7 +470,7 @@ $pressure_limiter->check_identify( '0969789301' );
 $pressure_limiter->check_identify( '0969789302' );
 check( 'half the identify allowance is pressure', true, Captcha::under_pressure() );
 
-$GLOBALS['sl_transients'] = array();
+$GLOBALS['ow_transients'] = array();
 check( 'and it subsides with the counter', false, Captcha::under_pressure() );
 
 // always mode ignores all of it.
@@ -479,11 +478,11 @@ Settings::update( array( 'security.captcha_mode' => 'always' ) );
 check( 'always mode challenges regardless', true, Captcha::is_required() );
 
 // A required challenge with no token is refused before any HTTP call.
-check( 'a missing token is refused', 'smart_login_captcha_missing', Captcha::check( array() )->get_error_code() );
+check( 'a missing token is refused', 'OMNIWP_captcha_missing', Captcha::check( array() )->get_error_code() );
 
 // And a token that cannot be verified is refused too: the stub gateway answers
 // 500, which must read as "no" rather than "carry on".
-check( 'an unverifiable token is refused', 'smart_login_captcha_failed', Captcha::check( array( 'cf-turnstile-response' => 'token' ) )->get_error_code() );
+check( 'an unverifiable token is refused', 'OMNIWP_captcha_failed', Captcha::check( array( 'cf-turnstile-response' => 'token' ) )->get_error_code() );
 
 Captcha::clear_secret();
 Settings::update(
@@ -493,22 +492,22 @@ Settings::update(
 		'security.max_identify_per_ip_hour' => 30,
 	)
 );
-$GLOBALS['sl_transients'] = array();
+$GLOBALS['ow_transients'] = array();
 
 // ---------------------------------------------------------------------
 section( 'RequestGuard::verify_rest — parity with the form path (Phase 9.7)' );
 
-check( 'a tripped honeypot is refused', true, is_wp_error( RequestGuard::verify_rest( 'rest', array( 'smart_login_website' => 'bot' ) ) ) );
+check( 'a tripped honeypot is refused', true, is_wp_error( RequestGuard::verify_rest( 'rest', array( 'OMNIWP_website' => 'bot' ) ) ) );
 
 // A stamp younger than the minimum fill time is a machine, not a person.
 $fresh = RequestGuard::stamp( 'rest' );
-check( 'a stamp from this instant is too fast', 'smart_login_too_fast', RequestGuard::verify_rest( 'rest', array( 'smart_login_ts' => $fresh ) )->get_error_code() );
+check( 'a stamp from this instant is too fast', 'OMNIWP_too_fast', RequestGuard::verify_rest( 'rest', array( 'OMNIWP_ts' => $fresh ) )->get_error_code() );
 
 // A forged signature must not pass, whatever the timestamp says.
-check( 'a forged stamp is refused', 'smart_login_bad_stamp', RequestGuard::verify_rest( 'rest', array( 'smart_login_ts' => ( time() - 60 ) . '.deadbeef' ) )->get_error_code() );
+check( 'a forged stamp is refused', 'OMNIWP_bad_stamp', RequestGuard::verify_rest( 'rest', array( 'OMNIWP_ts' => ( time() - 60 ) . '.deadbeef' ) )->get_error_code() );
 
 // Signed for a different action is a different secret.
-check( 'a stamp signed for another action is refused', 'smart_login_bad_stamp', RequestGuard::verify_rest( 'rest', array( 'smart_login_ts' => RequestGuard::stamp( 'login' ) ) )->get_error_code() );
+check( 'a stamp signed for another action is refused', 'OMNIWP_bad_stamp', RequestGuard::verify_rest( 'rest', array( 'OMNIWP_ts' => RequestGuard::stamp( 'login' ) ) )->get_error_code() );
 
 // The assertion that keeps this from being a breaking change: a cookie-less
 // native client sends no stamp at all and must still be served.
@@ -524,7 +523,7 @@ Settings::update(
 	)
 );
 
-$GLOBALS['sl_transients'] = array();
+$GLOBALS['ow_transients'] = array();
 $GLOBALS['wpdb']->writes  = array();
 
 for ( $i = 0; $i < 200; $i++ ) {
@@ -557,7 +556,7 @@ for ( $i = 0; $i < 50; $i++ ) {
 check( 'lockout events are never sampled', 50, count( $GLOBALS['wpdb']->writes ) );
 
 $GLOBALS['wpdb']->writes  = array();
-$GLOBALS['sl_transients'] = array();
+$GLOBALS['ow_transients'] = array();
 Settings::update( array( 'security.audit_max_per_event_hour' => 0 ) );
 
 for ( $i = 0; $i < 30; $i++ ) {
@@ -568,7 +567,7 @@ check( 'a cap of 0 records everything', 30, count( $GLOBALS['wpdb']->writes ) );
 
 Settings::update( array( 'security.audit_max_per_event_hour' => 500 ) );
 $GLOBALS['wpdb']->writes  = array();
-$GLOBALS['sl_transients'] = array();
+$GLOBALS['ow_transients'] = array();
 
 // ---------------------------------------------------------------------
 section( 'Installer::cleanup — the configured retention finally applies (Phase 9.9)' );
@@ -612,7 +611,7 @@ Settings::update(
 	)
 );
 
-$GLOBALS['sl_transients'] = array();
+$GLOBALS['ow_transients'] = array();
 $_SERVER['REMOTE_ADDR']   = '203.0.113.40';
 
 $spray = new RateLimiter( new OtpRepository() );
@@ -637,7 +636,7 @@ $spray->clear_login_failures( '0969789101' );
 check( 'a success does not clear the address-wide lock', true, $spray->ip_lock_remaining() > 0 );
 
 // The per-account lock still works on its own, unchanged by any of this.
-$GLOBALS['sl_transients'] = array();
+$GLOBALS['ow_transients'] = array();
 $_SERVER['REMOTE_ADDR']   = '203.0.113.42';
 Settings::update( array( 'security.max_login_failures_per_ip_hour' => 0 ) );
 
@@ -654,7 +653,7 @@ Settings::update(
 		'security.ip_lockout_minutes'             => 15,
 	)
 );
-$GLOBALS['sl_transients'] = array();
+$GLOBALS['ow_transients'] = array();
 
 // ---------------------------------------------------------------------
 section( 'Client::in_cidr — v4 and v6 (Phase 9.5)' );
@@ -679,7 +678,7 @@ check( 'an empty range matches nothing', false, Client::in_cidr( '1.2.3.4', '' )
 // ---------------------------------------------------------------------
 section( 'Client::ip — a header is trusted only from a trusted peer (Phase 9.5)' );
 
-$GLOBALS['sl_filters']            = array();
+$GLOBALS['ow_filters']            = array();
 $_SERVER['REMOTE_ADDR']           = '203.0.113.9';
 $_SERVER['HTTP_CF_CONNECTING_IP'] = '198.51.100.7';
 
@@ -723,19 +722,18 @@ Settings::update(
 		'security.trusted_proxy_cidrs' => '',
 	)
 );
-add_filter( 'smart_login_trust_proxy_headers', '__return_true' );
+add_filter( 'omniwp_trust_proxy_headers', '__return_true' );
 check( 'the legacy filter alone does not grant trust', '203.0.113.9', Client::ip() );
 
 // Paired with a range filter, a managed deployment still works without settings.
-add_filter(
-	'smart_login_trusted_proxy_cidrs',
+add_filter( 'omniwp_trusted_proxy_cidrs',
 	static function () {
 		return array( '203.0.113.0/24' );
 	}
 );
 check( 'filter-configured deployments still work', '198.51.100.8', Client::ip() );
 
-$GLOBALS['sl_filters'] = array();
+$GLOBALS['ow_filters'] = array();
 unset( $_SERVER['HTTP_X_FORWARDED_FOR'] );
 Settings::update(
 	array(
@@ -748,7 +746,7 @@ Settings::update(
 section( 'RateLimiter — the identify oracle costs something (Phase 9.4)' );
 
 Settings::update( array( 'security.max_identify_per_ip_hour' => 3 ) );
-$GLOBALS['sl_transients'] = array();
+$GLOBALS['ow_transients'] = array();
 $_SERVER['REMOTE_ADDR']   = '203.0.113.20';
 
 $idfy = new RateLimiter( new OtpRepository() );
@@ -761,7 +759,7 @@ check( 'third lookup allowed', true, true === $idfy->check_identify( '0969789003
 
 $over = $idfy->check_identify( '0969789004' );
 check( 'a fourth distinct identifier from one IP is refused', true, is_wp_error( $over ) );
-check( 'the refusal is the identify limit', 'smart_login_identify_limit', is_wp_error( $over ) ? $over->get_error_code() : '' );
+check( 'the refusal is the identify limit', 'OMNIWP_identify_limit', is_wp_error( $over ) ? $over->get_error_code() : '' );
 
 // The whole point: refusal must not depend on whether the subject exists, or
 // the limit becomes the oracle it was meant to close.
@@ -769,7 +767,7 @@ $_SERVER['REMOTE_ADDR'] = '203.0.113.21';
 check( 'a different IP has its own budget', true, true === $idfy->check_identify( '0969789004' ) );
 
 Settings::update( array( 'security.max_identify_per_ip_hour' => 0 ) );
-$GLOBALS['sl_transients'] = array();
+$GLOBALS['ow_transients'] = array();
 $_SERVER['REMOTE_ADDR']   = '203.0.113.22';
 for ( $i = 0; $i < 10; $i++ ) {
 	$idfy->check_identify( '096978900' . $i );
@@ -777,7 +775,7 @@ for ( $i = 0; $i < 10; $i++ ) {
 check( 'a limit of 0 disables the check', true, true === $idfy->check_identify( '0969789999' ) );
 
 Settings::update( array( 'security.max_identify_per_ip_hour' => 30 ) );
-$GLOBALS['sl_transients'] = array();
+$GLOBALS['ow_transients'] = array();
 
 // ---------------------------------------------------------------------
 section( 'RateLimiter — site-wide budget and kill switch (Phase 9.1)' );
@@ -789,7 +787,7 @@ section( 'RateLimiter — site-wide budget and kill switch (Phase 9.1)' );
  * count_* method indistinguishable through it. RateLimiter injects its
  * repository, so the honest instrument is a repository, not a smarter wpdb.
  */
-class SmartLoginBudgetRepo extends OtpRepository {
+class OmniWPBudgetRepo extends OtpRepository {
 
 	/** @var int Rows the site is pretending to have sent this hour. */
 	public $sent = 0;
@@ -829,10 +827,10 @@ Settings::update(
 );
 
 RateLimiter::resume();
-$GLOBALS['sl_mails']    = array();
-$GLOBALS['sl_options']['admin_email'] = 'ops@example.test';
+$GLOBALS['ow_mails']    = array();
+$GLOBALS['ow_options']['admin_email'] = 'ops@example.test';
 
-$budget_repo = new SmartLoginBudgetRepo();
+$budget_repo = new OmniWPBudgetRepo();
 $budget      = new RateLimiter( $budget_repo );
 
 // Two sends to two different destinations from two different addresses. Neither
@@ -851,9 +849,9 @@ $_SERVER['REMOTE_ADDR'] = '203.0.113.13';
 $refused                = $budget->check_otp_send( '84969789003', 'register' );
 
 check( 'a third distinct destination on a third IP is refused', true, is_wp_error( $refused ) );
-check( 'the refusal does not name the site budget', 'smart_login_unavailable', is_wp_error( $refused ) ? $refused->get_error_code() : '' );
+check( 'the refusal does not name the site budget', 'OMNIWP_unavailable', is_wp_error( $refused ) ? $refused->get_error_code() : '' );
 check( 'the halt is recorded', true, $budget->halted_for() > 0 );
-check( 'crossing the ceiling mails the admin once', 1, count( $GLOBALS['sl_mails'] ) );
+check( 'crossing the ceiling mails the admin once', 1, count( $GLOBALS['ow_mails'] ) );
 
 // While halted, the limiter must shed load rather than add to it: no counting
 // query at all, and still no second mail.
@@ -862,7 +860,7 @@ $again                = $budget->check_otp_send( '84969789004', 'register' );
 
 check( 'a halted site is refused', true, is_wp_error( $again ) );
 check( 'a halted site runs no counting query', 0, $budget_repo->counted );
-check( 'a halted site does not mail again', 1, count( $GLOBALS['sl_mails'] ) );
+check( 'a halted site does not mail again', 1, count( $GLOBALS['ow_mails'] ) );
 
 RateLimiter::resume();
 check( 'resume() clears the halt', 0, $budget->halted_for() );
@@ -899,17 +897,17 @@ check( 'collapses whitespace (last)', 'Trần Thị', $spaced['last'] );
 // ---------------------------------------------------------------------
 section( 'RegisterHandler::parse_dob' );
 
-require_once SMART_LOGIN_DIR . 'includes/Auth/class-register-handler.php';
+require_once OMNIWP_DIR . 'includes/Auth/class-register-handler.php';
 
-check( 'dd/mm/yyyy', '1994-10-05', \SmartLogin\Auth\RegisterHandler::parse_dob( '05/10/1994' ) );
-check( 'yyyy-mm-dd', '1994-10-05', \SmartLogin\Auth\RegisterHandler::parse_dob( '1994-10-05' ) );
-check( 'dd-mm-yyyy', '1994-10-05', \SmartLogin\Auth\RegisterHandler::parse_dob( '05-10-1994' ) );
-check( 'rejects day 32', '', \SmartLogin\Auth\RegisterHandler::parse_dob( '32/10/1994' ) );
-check( 'rejects month 13', '', \SmartLogin\Auth\RegisterHandler::parse_dob( '05/13/1994' ) );
-check( 'rejects a future date', '', \SmartLogin\Auth\RegisterHandler::parse_dob( '01/01/2999' ) );
-check( 'rejects year 1800', '', \SmartLogin\Auth\RegisterHandler::parse_dob( '01/01/1800' ) );
-check( 'rejects gibberish', '', \SmartLogin\Auth\RegisterHandler::parse_dob( 'hôm qua' ) );
-check( 'empty stays empty', '', \SmartLogin\Auth\RegisterHandler::parse_dob( '' ) );
+check( 'dd/mm/yyyy', '1994-10-05', \OmniWP\Auth\RegisterHandler::parse_dob( '05/10/1994' ) );
+check( 'yyyy-mm-dd', '1994-10-05', \OmniWP\Auth\RegisterHandler::parse_dob( '1994-10-05' ) );
+check( 'dd-mm-yyyy', '1994-10-05', \OmniWP\Auth\RegisterHandler::parse_dob( '05-10-1994' ) );
+check( 'rejects day 32', '', \OmniWP\Auth\RegisterHandler::parse_dob( '32/10/1994' ) );
+check( 'rejects month 13', '', \OmniWP\Auth\RegisterHandler::parse_dob( '05/13/1994' ) );
+check( 'rejects a future date', '', \OmniWP\Auth\RegisterHandler::parse_dob( '01/01/2999' ) );
+check( 'rejects year 1800', '', \OmniWP\Auth\RegisterHandler::parse_dob( '01/01/1800' ) );
+check( 'rejects gibberish', '', \OmniWP\Auth\RegisterHandler::parse_dob( 'hôm qua' ) );
+check( 'empty stays empty', '', \OmniWP\Auth\RegisterHandler::parse_dob( '' ) );
 
 // ---------------------------------------------------------------------
 section( 'Placeholders — JSON safety' );
@@ -985,7 +983,7 @@ $intent_otp  = new OtpService( $intent_repo );
 $mismatch    = $intent_otp->verify( 'test-token', '123456', OtpService::INTENT_LOGIN );
 
 check( 'cross-intent OTP is rejected', true, is_wp_error( $mismatch ) );
-check( 'cross-intent error code', 'smart_login_wrong_intent', $mismatch->get_error_code() );
+check( 'cross-intent error code', 'OMNIWP_wrong_intent', $mismatch->get_error_code() );
 check( 'intent mismatch does not consume the row', 0, $intent_repo->consume_calls );
 
 $verified = $intent_otp->verify( 'test-token', '123456', OtpService::INTENT_RECOVER );
@@ -997,7 +995,7 @@ $replay_repo->consume_result = false;
 $replay                      = ( new OtpService( $replay_repo ) )->verify( 'test-token', '123456', OtpService::INTENT_RECOVER );
 
 check( 'losing an atomic consume race is rejected', true, is_wp_error( $replay ) );
-check( 'atomic consume race uses replay error', 'smart_login_otp_used', $replay->get_error_code() );
+check( 'atomic consume race uses replay error', 'OMNIWP_otp_used', $replay->get_error_code() );
 
 // ---------------------------------------------------------------------
 section( 'Password reset grant — single use' );
@@ -1007,9 +1005,9 @@ check( 'first grant consume returns user', 42, PendingSession::consume_password_
 check( 'second grant consume is rejected', 0, PendingSession::consume_password_reset( $grant ) );
 
 $failed_delete_grant                      = PendingSession::grant_password_reset( 43 );
-$GLOBALS['sl_transient_delete_fail']      = true;
+$GLOBALS['ow_transient_delete_fail']      = true;
 $failed_delete_result                     = PendingSession::consume_password_reset( $failed_delete_grant );
-$GLOBALS['sl_transient_delete_fail']      = false;
+$GLOBALS['ow_transient_delete_fail']      = false;
 
 check( 'grant fails closed when atomic delete loses', 0, $failed_delete_result );
 
@@ -1029,19 +1027,19 @@ $webhook_options = array(
 );
 
 Settings::update( $webhook_options );
-$GLOBALS['sl_http_requests'] = array();
+$GLOBALS['ow_http_requests'] = array();
 ( new WebhookTransport() )->dispatch( '84969789475', '123456', array( 'intent' => OtpService::INTENT_LOGIN ) );
-check( 'retry is disabled without an idempotency contract', 1, count( $GLOBALS['sl_http_requests'] ) );
+check( 'retry is disabled without an idempotency contract', 1, count( $GLOBALS['ow_http_requests'] ) );
 
 $webhook_options['sms.idempotency_header'] = 'Idempotency-Key';
 Settings::update( $webhook_options );
-$GLOBALS['sl_http_requests'] = array();
+$GLOBALS['ow_http_requests'] = array();
 ( new WebhookTransport() )->dispatch( '84969789475', '123456', array( 'intent' => OtpService::INTENT_LOGIN ) );
 
-$first_id  = $GLOBALS['sl_http_requests'][0]['args']['headers']['Idempotency-Key'] ?? '';
-$second_id = $GLOBALS['sl_http_requests'][1]['args']['headers']['Idempotency-Key'] ?? '';
+$first_id  = $GLOBALS['ow_http_requests'][0]['args']['headers']['Idempotency-Key'] ?? '';
+$second_id = $GLOBALS['ow_http_requests'][1]['args']['headers']['Idempotency-Key'] ?? '';
 
-check( 'idempotent webhook may retry once', 2, count( $GLOBALS['sl_http_requests'] ) );
+check( 'idempotent webhook may retry once', 2, count( $GLOBALS['ow_http_requests'] ) );
 check( 'retry carries a non-empty delivery id', true, '' !== $first_id );
 check( 'both delivery attempts share one id', $first_id, $second_id );
 
@@ -1050,7 +1048,7 @@ section( 'Circuit breaker — a dead gateway stops costing workers (Phase 9.3)' 
 
 // A transport that always fails, and counts how often it was actually called.
 // The whole point of the breaker is that this counter stops rising.
-class SmartLoginDeadTransport implements \SmartLogin\OTP\Transports\TransportInterface {
+class OmniWPDeadTransport implements \OmniWP\OTP\Transports\TransportInterface {
 
 	public $calls = 0;
 
@@ -1076,10 +1074,10 @@ Settings::update(
 	)
 );
 
-delete_transient( 'smart_login_breaker_sms' );
-$GLOBALS['sl_mails'] = array();
+delete_transient( 'OMNIWP_breaker_sms' );
+$GLOBALS['ow_mails'] = array();
 
-$dead        = new SmartLoginDeadTransport();
+$dead        = new OmniWPDeadTransport();
 $dead_router = new TransportRouter( array( 'sms' => $dead ) );
 
 for ( $i = 0; $i < 3; $i++ ) {
@@ -1092,14 +1090,14 @@ $blocked = $dead_router->send( '84969789475', '123456', array( 'transport' => 's
 
 check( 'the next send is refused', true, is_wp_error( $blocked ) );
 check( 'and never reaches the transport', 3, $dead->calls );
-check( 'the refusal is the breaker, not the gateway', 'smart_login_transport_down', $blocked->get_error_code() );
-check( 'opening the breaker mails the admin once', 1, count( $GLOBALS['sl_mails'] ) );
+check( 'the refusal is the breaker, not the gateway', 'OMNIWP_transport_down', $blocked->get_error_code() );
+check( 'opening the breaker mails the admin once', 1, count( $GLOBALS['ow_mails'] ) );
 
 // Cooldown elapsed: exactly one probe goes through, and a single failure puts
 // the breaker straight back rather than waiting for another three.
-$breaker_state               = get_transient( 'smart_login_breaker_sms' );
+$breaker_state               = get_transient( 'OMNIWP_breaker_sms' );
 $breaker_state['open_until'] = time() - 1;
-set_transient( 'smart_login_breaker_sms', $breaker_state, 3600 );
+set_transient( 'OMNIWP_breaker_sms', $breaker_state, 3600 );
 
 $dead_router->send( '84969789475', '123456', array( 'transport' => 'sms' ) );
 check( 'after the cooldown one probe is allowed through', 4, $dead->calls );
@@ -1110,7 +1108,7 @@ check( 'and the transport is spared again', 4, $dead->calls );
 
 // A success clears the history outright, so an intermittent gateway does not
 // accumulate its way to a permanent outage.
-class SmartLoginLiveTransport extends SmartLoginDeadTransport {
+class OmniWPLiveTransport extends OmniWPDeadTransport {
 
 	public function send( string $destination, string $code, array $ctx ) {
 		++$this->calls;
@@ -1119,17 +1117,17 @@ class SmartLoginLiveTransport extends SmartLoginDeadTransport {
 	}
 }
 
-delete_transient( 'smart_login_breaker_sms' );
-$live        = new SmartLoginLiveTransport();
+delete_transient( 'OMNIWP_breaker_sms' );
+$live        = new OmniWPLiveTransport();
 $live_router = new TransportRouter( array( 'sms' => $live ) );
 
 $live_router->send( '84969789475', '123456', array( 'transport' => 'sms' ) );
-check( 'a success leaves no breaker state behind', false, get_transient( 'smart_login_breaker_sms' ) );
+check( 'a success leaves no breaker state behind', false, get_transient( 'OMNIWP_breaker_sms' ) );
 
 // Threshold 0 disables the breaker entirely.
 Settings::update( array( 'security.breaker_threshold' => 0 ) );
-delete_transient( 'smart_login_breaker_sms' );
-$never = new SmartLoginDeadTransport();
+delete_transient( 'OMNIWP_breaker_sms' );
+$never = new OmniWPDeadTransport();
 $never_router = new TransportRouter( array( 'sms' => $never ) );
 
 for ( $i = 0; $i < 6; $i++ ) {
@@ -1144,7 +1142,7 @@ Settings::update(
 		'security.breaker_cooldown'  => 300,
 	)
 );
-delete_transient( 'smart_login_breaker_sms' );
+delete_transient( 'OMNIWP_breaker_sms' );
 
 // ---------------------------------------------------------------------
 section( 'Webhook timeout — the ceiling that actually binds (Phase 9.3)' );
@@ -1153,20 +1151,20 @@ section( 'Webhook timeout — the ceiling that actually binds (Phase 9.3)' );
 // survives until somebody re-saves that tab, so the read-time clamp is what
 // protects the sites that never do.
 Settings::update( array_merge( $webhook_options, array( 'sms.timeout' => 30 ) ) );
-$GLOBALS['sl_http_requests'] = array();
+$GLOBALS['ow_http_requests'] = array();
 ( new WebhookTransport() )->dispatch( '84969789475', '123456', array( 'intent' => OtpService::INTENT_LOGIN ) );
 
 check(
 	'a stored timeout above the ceiling is clamped at read time',
 	WebhookTransport::MAX_TIMEOUT,
-	$GLOBALS['sl_http_requests'][0]['args']['timeout'] ?? 0
+	$GLOBALS['ow_http_requests'][0]['args']['timeout'] ?? 0
 );
 
 Settings::update( array_merge( $webhook_options, array( 'sms.timeout' => 4 ) ) );
-$GLOBALS['sl_http_requests'] = array();
+$GLOBALS['ow_http_requests'] = array();
 ( new WebhookTransport() )->dispatch( '84969789475', '123456', array( 'intent' => OtpService::INTENT_LOGIN ) );
 
-check( 'a timeout under the ceiling is left alone', 4, $GLOBALS['sl_http_requests'][0]['args']['timeout'] ?? 0 );
+check( 'a timeout under the ceiling is left alone', 4, $GLOBALS['ow_http_requests'][0]['args']['timeout'] ?? 0 );
 
 // ---------------------------------------------------------------------
 section( 'AddressNormalizer — Vietnamese diacritics' );
@@ -1321,7 +1319,7 @@ $password_template = file_get_contents( dirname( __DIR__ ) . '/templates/form-pa
 $signup_template   = file_get_contents( dirname( __DIR__ ) . '/templates/form-signup.php' );
 $onboard_template  = file_get_contents( dirname( __DIR__ ) . '/templates/onboarding.php' );
 $success_template  = file_get_contents( dirname( __DIR__ ) . '/templates/registered-success.php' );
-$auth_script   = file_get_contents( dirname( __DIR__ ) . '/assets/js/smart-login.js' );
+$auth_script   = file_get_contents( dirname( __DIR__ ) . '/assets/js/omniwp.js' );
 $profile_form  = file_get_contents( dirname( __DIR__ ) . '/templates/woocommerce/form-edit-account.php' );
 $template_loader = file_get_contents( dirname( __DIR__ ) . '/includes/Frontend/class-template-loader.php' );
 $settings_page = file_get_contents( dirname( __DIR__ ) . '/includes/Admin/class-settings-page.php' );
@@ -1343,7 +1341,7 @@ check( 'entry screen posts the identify action', true, false !== strpos( $auth_t
 // is still a login — only the field order changed.
 check( 'password step guards as a login', true, false !== strpos( $password_template, "RequestGuard::fields( 'login', 'login_' )" ) );
 check( 'password step echoes the identifier back', true, false !== strpos( $password_template, 'name="identity"' ) );
-check( 'password step marks its origin so failures return to it', true, false !== strpos( $password_template, 'name="sl_from_password"' ) );
+check( 'password step marks its origin so failures return to it', true, false !== strpos( $password_template, 'name="ow_from_password"' ) );
 check( 'password step offers a way to correct the identifier', true, false !== strpos( $password_template, 'STEP_IDENTIFY' ) );
 
 // Step 3: one password box. The show/hide toggle already does what a second
@@ -1416,7 +1414,7 @@ check( 'after_registration() was located', true, '' !== $after_registration_src 
 check( 'the page-hosted ending is still a redirect', true, false !== strpos( $after_registration_src, '->go( $this->welcome_url() )' ) );
 check( 'the redirect is skipped only for an in-place flow', true, 1 === preg_match( '/if \(\s*!\s*\$this->in_place\s*\)/', $after_registration_src ) );
 
-check( 'onboarding always offers a way out', true, false !== strpos( $onboard_template, 'name="sl_skip"' ) );
+check( 'onboarding always offers a way out', true, false !== strpos( $onboard_template, 'name="ow_skip"' ) );
 check( 'onboarding never asks for a password', false, false !== strpos( $onboard_template, 'partials/password-field' ) );
 check( 'onboarding never embeds contact verification', false, false !== strpos( $onboard_template, 'data-sl-contact' ) );
 check( 'onboarding states why each field is worth giving', true, false !== strpos( $onboard_template, 'sl-hint--reason' ) );
@@ -1460,7 +1458,7 @@ section( 'Every tabbed setting is actually rendered' );
  *
  * @return mixed
  */
-function sl_dig_setting( array $source, string $path ) {
+function ow_dig_setting( array $source, string $path ) {
 	$node = $source;
 
 	foreach ( explode( '.', $path ) as $segment ) {
@@ -1479,7 +1477,7 @@ function sl_dig_setting( array $source, string $path ) {
  *
  * @param mixed $value
  */
-function sl_post_setting( array &$payload, string $path, $value ): void {
+function ow_post_setting( array &$payload, string $path, $value ): void {
 	$segments = explode( '.', $path );
 	$leaf     = array_pop( $segments );
 	$node     = &$payload;
@@ -1503,7 +1501,7 @@ function sl_post_setting( array &$payload, string $path, $value ): void {
  *
  * @return mixed
  */
-function sl_sample_value( string $path, array $field ) {
+function ow_sample_value( string $path, array $field ) {
 	/*
 	 * The two preset selects are asked for their "custom" value on purpose.
 	 * Any other choice makes the save derive half of its own tab from the
@@ -1512,11 +1510,11 @@ function sl_sample_value( string $path, array $field ) {
 	 * here the subject is the plumbing, so the presets are told to stand aside.
 	 */
 	if ( 'sms.preset' === $path ) {
-		return \SmartLogin\GatewayPresets::CUSTOM;
+		return \OmniWP\GatewayPresets::CUSTOM;
 	}
 
 	if ( 'otp.preset' === $path ) {
-		return \SmartLogin\OtpPresets::CUSTOM;
+		return \OmniWP\OtpPresets::CUSTOM;
 	}
 
 	if ( 'credentials' === ( $field['type'] ?? '' ) ) {
@@ -1560,7 +1558,7 @@ function sl_sample_value( string $path, array $field ) {
 			// known events precisely so a stale name cannot survive a save, so
 			// an invented sample would measure that rule instead of the
 			// plumbing this assertion is about.
-			return array( \SmartLogin\Security\AuditLog::LOGIN_SUCCESS );
+			return array( \OmniWP\Security\AuditLog::LOGIN_SUCCESS );
 	}
 
 	switch ( $field['type'] ?? 'text' ) {
@@ -1592,9 +1590,9 @@ function sl_sample_value( string $path, array $field ) {
 	}
 }
 
-$registry_tabs = \SmartLogin\FieldRegistry::tabs();
+$registry_tabs = \OmniWP\FieldRegistry::tabs();
 
-foreach ( \SmartLogin\FieldRegistry::all() as $path => $field ) {
+foreach ( \OmniWP\FieldRegistry::all() as $path => $field ) {
 	if ( ! isset( $field['type'] ) || ! array_key_exists( 'default', $field ) ) {
 		check( sprintf( '%s declares a type and a default', $path ), true, false );
 	}
@@ -1611,9 +1609,9 @@ check(
 	array(),
 	array_values(
 		array_filter(
-			array_keys( \SmartLogin\FieldRegistry::all() ),
-			static fn( string $path ): bool => null === sl_dig_setting( Settings::defaults(), $path )
-				&& null !== \SmartLogin\FieldRegistry::get( $path )['default']
+			array_keys( \OmniWP\FieldRegistry::all() ),
+			static fn( string $path ): bool => null === ow_dig_setting( Settings::defaults(), $path )
+				&& null !== \OmniWP\FieldRegistry::get( $path )['default']
 		)
 	)
 );
@@ -1621,7 +1619,7 @@ check(
 $settings_before = Settings::all();
 
 foreach ( array_keys( $registry_tabs ) as $registry_tab ) {
-	$tab_fields = \SmartLogin\FieldRegistry::for_tab( $registry_tab );
+	$tab_fields = \OmniWP\FieldRegistry::for_tab( $registry_tab );
 
 	check( sprintf( 'tab "%s" draws at least one field', $registry_tab ), true, count( $tab_fields ) > 0 );
 
@@ -1629,7 +1627,7 @@ foreach ( array_keys( $registry_tabs ) as $registry_tab ) {
 	$payload = array( Settings::TAB_FIELD => $registry_tab );
 
 	foreach ( $tab_fields as $path => $field ) {
-		sl_post_setting( $payload, $path, sl_sample_value( $path, $field ) );
+		ow_post_setting( $payload, $path, ow_sample_value( $path, $field ) );
 	}
 
 	$saved   = Settings::sanitize( $payload );
@@ -1652,14 +1650,14 @@ foreach ( array_keys( $registry_tabs ) as $registry_tab ) {
 		if ( 'secret' === ( $field['type'] ?? '' ) ) {
 			// The registry still plants an empty default for the path, which is
 			// harmless. What must never appear there is the submitted value.
-			if ( '' !== (string) sl_dig_setting( $saved, $path ) ) {
+			if ( '' !== (string) ow_dig_setting( $saved, $path ) ) {
 				$dropped[] = $path . ' (secret reached the option array)';
 			}
 
 			continue;
 		}
 
-		if ( sl_dig_setting( $saved, $path ) !== sl_sample_value( $path, $field ) ) {
+		if ( ow_dig_setting( $saved, $path ) !== ow_sample_value( $path, $field ) ) {
 			$dropped[] = $path;
 		}
 	}
@@ -1669,12 +1667,12 @@ foreach ( array_keys( $registry_tabs ) as $registry_tab ) {
 	// ...and touches nothing belonging to another tab.
 	$collateral = array();
 
-	foreach ( \SmartLogin\FieldRegistry::all() as $path => $field ) {
+	foreach ( \OmniWP\FieldRegistry::all() as $path => $field ) {
 		if ( ( $field['tab'] ?? '' ) === $registry_tab ) {
 			continue;
 		}
 
-		if ( sl_dig_setting( $saved, $path ) !== sl_dig_setting( $settings_before, $path ) ) {
+		if ( ow_dig_setting( $saved, $path ) !== ow_dig_setting( $settings_before, $path ) ) {
 			$collateral[] = $path;
 		}
 	}
@@ -1688,20 +1686,20 @@ foreach ( array_keys( $registry_tabs ) as $registry_tab ) {
 	$phantom    = array();
 	$not_leared = array();
 
-	foreach ( \SmartLogin\FieldRegistry::all() as $path => $field ) {
+	foreach ( \OmniWP\FieldRegistry::all() as $path => $field ) {
 		if ( 'checkbox' !== ( $field['type'] ?? '' ) ) {
 			continue;
 		}
 
 		if ( ( $field['tab'] ?? '' ) === $registry_tab ) {
-			if ( 0 !== sl_dig_setting( $empty, $path ) ) {
+			if ( 0 !== ow_dig_setting( $empty, $path ) ) {
 				$not_leared[] = $path;
 			}
 
 			continue;
 		}
 
-		if ( sl_dig_setting( $empty, $path ) !== sl_dig_setting( $settings_before, $path ) ) {
+		if ( ow_dig_setting( $empty, $path ) !== ow_dig_setting( $settings_before, $path ) ) {
 			$phantom[] = $path;
 		}
 	}
@@ -1719,34 +1717,34 @@ foreach ( array_keys( $registry_tabs ) as $registry_tab ) {
  * — when the stored value equals the value registered as the setting's default — routes
  * the write through `add_option()`, which sanitises again (wp-includes/option.php:884
  * and :1111). The second pass is handed the first pass's output, which is
- * registry-shaped and therefore carries no `_sl_tab`. Writing nothing at that point
+ * registry-shaped and therefore carries no `_ow_tab`. Writing nothing at that point
  * meant handing back the stored values and discarding the save.
  *
  * Reported from the screen as "I choose Cả hai, press save, and it comes back as
  * Chỉ số điện thoại". The rule's fear — a tabless save wiping other tabs — is still
  * asserted, and is now the thing that gets asserted instead of the letter.
  */
-$sl_tabless = Settings::sanitize( array( 'identity' => array( 'mode' => 'email_only' ) ) );
+$ow_tabless = Settings::sanitize( array( 'identity' => array( 'mode' => 'email_only' ) ) );
 
 check(
 	'a tabless save writes the field it carries',
 	'email_only',
-	sl_dig_setting( $sl_tabless, 'identity.mode' )
+	ow_dig_setting( $ow_tabless, 'identity.mode' )
 );
 
-$sl_disturbed = array();
+$ow_disturbed = array();
 
-foreach ( \SmartLogin\FieldRegistry::all() as $path => $field ) {
+foreach ( \OmniWP\FieldRegistry::all() as $path => $field ) {
 	if ( 'identity.mode' === $path ) {
 		continue;
 	}
 
-	if ( sl_dig_setting( $sl_tabless, $path ) !== sl_dig_setting( $settings_before, $path ) ) {
-		$sl_disturbed[] = $path;
+	if ( ow_dig_setting( $ow_tabless, $path ) !== ow_dig_setting( $settings_before, $path ) ) {
+		$ow_disturbed[] = $path;
 	}
 }
 
-check( 'and disturbs nothing it does not carry', array(), $sl_disturbed );
+check( 'and disturbs nothing it does not carry', array(), $ow_disturbed );
 
 check( 'the dead require_verification switch is gone', false, false !== strpos( $settings_page, 'require_verification' ) );
 
@@ -1783,10 +1781,10 @@ section( 'The uninstall gate reads a key that exists' );
  * administrator ticked never opens.
  */
 $uninstall_source = file_get_contents( dirname( __DIR__ ) . '/uninstall.php' );
-$declared_paths   = array_keys( \SmartLogin\FieldRegistry::all() );
+$declared_paths   = array_keys( \OmniWP\FieldRegistry::all() );
 $undeclared_reads = array();
 
-if ( preg_match_all( '/\$smart_login_settings((?:\[\s*\'[^\']+\'\s*\])+)/', $uninstall_source, $matches ) ) {
+if ( preg_match_all( '/\$OMNIWP_settings((?:\[\s*\'[^\']+\'\s*\])+)/', $uninstall_source, $matches ) ) {
 	foreach ( $matches[1] as $subscripts ) {
 		preg_match_all( "/'([^']+)'/", $subscripts, $keys );
 

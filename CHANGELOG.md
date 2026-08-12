@@ -19,7 +19,7 @@
   nhập sẽ **không còn lối vào**. Đếm trước khi nâng cấp:
 
   ```sql
-  SELECT user_id, GROUP_CONCAT(channel) c FROM wp_smartlogin_identities
+  SELECT user_id, GROUP_CONCAT(channel) c FROM wp_OmniWP_identities
   GROUP BY user_id HAVING c = 'zalo'
   ```
 
@@ -37,7 +37,7 @@
   đây nó ghi `billing_*` và không gì khác, trong khi tiêu đề nói "giao hàng" và
   dòng ghi chú nói "sửa ở đây là sửa cả hai" — cả hai câu đều sai với khách đã
   từng lưu địa chỉ giao riêng. Nay giá trị được ghi sang `shipping_state`,
-  `shipping_city`, `shipping_address_1` và `smartlogin_shipping_ward_code`.
+  `shipping_city`, `shipping_address_1` và `OmniWP_shipping_ward_code`.
 
   **Cái giá:** khách nào đang cố tình để địa chỉ giao khác địa chỉ thanh toán sẽ
   bị ghi đè ở lần lưu tiếp theo trên thẻ này. Đó là ý nghĩa của "một địa chỉ" và
@@ -104,7 +104,7 @@
 - Sửa: xoá một người dùng nay trả lại số điện thoại và email họ giữ.
 - Màn hình đặt mật khẩu có lối nhận mã cho người chưa từng đặt mật khẩu.
 - Mục Bảo mật không còn hiện ô "mật khẩu hiện tại" cho tài khoản không điền được.
-- Bản này không nâng cấp từ 1.0.1: mọi mã di trú đã gỡ, `SMART_LOGIN_DB_VERSION`
+- Bản này không nâng cấp từ 1.0.1: mọi mã di trú đã gỡ, `OMNIWP_DB_VERSION`
   đặt lại về 1.
 
 ---
@@ -164,16 +164,16 @@ một botnet đổi cả hai trục không gặp trần nào.
   Trước đây quyền sở hữu được suy ra từ `wp_users.user_login`, mà WordPress
   không cho phép thay đổi — nên sau khi người dùng đổi số, số cũ vẫn phân giải
   về tài khoản của họ. Người nhận SIM tái sử dụng có thể yêu cầu mã đặt lại mật
-  khẩu và chiếm tài khoản. Nay quyền sở hữu chỉ đến từ bảng `smartlogin_identities`,
+  khẩu và chiếm tài khoản. Nay quyền sở hữu chỉ đến từ bảng `OmniWP_identities`,
   và một chủ thể đã thu hồi không có chủ sở hữu.
-- **`user_login` chuyển sang giá trị mờ** (`sl_` + 24 ký tự hex). WordPress phân
+- **`user_login` chuyển sang giá trị mờ** (`ow_` + 24 ký tự hex). WordPress phân
   giải nó ở `authenticate` priority 20 — trước mọi mã của plugin, và ở cả ba
   handler `username_password`, `email_password` và `application_password`, nên
   phạm vi gồm cả REST API. Một giá trị không đoán được loại bỏ hẳn đường này.
 - **Địa chỉ email ảo không còn suy diễn được từ số điện thoại**, vì lý do tương
   tự và vì nó không bao giờ được cập nhật khi người dùng đổi số.
 - **Chính sách mật khẩu áp dụng cho cả đặt lại mật khẩu.** Filter
-  `smart_login_validate_password` trước đây chỉ chạy khi đăng ký, nên một site
+  `OMNIWP_validate_password` trước đây chỉ chạy khi đăng ký, nên một site
   bắt buộc mật khẩu phải có chữ số có thể bị bỏ qua hoàn toàn bằng cách đi qua
   luồng Quên mật khẩu.
 - **Phát hành phiên đăng nhập bắt buộc có `AuthProof`.** Constructor là private
@@ -193,7 +193,7 @@ một botnet đổi cả hai trục không gặp trần nào.
   Headers và điều kiện thành công được sinh lúc lưu và hiển thị read-only để
   kiểm chứng, với secret được che. Tab Gửi mã từ 11 trường xuống còn 3 ô. Chọn
   `Tuỳ chỉnh` thì mở khoá toàn bộ và không bao giờ bị sinh đè. Thêm gateway mới
-  là một entry qua filter `smart_login_gateway_presets`.
+  là một entry qua filter `OMNIWP_gateway_presets`.
 - **Preset bảo mật OTP** — Chặt / Cân bằng / Thoáng thay cho sáu ô số, số chi
   tiết nằm trong khối gấp lại được.
 - **Bỏ ô text ở những chỗ vốn là danh sách hữu hạn**: mã quốc gia thành select;
@@ -222,8 +222,8 @@ một botnet đổi cả hai trục không gặp trần nào.
   rồi thả người vừa đăng ký vào form tài khoản đầy đủ: khoảng 15 control, trong
   đó có 2 widget xác thực OTP và 3 ô đổi mật khẩu. Nay là một màn hỏi tối đa 3
   mục, mỗi mục kèm lý do vì sao đáng điền, và luôn có nút **Để sau**.
-- **Bỏ hẳn cổng chặn hồ sơ.** `smartlogin_gate` được đặt vào URL và
-  `_smartlogin_profile_gate` được ghi vào meta, nhưng không đoạn mã nào đọc
+- **Bỏ hẳn cổng chặn hồ sơ.** `OmniWP_gate` được đặt vào URL và
+  `_OmniWP_profile_gate` được ghi vào meta, nhưng không đoạn mã nào đọc
   chúng. Giao diện nói "bắt buộc" trong khi không có gì cưỡng chế — vị trí tệ
   nhất trong ba lựa chọn. Nay chỉ còn lời mời.
 - **Chỉ báo tiến độ** ở hai bước giữa của luồng đăng ký.
@@ -253,8 +253,8 @@ một botnet đổi cả hai trục không gặp trần nào.
 
 ### Đã thêm
 
-- Bảng `smartlogin_identities` (chỉ số quyền, `UNIQUE (channel, subject)`) và
-  `smartlogin_identity_history` (append-only, không dùng để xác thực).
+- Bảng `OmniWP_identities` (chỉ số quyền, `UNIQUE (channel, subject)`) và
+  `OmniWP_identity_history` (append-only, không dùng để xác thực).
 - `IdentityDirectory` — nơi duy nhất trả lời "chủ thể này thuộc về ai".
 - Bảng quyết định 4 intent × 4 trạng thái, dưới dạng dữ liệu.
 - Xem và **bỏ liên kết** nhà cung cấp, có xác nhận mật khẩu và cổng chặn không
@@ -271,7 +271,7 @@ một botnet đổi cả hai trục không gặp trần nào.
   trị nên phép gán bị bỏ đi.
 - **`billing_phone` không còn bị số đăng nhập ghi đè.** Khách hàng muốn hàng giao
   tới số của người thân trước đây không giữ được: lưu sổ địa chỉ là bị đặt lại.
-- **`smart_login_phone_is_valid` nay áp dụng cho số Việt Nam.** Nhánh xử lý số VN
+- **`OMNIWP_phone_is_valid` nay áp dụng cho số Việt Nam.** Nhánh xử lý số VN
   trả về trước khi tới filter, nên hook đã tài liệu hoá này chết trên đúng cấu
   hình mặc định mà gần như mọi site đều dùng.
 - **ETag của REST địa chỉ theo dữ liệu, không theo phiên bản plugin.** Sinh lại
@@ -286,10 +286,10 @@ một botnet đổi cả hai trục không gặp trần nào.
   nhau, nên tập hằng số phình theo mỗi tính năng.
 - Namespace `OTP\Channels` đổi thành `OTP\Transports`. Từ "channel" nay chỉ có
   một nghĩa duy nhất trong toàn dự án: một không gian định danh.
-- Filter `smart_login_otp_channels` → `smart_login_otp_transports`.
+- Filter `OMNIWP_otp_channels` → `OMNIWP_otp_transports`.
 - Placeholder `{{purpose}}` / `{{channel}}` → `{{intent}}` / `{{transport}}`.
 - `LoginHandler::attempt()` bỏ tham số `$remember` — nó chưa bao giờ được dùng.
-- Bảng `smart_login_external_identities` bị xoá; nhà cung cấp liên kết không còn
+- Bảng `OMNIWP_external_identities` bị xoá; nhà cung cấp liên kết không còn
   là trường hợp đặc biệt.
 - Cấu trúc CSDL `2` → `4`.
 

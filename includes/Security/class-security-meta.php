@@ -21,16 +21,16 @@
  * one writer is exempt — and the exemption is declared in the rule, at the call
  * site, rather than implied by its absence here.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Security;
+namespace OmniWP\Security;
 
 defined( 'ABSPATH' ) || exit;
 
 final class SecurityMeta {
 
-	const META_PASSWORD_CHANGED = '_smartlogin_password_changed_at';
+	const META_PASSWORD_CHANGED = '_OmniWP_password_changed_at';
 
 	/**
 	 * Note that the account holder just chose a password.
@@ -83,26 +83,26 @@ final class SecurityMeta {
 		// A clock that has gone backwards — a restored backup, a corrected server
 		// time — reads as today rather than as a negative age.
 		if ( $seconds < DAY_IN_SECONDS ) {
-			return __( 'hôm nay', 'smart-login' );
+			return __( 'hôm nay', 'omniwp' );
 		}
 
 		$days = (int) floor( $seconds / DAY_IN_SECONDS );
 
 		if ( $days < 30 ) {
 			/* translators: %d: number of days. */
-			return sprintf( _n( '%d ngày trước', '%d ngày trước', $days, 'smart-login' ), $days );
+			return sprintf( _n( '%d ngày trước', '%d ngày trước', $days, 'omniwp' ), $days );
 		}
 
 		if ( $days < 365 ) {
 			$months = (int) floor( $days / 30 );
 
 			/* translators: %d: number of months. */
-			return sprintf( _n( '%d tháng trước', '%d tháng trước', $months, 'smart-login' ), $months );
+			return sprintf( _n( '%d tháng trước', '%d tháng trước', $months, 'omniwp' ), $months );
 		}
 
 		$years = (int) floor( $days / 365 );
 
 		/* translators: %d: number of years. */
-		return sprintf( _n( '%d năm trước', '%d năm trước', $years, 'smart-login' ), $years );
+		return sprintf( _n( '%d năm trước', '%d năm trước', $years, 'omniwp' ), $years );
 	}
 }

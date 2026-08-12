@@ -4,7 +4,7 @@
 ( function () {
 	'use strict';
 
-	var config = window.SmartLoginAdmin || {};
+	var config = window.OmniWPAdmin || {};
 	var i18n = config.i18n || {};
 
 	function escapeHtml( value ) {
@@ -85,7 +85,7 @@
 			box.hidden = true;
 
 			var body = new URLSearchParams();
-			body.append( 'action', 'smart_login_test_channel' );
+			body.append( 'action', 'OMNIWP_test_channel' );
 			body.append( 'nonce', config.nonce || '' );
 			body.append( 'transport', transport );
 			body.append( 'destination', destination );
@@ -233,11 +233,88 @@
 		} );
 	}
 
+	function initMenuItemsRepeater( wrapper ) {
+		var table = wrapper.querySelector( '.sl-menu-items-table' );
+		var addBtn = wrapper.querySelector( '.sl-add-menu-row' );
+		var template = wrapper.querySelector( '.sl-menu-row-template' );
+
+		if ( ! table || ! addBtn || ! template ) {
+			return;
+		}
+
+		var tbody = table.querySelector( 'tbody' );
+
+		function reindex() {
+			var rows = tbody.querySelectorAll( 'tr' );
+			rows.forEach( function ( tr, idx ) {
+				tr.querySelectorAll( 'input, select' ).forEach( function ( el ) {
+					var name = el.getAttribute( 'name' );
+					if ( name ) {
+						el.setAttribute( 'name', name.replace( /\[\d+\]/, '[' + idx + ']' ) );
+					}
+				} );
+			} );
+		}
+
+		addBtn.addEventListener( 'click', function () {
+			var index = tbody.children.length;
+			var html = template.innerHTML.replace( /\{\{INDEX\}\}/g, index );
+			var tr = document.createElement( 'tr' );
+			tr.innerHTML = html;
+			tbody.appendChild( tr );
+			reindex();
+		} );
+
+		tbody.addEventListener( 'click', function ( e ) {
+			var target = e.target;
+			if ( ! target ) {
+				return;
+			}
+
+			var row = target.closest( 'tr' );
+			if ( ! row ) {
+				return;
+			}
+
+			// Delete row
+			if ( target.classList.contains( 'sl-remove-menu-row' ) ) {
+				e.preventDefault();
+				row.remove();
+				reindex();
+				return;
+			}
+
+			// Move Up
+			if ( target.classList.contains( 'sl-move-menu-row-up' ) ) {
+				e.preventDefault();
+				var prev = row.previousElementSibling;
+				if ( prev ) {
+					tbody.insertBefore( row, prev );
+					reindex();
+				}
+				return;
+			}
+
+			// Move Down
+			if ( target.classList.contains( 'sl-move-menu-row-down' ) ) {
+				e.preventDefault();
+				var next = row.nextElementSibling;
+				if ( next ) {
+					tbody.insertBefore( next, row );
+					reindex();
+				}
+				return;
+			}
+		} );
+	}
+
 	document.addEventListener( 'DOMContentLoaded', function () {
 		document.querySelectorAll( '.sl-tester' ).forEach( init );
 		document.querySelectorAll( '[data-provider-card]' ).forEach( initProviderCard );
 		document.querySelectorAll( '.sl-mail-surface' ).forEach( initMailMessages );
 		document.querySelectorAll( '.sl-guide-page' ).forEach( initGuideToc );
+		document.querySelectorAll( '.sl-menu-items-wrapper' ).forEach( initMenuItemsRepeater );
 		initMailActions( document );
 	} );
 } )();
+

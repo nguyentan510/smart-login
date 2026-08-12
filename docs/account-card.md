@@ -18,8 +18,8 @@ premise are kept.
 
 ### 1. There is no spacing or type scale — there is a list of numbers
 
-`.smart-login` declares six tokens and all six are colours
-(`smart-login.css:7-12`). Every distance and every font size in the stylesheet is
+`.omniwp` declares six tokens and all six are colours
+(`omniwp.css:7-12`). Every distance and every font size in the stylesheet is
 a literal, chosen at the component. Measured across the file:
 
 | | Values in use |
@@ -46,7 +46,7 @@ editor (`:558-563`), where `align-items: center` hides the difference rather
 than removing it.
 
 **Measured, after the first reading of it was wrong.** The prediction here was
-that the button inherits `1.5` from `.smart-login` and comes out *taller*, near
+that the button inherits `1.5` from `.omniwp` and comes out *taller*, near
 50px. In a browser it computes `line-height: normal` — the UA stylesheet for
 `button` sets it, and that beats inheritance — so the button is 45px against the
 input's 47 and is *shorter*. Two pixels, the other way round. The defect is
@@ -145,7 +145,7 @@ waiting for content.
 
 ### Decision 1 — The scale is declared once, and the account surface reads it
 
-Six spacing steps and five type steps, as custom properties on `.smart-login`:
+Six spacing steps and five type steps, as custom properties on `.omniwp`:
 
 ```
 --sl-space-1: 4px    --sl-fs-xs: 12px
@@ -206,7 +206,7 @@ Taking **option (a)**: one address, mirrored to both Woo address books.
 `save_for_user()` writes the `shipping_*` counterparts alongside the `billing_*`
 ones, through the same `ProfileSeeder::set_many_from_user_input()` path and with
 the same ward-code bookkeeping `WooAddress` already uses for shipping
-(`smartlogin_shipping_ward_code`, `class-woo-address.php:158`). The heading
+(`OmniWP_shipping_ward_code`, `class-woo-address.php:158`). The heading
 becomes **"Địa chỉ nhận hàng"**, and the note stops claiming "cả hai" and states
 what is true: this is the address both checkout and delivery use.
 
@@ -301,6 +301,6 @@ for the glyph.
 
 ## Not in scope
 
-No schema change, no `SMART_LOGIN_DB_VERSION` bump. One new user meta key
-(`_smartlogin_password_changed_at`) and the `shipping_*` mirror, both written
+No schema change, no `OMNIWP_DB_VERSION` bump. One new user meta key
+(`_OmniWP_password_changed_at`) and the `shipping_*` mirror, both written
 through existing paths.

@@ -14,14 +14,14 @@
  *
  * Run with:  php tests/identity/run-sign-in-card-tests.php
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 require __DIR__ . '/../stubs.php';
 require __DIR__ . '/../template-stubs.php';
 require __DIR__ . '/../harness.php';
 
-use SmartLogin\Settings;
+use OmniWP\Settings;
 
 Settings::update(
 	array(
@@ -30,10 +30,10 @@ Settings::update(
 	)
 );
 
-$GLOBALS['sl_logged_in']       = true;
-$GLOBALS['sl_current_user_id'] = 7;
+$GLOBALS['ow_logged_in']       = true;
+$GLOBALS['ow_current_user_id'] = 7;
 
-$sl_root = dirname( __DIR__, 2 ) . '/';
+$ow_root = dirname( __DIR__, 2 ) . '/';
 
 /**
  * Render one template and return its markup, failing loudly on a throw.
@@ -42,13 +42,13 @@ $sl_root = dirname( __DIR__, 2 ) . '/';
  * need the *same* templates under fixtures chosen to be wrong in a particular
  * way, which is a different job and belongs to the phase that cares.
  */
-$sl_render = static function ( string $template, array $args ) use ( $sl_root ): string {
-	$captured = sl_capture(
-		static function () use ( $sl_root, $template, $args ): void {
-			( static function ( string $sl_file, array $sl_args ): void {
-				extract( $sl_args, EXTR_SKIP ); // phpcs:ignore WordPress.PHP.DontExtract
-				include $sl_file;
-			} )( $sl_root . 'templates/' . $template . '.php', $args );
+$ow_render = static function ( string $template, array $args ) use ( $ow_root ): string {
+	$captured = ow_capture(
+		static function () use ( $ow_root, $template, $args ): void {
+			( static function ( string $ow_file, array $ow_args ): void {
+				extract( $ow_args, EXTR_SKIP ); // phpcs:ignore WordPress.PHP.DontExtract
+				include $ow_file;
+			} )( $ow_root . 'templates/' . $template . '.php', $args );
 		}
 	);
 
@@ -62,7 +62,7 @@ $sl_render = static function ( string $template, array $args ) use ( $sl_root ):
 /**
  * One identity record in the shape IdentityLinkService::linked() emits.
  */
-$sl_identity = static function ( string $channel, string $subject, string $masked, string $label, bool $federated, bool $primary = false ): array {
+$ow_identity = static function ( string $channel, string $subject, string $masked, string $label, bool $federated, bool $primary = false ): array {
 	return array(
 		'channel'     => $channel,
 		'subject'     => $subject,
@@ -79,52 +79,52 @@ $sl_identity = static function ( string $channel, string $subject, string $maske
 // The stub user's address. Counted by domain rather than in full: the masked
 // form keeps the domain and loses the local part, so a rule matching the whole
 // string would pass while looking straight at the defect.
-$sl_email  = 'user@example.test';
-$sl_domain = '@example.test';
+$ow_email  = 'user@example.test';
+$ow_domain = '@example.test';
 
 // ---------------------------------------------------------------------
-sl_section( 'Rule 1 — one value, one place (16.1)' );
+ow_section( 'Rule 1 — one value, one place (16.1)' );
 
-$sl_contact_args = array(
-	'sl_user'       => new WP_User( 7, 'Nguyễn Như' ),
-	'sl_phone'      => '',
-	'sl_synthetic'  => false,
-	'sl_pending'    => array(),
-	'sl_otp_length' => 6,
-	'sl_providers'  => array(
-		'sl_identities'     => array(
-			$sl_identity( 'email', $sl_email, 'us•••' . $sl_domain, 'Email', false, true ),
-			$sl_identity( 'google', '117100000000000000000', '1171••••••', 'Google', true ),
+$ow_contact_args = array(
+	'ow_user'       => new WP_User( 7, 'Nguyễn Như' ),
+	'ow_phone'      => '',
+	'ow_synthetic'  => false,
+	'ow_pending'    => array(),
+	'ow_otp_length' => 6,
+	'ow_providers'  => array(
+		'ow_identities'     => array(
+			$ow_identity( 'email', $ow_email, 'us•••' . $ow_domain, 'Email', false, true ),
+			$ow_identity( 'google', '117100000000000000000', '1171••••••', 'Google', true ),
 		),
-		'sl_can_unlink'     => true,
-		'sl_redirect'       => 'https://example.test/my-account/',
-		'sl_link_providers' => array(),
+		'ow_can_unlink'     => true,
+		'ow_redirect'       => 'https://example.test/my-account/',
+		'ow_link_providers' => array(),
 	),
 );
 
-$sl_card = $sl_render( 'partials/account/contact', $sl_contact_args );
+$ow_card = $ow_render( 'partials/account/contact', $ow_contact_args );
 
-sl_assert(
+ow_assert(
 	'the account address appears once in the card',
-	1 === substr_count( $sl_card, $sl_domain ),
+	1 === substr_count( $ow_card, $ow_domain ),
 	sprintf(
 		'Counted %d. IdentityLinkService::linked() returns every identity record and has never filtered by channel, so the contact row prints the address whole and the list below prints it masked — two rows a member reads as two addresses.',
-		substr_count( $sl_card, $sl_domain )
+		substr_count( $ow_card, $ow_domain )
 	)
 );
 
 // The first half of this rule can be satisfied by rendering nothing at all. The
 // federated row is what the card is for, and it has to survive.
-sl_assert(
+ow_assert(
 	'the federated row survives the filter',
-	false !== strpos( $sl_card, 'Google' ),
+	false !== strpos( $ow_card, 'Google' ),
 	'A card that answers by rendering nothing has not answered.'
 );
 
 // ---------------------------------------------------------------------
-sl_section( 'Rule 2 — Đổi for what you own, Bỏ liên kết for what you borrowed (16.1)' );
+ow_section( 'Rule 2 — Đổi for what you own, Bỏ liên kết for what you borrowed (16.1)' );
 
-$sl_list = static function ( array $identities ) use ( $sl_render ): string {
+$ow_list = static function ( array $identities ) use ( $ow_render ): string {
 	/*
 	 * Rendered the way a page renders it: the unlink form is deferred out of the
 	 * partial since P9, because a <form> inside the account form ends that form.
@@ -132,40 +132,40 @@ $sl_list = static function ( array $identities ) use ( $sl_render ): string {
 	 */
 	// Reset first: the buffer is static and a previous render in this process
 	// would otherwise leak its form into this one.
-	\SmartLogin\Frontend\DeferredForms::reset();
+	\OmniWP\Frontend\DeferredForms::reset();
 
-	$sl_markup = $sl_render(
+	$ow_markup = $ow_render(
 		'partials/linked-identities',
 		array(
-			'sl_identities' => $identities,
-			'sl_can_unlink' => true,
-			'sl_redirect'   => 'https://example.test/my-account/',
+			'ow_identities' => $identities,
+			'ow_can_unlink' => true,
+			'ow_redirect'   => 'https://example.test/my-account/',
 		)
 	);
 
 	ob_start();
-	\SmartLogin\Frontend\DeferredForms::flush();
+	\OmniWP\Frontend\DeferredForms::flush();
 
-	return $sl_markup . (string) ob_get_clean();
+	return $ow_markup . (string) ob_get_clean();
 };
 
-$sl_self_only = $sl_list( array( $sl_identity( 'email', $sl_email, 'us•••' . $sl_domain, 'Email', false, true ) ) );
-$sl_federated = $sl_list( array( $sl_identity( 'google', '117100000000000000000', '1171••••••', 'Google', true ) ) );
+$ow_self_only = $ow_list( array( $ow_identity( 'email', $ow_email, 'us•••' . $ow_domain, 'Email', false, true ) ) );
+$ow_federated = $ow_list( array( $ow_identity( 'google', '117100000000000000000', '1171••••••', 'Google', true ) ) );
 
-sl_assert(
+ow_assert(
 	'an address the account owns offers no unlink control',
-	false === strpos( $sl_self_only, 'unlink_identity' ),
+	false === strpos( $ow_self_only, 'unlink_identity' ),
 	'The operation a member wants on their own address is Đổi, which the contact row already offers and replace_in_channel() already implements. "Bỏ liên kết" beside a badge reading "Chính" is the wrong verb for the wrong operation.'
 );
 
-sl_assert(
+ow_assert(
 	'a federated identity still offers one',
-	false !== strpos( $sl_federated, 'unlink_identity' ),
+	false !== strpos( $ow_federated, 'unlink_identity' ),
 	'The half that stops the rule above from passing because the partial renders nothing at all.'
 );
 
 // ---------------------------------------------------------------------
-sl_section( 'Rule 6 — a provider row names the account, not the number (16.2)' );
+ow_section( 'Rule 6 — a provider row names the account, not the number (16.2)' );
 
 /*
  * Through linked() and the stub $wpdb rather than around them: Phase 6 added
@@ -176,7 +176,7 @@ sl_section( 'Rule 6 — a provider row names the account, not the number (16.2)'
  * its tests passing, because one assertion that "something resolves" was taken
  * for three that resolve differently.
  */
-$sl_row = static function ( string $subject, ?array $meta ): array {
+$ow_row = static function ( string $subject, ?array $meta ): array {
 	return array(
 		'id'          => 1,
 		'user_id'     => 7,
@@ -190,58 +190,58 @@ $sl_row = static function ( string $subject, ?array $meta ): array {
 	);
 };
 
-$GLOBALS['sl_wpdb_results'] = array(
-	$sl_row( '117100000000000000001', array( 'name' => 'Cai Hoa', 'email' => 'hoa@example.test' ) ),
-	$sl_row( '117100000000000000002', array( 'email' => 'hoa@example.test' ) ),
-	$sl_row( '117100000000000000003', null ),
+$GLOBALS['ow_wpdb_results'] = array(
+	$ow_row( '117100000000000000001', array( 'name' => 'Cai Hoa', 'email' => 'hoa@example.test' ) ),
+	$ow_row( '117100000000000000002', array( 'email' => 'hoa@example.test' ) ),
+	$ow_row( '117100000000000000003', null ),
 );
 
-$sl_linked = ( new \SmartLogin\Auth\IdentityLinkService() )->linked( 7 );
+$ow_linked = ( new \OmniWP\Auth\IdentityLinkService() )->linked( 7 );
 
-sl_check( 'a stored display name wins', 'Cai Hoa', $sl_linked[0]['display'] ?? null );
+ow_check( 'a stored display name wins', 'Cai Hoa', $ow_linked[0]['display'] ?? null );
 
-$sl_by_email = (string) ( $sl_linked[1]['display'] ?? '' );
+$ow_by_email = (string) ( $ow_linked[1]['display'] ?? '' );
 
-sl_assert(
+ow_assert(
 	'no name falls to the provider address, masked',
-	false !== strpos( $sl_by_email, '@example.test' ) && false === strpos( $sl_by_email, 'hoa@' ),
-	'A provider address is a real identifier, so the screen-sharing rule that applies to subjects applies to it. Got: ' . $sl_by_email
+	false !== strpos( $ow_by_email, '@example.test' ) && false === strpos( $ow_by_email, 'hoa@' ),
+	'A provider address is a real identifier, so the screen-sharing rule that applies to subjects applies to it. Got: ' . $ow_by_email
 );
 
-sl_assert(
+ow_assert(
 	'no meta at all falls to the linked date',
-	false !== strpos( (string) ( $sl_linked[2]['display'] ?? '' ), '30/07/2026' ),
-	'Every identity linked before the claims were stored has empty meta, and a row with no value reads as a rendering fault. Got: ' . ( $sl_linked[2]['display'] ?? '' )
+	false !== strpos( (string) ( $ow_linked[2]['display'] ?? '' ), '30/07/2026' ),
+	'Every identity linked before the claims were stored has empty meta, and a row with no value reads as a rendering fault. Got: ' . ( $ow_linked[2]['display'] ?? '' )
 );
 
-$GLOBALS['sl_wpdb_results'] = array();
+$GLOBALS['ow_wpdb_results'] = array();
 
 // Asserted on the markup, not on the payload: `masked` stays in the array for
 // the REST route, and it is the row that must stop rendering it.
-$sl_sub_row = $sl_list(
-	array( $sl_identity( 'google', '117100000000000000000', '1171••••••', 'Google', true ) + array( 'display' => 'Cai Hoa' ) )
+$ow_sub_row = $ow_list(
+	array( $ow_identity( 'google', '117100000000000000000', '1171••••••', 'Google', true ) + array( 'display' => 'Cai Hoa' ) )
 );
 
-sl_assert(
+ow_assert(
 	'the rendered row carries no masked subject',
-	false === strpos( $sl_sub_row, '1171••••••' ) && false !== strpos( $sl_sub_row, 'Cai Hoa' ),
+	false === strpos( $ow_sub_row, '1171••••••' ) && false !== strpos( $ow_sub_row, 'Cai Hoa' ),
 	'`1171••••••` is the OIDC subject masked. Its owner has never seen that number here or at Google.'
 );
 
 // ---------------------------------------------------------------------
-sl_section( 'Rule 3 — every input the plugin renders is styled by the plugin (16.3)' );
+ow_section( 'Rule 3 — every input the plugin renders is styled by the plugin (16.3)' );
 
-$sl_css = sl_source( 'assets/css/smart-login.css' );
+$ow_css = ow_source( 'assets/css/omniwp.css' );
 
 // Comments carry example selectors and declarations. A rule that reads prose is
 // a rule that changes colour when somebody rewords a comment — the lesson Phase
 // 4 recorded when two fitness rules fired on docblocks.
-$sl_css_code = (string) preg_replace( '#/\*.*?\*/#s', '', $sl_css );
+$ow_css_code = (string) preg_replace( '#/\*.*?\*/#s', '', $ow_css );
 
 // Every class the stylesheet declares a rule for, so a made-up class name cannot
 // satisfy the rule below.
-preg_match_all( '/\.([a-zA-Z][a-zA-Z0-9_-]*)/', $sl_css_code, $sl_class_matches );
-$sl_styled = array_flip( $sl_class_matches[1] );
+preg_match_all( '/\.([a-zA-Z][a-zA-Z0-9_-]*)/', $ow_css_code, $ow_class_matches );
+$ow_styled = array_flip( $ow_class_matches[1] );
 
 /*
  * `[^>]` stops at the closing angle of a PHP close tag, and half these
@@ -252,68 +252,68 @@ $sl_styled = array_flip( $sl_class_matches[1] );
  * ends PHP mode, and the first draft of this file did exactly that — everything
  * below it was echoed as HTML and two rules silently never ran.
  */
-$sl_input_tag = '/<input\b((?:\?>|[^>?]|\?(?!>))*?)>/s';
+$ow_input_tag = '/<input\b((?:\?>|[^>?]|\?(?!>))*?)>/s';
 
 // Types that are never visible and have no styling to miss.
-$sl_invisible = array( 'hidden', 'checkbox', 'radio', 'submit', 'button', 'file', 'image' );
+$ow_invisible = array( 'hidden', 'checkbox', 'radio', 'submit', 'button', 'file', 'image' );
 
-$sl_unstyled = array();
+$ow_unstyled = array();
 
-foreach ( sl_plugin_sources() as $sl_relative => $sl_contents ) {
-	if ( 0 !== strpos( $sl_relative, 'templates/' ) ) {
+foreach ( ow_plugin_sources() as $ow_relative => $ow_contents ) {
+	if ( 0 !== strpos( $ow_relative, 'templates/' ) ) {
 		continue;
 	}
 
-	if ( ! preg_match_all( $sl_input_tag, $sl_contents, $sl_tags, PREG_OFFSET_CAPTURE ) ) {
+	if ( ! preg_match_all( $ow_input_tag, $ow_contents, $ow_tags, PREG_OFFSET_CAPTURE ) ) {
 		continue;
 	}
 
-	foreach ( $sl_tags[0] as $sl_index => $sl_tag ) {
-		$sl_attrs = $sl_tags[1][ $sl_index ][0];
+	foreach ( $ow_tags[0] as $ow_index => $ow_tag ) {
+		$ow_attrs = $ow_tags[1][ $ow_index ][0];
 
 		// A type built from PHP is in scope: the stricter direction, and the one
 		// dynamic type in the tree (contact.php) satisfies the rule anyway.
-		if ( preg_match( '/type=["\']([a-z]+)["\']/', $sl_attrs, $sl_type )
-			&& in_array( $sl_type[1], $sl_invisible, true ) ) {
+		if ( preg_match( '/type=["\']([a-z]+)["\']/', $ow_attrs, $ow_type )
+			&& in_array( $ow_type[1], $ow_invisible, true ) ) {
 			continue;
 		}
 
-		$sl_classes = array();
+		$ow_classes = array();
 
-		if ( preg_match( '/class=["\']([^"\']*)["\']/', $sl_attrs, $sl_class_attr ) ) {
-			$sl_classes = preg_split( '/\s+/', trim( $sl_class_attr[1] ), -1, PREG_SPLIT_NO_EMPTY ) ?: array();
+		if ( preg_match( '/class=["\']([^"\']*)["\']/', $ow_attrs, $ow_class_attr ) ) {
+			$ow_classes = preg_split( '/\s+/', trim( $ow_class_attr[1] ), -1, PREG_SPLIT_NO_EMPTY ) ?: array();
 		}
 
-		$sl_known = array_filter( $sl_classes, static fn( string $c ): bool => isset( $sl_styled[ $c ] ) );
+		$ow_known = array_filter( $ow_classes, static fn( string $c ): bool => isset( $ow_styled[ $c ] ) );
 
-		if ( $sl_known ) {
+		if ( $ow_known ) {
 			continue;
 		}
 
-		$sl_line       = substr_count( substr( $sl_contents, 0, (int) $sl_tag[1] ), "\n" ) + 1;
-		$sl_unstyled[] = $sl_relative . ':' . $sl_line;
+		$ow_line       = substr_count( substr( $ow_contents, 0, (int) $ow_tag[1] ), "\n" ) + 1;
+		$ow_unstyled[] = $ow_relative . ':' . $ow_line;
 	}
 }
 
-sl_assert(
+ow_assert(
 	'no visible input renders without a class the stylesheet targets',
-	array() === $sl_unstyled,
-	'A class rule, not an instance: an input with no class inherits whatever the theme gives it, which is how the unlink confirmation ended up as a browser-default box inline with its label. → ' . implode( ', ', $sl_unstyled )
+	array() === $ow_unstyled,
+	'A class rule, not an instance: an input with no class inherits whatever the theme gives it, which is how the unlink confirmation ended up as a browser-default box inline with its label. → ' . implode( ', ', $ow_unstyled )
 );
 
 // ---------------------------------------------------------------------
-sl_section( 'Rule 4 — a full-width component declares its own box model (16.3)' );
+ow_section( 'Rule 4 — a full-width component declares its own box model (16.3)' );
 
 /*
- * `.smart-login *` sets box-sizing by `inherit` at one class of specificity, so
+ * `.omniwp *` sets box-sizing by `inherit` at one class of specificity, so
  * a single theme rule outranks it and every `width: 100%` component then adds
- * its padding on the outside. smart-login.css:251-267 already argues this at
+ * its padding on the outside. omniwp.css:251-267 already argues this at
  * length and fixes it for `.sl-input` alone.
  *
  * The subject of a selector is its last class: in `.sl-savebar .sl-btn` it is
  * the button that is being sized, not the bar.
  */
-$sl_subject_classes = static function ( string $selector ): array {
+$ow_subject_classes = static function ( string $selector ): array {
 	$out = array();
 
 	foreach ( explode( ',', $selector ) as $part ) {
@@ -325,57 +325,57 @@ $sl_subject_classes = static function ( string $selector ): array {
 	return $out;
 };
 
-$sl_full_width = array();
-$sl_guarded    = array();
+$ow_full_width = array();
+$ow_guarded    = array();
 
 // @media wrappers are skipped rather than parsed: their inner rules match this
 // pattern on their own, which is all the rule needs.
-if ( preg_match_all( '/([^{}]+)\{([^{}]*)\}/s', $sl_css_code, $sl_blocks, PREG_SET_ORDER ) ) {
-	foreach ( $sl_blocks as $sl_block ) {
-		$sl_selector = trim( $sl_block[1] );
-		$sl_body     = $sl_block[2];
+if ( preg_match_all( '/([^{}]+)\{([^{}]*)\}/s', $ow_css_code, $ow_blocks, PREG_SET_ORDER ) ) {
+	foreach ( $ow_blocks as $ow_block ) {
+		$ow_selector = trim( $ow_block[1] );
+		$ow_body     = $ow_block[2];
 
-		if ( preg_match( '/(?<![-\w])width\s*:\s*100%/', $sl_body ) ) {
-			foreach ( $sl_subject_classes( $sl_selector ) as $sl_class ) {
-				if ( 0 === strpos( $sl_class, 'sl-' ) ) {
-					$sl_full_width[ $sl_class ] = true;
+		if ( preg_match( '/(?<![-\w])width\s*:\s*100%/', $ow_body ) ) {
+			foreach ( $ow_subject_classes( $ow_selector ) as $ow_class ) {
+				if ( 0 === strpos( $ow_class, 'sl-' ) ) {
+					$ow_full_width[ $ow_class ] = true;
 				}
 			}
 		}
 
-		if ( preg_match( '/box-sizing\s*:\s*border-box/', $sl_body )
-			&& preg_match( '/max-width\s*:\s*100%/', $sl_body ) ) {
-			foreach ( $sl_subject_classes( $sl_selector ) as $sl_class ) {
-				$sl_guarded[ $sl_class ] = true;
+		if ( preg_match( '/box-sizing\s*:\s*border-box/', $ow_body )
+			&& preg_match( '/max-width\s*:\s*100%/', $ow_body ) ) {
+			foreach ( $ow_subject_classes( $ow_selector ) as $ow_class ) {
+				$ow_guarded[ $ow_class ] = true;
 			}
 		}
 	}
 }
 
-$sl_unguarded = array();
+$ow_unguarded = array();
 
-foreach ( array_keys( $sl_full_width ) as $sl_class ) {
+foreach ( array_keys( $ow_full_width ) as $ow_class ) {
 	// A modifier counts as covered by its base: an element carrying
 	// `sl-btn--block` carries `sl-btn` too.
-	$sl_base = (string) strstr( $sl_class, '--', true );
+	$ow_base = (string) strstr( $ow_class, '--', true );
 
-	if ( isset( $sl_guarded[ $sl_class ] ) || ( '' !== $sl_base && isset( $sl_guarded[ $sl_base ] ) ) ) {
+	if ( isset( $ow_guarded[ $ow_class ] ) || ( '' !== $ow_base && isset( $ow_guarded[ $ow_base ] ) ) ) {
 		continue;
 	}
 
-	$sl_unguarded[] = '.' . $sl_class;
+	$ow_unguarded[] = '.' . $ow_class;
 }
 
-sort( $sl_unguarded );
+sort( $ow_unguarded );
 
-sl_assert(
+ow_assert(
 	'every full-width component is covered by the border-box guard',
-	array() === $sl_unguarded,
-	'width:100% plus padding equals overflow the moment a theme resets box-sizing, and .smart-login * loses that argument on specificity. → ' . implode( ', ', $sl_unguarded )
+	array() === $ow_unguarded,
+	'width:100% plus padding equals overflow the moment a theme resets box-sizing, and .omniwp * loses that argument on specificity. → ' . implode( ', ', $ow_unguarded )
 );
 
 // ---------------------------------------------------------------------
-sl_section( 'Rule 5 — the shared fixture holds the shape the rules are about (16.1)' );
+ow_section( 'Rule 5 — the shared fixture holds the shape the rules are about (16.1)' );
 
 /*
  * A test of a test, and it earns the place. The template suite has rendered the
@@ -392,24 +392,24 @@ sl_section( 'Rule 5 — the shared fixture holds the shape the rules are about (
  * and a fixture that has moved house is exactly the boundary a rename crosses
  * without any test noticing. CLAUDE.md records five previous times.
  */
-$sl_fixtures = sl_source( 'tests/template-fixtures.php' );
+$ow_fixtures = ow_source( 'tests/template-fixtures.php' );
 
-foreach ( array( 'partials/account/contact', 'partials/linked-identities' ) as $sl_name ) {
-	$sl_found = preg_match(
-		'/\'' . preg_quote( $sl_name, '/' ) . '\'\s*=>\s*array\((.*?)\n\t\),\n/s',
-		$sl_fixtures,
-		$sl_block
+foreach ( array( 'partials/account/contact', 'partials/linked-identities' ) as $ow_name ) {
+	$ow_found = preg_match(
+		'/\'' . preg_quote( $ow_name, '/' ) . '\'\s*=>\s*array\((.*?)\n\t\),\n/s',
+		$ow_fixtures,
+		$ow_block
 	);
 
-	sl_assert(
-		sprintf( 'the %s fixture carries a non-federated identity', $sl_name ),
-		1 === $sl_found && (bool) preg_match( "/'federated'\s*=>\s*false/", $sl_block[1] ),
+	ow_assert(
+		sprintf( 'the %s fixture carries a non-federated identity', $ow_name ),
+		1 === $ow_found && (bool) preg_match( "/'federated'\s*=>\s*false/", $ow_block[1] ),
 		'The smoke test renders what the fixture describes. A fixture holding only federated identities cannot execute the branch the rules above are about.'
 	);
 }
 
 // ---------------------------------------------------------------------
-sl_section( 'Rule 6 — a lone provider button is a whole row, not half of one' );
+ow_section( 'Rule 6 — a lone provider button is a whole row, not half of one' );
 
 /*
  * The provider row was a two-column grid with the count written into it. That
@@ -428,22 +428,22 @@ sl_section( 'Rule 6 — a lone provider button is a whole row, not half of one' 
  * the behaviour and the markup it acts on, and stops short of claiming to have
  * measured a rendered width.
  */
-$sl_grid_css = (string) preg_replace( '#/\*.*?\*/#s', '', sl_source( 'assets/css/smart-login.css' ) );
+$ow_grid_css = (string) preg_replace( '#/\*.*?\*/#s', '', ow_source( 'assets/css/omniwp.css' ) );
 
-preg_match_all( '/([^{}]*\.sl-provider-buttons[^{}]*)\{([^{}]*)\}/s', $sl_grid_css, $sl_grid_rules, PREG_SET_ORDER );
+preg_match_all( '/([^{}]*\.sl-provider-buttons[^{}]*)\{([^{}]*)\}/s', $ow_grid_css, $ow_grid_rules, PREG_SET_ORDER );
 
-$sl_spanning = '';
+$ow_spanning = '';
 
-foreach ( $sl_grid_rules as $sl_rule ) {
-	if ( false !== strpos( $sl_rule[2], 'grid-column' ) ) {
-		$sl_spanning = trim( preg_replace( '/\s+/', ' ', $sl_rule[1] ) );
+foreach ( $ow_grid_rules as $ow_rule ) {
+	if ( false !== strpos( $ow_rule[2], 'grid-column' ) ) {
+		$ow_spanning = trim( preg_replace( '/\s+/', ' ', $ow_rule[1] ) );
 	}
 }
 
-sl_assert(
+ow_assert(
 	'the odd button out is told to span the whole row',
-	'' !== $sl_spanning && false !== strpos( $sl_spanning, ':last-child' ) && false !== strpos( $sl_spanning, ':nth-child(odd)' ),
-	'Nothing in .sl-provider-buttons sets grid-column for the unpaired button, so one provider draws in a two-column track and occupies half the width. Found: ' . ( '' === $sl_spanning ? 'no such rule' : $sl_spanning )
+	'' !== $ow_spanning && false !== strpos( $ow_spanning, ':last-child' ) && false !== strpos( $ow_spanning, ':nth-child(odd)' ),
+	'Nothing in .sl-provider-buttons sets grid-column for the unpaired button, so one provider draws in a two-column track and occupies half the width. Found: ' . ( '' === $ow_spanning ? 'no such rule' : $ow_spanning )
 );
 
 /*
@@ -451,12 +451,12 @@ sl_assert(
  * the assertion above by accident while quietly undoing the pair layout, which
  * is the change this repo asked for to be reversible.
  */
-preg_match( '/\.smart-login--identify \.sl-provider-buttons\s*\{([^{}]*)\}/s', $sl_grid_css, $sl_track_rule );
+preg_match( '/\.omniwp--identify \.sl-provider-buttons\s*\{([^{}]*)\}/s', $ow_grid_css, $ow_track_rule );
 
-sl_assert(
+ow_assert(
 	'two providers still share the row',
-	false !== strpos( $sl_track_rule[1] ?? '', 'repeat(2' ),
-	'The two-column track is what a second provider comes back to. Removing it makes the pair layout a rewrite rather than a return. Found: ' . trim( (string) ( $sl_track_rule[1] ?? 'no rule' ) )
+	false !== strpos( $ow_track_rule[1] ?? '', 'repeat(2' ),
+	'The two-column track is what a second provider comes back to. Removing it makes the pair layout a rewrite rather than a return. Found: ' . trim( (string) ( $ow_track_rule[1] ?? 'no rule' ) )
 );
 
 /*
@@ -465,15 +465,15 @@ sl_assert(
  * make every button both last and odd within its own parent, and the rule above
  * would go on passing while every layout it describes was wrong.
  */
-$sl_auth_markup = sl_source( 'templates/form-auth.php' );
+$ow_auth_markup = ow_source( 'templates/form-auth.php' );
 
-preg_match( '/<div class="sl-provider-buttons">(.*?)<\/div>/s', $sl_auth_markup, $sl_grid_markup );
+preg_match( '/<div class="sl-provider-buttons">(.*?)<\/div>/s', $ow_auth_markup, $ow_grid_markup );
 
-sl_assert(
+ow_assert(
 	'the buttons are direct children of the grid',
-	'' !== ( $sl_grid_markup[1] ?? '' ) && false === strpos( (string) ( $sl_grid_markup[1] ?? '' ), '<div' ),
+	'' !== ( $ow_grid_markup[1] ?? '' ) && false === strpos( (string) ( $ow_grid_markup[1] ?? '' ), '<div' ),
 	'A wrapper element per button makes every one of them :last-child of its own parent, so the spanning rule would apply to all of them and to none of the right ones.'
 );
 
 // ---------------------------------------------------------------------
-sl_summary( 'Sign-in card' );
+ow_summary( 'Sign-in card' );

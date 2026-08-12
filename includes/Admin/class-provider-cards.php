@@ -8,15 +8,15 @@
  * fields (enabled, client id) still come from the registry, so they are declared
  * in the same place as everything else.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Admin;
+namespace OmniWP\Admin;
 
-use SmartLogin\Auth\ProviderAuthController;
-use SmartLogin\Auth\Providers\ProviderCredentials;
-use SmartLogin\Auth\Providers\ProviderRegistry;
-use SmartLogin\Settings;
+use OmniWP\Auth\ProviderAuthController;
+use OmniWP\Auth\Providers\ProviderCredentials;
+use OmniWP\Auth\Providers\ProviderRegistry;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -31,7 +31,7 @@ final class ProviderCards {
 			<p>
 				<?php
 				echo wp_kses_post(
-					__( 'Bạn có thể cấu hình trực tiếp tại đây. Client secret được <strong>mã hóa trước khi lưu</strong> và không bao giờ hiển thị lại. Nếu website đã khai báo credentials trong <code>wp-config.php</code> hoặc biến môi trường, cấu hình triển khai đó sẽ được ưu tiên.', 'smart-login' )
+					__( 'Bạn có thể cấu hình trực tiếp tại đây. Client secret được <strong>mã hóa trước khi lưu</strong> và không bao giờ hiển thị lại. Nếu website đã khai báo credentials trong <code>wp-config.php</code> hoặc biến môi trường, cấu hình triển khai đó sẽ được ưu tiên.', 'omniwp' )
 				);
 				?>
 			</p>
@@ -41,7 +41,7 @@ final class ProviderCards {
 
 		<div class="sl-provider-grid">
 			<?php
-			$this->card( 'google', __( 'Google Login', 'smart-login' ), $fields, 'google_client_secret', 'google_clear_secret' );
+			$this->card( 'google', __( 'Google Login', 'omniwp' ), $fields, 'google_client_secret', 'google_clear_secret' );
 			?>
 		</div>
 		<?php
@@ -69,7 +69,7 @@ final class ProviderCards {
 		}
 		?>
 		<div class="sl-provider-policy">
-			<h3><?php esc_html_e( 'Áp dụng cho mọi nhà cung cấp bên dưới', 'smart-login' ); ?></h3>
+			<h3><?php esc_html_e( 'Áp dụng cho mọi nhà cung cấp bên dưới', 'omniwp' ); ?></h3>
 			<table class="form-table" role="presentation">
 				<?php
 				foreach ( $shared as $path => $field ) {
@@ -94,11 +94,11 @@ final class ProviderCards {
 		$has_secret    = '' !== ProviderCredentials::secret( $provider );
 		$source        = ProviderCredentials::source( $provider );
 		$source_labels = array(
-			'environment' => __( 'wp-config.php / Environment', 'smart-login' ),
-			'settings'    => __( 'Settings đã mã hóa', 'smart-login' ),
-			'missing'     => __( 'Chưa cấu hình', 'smart-login' ),
+			'environment' => __( 'wp-config.php / Environment', 'omniwp' ),
+			'settings'    => __( 'Settings đã mã hóa', 'omniwp' ),
+			'missing'     => __( 'Chưa cấu hình', 'omniwp' ),
 		);
-		$secret_label  = __( 'Google Client Secret', 'smart-login' );
+		$secret_label  = __( 'Google Client Secret', 'omniwp' );
 
 		// Whatever the registry declares for this provider, in declared order —
 		// minus the switch, which the header above now draws. Excluded here
@@ -120,7 +120,7 @@ final class ProviderCards {
 						<?php
 						printf(
 							/* translators: %s: credential source. */
-							esc_html__( 'Nguồn: %s', 'smart-login' ),
+							esc_html__( 'Nguồn: %s', 'omniwp' ),
 							esc_html( $source_labels[ $source ] ?? $source_labels['missing'] )
 						);
 						?>
@@ -133,13 +133,13 @@ final class ProviderCards {
 
 			<div class="sl-provider-tabs" role="tablist" aria-label="<?php echo esc_attr( $label ); ?>">
 				<button type="button" class="button-link is-active" role="tab" aria-selected="true" data-provider-tab="setup">
-					<?php esc_html_e( 'Thiết lập', 'smart-login' ); ?>
+					<?php esc_html_e( 'Thiết lập', 'omniwp' ); ?>
 				</button>
 				<button type="button" class="button-link" role="tab" aria-selected="false" data-provider-tab="check">
-					<?php esc_html_e( 'Kiểm tra', 'smart-login' ); ?>
+					<?php esc_html_e( 'Kiểm tra', 'omniwp' ); ?>
 				</button>
 				<button type="button" class="button-link" role="tab" aria-selected="false" data-provider-tab="docs">
-					<?php esc_html_e( 'Hướng dẫn', 'smart-login' ); ?>
+					<?php esc_html_e( 'Hướng dẫn', 'omniwp' ); ?>
 				</button>
 			</div>
 
@@ -154,7 +154,7 @@ final class ProviderCards {
 						if ( 'environment' === $source ) {
 							printf(
 								'<tr><th scope="row"></th><td><p class="description">%s</p></td></tr>',
-								esc_html__( 'Giá trị triển khai đang được ưu tiên; các ô trên là cấu hình dự phòng.', 'smart-login' )
+								esc_html__( 'Giá trị triển khai đang được ưu tiên; các ô trên là cấu hình dự phòng.', 'omniwp' )
 							);
 						}
 						?>
@@ -170,21 +170,21 @@ final class ProviderCards {
 									value=""
 									class="regular-text"
 									autocomplete="new-password"
-									placeholder="<?php echo $has_secret ? esc_attr__( 'Đã lưu — để trống để giữ nguyên', 'smart-login' ) : esc_attr__( 'Nhập secret', 'smart-login' ); ?>"
+									placeholder="<?php echo $has_secret ? esc_attr__( 'Đã lưu — để trống để giữ nguyên', 'omniwp' ) : esc_attr__( 'Nhập secret', 'omniwp' ); ?>"
 								/>
 								<p class="description">
-									<?php esc_html_e( 'Secret chỉ dùng khi lưu; plugin không đưa secret hiện có trở lại HTML.', 'smart-login' ); ?>
+									<?php esc_html_e( 'Secret chỉ dùng khi lưu; plugin không đưa secret hiện có trở lại HTML.', 'omniwp' ); ?>
 								</p>
 								<?php if ( $has_secret && 'environment' !== $source ) : ?>
 									<label class="sl-provider-clear-secret">
 										<input type="checkbox" name="<?php echo esc_attr( Settings::OPTION . '[' . $clear_field . ']' ); ?>" value="1" />
-										<?php esc_html_e( 'Xóa secret đã lưu khi bấm Lưu thay đổi', 'smart-login' ); ?>
+										<?php esc_html_e( 'Xóa secret đã lưu khi bấm Lưu thay đổi', 'omniwp' ); ?>
 									</label>
 								<?php endif; ?>
 							</td>
 						</tr>
 						<tr>
-							<th scope="row"><?php esc_html_e( 'Callback URL', 'smart-login' ); ?></th>
+							<th scope="row"><?php esc_html_e( 'Callback URL', 'omniwp' ); ?></th>
 							<td>
 								<input
 									type="text"
@@ -193,7 +193,7 @@ final class ProviderCards {
 									readonly
 									data-provider-callback
 								/>
-								<p class="description"><?php esc_html_e( 'Sao chép chính xác URL này sang cấu hình ứng dụng của provider.', 'smart-login' ); ?></p>
+								<p class="description"><?php esc_html_e( 'Sao chép chính xác URL này sang cấu hình ứng dụng của provider.', 'omniwp' ); ?></p>
 							</td>
 						</tr>
 					</tbody>
@@ -240,7 +240,7 @@ final class ProviderCards {
 				<?php
 				printf(
 					/* translators: %s: provider name. */
-					esc_html__( 'Kích hoạt %s', 'smart-login' ),
+					esc_html__( 'Kích hoạt %s', 'omniwp' ),
 					esc_html( $label )
 				);
 				?>
@@ -269,14 +269,14 @@ final class ProviderCards {
 		if ( array_key_exists( $provider, ( new ProviderRegistry() )->available() ) ) {
 			return array(
 				'class' => 'is-ready',
-				'label' => __( 'Đang hoạt động', 'smart-login' ),
+				'label' => __( 'Đang hoạt động', 'omniwp' ),
 			);
 		}
 
 		if ( $configured ) {
 			return array(
 				'class' => 'is-idle',
-				'label' => __( 'Đã cấu hình · chưa bật', 'smart-login' ),
+				'label' => __( 'Đã cấu hình · chưa bật', 'omniwp' ),
 			);
 		}
 
@@ -289,13 +289,13 @@ final class ProviderCards {
 		if ( Settings::is_on( $enabled_path ) ) {
 			return array(
 				'class' => 'is-missing',
-				'label' => __( 'Đã bật · thiếu credentials', 'smart-login' ),
+				'label' => __( 'Đã bật · thiếu credentials', 'omniwp' ),
 			);
 		}
 
 		return array(
 			'class' => 'is-missing',
-			'label' => __( 'Chưa cấu hình', 'smart-login' ),
+			'label' => __( 'Chưa cấu hình', 'omniwp' ),
 		);
 	}
 
@@ -317,7 +317,7 @@ final class ProviderCards {
 		if ( ! $configured ) {
 			printf(
 				'<p class="description">%s</p>',
-				esc_html__( 'Điền Client ID và Secret rồi Lưu thay đổi trước khi kiểm tra.', 'smart-login' )
+				esc_html__( 'Điền Client ID và Secret rồi Lưu thay đổi trước khi kiểm tra.', 'omniwp' )
 			);
 
 			return;
@@ -328,12 +328,12 @@ final class ProviderCards {
 		if ( is_array( $result ) && ( $result['provider'] ?? '' ) === $provider ) {
 			printf(
 				'<div class="notice notice-success inline"><p>%s</p></div>',
-				esc_html__( 'Vòng đăng nhập chạy được. Không có tài khoản nào được tạo và không ai được đăng nhập — đây chỉ là phép thử.', 'smart-login' )
+				esc_html__( 'Vòng đăng nhập chạy được. Không có tài khoản nào được tạo và không ai được đăng nhập — đây chỉ là phép thử.', 'omniwp' )
 			);
 		}
 		?>
 		<p class="description">
-			<?php esc_html_e( 'Mở một vòng đăng nhập thật với nhà cung cấp rồi dừng lại ngay khi nhận được danh tính. Không tạo tài khoản, không đăng nhập, không liên kết gì.', 'smart-login' ); ?>
+			<?php esc_html_e( 'Mở một vòng đăng nhập thật với nhà cung cấp rồi dừng lại ngay khi nhận được danh tính. Không tạo tài khoản, không đăng nhập, không liên kết gì.', 'omniwp' ); ?>
 		</p>
 		<p>
 			<a
@@ -341,10 +341,10 @@ final class ProviderCards {
 				href="<?php echo esc_url( ProviderAuthController::test_url( $provider ) ); ?>"
 				target="_blank"
 				rel="noopener noreferrer"
-			><?php esc_html_e( 'Chạy kiểm tra', 'smart-login' ); ?></a>
+			><?php esc_html_e( 'Chạy kiểm tra', 'omniwp' ); ?></a>
 		</p>
 		<p class="description">
-			<?php esc_html_e( 'Nếu nhà cung cấp báo lỗi, thông báo của họ sẽ hiện ra — thường gặp nhất là redirect URI khai báo lệch so với URL dưới đây.', 'smart-login' ); ?>
+			<?php esc_html_e( 'Nếu nhà cung cấp báo lỗi, thông báo của họ sẽ hiện ra — thường gặp nhất là redirect URI khai báo lệch so với URL dưới đây.', 'omniwp' ); ?>
 		</p>
 		<p><code><?php echo esc_html( ProviderCredentials::redirect_uri( $provider ) ); ?></code></p>
 		<?php
@@ -355,14 +355,14 @@ final class ProviderCards {
 			return;
 		}
 		?>
-			<h4><?php esc_html_e( 'Tạo OAuth Client trên Google Cloud', 'smart-login' ); ?></h4>
+			<h4><?php esc_html_e( 'Tạo OAuth Client trên Google Cloud', 'omniwp' ); ?></h4>
 			<ol>
 				<li>
 					<?php
 					printf(
 						wp_kses(
 							/* translators: %s: Google Cloud Console URL. */
-							__( 'Mở <a href="%s" target="_blank" rel="noopener noreferrer">Google Cloud Console → Clients</a>, chọn đúng project.', 'smart-login' ),
+							__( 'Mở <a href="%s" target="_blank" rel="noopener noreferrer">Google Cloud Console → Clients</a>, chọn đúng project.', 'omniwp' ),
 							array(
 								'a' => array(
 									'href'   => array(),
@@ -375,13 +375,13 @@ final class ProviderCards {
 					);
 					?>
 				</li>
-				<li><?php esc_html_e( 'Cấu hình OAuth consent screen; nếu ứng dụng đang ở Testing, thêm các tài khoản thử nghiệm vào Test users.', 'smart-login' ); ?></li>
-				<li><?php esc_html_e( 'Tạo OAuth Client ID loại Web application.', 'smart-login' ); ?></li>
-				<li><?php esc_html_e( 'Trong Authorized redirect URIs, dán chính xác Callback URL ở tab Thiết lập.', 'smart-login' ); ?></li>
-				<li><?php esc_html_e( 'Sao chép Client ID và Client Secret vào các ô tương ứng, bật Kích hoạt rồi Lưu thay đổi.', 'smart-login' ); ?></li>
+				<li><?php esc_html_e( 'Cấu hình OAuth consent screen; nếu ứng dụng đang ở Testing, thêm các tài khoản thử nghiệm vào Test users.', 'omniwp' ); ?></li>
+				<li><?php esc_html_e( 'Tạo OAuth Client ID loại Web application.', 'omniwp' ); ?></li>
+				<li><?php esc_html_e( 'Trong Authorized redirect URIs, dán chính xác Callback URL ở tab Thiết lập.', 'omniwp' ); ?></li>
+				<li><?php esc_html_e( 'Sao chép Client ID và Client Secret vào các ô tương ứng, bật Kích hoạt rồi Lưu thay đổi.', 'omniwp' ); ?></li>
 			</ol>
 			<div class="notice notice-warning inline">
-				<p><?php esc_html_e( 'Không dùng JavaScript origin thay cho redirect URI. Google yêu cầu URI callback phải khớp chính xác với URI đã khai báo.', 'smart-login' ); ?></p>
+				<p><?php esc_html_e( 'Không dùng JavaScript origin thay cho redirect URI. Google yêu cầu URI callback phải khớp chính xác với URI đã khai báo.', 'omniwp' ); ?></p>
 			</div>
 		<?php
 	}

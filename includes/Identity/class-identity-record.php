@@ -1,15 +1,15 @@
 <?php
 /**
- * One row of smartlogin_identities, as an object.
+ * One row of OmniWP_identities, as an object.
  *
  * A record can only be created from a VerifiedClaim, so an unproven subject has
  * no route into the table. from_row() is the read path used by the Phase 2
  * repository; to_row() is the write path.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Identity;
+namespace OmniWP\Identity;
 
 defined( 'ABSPATH' ) || exit;
 

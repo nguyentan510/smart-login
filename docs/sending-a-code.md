@@ -53,7 +53,7 @@ bends:
 `class-gateway-presets.php:68`:
 
 ```php
-'generic' => __( 'Webhook JSON (n8n / Make / Zapier)', 'smart-login' ),
+'generic' => __( 'Webhook JSON (n8n / Make / Zapier)', 'omniwp' ),
 ```
 
 The tab named **Automation** documents itself as being for n8n, Make and Zapier.
@@ -238,7 +238,7 @@ every other gateway.
 **No new gateway presets.** The eSMS parameters are the ones this project has
 verified against a live account; a preset with the wrong parameter names is worse
 than no preset because it looks authoritative while failing. Others arrive
-through `smart_login_gateway_presets` when somebody has an account to test with.
+through `OMNIWP_gateway_presets` when somebody has an account to test with.
 
 **Email keeps one transport.** `wp_mail()` and nothing else. Routing email at an
 external sender is the same class of change this phase is undoing, and no report

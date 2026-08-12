@@ -8,10 +8,10 @@
  * the wrong one — a redaction rule that exists twice is a redaction rule that
  * will be fixed once.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\OTP\Transports;
+namespace OmniWP\OTP\Transports;
 
 defined( 'ABSPATH' ) || exit;
 

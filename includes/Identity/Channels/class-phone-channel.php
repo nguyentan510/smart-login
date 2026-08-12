@@ -6,13 +6,13 @@
  * already covered by the regression suite. This class only adapts it to the
  * channel contract.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Identity\Channels;
+namespace OmniWP\Identity\Channels;
 
-use SmartLogin\Identity\Phone;
-use SmartLogin\Identity\VerifiedClaim;
+use OmniWP\Identity\Phone;
+use OmniWP\Identity\VerifiedClaim;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -45,7 +45,7 @@ final class PhoneChannel implements IdentityChannel {
 	}
 
 	public function label(): string {
-		return __( 'Số điện thoại', 'smart-login' );
+		return __( 'Số điện thoại', 'omniwp' );
 	}
 
 	public function mask( string $subject ): string {

@@ -2,26 +2,26 @@
 /**
  * Resolves, auto-links or creates a WordPress user for an external identity.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth;
+namespace OmniWP\Auth;
 
-use SmartLogin\Auth\Providers\ProviderIdentity;
-use SmartLogin\Identity\Channels\MailChannel;
-use SmartLogin\Identity\ChannelRegistry;
-use SmartLogin\Identity\Claim;
-use SmartLogin\Identity\IdentityDirectory;
-use SmartLogin\Identity\IdentityRecord;
-use SmartLogin\Identity\IdentityRepository;
-use SmartLogin\Identity\OpaqueLogin;
-use SmartLogin\Identity\Phone;
-use SmartLogin\Identity\ProfileSeeder;
-use SmartLogin\Identity\UserManager;
-use SmartLogin\Identity\VerifiedClaim;
-use SmartLogin\Security\AuditLog;
-use SmartLogin\Security\RateLimiter;
-use SmartLogin\Settings;
+use OmniWP\Auth\Providers\ProviderIdentity;
+use OmniWP\Identity\Channels\MailChannel;
+use OmniWP\Identity\ChannelRegistry;
+use OmniWP\Identity\Claim;
+use OmniWP\Identity\IdentityDirectory;
+use OmniWP\Identity\IdentityRecord;
+use OmniWP\Identity\IdentityRepository;
+use OmniWP\Identity\OpaqueLogin;
+use OmniWP\Identity\Phone;
+use OmniWP\Identity\ProfileSeeder;
+use OmniWP\Identity\UserManager;
+use OmniWP\Identity\VerifiedClaim;
+use OmniWP\Security\AuditLog;
+use OmniWP\Security\RateLimiter;
+use OmniWP\Settings;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
@@ -68,17 +68,17 @@ final class AccountProvisioner {
 	/** @return array{user:\WP_User,context:AuthContext}|WP_Error */
 	public function resolve( ProviderIdentity $identity, array $transaction ) {
 		if ( '' === $identity->provider || '' === $identity->subject || strlen( $identity->subject ) > 191 ) {
-			return new WP_Error( 'smart_login_provider_identity', __( 'Nhà cung cấp đăng nhập không trả về định danh hợp lệ.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_provider_identity', __( 'Nhà cung cấp đăng nhập không trả về định danh hợp lệ.', 'omniwp' ) );
 		}
 
 		$existing = $this->identities->find( $this->claim_for( $identity ) );
 		if ( $existing ) {
 			$user = get_userdata( $existing->user_id() );
 			if ( ! $user ) {
-				return new WP_Error( 'smart_login_provider_orphan', __( 'Liên kết tài khoản không còn hợp lệ.', 'smart-login' ) );
+				return new WP_Error( 'OMNIWP_provider_orphan', __( 'Liên kết tài khoản không còn hợp lệ.', 'omniwp' ) );
 			}
 			if ( ! empty( $transaction['linking'] ) && (int) ( $transaction['user_id'] ?? 0 ) !== (int) $user->ID ) {
-				return new WP_Error( 'smart_login_provider_conflict', __( 'Tài khoản nhà cung cấp đã liên kết với người dùng khác.', 'smart-login' ) );
+				return new WP_Error( 'OMNIWP_provider_conflict', __( 'Tài khoản nhà cung cấp đã liên kết với người dùng khác.', 'omniwp' ) );
 			}
 			return array(
 				'user'    => $user,
@@ -90,20 +90,20 @@ final class AccountProvisioner {
 		$link_user_id = (int) ( $transaction['user_id'] ?? 0 );
 		if ( $linking ) {
 			if ( $link_user_id <= 0 || get_current_user_id() !== $link_user_id ) {
-				return new WP_Error( 'smart_login_provider_link_auth', __( 'Phiên liên kết tài khoản không còn hợp lệ.', 'smart-login' ) );
+				return new WP_Error( 'OMNIWP_provider_link_auth', __( 'Phiên liên kết tài khoản không còn hợp lệ.', 'omniwp' ) );
 			}
 			$user = get_userdata( $link_user_id );
 			if ( ! $user ) {
-				return new WP_Error( 'smart_login_no_user', __( 'Không tìm thấy tài khoản.', 'smart-login' ) );
+				return new WP_Error( 'OMNIWP_no_user', __( 'Không tìm thấy tài khoản.', 'omniwp' ) );
 			}
 			if ( $identity->email_verified && '' !== $identity->email ) {
 				$email_owner = get_user_by( 'email', $identity->email );
 				if ( $email_owner && (int) $email_owner->ID !== $link_user_id ) {
-					return new WP_Error( 'smart_login_provider_conflict', __( 'Email của nhà cung cấp đã thuộc về tài khoản khác.', 'smart-login' ) );
+					return new WP_Error( 'OMNIWP_provider_conflict', __( 'Email của nhà cung cấp đã thuộc về tài khoản khác.', 'omniwp' ) );
 				}
 			}
 			if ( ! $this->link( $identity, (int) $user->ID, IdentityRecord::BY_OAUTH ) ) {
-				return new WP_Error( 'smart_login_provider_link', __( 'Không thể liên kết tài khoản nhà cung cấp.', 'smart-login' ) );
+				return new WP_Error( 'OMNIWP_provider_link', __( 'Không thể liên kết tài khoản nhà cung cấp.', 'omniwp' ) );
 			}
 			return array(
 				'user'    => $user,
@@ -120,15 +120,15 @@ final class AccountProvisioner {
 				)
 			);
 			// The only route to Resolution::CONFLICT in the whole system:
-			// smartlogin_identities cannot be ambiguous, but two WordPress users
+			// OmniWP_identities cannot be ambiguous, but two WordPress users
 			// sharing an address can be. Fail closed rather than pick one.
 			if ( count( $ids ) > 1 ) {
-				return new WP_Error( 'smart_login_provider_conflict', __( 'Email đang thuộc về nhiều tài khoản. Không thể tự động liên kết.', 'smart-login' ) );
+				return new WP_Error( 'OMNIWP_provider_conflict', __( 'Email đang thuộc về nhiều tài khoản. Không thể tự động liên kết.', 'omniwp' ) );
 			}
 			$user = 1 === count( $ids ) ? get_userdata( (int) $ids[0] ) : null;
 			if ( $user && ! UserManager::is_synthetic_email( (string) $user->user_email ) ) {
 				if ( ! $this->link( $identity, (int) $user->ID, IdentityRecord::BY_AUTO_EMAIL ) ) {
-					return new WP_Error( 'smart_login_provider_link', __( 'Không thể tự động liên kết tài khoản hiện có.', 'smart-login' ) );
+					return new WP_Error( 'OMNIWP_provider_link', __( 'Không thể tự động liên kết tài khoản hiện có.', 'omniwp' ) );
 				}
 				// This branch has already decided the address identifies this account —
 				// that is the whole of what auto-linking means. Leaving it without a row
@@ -160,7 +160,7 @@ final class AccountProvisioner {
 					);
 				}
 			}
-			return new WP_Error( 'smart_login_provider_link', __( 'Không thể lưu liên kết tài khoản nhà cung cấp.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_provider_link', __( 'Không thể lưu liên kết tài khoản nhà cung cấp.', 'omniwp' ) );
 		}
 
 		$this->adopt_provider_email( $identity, (int) $user->ID );
@@ -240,7 +240,7 @@ final class AccountProvisioner {
 			: UserManager::synthetic_email( $opaque );
 
 		if ( email_exists( $email ) ) {
-			return new WP_Error( 'smart_login_exists', __( 'Tài khoản đã tồn tại.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_exists', __( 'Tài khoản đã tồn tại.', 'omniwp' ) );
 		}
 		$login   = $opaque;
 		$names   = UserManager::split_name( $identity->display_name );
@@ -275,7 +275,7 @@ final class AccountProvisioner {
 		}
 
 		$user = get_userdata( (int) $user_id );
-		return $user ?: new WP_Error( 'smart_login_provider_user', __( 'Không thể tải tài khoản vừa tạo.', 'smart-login' ) );
+		return $user ?: new WP_Error( 'OMNIWP_provider_user', __( 'Không thể tải tài khoản vừa tạo.', 'omniwp' ) );
 	}
 
 	/**

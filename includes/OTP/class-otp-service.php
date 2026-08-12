@@ -6,22 +6,22 @@
  * constant time. The plaintext exists in memory just long enough to hand to a
  * channel.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\OTP;
+namespace OmniWP\OTP;
 
-use SmartLogin\Identity\ChannelRegistry;
-use SmartLogin\Identity\Channels\MailChannel;
-use SmartLogin\Identity\Channels\PhoneChannel;
-use SmartLogin\Identity\Claim;
-use SmartLogin\Identity\Phone;
-use SmartLogin\Identity\VerifiedClaim;
-use SmartLogin\OTP\Transports\TransportRouter;
-use SmartLogin\Security\AuditLog;
-use SmartLogin\Security\Client;
-use SmartLogin\Security\RateLimiter;
-use SmartLogin\Settings;
+use OmniWP\Identity\ChannelRegistry;
+use OmniWP\Identity\Channels\MailChannel;
+use OmniWP\Identity\Channels\PhoneChannel;
+use OmniWP\Identity\Claim;
+use OmniWP\Identity\Phone;
+use OmniWP\Identity\VerifiedClaim;
+use OmniWP\OTP\Transports\TransportRouter;
+use OmniWP\Security\AuditLog;
+use OmniWP\Security\Client;
+use OmniWP\Security\RateLimiter;
+use OmniWP\Settings;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
@@ -74,7 +74,7 @@ class OtpService {
 	 */
 	public function issue( string $destination, string $intent, array $payload = array(), array $ctx = array() ) {
 		if ( '' === $destination ) {
-			return new WP_Error( 'smart_login_no_destination', __( 'Thiếu số điện thoại hoặc email nhận mã.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_no_destination', __( 'Thiếu số điện thoại hoặc email nhận mã.', 'omniwp' ) );
 		}
 
 		$allowed = $this->limiter->check_otp_send( $destination, $intent );
@@ -124,7 +124,7 @@ class OtpService {
 		);
 
 		if ( ! $row_id ) {
-			return new WP_Error( 'smart_login_db', __( 'Không tạo được mã xác thực. Vui lòng thử lại.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_db', __( 'Không tạo được mã xác thực. Vui lòng thử lại.', 'omniwp' ) );
 		}
 
 		$send_ctx = array_merge(
@@ -182,7 +182,7 @@ class OtpService {
 		 * @param string $destination
 		 * @param array  $send_ctx
 		 */
-		do_action( 'smart_login_otp_sent', $destination, $send_ctx );
+		do_action( 'OMNIWP_otp_sent', $destination, $send_ctx );
 
 		$result = array(
 			'token'        => $token,
@@ -213,29 +213,29 @@ class OtpService {
 		$code  = preg_replace( '/\D/', '', trim( $code ) );
 
 		if ( '' === $token || '' === $code ) {
-			return new WP_Error( 'smart_login_otp_missing', __( 'Vui lòng nhập mã xác thực.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_otp_missing', __( 'Vui lòng nhập mã xác thực.', 'omniwp' ) );
 		}
 
 		$row = $this->repo->find_by_token( $token );
 
 		if ( ! $row ) {
-			return new WP_Error( 'smart_login_otp_invalid', __( 'Mã xác thực không hợp lệ. Vui lòng yêu cầu mã mới.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_otp_invalid', __( 'Mã xác thực không hợp lệ. Vui lòng yêu cầu mã mới.', 'omniwp' ) );
 		}
 
 		if ( '' !== $expected_intent && $expected_intent !== $row['intent'] ) {
-			return new WP_Error( 'smart_login_wrong_intent', __( 'Phiên xác thực không hợp lệ.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_wrong_intent', __( 'Phiên xác thực không hợp lệ.', 'omniwp' ) );
 		}
 
 		$masked = RateLimiter::mask_identity( $row['destination'] );
 
 		if ( ! empty( $row['consumed_at'] ) ) {
-			return new WP_Error( 'smart_login_otp_used', __( 'Mã xác thực đã được sử dụng. Vui lòng yêu cầu mã mới.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_otp_used', __( 'Mã xác thực đã được sử dụng. Vui lòng yêu cầu mã mới.', 'omniwp' ) );
 		}
 
 		if ( strtotime( $row['expires_at'] . ' UTC' ) < time() ) {
 			AuditLog::record( AuditLog::OTP_EXPIRED, $masked, array( 'intent' => $row['intent'] ) );
 
-			return new WP_Error( 'smart_login_otp_expired', __( 'Mã xác thực đã hết hạn. Vui lòng bấm "Gửi lại".', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_otp_expired', __( 'Mã xác thực đã hết hạn. Vui lòng bấm "Gửi lại".', 'omniwp' ) );
 		}
 
 		$max = max( 1, Settings::get_int( 'otp.max_attempts', 5 ) );
@@ -243,7 +243,7 @@ class OtpService {
 		if ( (int) $row['attempts'] >= $max ) {
 			$this->repo->mark_consumed( (int) $row['id'] );
 
-			return new WP_Error( 'smart_login_otp_locked', __( 'Bạn đã nhập sai quá số lần cho phép. Vui lòng yêu cầu mã mới.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_otp_locked', __( 'Bạn đã nhập sai quá số lần cho phép. Vui lòng yêu cầu mã mới.', 'omniwp' ) );
 		}
 
 		if ( ! hash_equals( $row['code_hash'], $this->hash_code( $code ) ) ) {
@@ -262,14 +262,14 @@ class OtpService {
 			if ( $left <= 0 ) {
 				$this->repo->mark_consumed( (int) $row['id'] );
 
-				return new WP_Error( 'smart_login_otp_locked', __( 'Bạn đã nhập sai quá số lần cho phép. Vui lòng yêu cầu mã mới.', 'smart-login' ) );
+				return new WP_Error( 'OMNIWP_otp_locked', __( 'Bạn đã nhập sai quá số lần cho phép. Vui lòng yêu cầu mã mới.', 'omniwp' ) );
 			}
 
 			return new WP_Error(
-				'smart_login_otp_wrong',
+				'OMNIWP_otp_wrong',
 				sprintf(
 					/* translators: %d: remaining attempts. */
-					_n( 'Mã xác thực không đúng. Bạn còn %d lần thử.', 'Mã xác thực không đúng. Bạn còn %d lần thử.', $left, 'smart-login' ),
+					_n( 'Mã xác thực không đúng. Bạn còn %d lần thử.', 'Mã xác thực không đúng. Bạn còn %d lần thử.', $left, 'omniwp' ),
 					$left
 				),
 				array( 'attempts_left' => $left )
@@ -277,7 +277,7 @@ class OtpService {
 		}
 
 		if ( ! $this->repo->consume_if_open( (int) $row['id'] ) ) {
-			return new WP_Error( 'smart_login_otp_used', __( 'Mã xác thực đã được sử dụng. Vui lòng yêu cầu mã mới.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_otp_used', __( 'Mã xác thực đã được sử dụng. Vui lòng yêu cầu mã mới.', 'omniwp' ) );
 		}
 
 		AuditLog::record( AuditLog::OTP_VERIFIED, $masked, array( 'intent' => $row['intent'] ) );
@@ -294,7 +294,7 @@ class OtpService {
 		$row = $this->repo->find_by_token( $token );
 
 		if ( ! $row ) {
-			return new WP_Error( 'smart_login_otp_invalid', __( 'Phiên xác thực không hợp lệ. Vui lòng bắt đầu lại.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_otp_invalid', __( 'Phiên xác thực không hợp lệ. Vui lòng bắt đầu lại.', 'omniwp' ) );
 		}
 
 		return $this->issue(
@@ -382,7 +382,7 @@ class OtpService {
 		 * @param string $code
 		 * @param int    $length
 		 */
-		return (string) apply_filters( 'smart_login_otp_code', $code, $length );
+		return (string) apply_filters( 'OMNIWP_otp_code', $code, $length );
 	}
 
 	private function hash_code( string $code ): string {

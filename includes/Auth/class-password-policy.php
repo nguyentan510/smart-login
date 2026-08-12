@@ -3,17 +3,17 @@
  * One place that decides whether a password is acceptable.
  *
  * It existed only inside RegisterHandler before, so the documented
- * `smart_login_validate_password` filter ran on registration but not on reset —
+ * `OMNIWP_validate_password` filter ran on registration but not on reset —
  * a site enforcing "must contain a digit" could have that requirement bypassed
  * simply by going through Forgot password. A policy applied on one of two paths
  * is not a policy.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth;
+namespace OmniWP\Auth;
 
-use SmartLogin\Settings;
+use OmniWP\Settings;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
@@ -35,24 +35,24 @@ final class PasswordPolicy {
 	 */
 	public static function validate( string $password, ?string $confirmation = null ) {
 		if ( '' === $password ) {
-			return new WP_Error( 'smart_login_no_password', __( 'Vui lòng nhập mật khẩu.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_no_password', __( 'Vui lòng nhập mật khẩu.', 'omniwp' ) );
 		}
 
 		$min = self::min_length();
 
 		if ( mb_strlen( $password ) < $min ) {
 			return new WP_Error(
-				'smart_login_weak_password',
+				'OMNIWP_weak_password',
 				sprintf(
 					/* translators: %d: minimum length. */
-					__( 'Mật khẩu phải có ít nhất %d ký tự.', 'smart-login' ),
+					__( 'Mật khẩu phải có ít nhất %d ký tự.', 'omniwp' ),
 					$min
 				)
 			);
 		}
 
 		if ( null !== $confirmation && $confirmation !== $password ) {
-			return new WP_Error( 'smart_login_password_mismatch', __( 'Mật khẩu nhập lại không khớp.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_password_mismatch', __( 'Mật khẩu nhập lại không khớp.', 'omniwp' ) );
 		}
 
 		/**
@@ -63,7 +63,7 @@ final class PasswordPolicy {
 		 * @param true|WP_Error $result
 		 * @param string        $password
 		 */
-		$extra = apply_filters( 'smart_login_validate_password', true, $password );
+		$extra = apply_filters( 'OMNIWP_validate_password', true, $password );
 
 		return is_wp_error( $extra ) ? $extra : true;
 	}

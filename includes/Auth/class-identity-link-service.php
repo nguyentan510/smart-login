@@ -20,19 +20,19 @@
  * would detach a victim's real provider before attaching their own, so it
  * requires the account password rather than just a nonce.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth;
+namespace OmniWP\Auth;
 
-use SmartLogin\Identity\Channels\MailChannel;
-use SmartLogin\Identity\Claim;
-use SmartLogin\Identity\ChannelRegistry;
-use SmartLogin\Identity\IdentityDirectory;
-use SmartLogin\Identity\IdentityHistory;
-use SmartLogin\Identity\IdentityRecord;
-use SmartLogin\Security\AuditLog;
-use SmartLogin\Security\RateLimiter;
+use OmniWP\Identity\Channels\MailChannel;
+use OmniWP\Identity\Claim;
+use OmniWP\Identity\ChannelRegistry;
+use OmniWP\Identity\IdentityDirectory;
+use OmniWP\Identity\IdentityHistory;
+use OmniWP\Identity\IdentityRecord;
+use OmniWP\Security\AuditLog;
+use OmniWP\Security\RateLimiter;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
@@ -131,7 +131,7 @@ final class IdentityLinkService {
 
 		return sprintf(
 			/* translators: %s: date the provider account was linked, d/m/Y. */
-			__( 'Đã liên kết %s', 'smart-login' ),
+			__( 'Đã liên kết %s', 'omniwp' ),
 			gmdate( 'd/m/Y', $linked )
 		);
 	}
@@ -154,7 +154,7 @@ final class IdentityLinkService {
 		 * @param int  $user_id
 		 * @param int  $remaining
 		 */
-		if ( apply_filters( 'smart_login_allow_orphan_unlink', false, $user_id, $remaining ) ) {
+		if ( apply_filters( 'OMNIWP_allow_orphan_unlink', false, $user_id, $remaining ) ) {
 			return $remaining >= 1;
 		}
 
@@ -174,13 +174,13 @@ final class IdentityLinkService {
 		$user = $user_id > 0 ? get_userdata( $user_id ) : null;
 
 		if ( ! $user ) {
-			return new WP_Error( 'smart_login_no_user', __( 'Không tìm thấy tài khoản.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_no_user', __( 'Không tìm thấy tài khoản.', 'omniwp' ) );
 		}
 
 		$claim = $this->channels->claim( $channel_id, $subject );
 
 		if ( $claim->is_empty() ) {
-			return new WP_Error( 'smart_login_bad_identity', __( 'Thông tin định danh không hợp lệ.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_bad_identity', __( 'Thông tin định danh không hợp lệ.', 'omniwp' ) );
 		}
 
 		// Ownership is the directory's answer, not the caller's assertion. A
@@ -190,15 +190,15 @@ final class IdentityLinkService {
 
 		if ( ! $resolution->has_owner() || $resolution->user_id() !== $user_id ) {
 			return new WP_Error(
-				'smart_login_not_linked',
-				__( 'Liên kết này không thuộc về tài khoản của bạn.', 'smart-login' )
+				'OMNIWP_not_linked',
+				__( 'Liên kết này không thuộc về tài khoản của bạn.', 'omniwp' )
 			);
 		}
 
 		if ( ! $this->can_unlink( $user_id ) ) {
 			return new WP_Error(
-				'smart_login_last_identity',
-				__( 'Đây là cách đăng nhập duy nhất của bạn. Hãy thêm số điện thoại, email hoặc một liên kết khác trước khi bỏ liên kết này.', 'smart-login' )
+				'OMNIWP_last_identity',
+				__( 'Đây là cách đăng nhập duy nhất của bạn. Hãy thêm số điện thoại, email hoặc một liên kết khác trước khi bỏ liên kết này.', 'omniwp' )
 			);
 		}
 
@@ -209,7 +209,7 @@ final class IdentityLinkService {
 		}
 
 		if ( $this->directory->retire( $claim, 'unlinked_by_user' ) !== $user_id ) {
-			return new WP_Error( 'smart_login_unlink_failed', __( 'Không thể bỏ liên kết. Vui lòng thử lại.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_unlink_failed', __( 'Không thể bỏ liên kết. Vui lòng thử lại.', 'omniwp' ) );
 		}
 
 		AuditLog::record(
@@ -225,7 +225,7 @@ final class IdentityLinkService {
 		 * @param int   $user_id
 		 * @param Claim $claim
 		 */
-		do_action( 'smart_login_identity_unlinked', $user_id, $claim );
+		do_action( 'OMNIWP_identity_unlinked', $user_id, $claim );
 
 		return true;
 	}
@@ -247,15 +247,15 @@ final class IdentityLinkService {
 	private function reauthenticate( $user, string $password ) {
 		if ( '' === $password ) {
 			return new WP_Error(
-				'smart_login_password_required',
-				__( 'Vui lòng nhập mật khẩu để xác nhận.', 'smart-login' )
+				'OMNIWP_password_required',
+				__( 'Vui lòng nhập mật khẩu để xác nhận.', 'omniwp' )
 			);
 		}
 
 		if ( ! wp_check_password( $password, $user->user_pass, $user->ID ) ) {
 			AuditLog::record( AuditLog::LOGIN_FAILED, '', array( 'context' => 'unlink_reauth' ), (int) $user->ID );
 
-			return new WP_Error( 'smart_login_bad_password', __( 'Mật khẩu không đúng.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_bad_password', __( 'Mật khẩu không đúng.', 'omniwp' ) );
 		}
 
 		return true;

@@ -25,12 +25,12 @@ It is scoped so that the piece it lands is the one the rest will read.
 Every claim is pinned to a line. The ones that contradict the framing of the
 request are listed first, deliberately.
 
-### 1. `[smart_login_button]` exists, and renders unstyled
+### 1. `[OMNIWP_button]` exists, and renders unstyled
 
 The shortcode is real — `render_button()` at
 `includes/Frontend/class-shortcodes.php:46-70`, registered at `:29`. But it
 never calls `Assets::enqueue()`, and `Assets::maybe_enqueue()` scans six
-shortcode tags of which `smart_login_button` is **not one**
+shortcode tags of which `OMNIWP_button` is **not one**
 (`includes/Frontend/class-assets.php:43`). The stylesheet otherwise arrives only
 when the launcher fetches it on first open
 (`includes/Frontend/class-login-dialog.php:133-137`).
@@ -42,7 +42,7 @@ needed a menu. There is no working button.**
 
 ### 2. Even with the stylesheet, `.sl-btn` is the wrong shape for a header
 
-`.sl-btn { display: block; width: 100% }` (`assets/css/smart-login.css:443-457`),
+`.sl-btn { display: block; width: 100% }` (`assets/css/omniwp.css:443-457`),
 and deliberately so: the comment at `:505-517` records that 20 of the 27 `.sl-btn`
 in `templates/` want full width, and that inverting the base would mean editing
 18 call sites. The shortcode emits `sl-btn sl-btn--primary` with no
@@ -113,7 +113,7 @@ xuất?" interstitial instead of signing the member out.
 
 The launcher already knows this boundary from the other side: it refuses to
 capture any link carrying an `action` parameter, naming logout as the reason
-(`assets/js/smart-login-launcher.js:201-232`).
+(`assets/js/omniwp-launcher.js:201-232`).
 
 ### 8. There are already two glyph producers, and they mean different things
 
@@ -131,7 +131,7 @@ vocabulary the site owns; the other is somebody else's trademark.
 
 ### 1. One shortcode, two states
 
-`[smart_login_button]` keeps its name and grows a signed-in state. Not a second
+`[OMNIWP_button]` keeps its name and grows a signed-in state. Not a second
 shortcode.
 
 Whoever drops this into a header does not know who is going to look at the page,
@@ -163,7 +163,7 @@ it ships, unable to drift from the dropdown — not a convention anyone has to
 remember.
 
 The naming follows commit 20.5, one word one meaning: the class is `AccountMenu`,
-the settings section is `account_menu`, the filter is `smart_login_account_menu`,
+the settings section is `account_menu`, the filter is `OMNIWP_account_menu`,
 the docs live in `account-menu/`.
 
 ### 3. Settings own the middle; the plugin owns both ends
@@ -177,7 +177,7 @@ the docs live in `account-menu/`.
 An empty repeater therefore yields a **two-item menu that works**, not an empty
 box. A fresh install has a usable account menu before anybody opens Settings.
 
-The filter `smart_login_account_menu` runs **last, over the assembled array**, so
+The filter `OMNIWP_account_menu` runs **last, over the assembled array**, so
 a developer can remove even the pinned ends. It is the escape hatch, and by
 running last it is one escape hatch rather than a second way for an
 administrator to configure the same list.
@@ -224,10 +224,10 @@ would be unification past the point where it means anything.
 
 ### 7. The header button does not reuse `.sl-btn`
 
-It gets `.sl-account-btn` and its own stylesheet, `assets/css/smart-login-button.css`.
+It gets `.sl-account-btn` and its own stylesheet, `assets/css/omniwp-button.css`.
 
 Finding 2 is not a bug in `.sl-btn` — that class is correctly shaped for the
-sign-in form, and the comment at `smart-login.css:505-517` already argued the
+sign-in form, and the comment at `omniwp.css:505-517` already argued the
 case. Overriding it in a header context would reopen the argument that comment
 closed. A header button and a form button share a colour variable and nothing
 else.
@@ -317,17 +317,17 @@ offering a setting whose worst case is silent and ugly.
 
 ### 13. The design tokens move to `:root`, in their own file, before anything else lands
 
-`.smart-login` currently welds twenty design tokens to a **page layout block** in
+`.omniwp` currently welds twenty design tokens to a **page layout block** in
 one rule — `max-width: 460px`, `margin: 0 auto`, `padding: 8px 0 32px`
-(`smart-login.css:6-66`).
+(`omniwp.css:6-66`).
 
 This is the finding that changes the plan. The obvious way to give the header
-button the plugin's tokens is to wrap it in `.smart-login`, and that way is
+button the plugin's tokens is to wrap it in `.omniwp`, and that way is
 broken: the button would inherit a 460px cap and 32px of bottom padding, and
 overriding them re-opens exactly the argument decision 7 declined to have.
 
-So: `assets/css/smart-login-tokens.css` holds the token block on `:root`; the
-layout properties stay on `.smart-login`; both stylesheets declare it as a
+So: `assets/css/omniwp-tokens.css` holds the token block on `:root`; the
+layout properties stay on `.omniwp`; both stylesheets declare it as a
 dependency. One token source instead of one buried inside a layout rule.
 
 Two consequences worth stating outright:
@@ -336,14 +336,14 @@ Two consequences worth stating outright:
   of the refused list below can refuse a colour picker without refusing colour
   customisation.
 - **Overrides that exist today keep winning.** A theme setting
-  `.smart-login { --sl-accent: … }` still outranks `:root` on specificity, so
+  `.omniwp { --sl-accent: … }` still outranks `:root` on specificity, so
   this is backwards compatible by construction rather than by testing.
 
 This lands in **its own sub-phase, first, with no value changed** — same hexes,
 same numbers, only the selector moves. Any visual difference is then a bug and
 not a redesign, which is the only way a change with this much reach can be
 reviewed. The rendered-surface suite pins a baseline of 40 off-scale declarations
-(`smart-login.css:36-40`), and it is the thing that has to stay still.
+(`omniwp.css:36-40`), and it is the thing that has to stay still.
 
 ---
 
@@ -371,7 +371,7 @@ feature request with no answer on file.
 
 | Refused | Why | Replaced by |
 | --- | --- | --- |
-| Colour picker | `--sl-accent` already exists (`smart-login.css:7`). A picker makes two sources of colour, and the CSS one still wins | decision 13's `:root` tokens, documented in `README.md` |
+| Colour picker | `--sl-accent` already exists (`omniwp.css:7`). A picker makes two sources of colour, and the CSS one still wins | decision 13's `:root` tokens, documented in `README.md` |
 | Breakpoint as a number field | the theme owns its breakpoints. A number stored here will disagree with the theme's and neither side will be visibly wrong | the theme re-declares the collapse rules at its own width — **not** a CSS variable, see below |
 | Per-role item visibility | WordPress already refuses the destination to a member who may not have it. A second gate here is a second authorisation model, and the wrong one to trust | nothing; the deferral below |
 | Open the menu on hover | `<details>` has no hover state, and hover menus are unusable on touch. Two behaviours means one of them is untested on the device most visitors use | one behaviour: click |
@@ -382,7 +382,7 @@ appear in a media query condition — `@media (max-width: var(--x))` is invalid
 CSS, and the rule is simply dropped. The refusal stands and its reason is
 unchanged; only the replacement was wrong. The collapse breakpoint is `782px`,
 matching WordPress's own admin-bar breakpoint, it is written once in
-`smart-login-button.css`, and a theme that wants a different one re-declares
+`omniwp-button.css`, and a theme that wants a different one re-declares
 those rules at its own width in a stylesheet that loads after ours. Recorded
 here rather than quietly fixed, because it was an approved decision.
 
@@ -426,7 +426,7 @@ Written down here because a silent exception is a lie with a longer half-life.
 
 `tests/visual/render.php` is not a browser, and its README says so. Focus order
 in the open dropdown, the sheet at 375px, the collapse breakpoint, and whether
-the stylesheet actually reaches a page hosting only `[smart_login_button]` are
+the stylesheet actually reaches a page hosting only `[OMNIWP_button]` are
 **measurements**, and they go through `tests/integration/` — because the enqueue
 in finding 1 is exactly the class of defect that only a real WordPress can show,
 and four gates once missed a fatal by reasoning about one instead.

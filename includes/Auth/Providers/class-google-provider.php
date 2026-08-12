@@ -2,13 +2,13 @@
 /**
  * Google OpenID Connect authorization-code provider.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth\Providers;
+namespace OmniWP\Auth\Providers;
 
-use SmartLogin\Auth\OAuthTransactionStore;
-use SmartLogin\Settings;
+use OmniWP\Auth\OAuthTransactionStore;
+use OmniWP\Settings;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
@@ -24,7 +24,7 @@ final class GoogleProvider implements LoginProviderInterface {
 	public function id(): string {
 		return 'google'; }
 	public function label(): string {
-		return __( 'Tiếp tục với Google', 'smart-login' ); }
+		return __( 'Tiếp tục với Google', 'omniwp' ); }
 
 	public function name(): string {
 		return 'Google'; }
@@ -71,13 +71,13 @@ final class GoogleProvider implements LoginProviderInterface {
 	/** @return ProviderIdentity|WP_Error */
 	public function complete( array $request ) {
 		if ( ! $this->is_available() ) {
-			return new WP_Error( 'smart_login_provider_unavailable', __( 'Google Login chưa được cấu hình.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_provider_unavailable', __( 'Google Login chưa được cấu hình.', 'omniwp' ) );
 		}
 
 		$transaction = $request['_transaction'] ?? null;
 		$code        = trim( (string) ( $request['code'] ?? '' ) );
 		if ( ! is_array( $transaction ) || '' === $code ) {
-			return new WP_Error( 'smart_login_google_callback', __( 'Google không trả về mã xác thực hợp lệ.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_google_callback', __( 'Google không trả về mã xác thực hợp lệ.', 'omniwp' ) );
 		}
 
 		$response = wp_remote_post(
@@ -95,14 +95,14 @@ final class GoogleProvider implements LoginProviderInterface {
 			)
 		);
 
-		$tokens = $this->json_response( $response, 'smart_login_google_token' );
+		$tokens = $this->json_response( $response, 'OMNIWP_google_token' );
 		if ( is_wp_error( $tokens ) ) {
 			return $tokens;
 		}
 
 		$id_token = (string) ( $tokens['id_token'] ?? '' );
 		if ( '' === $id_token ) {
-			return new WP_Error( 'smart_login_google_token', __( 'Google không trả về ID token.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_google_token', __( 'Google không trả về ID token.', 'omniwp' ) );
 		}
 
 		$claims = ( new GoogleIdTokenVerifier() )->verify( $id_token );
@@ -120,12 +120,12 @@ final class GoogleProvider implements LoginProviderInterface {
 			|| $expires <= time()
 			|| ! hash_equals( (string) $transaction['nonce'], $nonce )
 		) {
-			return new WP_Error( 'smart_login_google_claims', __( 'Google ID token không đạt điều kiện xác thực.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_google_claims', __( 'Google ID token không đạt điều kiện xác thực.', 'omniwp' ) );
 		}
 
 		$subject = trim( (string) ( $claims['sub'] ?? '' ) );
 		if ( '' === $subject ) {
-			return new WP_Error( 'smart_login_google_claims', __( 'Google không trả về định danh tài khoản.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_google_claims', __( 'Google không trả về định danh tài khoản.', 'omniwp' ) );
 		}
 
 		return new ProviderIdentity(
@@ -148,12 +148,12 @@ final class GoogleProvider implements LoginProviderInterface {
 	/** @return array|WP_Error */
 	private function json_response( $response, string $code ) {
 		if ( is_wp_error( $response ) ) {
-			return new WP_Error( $code, __( 'Không thể kết nối tới Google. Vui lòng thử lại.', 'smart-login' ) );
+			return new WP_Error( $code, __( 'Không thể kết nối tới Google. Vui lòng thử lại.', 'omniwp' ) );
 		}
 		$status = (int) wp_remote_retrieve_response_code( $response );
 		$data   = json_decode( (string) wp_remote_retrieve_body( $response ), true );
 		if ( $status < 200 || $status >= 300 || ! is_array( $data ) ) {
-			return new WP_Error( $code, __( 'Google từ chối yêu cầu đăng nhập.', 'smart-login' ) );
+			return new WP_Error( $code, __( 'Google từ chối yêu cầu đăng nhập.', 'omniwp' ) );
 		}
 		return $data;
 	}

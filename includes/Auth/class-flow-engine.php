@@ -10,7 +10,7 @@
  * `RequestGuard::verify()` in the controller; porting the handlers showed why it
  * cannot live there. `handle_signup()` reacts to a guard failure by re-rendering
  * the signup step *with the unspent grant*, and `handle_login()` picks its
- * failure step from `sl_from_password` — both are decisions about the flow, and
+ * failure step from `ow_from_password` — both are decisions about the flow, and
  * a controller that owned the guard would have to own those too. The fragment
  * endpoint posts the same fields the HTML form does, so the same guard applies
  * unchanged to both callers.
@@ -20,20 +20,20 @@
  * them out would leave the caller responsible for a step of the protocol it has
  * no reason to know about.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth;
+namespace OmniWP\Auth;
 
-use SmartLogin\Address\AddressFields;
-use SmartLogin\Frontend\Flow;
-use SmartLogin\Identity\IdentityDirectory;
-use SmartLogin\Identity\UserManager;
-use SmartLogin\OTP\OtpService;
-use SmartLogin\Security\Captcha;
-use SmartLogin\Security\RateLimiter;
-use SmartLogin\Security\RequestGuard;
-use SmartLogin\Settings;
+use OmniWP\Address\AddressFields;
+use OmniWP\Frontend\Flow;
+use OmniWP\Identity\IdentityDirectory;
+use OmniWP\Identity\UserManager;
+use OmniWP\OTP\OtpService;
+use OmniWP\Security\Captcha;
+use OmniWP\Security\RateLimiter;
+use OmniWP\Security\RequestGuard;
+use OmniWP\Settings;
 use WP_Error;
 use WP_User;
 
@@ -48,7 +48,7 @@ class FlowEngine {
 	 * Whether to run the HTML form guard.
 	 *
 	 * `RequestGuard` has two verifiers because there are two kinds of client. A
-	 * browser posting a rendered form carries `smart_login_nonce` and the signed
+	 * browser posting a rendered form carries `OMNIWP_nonce` and the signed
 	 * timestamp as hidden inputs; a JSON client carries the `wp_rest` nonce in a
 	 * header and is checked once, for every route, by
 	 * `RestController::check_permission()`.
@@ -180,7 +180,7 @@ class FlowEngine {
 			return $decision->notice(
 				sprintf(
 					/* translators: %s: identifier label, e.g. "số điện thoại". */
-					__( 'Vui lòng nhập %s.', 'smart-login' ),
+					__( 'Vui lòng nhập %s.', 'omniwp' ),
 					mb_strtolower( RegisterHandler::identifier_label() )
 				)
 			)->render( Flow::STEP_IDENTIFY );
@@ -208,7 +208,7 @@ class FlowEngine {
 			return $decision->notice(
 				sprintf(
 					/* translators: %s: identifier label, e.g. "Số điện thoại". */
-					__( '%s không hợp lệ.', 'smart-login' ),
+					__( '%s không hợp lệ.', 'omniwp' ),
 					RegisterHandler::identifier_label()
 				)
 			)->render( Flow::STEP_IDENTIFY );
@@ -326,11 +326,11 @@ class FlowEngine {
 	 * entirely if the redirect went astray.
 	 */
 	public function welcome_url(): string {
-		$strip = array( 'smart_login_step', 'smartlogin_welcome' );
+		$strip = array( 'OMNIWP_step', 'OmniWP_welcome' );
 		$base  = Flow::base();
 		$here  = '' !== $base ? remove_query_arg( $strip, $base ) : remove_query_arg( $strip );
 
-		return add_query_arg( 'smartlogin_welcome', '1', $here );
+		return add_query_arg( 'OmniWP_welcome', '1', $here );
 	}
 
 	/**
@@ -354,7 +354,7 @@ class FlowEngine {
 		// decides immediately is exactly who that button is for — failing them
 		// for answering too quickly would be the opposite of taking no for an
 		// answer.
-		if ( ! empty( $input['sl_skip'] ) ) {
+		if ( ! empty( $input['ow_skip'] ) ) {
 			return $decision->go( $redirect );
 		}
 
@@ -480,7 +480,7 @@ class FlowEngine {
 
 		if ( ! $session ) {
 			return $decision->notice(
-				__( 'Phiên xác thực đã hết hạn. Vui lòng thực hiện lại.', 'smart-login' )
+				__( 'Phiên xác thực đã hết hạn. Vui lòng thực hiện lại.', 'omniwp' )
 			)->render( Flow::STEP_LOGIN );
 		}
 
@@ -498,7 +498,7 @@ class FlowEngine {
 		}
 
 		return $decision->notice(
-			__( 'Phiên xác thực không hợp lệ.', 'smart-login' )
+			__( 'Phiên xác thực không hợp lệ.', 'omniwp' )
 		)->render( Flow::STEP_LOGIN );
 	}
 
@@ -547,7 +547,7 @@ class FlowEngine {
 
 		if ( ! $user ) {
 			return $decision->notice(
-				__( 'Không tìm thấy tài khoản.', 'smart-login' )
+				__( 'Không tìm thấy tài khoản.', 'omniwp' )
 			)->render( Flow::STEP_LOGIN );
 		}
 
@@ -605,7 +605,7 @@ class FlowEngine {
 
 		if ( ! $session ) {
 			return $decision->notice(
-				__( 'Phiên xác thực đã hết hạn. Vui lòng thực hiện lại.', 'smart-login' )
+				__( 'Phiên xác thực đã hết hạn. Vui lòng thực hiện lại.', 'omniwp' )
 			)->render( Flow::STEP_LOGIN );
 		}
 
@@ -624,7 +624,7 @@ class FlowEngine {
 		PendingSession::start( $result['token'], $session['intent'] );
 
 		return $decision->notice(
-			__( 'Đã gửi lại mã xác thực.', 'smart-login' ),
+			__( 'Đã gửi lại mã xác thực.', 'omniwp' ),
 			'success'
 		)->render( Flow::STEP_OTP, $result + array( 'intent' => $session['intent'] ) );
 	}
@@ -644,7 +644,7 @@ class FlowEngine {
 		// Identifier-first posts from the password screen, which already knows the
 		// identifier is registered. A rejected password must land back there
 		// rather than throwing the visitor out to step 1 to retype it.
-		$fail_step = empty( $input['sl_from_password'] ) ? Flow::STEP_IDENTIFY : Flow::STEP_PASSWORD;
+		$fail_step = empty( $input['ow_from_password'] ) ? Flow::STEP_IDENTIFY : Flow::STEP_PASSWORD;
 		$fail_data = Flow::STEP_PASSWORD === $fail_step ? array( 'identity' => $identity ) : array();
 
 		$guard = $this->guard( 'login', $input, 'login_' );
@@ -658,7 +658,7 @@ class FlowEngine {
 
 		if ( '' === $identity || '' === $password ) {
 			return $decision->notice(
-				__( 'Vui lòng nhập đầy đủ thông tin đăng nhập.', 'smart-login' )
+				__( 'Vui lòng nhập đầy đủ thông tin đăng nhập.', 'omniwp' )
 			)->render( $fail_step, $fail_data );
 		}
 
@@ -668,14 +668,14 @@ class FlowEngine {
 			return $this->complete_login( $decision, $user, (string) ( $input['redirect_to'] ?? '' ), $remember );
 		}
 
-		if ( is_wp_error( $user ) && 'smart_login_needs_otp' === $user->get_error_code() ) {
+		if ( is_wp_error( $user ) && 'OMNIWP_needs_otp' === $user->get_error_code() ) {
 			$data = (array) $user->get_error_data();
 
 			return $this->start_device_otp( $decision, (int) ( $data['user_id'] ?? 0 ), (string) ( $input['redirect_to'] ?? '' ), $remember );
 		}
 
 		$decision->error(
-			$user instanceof WP_Error ? $user : new WP_Error( 'smart_login_failed', __( 'Đăng nhập không thành công.', 'smart-login' ) )
+			$user instanceof WP_Error ? $user : new WP_Error( 'OMNIWP_failed', __( 'Đăng nhập không thành công.', 'omniwp' ) )
 		);
 
 		return $decision->render( $fail_step, $fail_data );
@@ -689,7 +689,7 @@ class FlowEngine {
 
 		if ( ! $user ) {
 			return $decision->notice(
-				__( 'Không tìm thấy tài khoản.', 'smart-login' )
+				__( 'Không tìm thấy tài khoản.', 'omniwp' )
 			)->render( Flow::STEP_LOGIN );
 		}
 
@@ -719,7 +719,7 @@ class FlowEngine {
 		PendingSession::start( $result['token'], OtpService::INTENT_LOGIN );
 
 		return $decision->notice(
-			__( 'Thiết bị mới được phát hiện. Vui lòng nhập mã xác thực vừa gửi cho bạn.', 'smart-login' ),
+			__( 'Thiết bị mới được phát hiện. Vui lòng nhập mã xác thực vừa gửi cho bạn.', 'omniwp' ),
 			'info'
 		)->render( Flow::STEP_OTP, $result + array( 'intent' => OtpService::INTENT_LOGIN ) );
 	}
@@ -785,7 +785,7 @@ class FlowEngine {
 		}
 
 		return $decision->notice(
-			__( 'Đặt lại mật khẩu thành công. Vui lòng đăng nhập bằng mật khẩu mới.', 'smart-login' ),
+			__( 'Đặt lại mật khẩu thành công. Vui lòng đăng nhập bằng mật khẩu mới.', 'omniwp' ),
 			'success',
 			true
 		)->go( Flow::url( Flow::STEP_LOGIN ) );
@@ -827,7 +827,7 @@ class FlowEngine {
 	private function fail_otp( FlowDecision $decision, WP_Error $error, string $token ): FlowDecision {
 		$decision->error( $error );
 
-		$fatal = array( 'smart_login_otp_invalid', 'smart_login_otp_used', 'smart_login_wrong_purpose', 'smart_login_exists' );
+		$fatal = array( 'OMNIWP_otp_invalid', 'OMNIWP_otp_used', 'OMNIWP_wrong_purpose', 'OMNIWP_exists' );
 
 		if ( in_array( $error->get_error_code(), $fatal, true ) ) {
 			PendingSession::clear();

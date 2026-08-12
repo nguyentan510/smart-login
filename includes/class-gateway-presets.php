@@ -21,10 +21,10 @@
  * guessed at — a preset with the wrong parameter names is worse than no preset,
  * because it looks authoritative while failing.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin;
+namespace OmniWP;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -51,7 +51,7 @@ final class GatewayPresets {
 	public static function all(): array {
 		$presets = array(
 			self::CUSTOM => array(
-				'label'       => __( 'Tuỳ chỉnh — tự khai báo API', 'smart-login' ),
+				'label'       => __( 'Tuỳ chỉnh — tự khai báo API', 'omniwp' ),
 				'credentials' => array(),
 			),
 			'esms'       => array(
@@ -72,7 +72,7 @@ final class GatewayPresets {
 						'secret' => true,
 					),
 					'brandname'  => array(
-						'label'  => __( 'Brandname đã đăng ký', 'smart-login' ),
+						'label'  => __( 'Brandname đã đăng ký', 'omniwp' ),
 						'secret' => false,
 					),
 				),
@@ -84,19 +84,19 @@ final class GatewayPresets {
 			// endpoint and key are ordinary fields rather than credentials, so
 			// they can carry `https_url` and `secret`, which this array cannot.
 			'signed'     => array(
-				'label'       => __( 'Envelope ký HMAC (chuẩn SmartLogin)', 'smart-login' ),
+				'label'       => __( 'Envelope ký HMAC (chuẩn OmniWP)', 'omniwp' ),
 				'envelope'    => self::ENVELOPE_SIGNED,
 				'credentials' => array(),
 			),
 			'generic'    => array(
-				'label'        => __( 'Gửi JSON tới endpoint của bạn (n8n / Make / Zapier)', 'smart-login' ),
+				'label'        => __( 'Gửi JSON tới endpoint của bạn (n8n / Make / Zapier)', 'omniwp' ),
 				'url'          => '{{cred:endpoint}}',
 				'method'       => 'POST',
 				'content_type' => 'application/json',
 				'body'         => '{"phone":"{{phone_local}}","code":"{{code}}","minutes":"{{ttl_minutes}}","site":"{{site_name}}"}',
 				'credentials'  => array(
 					'endpoint' => array(
-						'label'  => __( 'URL nhận yêu cầu', 'smart-login' ),
+						'label'  => __( 'URL nhận yêu cầu', 'omniwp' ),
 						'secret' => false,
 					),
 				),
@@ -108,7 +108,7 @@ final class GatewayPresets {
 		 *
 		 * @param array $presets
 		 */
-		return (array) apply_filters( 'smart_login_gateway_presets', $presets );
+		return (array) apply_filters( 'omniwp_gateway_presets', $presets );
 	}
 
 	/**

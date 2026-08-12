@@ -2,12 +2,12 @@
 /**
  * Picks the delivery transport for a given destination.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\OTP\Transports;
+namespace OmniWP\OTP\Transports;
 
-use SmartLogin\Settings;
+use OmniWP\Settings;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
@@ -32,7 +32,7 @@ class TransportRouter {
 		 *
 		 * @param array<string,TransportInterface> $transports
 		 */
-		$this->transports = (array) apply_filters( 'smart_login_otp_transports', $this->transports );
+		$this->transports = (array) apply_filters( 'OMNIWP_otp_transports', $this->transports );
 	}
 
 	/**
@@ -75,7 +75,7 @@ class TransportRouter {
 	 * reachable through the provider list, and as a routing table it was mostly a
 	 * way to get it wrong.
 	 *
-	 * `smart_login_otp_transports` still works and still matters: a filter that
+	 * `OMNIWP_otp_transports` still works and still matters: a filter that
 	 * replaces `sms` or `email` is serving that channel, which is a substitution
 	 * rather than a route. What it can no longer do is register a transport that
 	 * nothing reaches.
@@ -107,7 +107,7 @@ class TransportRouter {
 
 		return sprintf(
 			/* translators: %s: transport id, e.g. "zns". */
-			__( 'Kênh "%s" chưa được cấu hình. Liên hệ quản trị viên.', 'smart-login' ),
+			__( 'Kênh "%s" chưa được cấu hình. Liên hệ quản trị viên.', 'omniwp' ),
 			$id
 		);
 	}
@@ -141,7 +141,7 @@ class TransportRouter {
 		 * @param string             $code
 		 * @param array              $ctx
 		 */
-		$handled = apply_filters( 'smart_login_dispatch_otp', null, $destination, $code, $ctx );
+		$handled = apply_filters( 'OMNIWP_dispatch_otp', null, $destination, $code, $ctx );
 
 		if ( null !== $handled ) {
 			return $handled;
@@ -151,14 +151,14 @@ class TransportRouter {
 
 		if ( ! $transport ) {
 			return new WP_Error(
-				'smart_login_no_transport',
-				__( 'Chưa cấu hình kênh gửi mã xác thực.', 'smart-login' )
+				'OMNIWP_no_transport',
+				__( 'Chưa cấu hình kênh gửi mã xác thực.', 'omniwp' )
 			);
 		}
 
 		if ( ! $transport->is_available() ) {
 			return new WP_Error(
-				'smart_login_transport_unavailable',
+				'OMNIWP_transport_unavailable',
 				$this->unavailable_message( $transport, $transport_id )
 			);
 		}
@@ -172,8 +172,8 @@ class TransportRouter {
 
 		if ( $breaker->is_open() ) {
 			return new WP_Error(
-				'smart_login_transport_down',
-				__( 'Không gửi được mã xác thực. Vui lòng thử lại sau ít phút.', 'smart-login' ),
+				'OMNIWP_transport_down',
+				__( 'Không gửi được mã xác thực. Vui lòng thử lại sau ít phút.', 'omniwp' ),
 				array( 'retry_after' => $breaker->opens_in() )
 			);
 		}

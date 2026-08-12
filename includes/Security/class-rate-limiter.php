@@ -6,15 +6,15 @@
  * no extra storage to keep in sync. Login lockouts use transients because they
  * are short-lived and high-frequency.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Security;
+namespace OmniWP\Security;
 
-use SmartLogin\Identity\ChannelRegistry;
-use SmartLogin\Mail\Mailer;
-use SmartLogin\OTP\OtpRepository;
-use SmartLogin\Settings;
+use OmniWP\Identity\ChannelRegistry;
+use OmniWP\Mail\Mailer;
+use OmniWP\OTP\OtpRepository;
+use OmniWP\Settings;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
@@ -52,10 +52,10 @@ class RateLimiter {
 			$wait = $cooldown - ( time() - $last );
 
 			return new WP_Error(
-				'smart_login_cooldown',
+				'OMNIWP_cooldown',
 				sprintf(
 					/* translators: %d: seconds remaining. */
-					__( 'Vui lòng đợi %d giây trước khi yêu cầu mã mới.', 'smart-login' ),
+					__( 'Vui lòng đợi %d giây trước khi yêu cầu mã mới.', 'omniwp' ),
 					$wait
 				),
 				array( 'retry_after' => $wait )
@@ -65,8 +65,8 @@ class RateLimiter {
 		$per_dest = Settings::get_int( 'otp.max_per_destination_hour', 5 );
 		if ( $per_dest > 0 && $this->repo->count_recent_by_destination( $destination, HOUR_IN_SECONDS ) >= $per_dest ) {
 			return new WP_Error(
-				'smart_login_dest_limit',
-				__( 'Bạn đã yêu cầu quá nhiều mã xác thực. Vui lòng thử lại sau 1 giờ.', 'smart-login' ),
+				'OMNIWP_dest_limit',
+				__( 'Bạn đã yêu cầu quá nhiều mã xác thực. Vui lòng thử lại sau 1 giờ.', 'omniwp' ),
 				array( 'retry_after' => HOUR_IN_SECONDS )
 			);
 		}
@@ -81,7 +81,7 @@ class RateLimiter {
 		// visible in the log rather than inferred from a surprise.
 		if ( $per_ip > 0 && null === Client::ip_binary() ) {
 			$this->warn_once(
-				'smart_login_warned_no_ip',
+				'OMNIWP_warned_no_ip',
 				'no_client_ip',
 				'The per-IP send limit cannot apply to a request with no usable address.'
 			);
@@ -89,8 +89,8 @@ class RateLimiter {
 
 		if ( $per_ip > 0 && $this->repo->count_recent_by_ip( Client::ip_binary(), HOUR_IN_SECONDS ) >= $per_ip ) {
 			return new WP_Error(
-				'smart_login_ip_limit',
-				__( 'Hệ thống ghi nhận quá nhiều yêu cầu từ thiết bị của bạn. Vui lòng thử lại sau.', 'smart-login' ),
+				'OMNIWP_ip_limit',
+				__( 'Hệ thống ghi nhận quá nhiều yêu cầu từ thiết bị của bạn. Vui lòng thử lại sau.', 'omniwp' ),
 				array( 'retry_after' => HOUR_IN_SECONDS )
 			);
 		}
@@ -115,7 +115,7 @@ class RateLimiter {
 		 * @param string        $destination
 		 * @param string        $intent
 		 */
-		return apply_filters( 'smart_login_check_otp_send', true, $destination, $intent );
+		return apply_filters( 'OMNIWP_check_otp_send', true, $destination, $intent );
 	}
 
 	/**
@@ -181,7 +181,7 @@ class RateLimiter {
 		// own, needs no sweeping, and costs one transient. It allows roughly a
 		// 2x burst across the hour boundary, which is accepted — a rolling
 		// window would cost more than the problem does.
-		$key   = 'smart_login_idfy_' . md5( $ip . '|' . gmdate( 'YmdH' ) );
+		$key   = 'OMNIWP_idfy_' . md5( $ip . '|' . gmdate( 'YmdH' ) );
 		$count = (int) get_transient( $key );
 
 		if ( $count >= $max ) {
@@ -192,8 +192,8 @@ class RateLimiter {
 			);
 
 			return new WP_Error(
-				'smart_login_identify_limit',
-				__( 'Hệ thống ghi nhận quá nhiều yêu cầu từ thiết bị của bạn. Vui lòng thử lại sau.', 'smart-login' ),
+				'OMNIWP_identify_limit',
+				__( 'Hệ thống ghi nhận quá nhiều yêu cầu từ thiết bị của bạn. Vui lòng thử lại sau.', 'omniwp' ),
 				array( 'retry_after' => HOUR_IN_SECONDS )
 			);
 		}
@@ -208,7 +208,7 @@ class RateLimiter {
 	// -----------------------------------------------------------------
 
 	/** Where the halt deadline lives. An option, not a transient — see halt(). */
-	const HALT_OPTION = 'smart_login_otp_halted_until';
+	const HALT_OPTION = 'OMNIWP_otp_halted_until';
 
 	/**
 	 * Seconds left on the site-wide halt, 0 when sending is open.
@@ -264,7 +264,7 @@ class RateLimiter {
 			Mailer::admin_address(),
 			array(
 				'ceiling'      => (string) $ceiling,
-				'window'       => 'day' === $window ? __( 'ngày', 'smart-login' ) : __( 'giờ', 'smart-login' ),
+				'window'       => 'day' === $window ? __( 'ngày', 'omniwp' ) : __( 'giờ', 'omniwp' ),
 				'halt_minutes' => (string) $minutes,
 			)
 		);
@@ -278,8 +278,8 @@ class RateLimiter {
 	 */
 	private static function unavailable(): WP_Error {
 		return new WP_Error(
-			'smart_login_unavailable',
-			__( 'Hệ thống đang tạm thời không gửi được mã. Vui lòng thử lại sau.', 'smart-login' ),
+			'OMNIWP_unavailable',
+			__( 'Hệ thống đang tạm thời không gửi được mã. Vui lòng thử lại sau.', 'omniwp' ),
 			array( 'retry_after' => MINUTE_IN_SECONDS * 15 )
 		);
 	}
@@ -308,7 +308,7 @@ class RateLimiter {
 		$claim     = ( new ChannelRegistry() )->claim_any( $identity );
 		$canonical = $claim->is_empty() ? strtolower( $identity ) : $claim->subject();
 
-		return 'smart_login_lock_' . md5( $canonical . '|' . Client::ip() );
+		return 'OMNIWP_lock_' . md5( $canonical . '|' . Client::ip() );
 	}
 
 	/**
@@ -321,7 +321,7 @@ class RateLimiter {
 	 * attacks and it walked straight through until this existed.
 	 */
 	private function ip_lock_key(): string {
-		return 'smart_login_iplock_' . md5( (string) Client::ip() );
+		return 'OMNIWP_iplock_' . md5( (string) Client::ip() );
 	}
 
 	/**
@@ -449,9 +449,9 @@ class RateLimiter {
 	 */
 	public static function mask_identity( string $identity ): string {
 		if ( false !== strpos( $identity, '@' ) ) {
-			return \SmartLogin\Identity\Phone::mask_email( $identity );
+			return \OmniWP\Identity\Phone::mask_email( $identity );
 		}
 
-		return \SmartLogin\Identity\Phone::mask( $identity );
+		return \OmniWP\Identity\Phone::mask( $identity );
 	}
 }

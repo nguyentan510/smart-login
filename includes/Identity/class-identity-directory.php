@@ -2,7 +2,7 @@
 /**
  * The only place that answers "who owns this subject?".
  *
- * Everything that used to reach for wp_users.user_login, the smartlogin_phone
+ * Everything that used to reach for wp_users.user_login, the OmniWP_phone
  * user meta, or a get_users() meta_query now goes through here. That is
  * Invariant 1 from docs/identity-model.md, and tests/identity/run-fitness-tests.php
  * fails the build if another route reappears.
@@ -10,10 +10,10 @@
  * RESOLVE performs no writes. It is safe to call on any request, including ones
  * that will go on to reject the visitor.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Identity;
+namespace OmniWP\Identity;
 
 defined( 'ABSPATH' ) || exit;
 

@@ -13,7 +13,7 @@
  * used to justify pressure has been removed, so this screen asks and accepts
  * no for an answer.
  *
- * Override at yourtheme/smart-login/onboarding.php
+ * Override at yourtheme/omniwp/onboarding.php
  *
  * @var array    $notices
  * @var WP_User  $user
@@ -22,30 +22,30 @@
  * @var array    $address       Current address values, or empty.
  * @var bool     $email_missing Whether the account still has no real email.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-use SmartLogin\Address\AddressFields;
-use SmartLogin\Frontend\IconSet;
-use SmartLogin\Frontend\TemplateLoader;
-use SmartLogin\Security\RequestGuard;
+use OmniWP\Address\AddressFields;
+use OmniWP\Frontend\IconSet;
+use OmniWP\Frontend\TemplateLoader;
+use OmniWP\Security\RequestGuard;
 
 defined( 'ABSPATH' ) || exit;
 
-$sl_site   = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
-$sl_fields = (array) ( $fields ?? array() );
-$sl_first  = trim( (string) ( $user->first_name ?? '' ) );
-$sl_name   = '' !== $sl_first ? $sl_first : (string) $user->display_name;
+$ow_site   = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
+$ow_fields = (array) ( $fields ?? array() );
+$ow_first  = trim( (string) ( $user->first_name ?? '' ) );
+$ow_name   = '' !== $ow_first ? $ow_first : (string) $user->display_name;
 ?>
 <?php
 /*
  * `data-sl-onboarding` is how the launcher knows this screen is already on the
- * page. A member returning from a provider carries `smartlogin_welcome=1`, and
+ * page. A member returning from a provider carries `OmniWP_welcome=1`, and
  * both this template and the dialog answer to it — without a marker they would
  * both draw, and the visitor would be asked the same questions twice.
  */
 ?>
-<div class="smart-login smart-login--onboard" data-sl-onboarding>
+<div class="omniwp omniwp--onboard" data-sl-onboarding>
 
 	<?php TemplateLoader::output( 'partials/notices', array( 'notices' => $notices ) ); ?>
 
@@ -53,23 +53,23 @@ $sl_name   = '' !== $sl_first ? $sl_first : (string) $user->display_name;
 		<span class="sl-congrats__mark" aria-hidden="true">
 			<?php echo IconSet::get( 'check' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- IconSet returns fixed markup from a closed set; nothing here comes from input. ?>
 		</span>
-		<p class="sl-congrats-label"><?php esc_html_e( 'ĐĂNG KÝ THÀNH CÔNG', 'smart-login' ); ?></p>
+		<p class="sl-congrats-label"><?php esc_html_e( 'ĐĂNG KÝ THÀNH CÔNG', 'omniwp' ); ?></p>
 		<h2 class="sl-congrats-title">
 			<?php
 			printf(
 				/* translators: %s: site name. */
-				esc_html__( 'Bạn đã trở thành hội viên của %s!', 'smart-login' ),
-				esc_html( $sl_site )
+				esc_html__( 'Bạn đã trở thành hội viên của %s!', 'omniwp' ),
+				esc_html( $ow_site )
 			);
 			?>
 		</h2>
 	</div>
 
-	<?php if ( empty( $sl_fields ) ) : ?>
+	<?php if ( empty( $ow_fields ) ) : ?>
 
-		<p class="sl-lead"><?php esc_html_e( 'Hồ sơ của bạn đã đầy đủ. Không còn gì phải điền cả.', 'smart-login' ); ?></p>
+		<p class="sl-lead"><?php esc_html_e( 'Hồ sơ của bạn đã đầy đủ. Không còn gì phải điền cả.', 'omniwp' ); ?></p>
 		<a class="sl-btn sl-btn--primary sl-btn--block" href="<?php echo esc_url( $redirect ); ?>">
-			<?php esc_html_e( 'Bắt đầu khám phá', 'smart-login' ); ?>
+			<?php esc_html_e( 'Bắt đầu khám phá', 'omniwp' ); ?>
 		</a>
 
 	<?php else : ?>
@@ -78,22 +78,22 @@ $sl_name   = '' !== $sl_first ? $sl_first : (string) $user->display_name;
 			<?php
 			printf(
 				/* translators: %s: the member's first name. */
-				esc_html__( 'Chào %s! Thêm chút thông tin nữa để nhận đầy đủ ưu đãi hội viên — hoặc để sau cũng được.', 'smart-login' ),
-				esc_html( $sl_name )
+				esc_html__( 'Chào %s! Thêm chút thông tin nữa để nhận đầy đủ ưu đãi hội viên — hoặc để sau cũng được.', 'omniwp' ),
+				esc_html( $ow_name )
 			);
 			?>
 		</p>
 
 		<form method="post" class="sl-form sl-form--onboard">
 			<?php RequestGuard::fields( 'onboard' ); ?>
-			<input type="hidden" name="smart_login_action" value="onboard" />
+			<input type="hidden" name="OMNIWP_action" value="onboard" />
 			<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $redirect ); ?>" />
 
-			<?php foreach ( $sl_fields as $sl_field ) : ?>
-				<?php if ( 'full_name' === $sl_field['key'] ) : ?>
+			<?php foreach ( $ow_fields as $ow_field ) : ?>
+				<?php if ( 'full_name' === $ow_field['key'] ) : ?>
 					<div class="sl-field">
-						<label class="sl-label" for="sl-onboard-name"><?php echo esc_html( $sl_field['label'] ); ?></label>
-						<p class="sl-hint sl-hint--reason"><?php echo esc_html( $sl_field['reason'] ); ?></p>
+						<label class="sl-label" for="sl-onboard-name"><?php echo esc_html( $ow_field['label'] ); ?></label>
+						<p class="sl-hint sl-hint--reason"><?php echo esc_html( $ow_field['reason'] ); ?></p>
 						<input
 							type="text"
 							class="sl-input"
@@ -105,10 +105,10 @@ $sl_name   = '' !== $sl_first ? $sl_first : (string) $user->display_name;
 					</div>
 				<?php endif; ?>
 
-				<?php if ( 'address' === $sl_field['key'] ) : ?>
+				<?php if ( 'address' === $ow_field['key'] ) : ?>
 					<div class="sl-onboard-group">
-						<p class="sl-label"><?php echo esc_html( $sl_field['label'] ); ?></p>
-						<p class="sl-hint sl-hint--reason"><?php echo esc_html( $sl_field['reason'] ); ?></p>
+						<p class="sl-label"><?php echo esc_html( $ow_field['label'] ); ?></p>
+						<p class="sl-hint sl-hint--reason"><?php echo esc_html( $ow_field['reason'] ); ?></p>
 						<?php
 						AddressFields::output(
 							array(
@@ -120,37 +120,37 @@ $sl_name   = '' !== $sl_first ? $sl_first : (string) $user->display_name;
 					</div>
 				<?php endif; ?>
 
-				<?php if ( 'dob' === $sl_field['key'] ) : ?>
+				<?php if ( 'dob' === $ow_field['key'] ) : ?>
 					<div class="sl-field">
-						<label class="sl-label" for="sl-dob"><?php echo esc_html( $sl_field['label'] ); ?></label>
-						<p class="sl-hint sl-hint--reason"><?php echo esc_html( $sl_field['reason'] ); ?></p>
+						<label class="sl-label" for="sl-dob"><?php echo esc_html( $ow_field['label'] ); ?></label>
+						<p class="sl-hint sl-hint--reason"><?php echo esc_html( $ow_field['reason'] ); ?></p>
 						<input
 							type="text"
 							class="sl-input"
 							id="sl-dob"
 							name="dob"
 							value=""
-							placeholder="<?php esc_attr_e( 'dd/mm/yyyy', 'smart-login' ); ?>"
+							placeholder="<?php esc_attr_e( 'dd/mm/yyyy', 'omniwp' ); ?>"
 							inputmode="numeric"
 							autocomplete="bday"
 						/>
 					</div>
 				<?php endif; ?>
 
-				<?php if ( 'gender' === $sl_field['key'] ) : ?>
+				<?php if ( 'gender' === $ow_field['key'] ) : ?>
 					<fieldset class="sl-field sl-field--radio">
-						<legend class="sl-label"><?php echo esc_html( $sl_field['label'] ); ?></legend>
-						<p class="sl-hint sl-hint--reason"><?php echo esc_html( $sl_field['reason'] ); ?></p>
+						<legend class="sl-label"><?php echo esc_html( $ow_field['label'] ); ?></legend>
+						<p class="sl-hint sl-hint--reason"><?php echo esc_html( $ow_field['reason'] ); ?></p>
 						<?php
 						foreach ( array(
-							'female' => __( 'Nữ', 'smart-login' ),
-							'male'   => __( 'Nam', 'smart-login' ),
-							'other'  => __( 'Khác', 'smart-login' ),
-						) as $sl_value => $sl_label ) :
+							'female' => __( 'Nữ', 'omniwp' ),
+							'male'   => __( 'Nam', 'omniwp' ),
+							'other'  => __( 'Khác', 'omniwp' ),
+						) as $ow_value => $ow_label ) :
 							?>
 							<label class="sl-radio">
-								<input type="radio" name="gender" value="<?php echo esc_attr( $sl_value ); ?>" />
-								<span><?php echo esc_html( $sl_label ); ?></span>
+								<input type="radio" name="gender" value="<?php echo esc_attr( $ow_value ); ?>" />
+								<span><?php echo esc_html( $ow_label ); ?></span>
 							</label>
 						<?php endforeach; ?>
 					</fieldset>
@@ -159,10 +159,10 @@ $sl_name   = '' !== $sl_first ? $sl_first : (string) $user->display_name;
 
 			<div class="sl-onboard-actions">
 				<button type="submit" class="sl-btn sl-btn--primary sl-btn--block">
-					<?php esc_html_e( 'Hoàn tất', 'smart-login' ); ?>
+					<?php esc_html_e( 'Hoàn tất', 'omniwp' ); ?>
 				</button>
-				<button type="submit" name="sl_skip" value="1" class="sl-btn sl-btn--ghost sl-btn--block">
-					<?php esc_html_e( 'Để sau', 'smart-login' ); ?>
+				<button type="submit" name="ow_skip" value="1" class="sl-btn sl-btn--ghost sl-btn--block">
+					<?php esc_html_e( 'Để sau', 'omniwp' ); ?>
 				</button>
 			</div>
 		</form>
@@ -171,7 +171,7 @@ $sl_name   = '' !== $sl_first ? $sl_first : (string) $user->display_name;
 
 	<?php if ( ! empty( $email_missing ) ) : ?>
 		<p class="sl-hint sl-onboard-email">
-			<?php esc_html_e( 'Bạn có thể thêm email trong trang hồ sơ bất cứ lúc nào — việc này cần một mã xác thực riêng nên không nằm ở đây.', 'smart-login' ); ?>
+			<?php esc_html_e( 'Bạn có thể thêm email trong trang hồ sơ bất cứ lúc nào — việc này cần một mã xác thực riêng nên không nằm ở đây.', 'omniwp' ); ?>
 		</p>
 	<?php endif; ?>
 </div>

@@ -16,34 +16,34 @@
  *
  * Override at yourtheme/woocommerce/myaccount/form-edit-account.php
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-use SmartLogin\Frontend\AccountForm;
-use SmartLogin\Frontend\DeferredForms;
+use OmniWP\Frontend\AccountForm;
+use OmniWP\Frontend\DeferredForms;
 
 defined( 'ABSPATH' ) || exit;
 
-$sl_form = new AccountForm( get_current_user_id(), AccountForm::CONTEXT_WOOCOMMERCE );
+$ow_form = new AccountForm( get_current_user_id(), AccountForm::CONTEXT_WOOCOMMERCE );
 
-if ( ! $sl_form->user() ) {
+if ( ! $ow_form->user() ) {
 	return;
 }
 
 do_action( 'woocommerce_before_edit_account_form' );
 ?>
 
-<div class="smart-login smart-login--account">
+<div class="omniwp omniwp--account">
 
-	<?php $sl_form->output_status(); ?>
+	<?php $ow_form->output_status(); ?>
 
 	<form class="woocommerce-EditAccountForm edit-account sl-form" action="" method="post" <?php do_action( 'woocommerce_edit_account_form_tag' ); ?> >
 
 		<?php do_action( 'woocommerce_edit_account_form_start' ); ?>
 
 		<?php
-		foreach ( $sl_form->sections() as $sl_section ) {
-			$sl_form->output_section( $sl_section );
+		foreach ( $ow_form->sections() as $ow_section ) {
+			$ow_form->output_section( $ow_section );
 		}
 		?>
 
@@ -55,9 +55,9 @@ do_action( 'woocommerce_before_edit_account_form' );
 				<span data-sl-savebar-text></span>
 			</p>
 			<?php wp_nonce_field( 'save_account_details', 'save-account-details-nonce' ); ?>
-			<button type="reset" class="sl-btn sl-btn--ghost sl-btn--inline" data-sl-savebar-cancel><?php esc_html_e( 'Huỷ', 'smart-login' ); ?></button>
-			<button type="submit" class="sl-btn sl-btn--primary sl-btn--inline woocommerce-Button button" name="save_account_details" value="<?php esc_attr_e( 'Lưu thay đổi', 'smart-login' ); ?>">
-				<?php esc_html_e( 'Lưu thay đổi', 'smart-login' ); ?>
+			<button type="reset" class="sl-btn sl-btn--ghost sl-btn--inline" data-sl-savebar-cancel><?php esc_html_e( 'Huỷ', 'omniwp' ); ?></button>
+			<button type="submit" class="sl-btn sl-btn--primary sl-btn--inline woocommerce-Button button" name="save_account_details" value="<?php esc_attr_e( 'Lưu thay đổi', 'omniwp' ); ?>">
+				<?php esc_html_e( 'Lưu thay đổi', 'omniwp' ); ?>
 			</button>
 			<input type="hidden" name="action" value="save_account_details" />
 		</div>

@@ -6,10 +6,10 @@
  * and are aggressively cacheable — a nonce would make every response private
  * and defeat browser and CDN caching for no security gain.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Address;
+namespace OmniWP\Address;
 
 use WP_REST_Request;
 use WP_REST_Response;
@@ -18,7 +18,7 @@ defined( 'ABSPATH' ) || exit;
 
 class AddressRest {
 
-	const REST_NAMESPACE = 'smart-login/v1';
+	const REST_NAMESPACE = 'omniwp/v1';
 	const CACHE_SECONDS  = DAY_IN_SECONDS;
 
 	public function register(): void {
@@ -162,9 +162,9 @@ class AddressRest {
 			return $stamp;
 		}
 
-		$file  = SMART_LOGIN_DIR . 'data/provinces.php';
+		$file  = OMNIWP_DIR . 'data/provinces.php';
 		$mtime = is_readable( $file ) ? (int) filemtime( $file ) : 0;
-		$stamp = $mtime > 0 ? (string) $mtime : SMART_LOGIN_VERSION;
+		$stamp = $mtime > 0 ? (string) $mtime : OMNIWP_VERSION;
 
 		return $stamp;
 	}

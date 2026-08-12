@@ -11,10 +11,10 @@
  * deliberate: a mutable subject could be swapped after verification, which is
  * precisely the class of defect docs/identity-model.md exists to remove.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Identity;
+namespace OmniWP\Identity;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -61,7 +61,7 @@ final class Claim {
 
 	/**
 	 * Stable composite key, e.g. `phone:84969789475`. Matches the
-	 * UNIQUE (channel, subject) index in smartlogin_identities.
+	 * UNIQUE (channel, subject) index in OmniWP_identities.
 	 */
 	public function key(): string {
 		return $this->channel . ':' . $this->subject;

@@ -2,10 +2,10 @@
 /**
  * Form integrity: nonce, honeypot and minimum fill time.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Security;
+namespace OmniWP\Security;
 
 use WP_Error;
 
@@ -13,9 +13,9 @@ defined( 'ABSPATH' ) || exit;
 
 class RequestGuard {
 
-	const NONCE_FIELD    = 'smart_login_nonce';
-	const HONEYPOT_FIELD = 'smart_login_website';
-	const TIME_FIELD     = 'smart_login_ts';
+	const NONCE_FIELD    = 'OMNIWP_nonce';
+	const HONEYPOT_FIELD = 'OMNIWP_website';
+	const TIME_FIELD     = 'OMNIWP_ts';
 
 	/** Humans need at least this long to fill a form. */
 	const MIN_FILL_SECONDS = 2;
@@ -31,7 +31,7 @@ class RequestGuard {
 		$time_field  = self::TIME_FIELD . $prefix;
 		$honeypot    = self::HONEYPOT_FIELD . $prefix;
 
-		wp_nonce_field( 'smart_login_' . $action, $nonce_field );
+		wp_nonce_field( 'OMNIWP_' . $action, $nonce_field );
 
 		$ts    = time();
 		$stamp = $ts . '.' . self::sign( $ts, $action );
@@ -43,9 +43,10 @@ class RequestGuard {
 		);
 
 		// Honeypot: hidden from humans, irresistible to naive bots.
+		// Explicit attributes prevent password managers and browser autofill from filling this hidden field.
 		printf(
-			'<div class="smart-login-hp" aria-hidden="true"><label>%1$s<input type="text" name="%2$s" value="" tabindex="-1" autocomplete="off" /></label></div>',
-			esc_html__( 'Để trống ô này', 'smart-login' ),
+			'<div class="omniwp-hp" aria-hidden="true"><label>%1$s<input type="text" name="%2$s" value="" tabindex="-1" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other" aria-hidden="true" /></label></div>',
+			esc_html__( 'Để trống ô này', 'omniwp' ),
 			esc_attr( $honeypot )
 		);
 	}
@@ -79,10 +80,10 @@ class RequestGuard {
 		$honeypot    = self::HONEYPOT_FIELD . $prefix;
 		$nonce       = isset( $request[ $nonce_field ] ) ? sanitize_text_field( wp_unslash( $request[ $nonce_field ] ) ) : '';
 
-		if ( ! wp_verify_nonce( $nonce, 'smart_login_' . $action ) ) {
+		if ( ! wp_verify_nonce( $nonce, 'OMNIWP_' . $action ) ) {
 			return new WP_Error(
-				'smart_login_bad_nonce',
-				__( 'Phiên làm việc đã hết hạn. Vui lòng tải lại trang và thử lại.', 'smart-login' )
+				'OMNIWP_bad_nonce',
+				__( 'Phiên làm việc đã hết hạn. Vui lòng tải lại trang và thử lại.', 'omniwp' )
 			);
 		}
 
@@ -98,8 +99,8 @@ class RequestGuard {
 			);
 
 			return new WP_Error(
-				'smart_login_bot',
-				__( 'Yêu cầu không hợp lệ.', 'smart-login' )
+				'OMNIWP_bot',
+				__( 'Yêu cầu không hợp lệ.', 'omniwp' )
 			);
 		}
 
@@ -110,22 +111,22 @@ class RequestGuard {
 			$ts               = (int) $ts;
 
 			if ( ! hash_equals( self::sign( $ts, $action ), $sig ) ) {
-				return new WP_Error( 'smart_login_bad_stamp', __( 'Yêu cầu không hợp lệ.', 'smart-login' ) );
+				return new WP_Error( 'OMNIWP_bad_stamp', __( 'Yêu cầu không hợp lệ.', 'omniwp' ) );
 			}
 
 			$age = time() - $ts;
 
 			if ( $age < self::MIN_FILL_SECONDS ) {
 				return new WP_Error(
-					'smart_login_too_fast',
-					__( 'Bạn thao tác quá nhanh. Vui lòng thử lại.', 'smart-login' )
+					'OMNIWP_too_fast',
+					__( 'Bạn thao tác quá nhanh. Vui lòng thử lại.', 'omniwp' )
 				);
 			}
 
 			if ( $age > self::MAX_FORM_AGE ) {
 				return new WP_Error(
-					'smart_login_stale',
-					__( 'Biểu mẫu đã hết hạn. Vui lòng tải lại trang.', 'smart-login' )
+					'OMNIWP_stale',
+					__( 'Biểu mẫu đã hết hạn. Vui lòng tải lại trang.', 'omniwp' )
 				);
 			}
 		}
@@ -141,7 +142,7 @@ class RequestGuard {
 	 */
 	public static function verify_rest( string $action, array $params ) {
 		if ( ! empty( $params[ self::HONEYPOT_FIELD ] ) ) {
-			return new WP_Error( 'smart_login_bot', __( 'Yêu cầu không hợp lệ.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_bot', __( 'Yêu cầu không hợp lệ.', 'omniwp' ) );
 		}
 
 		$stamp = isset( $params[ self::TIME_FIELD ] ) ? sanitize_text_field( wp_unslash( $params[ self::TIME_FIELD ] ) ) : '';
@@ -158,22 +159,22 @@ class RequestGuard {
 		$ts               = (int) $ts;
 
 		if ( ! hash_equals( self::sign( $ts, $action ), $sig ) ) {
-			return new WP_Error( 'smart_login_bad_stamp', __( 'Yêu cầu không hợp lệ.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_bad_stamp', __( 'Yêu cầu không hợp lệ.', 'omniwp' ) );
 		}
 
 		$age = time() - $ts;
 
 		if ( $age < self::MIN_FILL_SECONDS ) {
 			return new WP_Error(
-				'smart_login_too_fast',
-				__( 'Bạn thao tác quá nhanh. Vui lòng thử lại.', 'smart-login' )
+				'OMNIWP_too_fast',
+				__( 'Bạn thao tác quá nhanh. Vui lòng thử lại.', 'omniwp' )
 			);
 		}
 
 		if ( $age > self::MAX_FORM_AGE ) {
 			return new WP_Error(
-				'smart_login_stale',
-				__( 'Biểu mẫu đã hết hạn. Vui lòng tải lại trang.', 'smart-login' )
+				'OMNIWP_stale',
+				__( 'Biểu mẫu đã hết hạn. Vui lòng tải lại trang.', 'omniwp' )
 			);
 		}
 

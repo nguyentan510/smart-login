@@ -20,22 +20,22 @@
  * actions performed by somebody already signed in, not steps of the sign-in
  * flow, and they have always belonged here.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Frontend;
+namespace OmniWP\Frontend;
 
-use SmartLogin\Auth\FlowDecision;
-use SmartLogin\Auth\FlowEngine;
-use SmartLogin\Auth\IdentityLinkService;
-use SmartLogin\OTP\OtpService;
+use OmniWP\Auth\FlowDecision;
+use OmniWP\Auth\FlowEngine;
+use OmniWP\Auth\IdentityLinkService;
+use OmniWP\OTP\OtpService;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
 
 class FormController {
 
-	const ACTION_FIELD = 'smart_login_action';
+	const ACTION_FIELD = 'OMNIWP_action';
 
 	/** @var OtpService|null */
 	private $otp;
@@ -237,8 +237,8 @@ class FormController {
 		// and minimum fill time are aimed at anonymous forms; on a profile page the
 		// visitor is already authenticated, and the timing check would reject
 		// somebody who only flipped one radio button and pressed save.
-		if ( ! wp_verify_nonce( (string) ( $post['_wpnonce'] ?? '' ), 'smart_login_save_profile' ) ) {
-			Notices::flash( __( 'Phiên làm việc đã hết hạn. Vui lòng tải lại trang và thử lại.', 'smart-login' ), 'error' );
+		if ( ! wp_verify_nonce( (string) ( $post['_wpnonce'] ?? '' ), 'OMNIWP_save_profile' ) ) {
+			Notices::flash( __( 'Phiên làm việc đã hết hạn. Vui lòng tải lại trang và thử lại.', 'omniwp' ), 'error' );
 			$this->redirect( $redirect );
 			return;
 		}
@@ -248,12 +248,12 @@ class FormController {
 		// keeps one set of markup serving both save paths — the same trick
 		// WooIntegration::prepare_account_post() plays in the other direction.
 		foreach ( array(
-			'smartlogin_full_name' => 'full_name',
-			'smartlogin_dob'       => 'dob',
-			'smartlogin_gender'    => 'gender',
-		) as $sl_posted => $sl_internal ) {
-			if ( isset( $post[ $sl_posted ] ) && ! isset( $post[ $sl_internal ] ) ) {
-				$post[ $sl_internal ] = $post[ $sl_posted ];
+			'OmniWP_full_name' => 'full_name',
+			'OmniWP_dob'       => 'dob',
+			'OmniWP_gender'    => 'gender',
+		) as $ow_posted => $ow_internal ) {
+			if ( isset( $post[ $ow_posted ] ) && ! isset( $post[ $ow_internal ] ) ) {
+				$post[ $ow_internal ] = $post[ $ow_posted ];
 			}
 		}
 
@@ -276,7 +276,7 @@ class FormController {
 			return;
 		}
 
-		Notices::flash( __( 'Đã lưu thông tin của bạn.', 'smart-login' ), 'success' );
+		Notices::flash( __( 'Đã lưu thông tin của bạn.', 'omniwp' ), 'success' );
 		$this->redirect( $redirect );
 	}
 
@@ -303,18 +303,18 @@ class FormController {
 		$user = get_userdata( $user_id );
 
 		if ( ! $user ) {
-			return new WP_Error( 'smart_login_no_user', __( 'Không tìm thấy tài khoản.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_no_user', __( 'Không tìm thấy tài khoản.', 'omniwp' ) );
 		}
 
 		if ( ! wp_check_password( (string) ( $post['password_current'] ?? '' ), $user->user_pass, $user_id ) ) {
-			return new WP_Error( 'smart_login_bad_password', __( 'Mật khẩu hiện tại không đúng.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_bad_password', __( 'Mật khẩu hiện tại không đúng.', 'omniwp' ) );
 		}
 
 		if ( (string) ( $post['password_2'] ?? '' ) !== $new ) {
-			return new WP_Error( 'smart_login_password_mismatch', __( 'Hai mật khẩu mới không khớp.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_password_mismatch', __( 'Hai mật khẩu mới không khớp.', 'omniwp' ) );
 		}
 
-		$policy = \SmartLogin\Auth\PasswordPolicy::validate( $new );
+		$policy = \OmniWP\Auth\PasswordPolicy::validate( $new );
 
 		if ( is_wp_error( $policy ) ) {
 			return $policy;
@@ -333,7 +333,7 @@ class FormController {
 
 		// After the write and not before: a failed update must not leave a date
 		// claiming a password changed when it did not.
-		\SmartLogin\Security\SecurityMeta::record_password_change( $user_id );
+		\OmniWP\Security\SecurityMeta::record_password_change( $user_id );
 
 		return true;
 	}
@@ -346,12 +346,12 @@ class FormController {
 	 */
 	private function handle_unlink_identity( array $post ): void {
 		if ( ! is_user_logged_in() ) {
-			Notices::add( __( 'Bạn cần đăng nhập để thực hiện việc này.', 'smart-login' ) );
+			Notices::add( __( 'Bạn cần đăng nhập để thực hiện việc này.', 'omniwp' ) );
 			return;
 		}
 
-		if ( ! isset( $post['_wpnonce'] ) || ! wp_verify_nonce( $post['_wpnonce'], 'smart_login_unlink_identity' ) ) {
-			Notices::add( __( 'Phiên làm việc đã hết hạn. Vui lòng tải lại trang.', 'smart-login' ) );
+		if ( ! isset( $post['_wpnonce'] ) || ! wp_verify_nonce( $post['_wpnonce'], 'OMNIWP_unlink_identity' ) ) {
+			Notices::add( __( 'Phiên làm việc đã hết hạn. Vui lòng tải lại trang.', 'omniwp' ) );
 			return;
 		}
 
@@ -366,7 +366,7 @@ class FormController {
 		if ( is_wp_error( $result ) ) {
 			Notices::flash( $result->get_error_message(), 'error' );
 		} else {
-			Notices::flash( __( 'Đã bỏ liên kết.', 'smart-login' ), 'success' );
+			Notices::flash( __( 'Đã bỏ liên kết.', 'omniwp' ), 'success' );
 		}
 
 		$redirect = (string) ( $post['_redirect'] ?? '' );

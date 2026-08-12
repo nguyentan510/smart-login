@@ -1,6 +1,6 @@
-=== Smart Login ===
+=== OmniWP ===
 Contributors: ngoctan
-Tags: otp, login, phone, woocommerce, vietnam
+Tags: otp, login, phone, woocommerce, portal, account, vietnam
 Requires at least: 6.0
 Tested up to: 7.0
 Requires PHP: 8.0
@@ -8,15 +8,15 @@ Stable tag: 1.1.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Đăng nhập và đăng ký bằng số điện thoại hoặc email với mã OTP, kèm địa chỉ hành chính Việt Nam 2 cấp cho WooCommerce.
+Nền tảng Quản lý Định danh & Trung tâm Khách hàng Toàn năng (Customer Identity & Account Portal) cho WordPress & WooCommerce.
 
 == Description ==
 
-Smart Login thay thế màn hình đăng nhập mặc định của WordPress bằng một luồng xác thực dùng mã OTP, và tích hợp sẵn với WooCommerce.
+OmniWP thay thế màn hình đăng nhập mặc định của WordPress bằng một luồng xác thực đa kênh (OTP SMS, Email, Google One-Tap / OAuth) và Trung tâm Khách hàng (Account Hub) tích hợp sâu WooCommerce.
 
 **Định danh**
 
-Mỗi cách đăng nhập của người dùng — số điện thoại, email, Google — là một *identity* riêng trong bảng `smartlogin_identities`, với ràng buộc `UNIQUE (channel, subject)`. Đó là nơi duy nhất trả lời câu hỏi "số này thuộc về ai".
+Mỗi cách đăng nhập của người dùng — số điện thoại, email, Google — là một *identity* riêng trong bảng `wp_ow_identities`, với ràng buộc `UNIQUE (channel, subject)`. Đó là nơi duy nhất trả lời câu hỏi "số này thuộc về ai".
 
 Hệ quả thực tế: khi người dùng đổi số điện thoại, số cũ được **thu hồi** chứ không phải ghi đè. Người nhận SIM tái sử dụng sau đó không thể dùng số ấy để lấy lại mật khẩu của chủ cũ.
 
@@ -36,10 +36,10 @@ Qua webhook tới bất kỳ nhà cung cấp SMS nào (cấu hình bằng placeh
 
 == Installation ==
 
-1. Tải thư mục plugin vào `/wp-content/plugins/`.
+1. Tải thư mục plugin `omniwp` vào `/wp-content/plugins/`.
 2. Kích hoạt trong màn hình **Plugins**.
-3. Vào **Smart Login → Cài đặt** để chọn kênh định danh và cấu hình webhook gửi SMS.
-4. Đặt shortcode `[smart_login]` lên một trang, hoặc bật tuỳ chọn thay thế biểu mẫu của WooCommerce.
+3. Vào **OmniWP → Cài đặt** để chọn kênh định danh và cấu hình webhook gửi SMS.
+4. Đặt shortcode `[omniwp_auth]` hoặc `[omniwp_account]` lên một trang, hoặc bật tuỳ chọn thay thế biểu mẫu của WooCommerce.
 
 == Frequently Asked Questions ==
 
@@ -47,7 +47,7 @@ Qua webhook tới bất kỳ nhà cung cấp SMS nào (cấu hình bằng placeh
 
 Không. Số cũ được thu hồi và ghi vào bảng lịch sử. Nó không còn chủ sở hữu, nên không đăng nhập được và cũng không lấy lại mật khẩu được — kể cả khi SIM đó đã được nhà mạng cấp cho người khác.
 
-= Tại sao tên đăng nhập trong danh sách Users trông như `sl_9f2c...`? =
+= Tại sao tên đăng nhập trong danh sách Users trông như `ow_9f2c...`? =
 
 Vì WordPress phân giải `user_login` ở `authenticate` priority 20, trước mọi mã của plugin, và không cho phép đổi giá trị này về sau. Nếu nó chứa số điện thoại thì số cũ sẽ vĩnh viễn đăng nhập được. Giá trị mờ này loại bỏ hẳn khả năng đó. Cột "Định danh chính" và ô tìm kiếm trong màn hình Users vẫn tra được theo số điện thoại.
 

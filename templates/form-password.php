@@ -2,31 +2,31 @@
 /**
  * Step 2a: the identifier is registered, so ask for the password.
  *
- * Override at yourtheme/smart-login/form-password.php
+ * Override at yourtheme/omniwp/form-password.php
  *
  * @var array  $notices
  * @var string $identity Exactly what the visitor typed on step 1.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-use SmartLogin\Frontend\Flow;
-use SmartLogin\Frontend\TemplateLoader;
-use SmartLogin\Security\RequestGuard;
+use OmniWP\Frontend\Flow;
+use OmniWP\Frontend\TemplateLoader;
+use OmniWP\Security\RequestGuard;
 
 defined( 'ABSPATH' ) || exit;
 
-$sl_identity = (string) ( $identity ?? '' );
-$sl_redirect = isset( $_GET['redirect_to'] ) ? esc_url_raw( wp_unslash( $_GET['redirect_to'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+$ow_identity = (string) ( $identity ?? '' );
+$ow_redirect = isset( $_GET['redirect_to'] ) ? esc_url_raw( wp_unslash( $_GET['redirect_to'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 ?>
-<div class="smart-login smart-login--password">
+<div class="omniwp omniwp--password">
 
-	<?php TemplateLoader::output( 'partials/screen-title', array( 'text' => __( 'Nhập mật khẩu', 'smart-login' ) ) ); ?>
+	<?php TemplateLoader::output( 'partials/screen-title', array( 'text' => __( 'Nhập mật khẩu', 'omniwp' ) ) ); ?>
 
 	<p class="sl-identity-chip">
-		<span class="sl-identity-chip__value"><?php echo esc_html( $sl_identity ); ?></span>
+		<span class="sl-identity-chip__value"><?php echo esc_html( $ow_identity ); ?></span>
 		<a class="sl-link" href="<?php echo esc_url( Flow::url( Flow::STEP_IDENTIFY ) ); ?>">
-			<?php esc_html_e( 'Đổi', 'smart-login' ); ?>
+			<?php esc_html_e( 'Đổi', 'omniwp' ); ?>
 		</a>
 	</p>
 
@@ -34,18 +34,18 @@ $sl_redirect = isset( $_GET['redirect_to'] ) ? esc_url_raw( wp_unslash( $_GET['r
 
 	<form method="post" class="sl-form sl-form--password">
 		<?php RequestGuard::fields( 'login', 'login_' ); ?>
-		<input type="hidden" name="smart_login_action" value="login" />
-		<input type="hidden" name="identity" value="<?php echo esc_attr( $sl_identity ); ?>" />
-		<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $sl_redirect ); ?>" />
+		<input type="hidden" name="OMNIWP_action" value="login" />
+		<input type="hidden" name="identity" value="<?php echo esc_attr( $ow_identity ); ?>" />
+		<input type="hidden" name="redirect_to" value="<?php echo esc_attr( $ow_redirect ); ?>" />
 		<?php // Tells the controller a rejected password belongs back on this screen. ?>
-		<input type="hidden" name="sl_from_password" value="1" />
+		<input type="hidden" name="ow_from_password" value="1" />
 
 		<?php
 		TemplateLoader::output(
 			'partials/password-field',
 			array(
 				'name'         => 'password',
-				'label'        => __( 'Mật khẩu', 'smart-login' ),
+				'label'        => __( 'Mật khẩu', 'omniwp' ),
 				'id'           => 'sl-password',
 				'autocomplete' => 'current-password',
 				'autofocus'    => true,
@@ -56,12 +56,12 @@ $sl_redirect = isset( $_GET['redirect_to'] ) ? esc_url_raw( wp_unslash( $_GET['r
 		<div class="sl-login-options">
 			<label class="sl-remember">
 				<input type="checkbox" name="remember" value="1" checked />
-				<span><?php esc_html_e( 'Ghi nhớ đăng nhập', 'smart-login' ); ?></span>
+				<span><?php esc_html_e( 'Ghi nhớ đăng nhập', 'omniwp' ); ?></span>
 			</label>
 		</div>
 
 		<button type="submit" class="sl-btn sl-btn--primary sl-btn--block">
-			<?php esc_html_e( 'Đăng nhập', 'smart-login' ); ?>
+			<?php esc_html_e( 'Đăng nhập', 'omniwp' ); ?>
 		</button>
 	</form>
 
@@ -83,14 +83,14 @@ $sl_redirect = isset( $_GET['redirect_to'] ) ? esc_url_raw( wp_unslash( $_GET['r
 	?>
 	<form method="post" class="sl-form sl-form--recover">
 		<?php RequestGuard::fields( 'forgot' ); ?>
-		<?php echo \SmartLogin\Security\Captcha::field_html(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts. ?>
-		<input type="hidden" name="smart_login_action" value="forgot" />
-		<input type="hidden" name="identity" value="<?php echo esc_attr( $sl_identity ); ?>" />
+		<?php echo \OmniWP\Security\Captcha::field_html(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts. ?>
+		<input type="hidden" name="OMNIWP_action" value="forgot" />
+		<input type="hidden" name="identity" value="<?php echo esc_attr( $ow_identity ); ?>" />
 
-		<p class="sl-hint"><?php esc_html_e( 'Chưa có mật khẩu, hoặc không nhớ?', 'smart-login' ); ?></p>
+		<p class="sl-hint"><?php esc_html_e( 'Chưa có mật khẩu, hoặc không nhớ?', 'omniwp' ); ?></p>
 
 		<button type="submit" class="sl-btn sl-btn--ghost">
-			<?php esc_html_e( 'Gửi mã xác thực', 'smart-login' ); ?>
+			<?php esc_html_e( 'Gửi mã xác thực', 'omniwp' ); ?>
 		</button>
 	</form>
 </div>

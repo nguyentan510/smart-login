@@ -63,7 +63,7 @@ because third-party plugins hook `woocommerce_save_account_details` and
 plugins writing — with no error, just missing data.
 
 `WooIntegration::prepare_account_post()` (`template_redirect` @10, ahead of
-Woo's @20) is already the correct adapter: it translates `smartlogin_full_name`
+Woo's @20) is already the correct adapter: it translates `OmniWP_full_name`
 into the `account_first_name` / `account_last_name` / `account_display_name`
 triplet Woo expects. Phase 8 generalises it. It does not replace it.
 
@@ -140,8 +140,8 @@ only `unlinked_providers()` get an invitation.
 
 ## CSS inventory — what is missing, not what should change
 
-`.smart-login--account` has **no rules at all**. The page inherits
-`max-width: 460px; margin: 0 auto` from `.smart-login` (`smart-login.css:15`) — a
+`.omniwp--account` has **no rules at all**. The page inherits
+`max-width: 460px; margin: 0 auto` from `.omniwp` (`omniwp.css:15`) — a
 login-card width applied to a profile page inside a full-width WooCommerce
 column. This one rule is the largest single visual improvement available.
 
@@ -184,7 +184,7 @@ entirely, on the owner's decision that neither earns its place:
   dataset.
 
 Three fitness rules keep both removed. Integrators who want a referral field can
-add one through `smart_login_registration_payload`; the README shows how.
+add one through `OMNIWP_registration_payload`; the README shows how.
 
 ## Address boundary
 

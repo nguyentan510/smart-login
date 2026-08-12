@@ -8,23 +8,23 @@
  * (text/checkbox/select/textarea) and every field had to pick the right one by
  * hand; picking wrong, or forgetting to call one at all, was invisible.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Admin;
+namespace OmniWP\Admin;
 
-use SmartLogin\GatewayPresets;
-use SmartLogin\Mail\MailRegistry;
-use SmartLogin\OTP\Placeholders;
-use SmartLogin\Security\AuditLog;
-use SmartLogin\Settings;
+use OmniWP\GatewayPresets;
+use OmniWP\Mail\MailRegistry;
+use OmniWP\OTP\Placeholders;
+use OmniWP\Security\AuditLog;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
 final class FieldRenderer {
 
 	/**
-	 * `otp.ttl` becomes `smart_login_settings[otp][ttl]`, which is the shape
+	 * `otp.ttl` becomes `OMNIWP_settings[otp][ttl]`, which is the shape
 	 * Settings::sanitize() digs back out by the same dot path.
 	 */
 	public static function name( string $path ): string {
@@ -93,6 +93,10 @@ final class FieldRenderer {
 
 					case 'secret':
 						self::secret( $path, $field );
+						break;
+
+					case 'color':
+						self::color( $path, $field );
 						break;
 
 					default:
@@ -180,7 +184,7 @@ final class FieldRenderer {
 			'<input type="password" class="regular-text" id="%1$s" name="%2$s" value="" autocomplete="new-password" placeholder="%3$s" />',
 			esc_attr( self::id( $path ) ),
 			esc_attr( self::name( $path ) ),
-			esc_attr( $stored ? __( 'Đã lưu — để trống nếu không đổi', 'smart-login' ) : __( 'Chưa có', 'smart-login' ) )
+			esc_attr( $stored ? __( 'Đã lưu — để trống nếu không đổi', 'omniwp' ) : __( 'Chưa có', 'omniwp' ) )
 		);
 
 		if ( $stored ) {
@@ -188,8 +192,8 @@ final class FieldRenderer {
 			// settings array, and Settings::sanitize() strips it before storing.
 			printf(
 				'<p><label><input type="checkbox" name="%1$s" value="1" /> %2$s</label></p>',
-				esc_attr( 'sl_clear_' . str_replace( '.', '_', $path ) ),
-				esc_html__( 'Xoá giá trị đã lưu', 'smart-login' )
+				esc_attr( 'ow_clear_' . str_replace( '.', '_', $path ) ),
+				esc_html__( 'Xoá giá trị đã lưu', 'omniwp' )
 			);
 		}
 	}
@@ -245,7 +249,7 @@ final class FieldRenderer {
 		$known   = array();
 		?>
 		<select id="<?php echo esc_attr( self::id( $path ) ); ?>" name="<?php echo esc_attr( self::name( $path ) ); ?>">
-			<option value=""><?php esc_html_e( '— Mặc định —', 'smart-login' ); ?></option>
+			<option value=""><?php esc_html_e( '— Mặc định —', 'omniwp' ); ?></option>
 			<?php
 			foreach ( $pages as $page ) {
 				$permalink = (string) get_permalink( $page->ID );
@@ -334,13 +338,13 @@ final class FieldRenderer {
 				class="button-link"
 				data-mail-copy="<?php echo esc_attr( $target ); ?>"
 				data-mail-default="<?php echo esc_attr( $inherited ); ?>"
-			><?php esc_html_e( 'Chép mẫu để sửa', 'smart-login' ); ?></button>
+			><?php esc_html_e( 'Chép mẫu để sửa', 'omniwp' ); ?></button>
 			<span aria-hidden="true"> · </span>
 			<button
 				type="button"
 				class="button-link sl-mail-revert"
 				data-mail-revert="<?php echo esc_attr( $target ); ?>"
-			><?php esc_html_e( 'Xoá, dùng lại mẫu chung', 'smart-login' ); ?></button>
+			><?php esc_html_e( 'Xoá, dùng lại mẫu chung', 'omniwp' ); ?></button>
 		</p>
 		<?php
 	}
@@ -368,7 +372,7 @@ final class FieldRenderer {
 		}
 		?>
 		<details class="sl-derived sl-message-tokens">
-			<summary><?php esc_html_e( 'Các thẻ dùng được trong mẫu này', 'smart-login' ); ?></summary>
+			<summary><?php esc_html_e( 'Các thẻ dùng được trong mẫu này', 'omniwp' ); ?></summary>
 			<table class="widefat striped sl-tokens">
 				<tbody>
 				<?php foreach ( $tokens as $token => $description ) : ?>
@@ -445,14 +449,14 @@ final class FieldRenderer {
 							placeholder="
 							<?php
 							echo '' !== (string) ( $stored[ $name ] ?? '' )
-								? esc_attr__( 'Đã lưu — để trống để giữ nguyên', 'smart-login' )
-								: esc_attr__( 'Nhập giá trị', 'smart-login' );
+								? esc_attr__( 'Đã lưu — để trống để giữ nguyên', 'omniwp' )
+								: esc_attr__( 'Nhập giá trị', 'omniwp' );
 							?>
 								"
 						<?php endif; ?>
 					/>
 					<?php if ( $secret ) : ?>
-						<p class="description"><?php esc_html_e( 'Không bao giờ được hiển thị lại sau khi lưu.', 'smart-login' ); ?></p>
+						<p class="description"><?php esc_html_e( 'Không bao giờ được hiển thị lại sau khi lưu.', 'omniwp' ); ?></p>
 					<?php endif; ?>
 				</td>
 			</tr>
@@ -471,8 +475,8 @@ final class FieldRenderer {
 				<table class="widefat sl-headers-table">
 					<thead>
 						<tr>
-							<th><?php esc_html_e( 'Tên', 'smart-login' ); ?></th>
-							<th><?php esc_html_e( 'Giá trị', 'smart-login' ); ?></th>
+							<th><?php esc_html_e( 'Tên', 'omniwp' ); ?></th>
+							<th><?php esc_html_e( 'Giá trị', 'omniwp' ); ?></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -500,7 +504,7 @@ final class FieldRenderer {
 						<?php endfor; ?>
 					</tbody>
 				</table>
-				<p class="description"><?php esc_html_e( 'Bỏ trống dòng không dùng. Giá trị chứa từ khoá bảo mật sẽ được che khi hiển thị kết quả gửi thử.', 'smart-login' ); ?></p>
+				<p class="description"><?php esc_html_e( 'Bỏ trống dòng không dùng. Giá trị chứa từ khoá bảo mật sẽ được che khi hiển thị kết quả gửi thử.', 'omniwp' ); ?></p>
 			</td>
 		</tr>
 		<?php
@@ -520,63 +524,109 @@ final class FieldRenderer {
 	 * originate in a form.
 	 */
 	private static function menu_items( string $path, array $field ): void {
-		$rows_in   = (array) Settings::get( $path, array() );
-		$row_count = max( 5, count( $rows_in ) + 1 );
-		$name      = self::name( $path );
-		$icons     = \SmartLogin\Frontend\IconSet::names();
+		$rows_in = (array) Settings::get( $path, array() );
+		$name    = self::name( $path );
+		$icons   = \OmniWP\Frontend\IconSet::names();
 		?>
 		<tr>
 			<th scope="row"><?php echo esc_html( $field['label'] ?? $path ); ?></th>
 			<td>
-				<table class="widefat sl-menu-items-table">
-					<thead>
-						<tr>
-							<th style="width:14em"><?php esc_html_e( 'Biểu tượng', 'smart-login' ); ?></th>
-							<th style="width:16em"><?php esc_html_e( 'Nhãn', 'smart-login' ); ?></th>
-							<th><?php esc_html_e( 'Liên kết', 'smart-login' ); ?></th>
-						</tr>
-					</thead>
-					<tbody>
-						<?php for ( $i = 0; $i < $row_count; $i++ ) : ?>
-							<?php $row = is_array( $rows_in[ $i ] ?? null ) ? $rows_in[ $i ] : array(); ?>
+				<div class="sl-menu-items-wrapper">
+					<table class="widefat sl-menu-items-table" style="max-width: 840px; margin-bottom: 10px;">
+						<thead>
 							<tr>
-								<td>
-									<select name="<?php echo esc_attr( $name . '[' . $i . '][icon]' ); ?>">
-										<?php foreach ( $icons as $icon_name => $icon_label ) : ?>
-											<option
-												value="<?php echo esc_attr( $icon_name ); ?>"
-												<?php selected( (string) ( $row['icon'] ?? '' ), (string) $icon_name ); ?>
-											>
-												<?php echo esc_html( $icon_label ); ?>
-											</option>
-										<?php endforeach; ?>
-									</select>
-								</td>
-								<td>
-									<input
-										type="text"
-										name="<?php echo esc_attr( $name . '[' . $i . '][label]' ); ?>"
-										value="<?php echo esc_attr( (string) ( $row['label'] ?? '' ) ); ?>"
-										placeholder="<?php esc_attr_e( 'Đơn hàng của tôi', 'smart-login' ); ?>"
-										class="regular-text"
-									/>
-								</td>
-								<td>
-									<input
-										type="url"
-										name="<?php echo esc_attr( $name . '[' . $i . '][url]' ); ?>"
-										value="<?php echo esc_attr( (string) ( $row['url'] ?? '' ) ); ?>"
-										placeholder="https://"
-										class="large-text"
-									/>
-								</td>
+								<th style="width:12em"><?php esc_html_e( 'Biểu tượng', 'omniwp' ); ?></th>
+								<th style="width:15em"><?php esc_html_e( 'Nhãn hiển thị', 'omniwp' ); ?></th>
+								<th><?php esc_html_e( 'Đường dẫn (URL)', 'omniwp' ); ?></th>
+								<th style="width:7.5em; text-align:center;"><?php esc_html_e( 'Thao tác', 'omniwp' ); ?></th>
 							</tr>
-						<?php endfor; ?>
-					</tbody>
-				</table>
+						</thead>
+						<tbody>
+							<?php
+							$index = 0;
+							foreach ( $rows_in as $row ) :
+								if ( ! is_array( $row ) || ( empty( $row['label'] ) && empty( $row['url'] ) ) ) {
+									continue;
+								}
+								?>
+								<tr>
+									<td>
+										<select name="<?php echo esc_attr( $name . '[' . $index . '][icon]' ); ?>">
+											<?php foreach ( $icons as $icon_name => $icon_label ) : ?>
+												<option value="<?php echo esc_attr( $icon_name ); ?>" <?php selected( (string) ( $row['icon'] ?? '' ), (string) $icon_name ); ?>>
+													<?php echo esc_html( $icon_label ); ?>
+												</option>
+											<?php endforeach; ?>
+										</select>
+									</td>
+									<td>
+										<input type="text"
+											name="<?php echo esc_attr( $name . '[' . $index . '][label]' ); ?>"
+											value="<?php echo esc_attr( (string) ( $row['label'] ?? '' ) ); ?>"
+											placeholder="<?php esc_attr_e( 'Ví dụ: Ví voucher', 'omniwp' ); ?>"
+											class="regular-text" />
+									</td>
+									<td>
+										<input type="text"
+											name="<?php echo esc_attr( $name . '[' . $index . '][url]' ); ?>"
+											value="<?php echo esc_attr( (string) ( $row['url'] ?? '' ) ); ?>"
+											placeholder="<?php esc_attr_e( 'https://example.com/voucher', 'omniwp' ); ?>"
+											class="large-text" />
+									</td>
+									<td style="text-align:center; white-space:nowrap;">
+										<button type="button" class="button button-small sl-move-menu-row-up" title="<?php esc_attr_e( 'Di chuyển lên', 'omniwp' ); ?>" style="padding:0 5px; min-height:26px; line-height:24px; font-size:11px;">▲</button>
+										<button type="button" class="button button-small sl-move-menu-row-down" title="<?php esc_attr_e( 'Di chuyển xuống', 'omniwp' ); ?>" style="padding:0 5px; min-height:26px; line-height:24px; font-size:11px;">▼</button>
+										<button type="button" class="button button-small button-link-delete sl-remove-menu-row" title="<?php esc_attr_e( 'Xóa dòng này', 'omniwp' ); ?>" style="color:#d63638; padding:0 6px; min-height:26px; line-height:24px; margin-left:4px; font-weight:bold;">✕</button>
+									</td>
+								</tr>
+								<?php
+								++$index;
+							endforeach;
+							?>
+						</tbody>
+					</table>
+
+					<button type="button" class="button button-secondary sl-add-menu-row">
+						+ <?php esc_html_e( 'Thêm mục tùy chỉnh mới', 'omniwp' ); ?>
+					</button>
+
+					<template class="sl-menu-row-template">
+						<tr>
+							<td>
+								<select name="<?php echo esc_attr( $name . '[{{INDEX}}][icon]' ); ?>">
+									<?php foreach ( $icons as $icon_name => $icon_label ) : ?>
+										<option value="<?php echo esc_attr( $icon_name ); ?>">
+											<?php echo esc_html( $icon_label ); ?>
+										</option>
+									<?php endforeach; ?>
+								</select>
+							</td>
+							<td>
+								<input type="text"
+									name="<?php echo esc_attr( $name . '[{{INDEX}}][label]' ); ?>"
+									value=""
+									placeholder="<?php esc_attr_e( 'Ví dụ: Ví voucher', 'omniwp' ); ?>"
+									class="regular-text" />
+							</td>
+							<td>
+								<input type="text"
+									name="<?php echo esc_attr( $name . '[{{INDEX}}][url]' ); ?>"
+									value=""
+									placeholder="<?php esc_attr_e( 'https://example.com/voucher', 'omniwp' ); ?>"
+									class="large-text" />
+							</td>
+							<td style="text-align:center; white-space:nowrap;">
+								<button type="button" class="button button-small sl-move-menu-row-up" title="<?php esc_attr_e( 'Di chuyển lên', 'omniwp' ); ?>" style="padding:0 5px; min-height:26px; line-height:24px; font-size:11px;">▲</button>
+								<button type="button" class="button button-small sl-move-menu-row-down" title="<?php esc_attr_e( 'Di chuyển xuống', 'omniwp' ); ?>" style="padding:0 5px; min-height:26px; line-height:24px; font-size:11px;">▼</button>
+								<button type="button" class="button button-small button-link-delete sl-remove-menu-row" title="<?php esc_attr_e( 'Xóa dòng này', 'omniwp' ); ?>" style="color:#d63638; padding:0 6px; min-height:26px; line-height:24px; margin-left:4px; font-weight:bold;">✕</button>
+							</td>
+						</tr>
+					</template>
+				</div>
 				<?php self::help( $field ); ?>
 			</td>
 		</tr>
+
 		<?php
 	}
 
@@ -646,6 +696,31 @@ final class FieldRenderer {
 		}
 
 		return $value;
+	}
+
+	private static function color( string $path, array $field ): void {
+		$value = (string) Settings::get( $path, $field['default'] ?? '#000000' );
+		$id    = self::id( $path );
+		$name  = self::name( $path );
+		?>
+		<div style="display: flex; align-items: center; gap: 8px;">
+			<input
+				type="color"
+				id="<?php echo esc_attr( $id ); ?>"
+				name="<?php echo esc_attr( $name ); ?>"
+				value="<?php echo esc_attr( $value ); ?>"
+				style="width: 42px; height: 32px; padding: 2px; border: 1px solid #dcdfe6; border-radius: 4px; cursor: pointer;"
+				onchange="document.getElementById('<?php echo esc_attr( $id ); ?>_text').value = this.value;"
+			/>
+			<input
+				type="text"
+				id="<?php echo esc_attr( $id ); ?>_text"
+				value="<?php echo esc_attr( $value ); ?>"
+				style="width: 100px; font-family: monospace; text-transform: lowercase;"
+				onchange="if(/^#[0-9A-F]{6}$/i.test(this.value)) document.getElementById('<?php echo esc_attr( $id ); ?>').value = this.value;"
+			/>
+		</div>
+		<?php
 	}
 
 	private static function help( array $field ): void {

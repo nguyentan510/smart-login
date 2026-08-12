@@ -5,12 +5,12 @@
  * Canonical storage format is E.164 without the leading plus: 84969789475.
  * That matches what the account screen displays and keeps user_login clean.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Identity;
+namespace OmniWP\Identity;
 
-use SmartLogin\Settings;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -134,7 +134,7 @@ class Phone {
 		 * @param bool   $valid
 		 * @param string $canonical
 		 */
-		return (bool) apply_filters( 'smart_login_phone_is_valid', $valid, $canonical );
+		return (bool) apply_filters( 'omniwp_phone_is_valid', $valid, $canonical );
 	}
 
 	/**

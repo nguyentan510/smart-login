@@ -24,25 +24,25 @@
  * resolve, because what is under test is the plugin's handling of the answer,
  * not anybody's webhook.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 declare( strict_types=1 );
 
-$wp_root     = rtrim( (string) getenv( 'SMART_LOGIN_WP_ROOT' ), "\\/" );
-$db_host     = (string) getenv( 'SMART_LOGIN_DB_HOST' );
-$db_name     = (string) getenv( 'SMART_LOGIN_DB_NAME' );
-$db_user     = (string) getenv( 'SMART_LOGIN_DB_USER' );
-$db_pass     = (string) getenv( 'SMART_LOGIN_DB_PASSWORD' );
-$prefix      = (string) getenv( 'SMART_LOGIN_DB_PREFIX' );
-$plugin_root = rtrim( (string) getenv( 'SMART_LOGIN_PLUGIN_ROOT' ), "\\/" );
+$wp_root     = rtrim( (string) getenv( 'OMNIWP_WP_ROOT' ), "\\/" );
+$db_host     = (string) getenv( 'OMNIWP_DB_HOST' );
+$db_name     = (string) getenv( 'OMNIWP_DB_NAME' );
+$db_user     = (string) getenv( 'OMNIWP_DB_USER' );
+$db_pass     = (string) getenv( 'OMNIWP_DB_PASSWORD' );
+$prefix      = (string) getenv( 'OMNIWP_DB_PREFIX' );
+$plugin_root = rtrim( (string) getenv( 'OMNIWP_PLUGIN_ROOT' ), "\\/" );
 
-// `$sl_plugin`, not `$plugin`: wp-settings.php uses $plugin as a loop variable
+// `$ow_plugin`, not `$plugin`: wp-settings.php uses $plugin as a loop variable
 // and unset()s it. See the note in run-wordpress-gate.php.
-$sl_plugin = $plugin_root . DIRECTORY_SEPARATOR . 'smart-login.php';
+$ow_plugin = $plugin_root . DIRECTORY_SEPARATOR . 'omniwp.php';
 
 $blocked = static function ( string $message ): never {
-	echo "SMART_LOGIN_DELIVERY_GATE_BLOCKED\n";
+	echo "OMNIWP_DELIVERY_GATE_BLOCKED\n";
 	echo 'reason=' . $message . "\n";
 	exit( 2 );
 };
@@ -58,19 +58,19 @@ $ok = static function ( string $label ): void {
 };
 
 if ( '' === $wp_root || ! is_file( $wp_root . DIRECTORY_SEPARATOR . 'wp-settings.php' ) ) {
-	$blocked( 'SMART_LOGIN_WP_ROOT must point to a WordPress public root' );
+	$blocked( 'OMNIWP_WP_ROOT must point to a WordPress public root' );
 }
-if ( '' === $plugin_root || ! is_file( $sl_plugin ) ) {
-	$blocked( 'SMART_LOGIN_PLUGIN_ROOT must point to the current plugin source' );
+if ( '' === $plugin_root || ! is_file( $ow_plugin ) ) {
+	$blocked( 'OMNIWP_PLUGIN_ROOT must point to the current plugin source' );
 }
 if ( '' === $db_host || '' === $db_name || '' === $db_user ) {
-	$blocked( 'SMART_LOGIN_DB_HOST, SMART_LOGIN_DB_NAME and SMART_LOGIN_DB_USER are required' );
+	$blocked( 'OMNIWP_DB_HOST, OMNIWP_DB_NAME and OMNIWP_DB_USER are required' );
 }
 
 $prefix = '' === $prefix ? 'wp_' : $prefix;
 
 if ( ! preg_match( '/^[A-Za-z0-9_]+$/', $prefix ) ) {
-	$blocked( 'SMART_LOGIN_DB_PREFIX contains unsupported characters' );
+	$blocked( 'OMNIWP_DB_PREFIX contains unsupported characters' );
 }
 
 define( 'ABSPATH', $wp_root . DIRECTORY_SEPARATOR );
@@ -91,8 +91,8 @@ try {
 	$blocked( 'WordPress bootstrap failed: ' . $exception->getMessage() );
 }
 
-if ( ! class_exists( 'SmartLogin\\Installer' ) ) {
-	require_once $sl_plugin;
+if ( ! class_exists( 'OmniWP\\Installer' ) ) {
+	require_once $ow_plugin;
 }
 
 // add_settings_error() and friends live in wp-admin, which wp-settings.php does
@@ -100,13 +100,13 @@ if ( ! class_exists( 'SmartLogin\\Installer' ) ) {
 // reason; loading it here is what makes the guard's other branch reachable.
 require_once ABSPATH . 'wp-admin/includes/template.php';
 
-\SmartLogin\Installer::maybe_upgrade();
+\OmniWP\Installer::maybe_upgrade();
 
-use SmartLogin\FieldRegistry;
-use SmartLogin\OTP\Transports\EnvelopeSigner;
-use SmartLogin\OTP\Transports\TransportRouter;
-use SmartLogin\OTP\Transports\WebhookTransport;
-use SmartLogin\Settings;
+use OmniWP\FieldRegistry;
+use OmniWP\OTP\Transports\EnvelopeSigner;
+use OmniWP\OTP\Transports\TransportRouter;
+use OmniWP\OTP\Transports\WebhookTransport;
+use OmniWP\Settings;
 
 echo 'Phase 10 — delivery routing, against WordPress ' . get_bloginfo( 'version' ) . "\n\n";
 
@@ -177,7 +177,7 @@ if ( 'https://hooks.invalid/otp' !== ( $saved['automation']['url'] ?? '' ) ) {
 $errors = get_settings_errors( Settings::OPTION );
 $codes  = array_column( $errors, 'code' );
 
-if ( ! in_array( 'smart_login_https_required', $codes, true ) ) {
+if ( ! in_array( 'OMNIWP_https_required', $codes, true ) ) {
 	$fail( 'the rejection is silent — add_settings_error() produced nothing on the real path' );
 } else {
 	$ok( 'the administrator is told why, through the real settings-error channel' );
@@ -283,7 +283,7 @@ remove_all_filters( 'pre_http_request' );
 // ---------------------------------------------------------------------
 echo "\n10.3 — the delivery tab still renders\n";
 
-if ( ! class_exists( 'SmartLogin\\Admin\\Screens\\SettingsScreen' ) ) {
+if ( ! class_exists( 'OmniWP\\Admin\\Screens\\SettingsScreen' ) ) {
 	$fail( 'the settings screen class did not load' );
 } else {
 	require_once ABSPATH . 'wp-admin/includes/plugin.php';
@@ -291,7 +291,7 @@ if ( ! class_exists( 'SmartLogin\\Admin\\Screens\\SettingsScreen' ) ) {
 	ob_start();
 
 	try {
-		( new \SmartLogin\Admin\Screens\SettingsScreen() )->render( 'delivery' );
+		( new \OmniWP\Admin\Screens\SettingsScreen() )->render( 'delivery' );
 		$html = (string) ob_get_clean();
 	} catch ( Throwable $exception ) {
 		ob_end_clean();
@@ -310,7 +310,7 @@ if ( ! class_exists( 'SmartLogin\\Admin\\Screens\\SettingsScreen' ) ) {
 			ob_start();
 
 			try {
-				( new \SmartLogin\Admin\Screens\SettingsScreen() )->render( $slug );
+				( new \OmniWP\Admin\Screens\SettingsScreen() )->render( $slug );
 				$screen_html = (string) ob_get_clean();
 			} catch ( Throwable $exception ) {
 				ob_end_clean();
@@ -341,7 +341,7 @@ if ( ! class_exists( 'SmartLogin\\Admin\\Screens\\SettingsScreen' ) ) {
 					continue;
 				}
 
-				if ( false === strpos( $screen_html, 'name="' . \SmartLogin\Admin\FieldRenderer::name( $path ) ) ) {
+				if ( false === strpos( $screen_html, 'name="' . \OmniWP\Admin\FieldRenderer::name( $path ) ) ) {
 					$missing[] = $slug . ':' . $path;
 				}
 			}
@@ -368,7 +368,7 @@ if ( ! class_exists( 'SmartLogin\\Admin\\Screens\\SettingsScreen' ) ) {
 		// A second-level tab reachable from nowhere is a tab whose settings can
 		// only be saved by typing the URL.
 		ob_start();
-		\SmartLogin\Admin\SettingsPage::nav( 'delivery-sms' );
+		\OmniWP\Admin\SettingsPage::nav( 'delivery-sms' );
 		$nav_html = (string) ob_get_clean();
 
 		$unreachable = array();
@@ -409,7 +409,7 @@ $ok( 'settings and secrets restored' );
 echo "\n";
 
 if ( $failures ) {
-	echo "SMART_LOGIN_DELIVERY_GATE_FAILED\n";
+	echo "OMNIWP_DELIVERY_GATE_FAILED\n";
 
 	foreach ( $failures as $message ) {
 		echo 'reason=' . $message . "\n";
@@ -418,7 +418,7 @@ if ( $failures ) {
 	exit( 1 );
 }
 
-echo "SMART_LOGIN_DELIVERY_GATE_OK\n";
+echo "OMNIWP_DELIVERY_GATE_OK\n";
 echo 'wordpress=' . get_bloginfo( 'version' ) . "\n";
 echo 'php=' . PHP_VERSION . "\n";
 // Hard-coded, and it had gone stale: it still listed `automation` after 20.1

@@ -33,10 +33,10 @@
  * competing with the settings screen. It can remove a pinned end. It cannot
  * skip validation — see normalise().
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Frontend;
+namespace OmniWP\Frontend;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -75,11 +75,73 @@ final class AccountMenu {
 	 * @return array<int,array{key:string,label:string,icon:string,url:string}>
 	 */
 	public static function items( int $user_id = 0 ): array {
-		$items = array_merge(
-			self::pinned_head(),
-			self::configured(),
-			self::pinned_tail()
-		);
+		$items = array();
+
+		// 1. Preset: Profile
+		if ( (bool) \OmniWP\Settings::get( 'account_menu.preset_profile', 1 ) ) {
+			$items[] = array(
+				'key'   => self::KEY_ACCOUNT,
+				'label' => __( 'Thông tin cá nhân', 'omniwp' ),
+				'icon'  => 'user',
+				'url'   => AccountForm::edit_url( 'profile' ),
+			);
+		}
+
+		// 2. Preset: Orders
+		if ( (bool) \OmniWP\Settings::get( 'account_menu.preset_orders', 1 ) ) {
+			$items[] = array(
+				'key'   => 'orders',
+				'label' => __( 'Lịch sử đơn hàng', 'omniwp' ),
+				'icon'  => 'box',
+				'url'   => AccountForm::edit_url( 'orders' ),
+			);
+		}
+
+		// 3. Preset: Vouchers
+		if ( (bool) \OmniWP\Settings::get( 'account_menu.preset_vouchers', 1 ) ) {
+			$items[] = array(
+				'key'   => 'vouchers',
+				'label' => __( 'Mã giảm giá', 'omniwp' ),
+				'icon'  => 'ticket',
+				'url'   => AccountForm::edit_url( 'vouchers' ),
+			);
+		}
+
+		// 3. Preset: Address
+		if ( (bool) \OmniWP\Settings::get( 'account_menu.preset_address', 1 ) ) {
+			$items[] = array(
+				'key'   => 'address_book',
+				'label' => __( 'Địa chỉ nhận hàng', 'omniwp' ),
+				'icon'  => 'map-pin',
+				'url'   => AccountForm::edit_url( 'address' ),
+			);
+		}
+
+		// 4. Preset: Security
+		if ( (bool) \OmniWP\Settings::get( 'account_menu.preset_security', 1 ) ) {
+			$items[] = array(
+				'key'   => 'security',
+				'label' => __( 'Đăng nhập & Bảo mật', 'omniwp' ),
+				'icon'  => 'shield',
+				'url'   => AccountForm::edit_url( 'security' ),
+			);
+		}
+
+		// 5. Configured custom items
+		$custom = self::configured();
+		if ( ! empty( $custom ) ) {
+			$items = array_merge( $items, $custom );
+		}
+
+		// 6. Preset: Logout
+		if ( (bool) \OmniWP\Settings::get( 'account_menu.preset_logout', 1 ) ) {
+			$items[] = array(
+				'key'   => self::KEY_LOGOUT,
+				'label' => __( 'Đăng xuất', 'omniwp' ),
+				'icon'  => 'log-out',
+				'url'   => wp_logout_url( home_url( '/' ) ),
+			);
+		}
 
 		/**
 		 * The assembled account menu, immediately before it is normalised.
@@ -92,50 +154,18 @@ final class AccountMenu {
 		 * @param array $items   Each entry: key, label, icon, url.
 		 * @param int   $user_id 0 for the current visitor.
 		 */
-		$items = (array) apply_filters( 'smart_login_account_menu', $items, $user_id );
+		$items = (array) apply_filters( 'omniwp_account_menu', $items, $user_id );
 
 		return self::normalise( $items );
 	}
 
 	/**
-	 * @return array<int,array<string,string>>
-	 */
-	private static function pinned_head(): array {
-		return array(
-			array(
-				'key'   => self::KEY_ACCOUNT,
-				'label' => __( 'Thông tin cá nhân', 'smart-login' ),
-				'icon'  => 'user',
-				'url'   => AccountForm::edit_url(),
-			),
-		);
-	}
-
-	/**
-	 * @return array<int,array<string,string>>
-	 */
-	private static function pinned_tail(): array {
-		return array(
-			array(
-				'key'   => self::KEY_LOGOUT,
-				'label' => __( 'Đăng xuất', 'smart-login' ),
-				'icon'  => 'log-out',
-				'url'   => wp_logout_url( home_url( '/' ) ),
-			),
-		);
-	}
-
-	/**
-	 * The rows an administrator added.
-	 *
-	 * Empty until 21.4 declares the setting. Reading a path that is not in
-	 * `FieldRegistry` returns the default and costs nothing, so this is the real
-	 * shape of the method rather than a placeholder to be replaced.
+	 * Custom extra rows added by the site administrator.
 	 *
 	 * @return array<int,array<string,string>>
 	 */
 	private static function configured(): array {
-		$rows = \SmartLogin\Settings::get( self::OPTION, array() );
+		$rows = \OmniWP\Settings::get( self::OPTION, array() );
 
 		return is_array( $rows ) ? $rows : array();
 	}
@@ -166,14 +196,22 @@ final class AccountMenu {
 		$clean = array();
 		$seen  = array();
 
-		foreach ( $items as $item ) {
+		foreach ( $items as $index => $item ) {
 			if ( ! is_array( $item ) ) {
 				continue;
 			}
 
-			$key   = (string) ( $item['key'] ?? '' );
 			$label = trim( (string) ( $item['label'] ?? '' ) );
 			$url   = trim( (string) ( $item['url'] ?? '' ) );
+			$key   = (string) ( $item['key'] ?? '' );
+
+			if ( '' === $key && '' !== $label ) {
+				$key = sanitize_title( $label );
+				$key = (string) preg_replace( '/[^a-z0-9_-]/', '', strtolower( $key ) );
+				if ( '' === $key ) {
+					$key = 'item-' . ( (int) $index + 1 );
+				}
+			}
 
 			if ( '' === $label || '' === $url || ! preg_match( '/^[a-z0-9_-]+$/', $key ) ) {
 				continue;

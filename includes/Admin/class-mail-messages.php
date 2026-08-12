@@ -19,13 +19,13 @@
  * saved, because an absent field reads as "not on this tab" and the stored value
  * is left alone. The mail suite asserts this.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Admin;
+namespace OmniWP\Admin;
 
-use SmartLogin\Mail\MailRegistry;
-use SmartLogin\Settings;
+use OmniWP\Mail\MailRegistry;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -42,9 +42,9 @@ final class MailMessages {
 			<table class="widefat striped sl-mail-list">
 				<thead>
 					<tr>
-						<th scope="col"><?php esc_html_e( 'Email', 'smart-login' ); ?></th>
-						<th scope="col"><?php esc_html_e( 'Gửi khi nào', 'smart-login' ); ?></th>
-						<th scope="col"><?php esc_html_e( 'Nội dung', 'smart-login' ); ?></th>
+						<th scope="col"><?php esc_html_e( 'Email', 'omniwp' ); ?></th>
+						<th scope="col"><?php esc_html_e( 'Gửi khi nào', 'omniwp' ); ?></th>
+						<th scope="col"><?php esc_html_e( 'Nội dung', 'omniwp' ); ?></th>
 					</tr>
 				</thead>
 				<tbody>
@@ -88,8 +88,8 @@ final class MailMessages {
 				<span class="sl-mail-state <?php echo $overridden ? 'is-custom' : 'is-inherited'; ?>">
 					<?php
 					echo $overridden
-						? esc_html__( 'Đã tuỳ chỉnh', 'smart-login' )
-						: esc_html__( 'Đang dùng mẫu chung', 'smart-login' );
+						? esc_html__( 'Đã tuỳ chỉnh', 'omniwp' )
+						: esc_html__( 'Đang dùng mẫu chung', 'omniwp' );
 					?>
 				</span>
 			</td>
@@ -121,7 +121,7 @@ final class MailMessages {
 				<?php
 				printf(
 					/* translators: %s: message name. */
-					esc_html__( 'Gửi email cho: %s', 'smart-login' ),
+					esc_html__( 'Gửi email cho: %s', 'omniwp' ),
 					esc_html( $label )
 				);
 				?>

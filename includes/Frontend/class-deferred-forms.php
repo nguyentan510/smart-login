@@ -23,10 +23,10 @@
  * `<details>` where they make sense, and the `<form>` element itself is
  * collected here and flushed after the outer form closes.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Frontend;
+namespace OmniWP\Frontend;
 
 defined( 'ABSPATH' ) || exit;
 

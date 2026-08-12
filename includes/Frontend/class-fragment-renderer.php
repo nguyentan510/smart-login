@@ -15,14 +15,14 @@
  * would be a second source of truth, and this project has watched a rename
  * cross an untested boundary six times.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Frontend;
+namespace OmniWP\Frontend;
 
-use SmartLogin\Auth\FlowDecision;
-use SmartLogin\Auth\FlowEngine;
-use SmartLogin\OTP\OtpService;
+use OmniWP\Auth\FlowDecision;
+use OmniWP\Auth\FlowEngine;
+use OmniWP\OTP\OtpService;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -52,7 +52,7 @@ class FragmentRenderer {
 		 * The welcome screen is the one step a caller may ask for that is not on
 		 * `Flow::PUBLIC_STEPS`, and only because the round trip through a
 		 * provider cannot carry a decision home: the visitor comes back with
-		 * `smartlogin_welcome=1` in the URL and the dialog reopens on it.
+		 * `OmniWP_welcome=1` in the URL and the dialog reopens on it.
 		 *
 		 * So it is allowed, and then checked. Rendering onboarding for somebody
 		 * who is not signed in would draw a form about an account that is not
@@ -155,20 +155,20 @@ class FragmentRenderer {
 	public static function title( string $step ): string {
 		switch ( Flow::canonical( $step ) ) {
 			case Flow::STEP_OTP:
-				return __( 'Nhập mã xác thực', 'smart-login' );
+				return __( 'Nhập mã xác thực', 'omniwp' );
 
 			case Flow::STEP_FORGOT:
 			case Flow::STEP_RESET:
-				return __( 'Khôi phục mật khẩu', 'smart-login' );
+				return __( 'Khôi phục mật khẩu', 'omniwp' );
 
 			case Flow::STEP_SIGNUP:
-				return __( 'Tạo tài khoản', 'smart-login' );
+				return __( 'Tạo tài khoản', 'omniwp' );
 
 			case Flow::STEP_ONBOARD:
-				return __( 'Chào mừng bạn', 'smart-login' );
+				return __( 'Chào mừng bạn', 'omniwp' );
 
 			case Flow::STEP_PASSWORD:
-				return __( 'Nhập mật khẩu', 'smart-login' );
+				return __( 'Nhập mật khẩu', 'omniwp' );
 		}
 
 		/*
@@ -184,6 +184,6 @@ class FragmentRenderer {
 		 * anybody to choose, and the lead sentence below the bar now says what
 		 * the visitor gets rather than restating the title.
 		 */
-		return __( 'Đăng nhập', 'smart-login' );
+		return __( 'Đăng nhập', 'omniwp' );
 	}
 }

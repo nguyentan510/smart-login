@@ -55,7 +55,7 @@ implementation. Acceptance decided afterwards is a description, not a test.
   message — it is the evidence the detector works.
 - Order commits so no deploy breaks in-flight clients (ship the JS that sends a
   field before the server that requires it).
-- Match the surrounding code: WPCS, LF endings, `sl_`-prefixed test helpers,
+- Match the surrounding code: WPCS, LF endings, `ow_`-prefixed test helpers,
   Vietnamese UI strings, English code comments and docs.
 
 **Deliverable:** the commit, plus the red-then-green evidence.

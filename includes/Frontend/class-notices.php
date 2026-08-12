@@ -2,10 +2,10 @@
 /**
  * In-request notice bag, plus a one-shot flash that survives a redirect.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Frontend;
+namespace OmniWP\Frontend;
 
 use WP_Error;
 
@@ -13,7 +13,7 @@ defined( 'ABSPATH' ) || exit;
 
 class Notices {
 
-	const FLASH_COOKIE = 'smart_login_flash';
+	const FLASH_COOKIE = 'OMNIWP_flash';
 
 	/** @var array<int,array{type:string,message:string}> */
 	private static $items = array();

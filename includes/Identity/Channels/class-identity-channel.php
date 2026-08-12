@@ -10,10 +10,10 @@
  * supporting a new identifier type. Nothing in register / login / recover needs
  * to change, and no new OTP purpose constants appear.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Identity\Channels;
+namespace OmniWP\Identity\Channels;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -35,7 +35,7 @@ interface IdentityChannel {
 	public function normalize( string $raw ): string;
 
 	/**
-	 * Whether a canonical subject may enter smartlogin_identities.
+	 * Whether a canonical subject may enter OmniWP_identities.
 	 *
 	 * Stricter than "well formed": a placeholder address is a valid email but
 	 * must never become a claimable identity.

@@ -22,7 +22,7 @@
  *
  * Run with:  php tests/run-all.php [--strict]
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 $strict = in_array( '--strict', array_slice( $argv, 1 ), true );
@@ -231,7 +231,18 @@ $suites = array(
 		'file' => 'identity/run-guide-tests.php',
 		'kind' => 'required',
 	),
+	array(
+		'name' => 'Smart Menu',
+		'file' => 'smart-menu/run-smart-menu-tests.php',
+		'kind' => 'required',
+	),
+	array(
+		'name' => 'E-Commerce Suite',
+		'file' => 'ecommerce/run-ecommerce-tests.php',
+		'kind' => 'required',
+	),
 );
+
 
 $results  = array();
 $blocking = 0;

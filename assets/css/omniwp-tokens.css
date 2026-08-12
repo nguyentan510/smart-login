@@ -1,0 +1,43 @@
+/**
+ * OmniWP Design Tokens
+ * Global CSS custom properties for colors, spacing, typography, and 5px border radii.
+ *
+ * @package OmniWP
+ */
+
+:root {
+	--sl-accent: #e30613;
+	--sl-accent-dark: #c00410;
+	--sl-text: #1f2430;
+	--sl-muted: #6b7280;
+	--sl-border: #d9dde5;
+
+	/* Recessed surfaces */
+	--sl-surface-2: #f7f8fa;
+	--sl-surface-3: #fafafa;
+
+	/* Radii - Clean 5px standardized UI */
+	--sl-radius: 5px;
+	--sl-radius-card: 5px;
+	--sl-radius-sm: 5px;
+
+	/* Flat & Subtle Elevation */
+	--sl-shadow-none: none;
+	--sl-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+	--sl-shadow-focus: 0 0 0 3px rgba(227, 6, 19, 0.15);
+
+	/* Spacing scale */
+	--sl-space-1: 4px;
+	--sl-space-2: 8px;
+	--sl-space-3: 12px;
+	--sl-space-4: 16px;
+	--sl-space-5: 20px;
+	--sl-space-6: 24px;
+
+	/* Font size scale */
+	--sl-fs-xs: 12px;
+	--sl-fs-sm: 13px;
+	--sl-fs-md: 15px;
+	--sl-fs-lg: 16px;
+	--sl-fs-xl: 20px;
+}

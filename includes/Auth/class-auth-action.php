@@ -14,12 +14,12 @@
  * from wp_users.user_login, and that is the account-takeover path this table
  * removes by construction. See docs/identity-model.md §5.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth;
+namespace OmniWP\Auth;
 
-use SmartLogin\Identity\Resolution;
+use OmniWP\Identity\Resolution;
 
 defined( 'ABSPATH' ) || exit;
 

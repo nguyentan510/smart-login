@@ -13,7 +13,7 @@
  *
  * Run with:  php tests/identity/run-admin-tests.php
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 require __DIR__ . '/../stubs.php';
@@ -21,11 +21,11 @@ require __DIR__ . '/../template-stubs.php';
 require __DIR__ . '/../admin-stubs.php';
 require __DIR__ . '/../harness.php';
 
-use SmartLogin\Admin\Screens\AuditScreen;
-use SmartLogin\Admin\Screens\SettingsScreen;
-use SmartLogin\Admin\SettingsPage;
-use SmartLogin\FieldRegistry;
-use SmartLogin\Settings;
+use OmniWP\Admin\Screens\AuditScreen;
+use OmniWP\Admin\Screens\SettingsScreen;
+use OmniWP\Admin\SettingsPage;
+use OmniWP\FieldRegistry;
+use OmniWP\Settings;
 
 // ---------------------------------------------------------------------
 /**
@@ -37,7 +37,7 @@ use SmartLogin\Settings;
  *
  * @param array $field Field spec.
  */
-function sl_show_if_holds( array $field ): bool {
+function ow_show_if_holds( array $field ): bool {
 	foreach ( (array) ( $field['show_if'] ?? array() ) as $path => $expected ) {
 		if ( (string) Settings::get( $path, '' ) !== (string) $expected ) {
 			return false;
@@ -47,34 +47,34 @@ function sl_show_if_holds( array $field ): bool {
 	return true;
 }
 
-sl_section( 'Every settings tab renders' );
+ow_section( 'Every settings tab renders' );
 
 $screen = new SettingsScreen();
 
 foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
-	$result = sl_capture(
+	$result = ow_capture(
 		static function () use ( $screen, $tab ): void {
 			$screen->render( $tab );
 		}
 	);
 
-	sl_assert( sprintf( 'tab "%s" renders', $tab ), null === $result['error'], (string) $result['error'] );
+	ow_assert( sprintf( 'tab "%s" renders', $tab ), null === $result['error'], (string) $result['error'] );
 
 	if ( null !== $result['error'] ) {
 		continue;
 	}
 
-	sl_assert(
+	ow_assert(
 		sprintf( 'tab "%s" emits no PHP notice', $tab ),
 		array() === $result['warnings'],
 		implode( ' | ', array_slice( $result['warnings'], 0, 3 ) )
 	);
 
-	sl_assert( sprintf( 'tab "%s" produces markup', $tab ), '' !== trim( $result['html'] ) );
+	ow_assert( sprintf( 'tab "%s" produces markup', $tab ), '' !== trim( $result['html'] ) );
 
 	// The tab must actually carry its own fields into the form, and must say
 	// which tab it is — without that hidden input a save writes nothing.
-	sl_assert(
+	ow_assert(
 		sprintf( 'tab "%s" names itself for the save', $tab ),
 		false !== strpos( $result['html'], 'name="' . Settings::OPTION . '[' . Settings::TAB_FIELD . ']" value="' . $tab . '"' ),
 		'Settings::sanitize() would treat this save as a no-op.'
@@ -96,7 +96,7 @@ foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
 		// setting decides it, so the deliberate pass further down sets that
 		// setting and requires the field to appear. A field that is never drawn
 		// under any value of its own condition still fails.
-		if ( ! sl_show_if_holds( $field ) ) {
+		if ( ! ow_show_if_holds( $field ) ) {
 			continue;
 		}
 
@@ -104,7 +104,7 @@ foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
 		// base name is where its inputs start rather than the whole attribute.
 		// The trailing `]` in the base keeps `sms.url` from matching a
 		// hypothetical `sms.url_extra`.
-		if ( false === strpos( $result['html'], 'name="' . \SmartLogin\Admin\FieldRenderer::name( $path ) ) ) {
+		if ( false === strpos( $result['html'], 'name="' . \OmniWP\Admin\FieldRenderer::name( $path ) ) ) {
 			$missing[] = $path;
 		}
 	}
@@ -112,28 +112,28 @@ foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
 	// This is the invariant the old screen could not hold: a field claimed by a
 	// tab and drawn by nothing. Here it is checked against the rendered HTML
 	// rather than against a second list that has to be maintained by hand.
-	sl_check( sprintf( 'tab "%s" draws every field it claims', $tab ), array(), $missing );
+	ow_check( sprintf( 'tab "%s" draws every field it claims', $tab ), array(), $missing );
 }
 
 // ---------------------------------------------------------------------
-sl_section( 'The overview screen renders and reports blockers' );
+ow_section( 'The overview screen renders and reports blockers' );
 
-$overview = sl_capture(
+$overview = ow_capture(
 	static function (): void {
-		( new \SmartLogin\Admin\Screens\OverviewScreen() )->render();
+		( new \OmniWP\Admin\Screens\OverviewScreen() )->render();
 	}
 );
 
-sl_assert( 'overview renders', null === $overview['error'], (string) $overview['error'] );
-sl_assert(
+ow_assert( 'overview renders', null === $overview['error'], (string) $overview['error'] );
+ow_assert(
 	'overview emits no PHP notice',
 	array() === $overview['warnings'],
 	implode( ' | ', array_slice( $overview['warnings'], 0, 3 ) )
 );
-sl_assert( 'overview produces markup', '' !== trim( $overview['html'] ) );
+ow_assert( 'overview produces markup', '' !== trim( $overview['html'] ) );
 
-$readiness = new \SmartLogin\Admin\Readiness();
-$statuses  = array( \SmartLogin\Admin\Readiness::OK, \SmartLogin\Admin\Readiness::WARN, \SmartLogin\Admin\Readiness::FAIL, \SmartLogin\Admin\Readiness::OFF );
+$readiness = new \OmniWP\Admin\Readiness();
+$statuses  = array( \OmniWP\Admin\Readiness::OK, \OmniWP\Admin\Readiness::WARN, \OmniWP\Admin\Readiness::FAIL, \OmniWP\Admin\Readiness::OFF );
 $malformed = array();
 
 foreach ( $readiness->checks() as $check ) {
@@ -148,7 +148,7 @@ foreach ( $readiness->checks() as $check ) {
 	}
 }
 
-sl_check( 'every check is well formed', array(), $malformed );
+ow_check( 'every check is well formed', array(), $malformed );
 
 /*
  * The default install cannot send a code: identity.mode is phone-only and
@@ -167,15 +167,15 @@ Settings::update(
 
 $delivery = null;
 
-foreach ( ( new \SmartLogin\Admin\Readiness() )->checks() as $check ) {
+foreach ( ( new \OmniWP\Admin\Readiness() )->checks() as $check ) {
 	if ( 'delivery' === $check['key'] ) {
 		$delivery = $check;
 	}
 }
 
-sl_check(
+ow_check(
 	'a phone-only site with no SMS channel is reported as blocking',
-	\SmartLogin\Admin\Readiness::FAIL,
+	\OmniWP\Admin\Readiness::FAIL,
 	$delivery['status'] ?? 'missing'
 );
 
@@ -193,15 +193,15 @@ Settings::update(
 
 $delivery_after = null;
 
-foreach ( ( new \SmartLogin\Admin\Readiness() )->checks() as $check ) {
+foreach ( ( new \OmniWP\Admin\Readiness() )->checks() as $check ) {
 	if ( 'delivery' === $check['key'] ) {
 		$delivery_after = $check;
 	}
 }
 
-sl_check(
+ow_check(
 	'configuring the gateway clears the blocker',
-	\SmartLogin\Admin\Readiness::OK,
+	\OmniWP\Admin\Readiness::OK,
 	$delivery_after['status'] ?? 'missing'
 );
 
@@ -231,19 +231,19 @@ Settings::store_secret( 'sms.signed_secret', '' );
 
 $routed = null;
 
-foreach ( ( new \SmartLogin\Admin\Readiness() )->checks() as $check ) {
+foreach ( ( new \OmniWP\Admin\Readiness() )->checks() as $check ) {
 	if ( 'delivery' === $check['key'] ) {
 		$routed = $check;
 	}
 }
 
-sl_check(
+ow_check(
 	'a channel routed at an unconfigured transport is reported as blocking',
-	\SmartLogin\Admin\Readiness::FAIL,
+	\OmniWP\Admin\Readiness::FAIL,
 	$routed['status'] ?? 'missing'
 );
 
-sl_assert(
+ow_assert(
 	'and the detail names the channel that cannot deliver',
 	false !== strpos( (string) ( $routed['detail'] ?? '' ), 'sms' ),
 	'A report that does not name the failing channel sends the administrator hunting. Detail was: ' . ( $routed['detail'] ?? '' )
@@ -254,20 +254,20 @@ Settings::store_secret( 'sms.signed_secret', 'admin-suite-signing-secret' );
 
 $routed_after = null;
 
-foreach ( ( new \SmartLogin\Admin\Readiness() )->checks() as $check ) {
+foreach ( ( new \OmniWP\Admin\Readiness() )->checks() as $check ) {
 	if ( 'delivery' === $check['key'] ) {
 		$routed_after = $check;
 	}
 }
 
-sl_assert(
+ow_assert(
 	'configuring the provider clears it',
-	\SmartLogin\Admin\Readiness::FAIL !== ( $routed_after['status'] ?? 'missing' ),
+	\OmniWP\Admin\Readiness::FAIL !== ( $routed_after['status'] ?? 'missing' ),
 	'Still blocking after the endpoint was configured: ' . ( $routed_after['detail'] ?? '' )
 );
 
 // ---------------------------------------------------------------------
-sl_section( 'A provider secret that is really the provider id' );
+ow_section( 'A provider secret that is really the provider id' );
 
 /*
  * The save-time rule refuses this pair, but it cannot reach a site that already
@@ -282,49 +282,49 @@ Settings::update(
 		'providers.google.client_id' => '2895898387789399761',
 	)
 );
-\SmartLogin\Auth\Providers\ProviderCredentials::store_secret( 'google', '2895898387789399761' );
+\OmniWP\Auth\Providers\ProviderCredentials::store_secret( 'google', '2895898387789399761' );
 
 $provider_check = null;
 
-foreach ( ( new \SmartLogin\Admin\Readiness() )->checks() as $check ) {
+foreach ( ( new \OmniWP\Admin\Readiness() )->checks() as $check ) {
 	if ( 'providers' === $check['key'] ) {
 		$provider_check = $check;
 	}
 }
 
-sl_check(
+ow_check(
 	'a secret equal to the app id is reported',
-	\SmartLogin\Admin\Readiness::WARN,
+	\OmniWP\Admin\Readiness::WARN,
 	$provider_check['status'] ?? 'missing'
 );
 
-sl_assert(
+ow_assert(
 	'and the detail names the provider that holds it',
 	false !== stripos( (string) ( $provider_check['detail'] ?? '' ), 'google' ),
 	'An administrator with two providers configured needs to know which one to open. Detail was: ' . ( $provider_check['detail'] ?? '' )
 );
 
-\SmartLogin\Auth\Providers\ProviderCredentials::store_secret( 'google', 'a-secret-that-is-not-the-app-id' );
+\OmniWP\Auth\Providers\ProviderCredentials::store_secret( 'google', 'a-secret-that-is-not-the-app-id' );
 
 $provider_check_after = null;
 
-foreach ( ( new \SmartLogin\Admin\Readiness() )->checks() as $check ) {
+foreach ( ( new \OmniWP\Admin\Readiness() )->checks() as $check ) {
 	if ( 'providers' === $check['key'] ) {
 		$provider_check_after = $check;
 	}
 }
 
-sl_check(
+ow_check(
 	'a correct pair clears it',
-	\SmartLogin\Admin\Readiness::OK,
+	\OmniWP\Admin\Readiness::OK,
 	$provider_check_after['status'] ?? 'missing'
 );
 
 Settings::update( array( 'providers.google.enabled' => 0 ) );
-\SmartLogin\Auth\Providers\ProviderCredentials::clear_secret( 'google' );
+\OmniWP\Auth\Providers\ProviderCredentials::clear_secret( 'google' );
 
 // ---------------------------------------------------------------------
-sl_section( 'The spend estimate follows the channel, not the transport' );
+ow_section( 'The spend estimate follows the channel, not the transport' );
 
 /*
  * The stub $wpdb returns one global whatever the query, so counting by channel
@@ -332,7 +332,7 @@ sl_section( 'The spend estimate follows the channel, not the transport' );
  * its repository by constructor for that reason, the same seam RateLimiter
  * already offered.
  */
-class SL_Spend_Repository extends \SmartLogin\OTP\OtpRepository {
+class ow_Spend_Repository extends \OmniWP\OTP\OtpRepository {
 
 	/** @var string[] */
 	public $asked = array();
@@ -344,7 +344,7 @@ class SL_Spend_Repository extends \SmartLogin\OTP\OtpRepository {
 	public function count_recent_by_channel( string $channel, int $seconds ): int {
 		$this->asked[] = 'by_channel:' . $channel;
 
-		return \SmartLogin\Identity\Channels\PhoneChannel::ID === $channel ? 3 : 0;
+		return \OmniWP\Identity\Channels\PhoneChannel::ID === $channel ? 3 : 0;
 	}
 
 	public function count_recent_by_transport( string $transport, int $seconds ): int {
@@ -364,22 +364,22 @@ Settings::update(
 	)
 );
 
-$spend_repo = new SL_Spend_Repository();
+$spend_repo = new ow_Spend_Repository();
 $budget     = null;
 
-foreach ( ( new \SmartLogin\Admin\Readiness( $spend_repo ) )->checks() as $check ) {
+foreach ( ( new \OmniWP\Admin\Readiness( $spend_repo ) )->checks() as $check ) {
 	if ( 'budget' === $check['key'] ) {
 		$budget = $check;
 	}
 }
 
-sl_assert(
+ow_assert(
 	'the estimate prices phone codes whichever transport carried them',
 	(bool) preg_match( '/1[.,]050/', (string) ( $budget['detail'] ?? '' ) ),
 	'3 codes at 350 should read 1.050 đ. Detail was: ' . ( $budget['detail'] ?? '' )
 );
 
-sl_assert(
+ow_assert(
 	'and it asks by channel rather than by transport',
 	in_array( 'by_channel:phone', $spend_repo->asked, true )
 		&& ! in_array( 'by_transport:sms', $spend_repo->asked, true ),
@@ -389,7 +389,7 @@ sl_assert(
 Settings::store_secret( 'automation.secret', '' );
 
 // ---------------------------------------------------------------------
-sl_section( 'Choosing a gateway replaces eleven fields with three' );
+ow_section( 'Choosing a gateway replaces eleven fields with three' );
 
 // Through sanitize() and into the option, which is the path a real save takes —
 // update() plants values directly and would skip the preset derivation entirely.
@@ -428,17 +428,17 @@ update_option(
 );
 Settings::flush_cache();
 
-sl_check(
+ow_check(
 	'the gateway saved from another tab survives',
 	'esms',
 	Settings::get( 'sms.preset' )
 );
 
-sl_check( 'saving a preset derives the gateway URL', 'https://rest.esms.vn/MainService.svc/json/SendMultipleMessage_V4_post_json/', Settings::get( 'sms.url' ) );
-sl_check( 'saving a preset derives the success condition', 'CodeResult', Settings::get( 'sms.success_path' ) );
-sl_check( 'saving a preset applies the OTP profile', 300, Settings::get_int( 'otp.ttl' ) );
+ow_check( 'saving a preset derives the gateway URL', 'https://rest.esms.vn/MainService.svc/json/SendMultipleMessage_V4_post_json/', Settings::get( 'sms.url' ) );
+ow_check( 'saving a preset derives the success condition', 'CodeResult', Settings::get( 'sms.success_path' ) );
+ow_check( 'saving a preset applies the OTP profile', 300, Settings::get_int( 'otp.ttl' ) );
 
-$delivery_html = sl_capture(
+$delivery_html = ow_capture(
 	static function () use ( $screen ): void {
 		$screen->render( 'delivery-sms' );
 	}
@@ -446,33 +446,33 @@ $delivery_html = sl_capture(
 
 $missing_credentials = array();
 
-foreach ( array_keys( \SmartLogin\GatewayPresets::credentials( 'esms' ) ) as $credential ) {
-	if ( false === strpos( $delivery_html, 'name="' . \SmartLogin\Admin\FieldRenderer::name( 'sms.credentials' ) . '[' . $credential . ']"' ) ) {
+foreach ( array_keys( \OmniWP\GatewayPresets::credentials( 'esms' ) ) as $credential ) {
+	if ( false === strpos( $delivery_html, 'name="' . \OmniWP\Admin\FieldRenderer::name( 'sms.credentials' ) . '[' . $credential . ']"' ) ) {
 		$missing_credentials[] = $credential;
 	}
 }
 
-sl_check( 'the preset draws every credential it asks for', array(), $missing_credentials );
+ow_check( 'the preset draws every credential it asks for', array(), $missing_credentials );
 
-sl_assert(
+ow_assert(
 	'the derived request is shown for checking',
 	false !== strpos( $delivery_html, 'rest.esms.vn' ),
 	'The administrator cannot verify what will be sent.'
 );
 
-sl_assert(
+ow_assert(
 	'a secret credential is never echoed into the form',
 	false === strpos( $delivery_html, 'secret-key-must-not-appear' ),
 	'The stored secret is present in the page source.'
 );
 
-sl_assert(
+ow_assert(
 	'a non-secret credential is shown so it can be corrected',
 	false !== strpos( $delivery_html, 'public-api-key' )
 );
 
 // The derivation itself: credentials in, a valid request out.
-$resolved = \SmartLogin\GatewayPresets::resolve(
+$resolved = \OmniWP\GatewayPresets::resolve(
 	'esms',
 	array(
 		'api_key'    => 'K',
@@ -481,44 +481,44 @@ $resolved = \SmartLogin\GatewayPresets::resolve(
 	)
 );
 
-sl_check( 'the derived URL comes from the preset', 'https://rest.esms.vn/MainService.svc/json/SendMultipleMessage_V4_post_json/', $resolved['sms.url'] );
-sl_assert( 'the derived body is valid JSON', null !== json_decode( $resolved['sms.body'], true ), $resolved['sms.body'] );
-sl_assert( 'the derived body still carries the code placeholder', false !== strpos( $resolved['sms.body'], '{{code}}' ) );
-sl_assert( 'no credential placeholder survives derivation', false === strpos( $resolved['sms.body'], '{{cred:' ) );
-sl_check( 'the success condition comes from the preset', '100', $resolved['sms.success_value'] );
+ow_check( 'the derived URL comes from the preset', 'https://rest.esms.vn/MainService.svc/json/SendMultipleMessage_V4_post_json/', $resolved['sms.url'] );
+ow_assert( 'the derived body is valid JSON', null !== json_decode( $resolved['sms.body'], true ), $resolved['sms.body'] );
+ow_assert( 'the derived body still carries the code placeholder', false !== strpos( $resolved['sms.body'], '{{code}}' ) );
+ow_assert( 'no credential placeholder survives derivation', false === strpos( $resolved['sms.body'], '{{cred:' ) );
+ow_check( 'the success condition comes from the preset', '100', $resolved['sms.success_value'] );
 
-sl_check( 'the custom preset derives nothing', array(), \SmartLogin\GatewayPresets::resolve( \SmartLogin\GatewayPresets::CUSTOM, array() ) );
+ow_check( 'the custom preset derives nothing', array(), \OmniWP\GatewayPresets::resolve( \OmniWP\GatewayPresets::CUSTOM, array() ) );
 
 $bodies_ok = array();
 
-foreach ( \SmartLogin\GatewayPresets::all() as $slug => $preset ) {
-	if ( \SmartLogin\GatewayPresets::is_custom( $slug ) || 'application/json' !== ( $preset['content_type'] ?? '' ) ) {
+foreach ( \OmniWP\GatewayPresets::all() as $slug => $preset ) {
+	if ( \OmniWP\GatewayPresets::is_custom( $slug ) || 'application/json' !== ( $preset['content_type'] ?? '' ) ) {
 		continue;
 	}
 
-	$filled = \SmartLogin\GatewayPresets::resolve( $slug, array_fill_keys( array_keys( $preset['credentials'] ), 'x' ) );
+	$filled = \OmniWP\GatewayPresets::resolve( $slug, array_fill_keys( array_keys( $preset['credentials'] ), 'x' ) );
 
 	if ( null === json_decode( $filled['sms.body'], true ) ) {
 		$bodies_ok[] = $slug;
 	}
 }
 
-sl_check( 'every JSON preset produces a parseable body', array(), $bodies_ok );
+ow_check( 'every JSON preset produces a parseable body', array(), $bodies_ok );
 
 // ---------------------------------------------------------------------
-sl_section( 'An unknown tab falls back rather than fataling' );
+ow_section( 'An unknown tab falls back rather than fataling' );
 
-$fallback = sl_capture(
+$fallback = ow_capture(
 	static function () use ( $screen ): void {
 		$screen->render( 'no-such-tab' );
 	}
 );
 
-sl_assert( 'an unknown tab still renders', null === $fallback['error'], (string) $fallback['error'] );
-sl_assert( 'an unknown tab produces markup', '' !== trim( $fallback['html'] ) );
+ow_assert( 'an unknown tab still renders', null === $fallback['error'], (string) $fallback['error'] );
+ow_assert( 'an unknown tab produces markup', '' !== trim( $fallback['html'] ) );
 
 // ---------------------------------------------------------------------
-sl_section( 'Secrets never reach the DOM' );
+ow_section( 'Secrets never reach the DOM' );
 
 // Every tab used to echo the entire option back through hidden inputs so the
 // other tabs could survive a save — gateway credentials included. Saving per
@@ -543,13 +543,13 @@ foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
 		continue;
 	}
 
-	$rendered = sl_capture(
+	$rendered = ow_capture(
 		static function () use ( $screen, $tab ): void {
 			$screen->render( $tab );
 		}
 	);
 
-	sl_assert(
+	ow_assert(
 		sprintf( 'tab "%s" does not leak the gateway token', $tab ),
 		false === strpos( $rendered['html'], 'super-secret-gateway-token' ),
 		'A credential from another tab is present in this page source.'
@@ -557,27 +557,27 @@ foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
 }
 
 // ---------------------------------------------------------------------
-sl_section( 'The audit screen renders' );
+ow_section( 'The audit screen renders' );
 
-$audit = sl_capture(
+$audit = ow_capture(
 	static function (): void {
 		( new AuditScreen() )->render();
 	}
 );
 
-sl_assert( 'audit screen renders', null === $audit['error'], (string) $audit['error'] );
-sl_assert( 'audit screen produces markup', '' !== trim( $audit['html'] ) );
+ow_assert( 'audit screen renders', null === $audit['error'], (string) $audit['error'] );
+ow_assert( 'audit screen produces markup', '' !== trim( $audit['html'] ) );
 
 // ---------------------------------------------------------------------
-sl_section( 'The tab strip covers the registry' );
+ow_section( 'The tab strip covers the registry' );
 
-$nav = sl_capture(
+$nav = ow_capture(
 	static function (): void {
 		SettingsPage::nav( 'auth' );
 	}
 );
 
-sl_assert( 'nav renders', null === $nav['error'], (string) $nav['error'] );
+ow_assert( 'nav renders', null === $nav['error'], (string) $nav['error'] );
 
 /*
  * Rendered once per tab, not once in total. Since 10.6 the second-level tabs
@@ -593,7 +593,7 @@ sl_assert( 'nav renders', null === $nav['error'], (string) $nav['error'] );
 $unlinked = array();
 
 foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
-	$strip = sl_capture(
+	$strip = ow_capture(
 		static function () use ( $tab ): void {
 			SettingsPage::nav( $tab );
 		}
@@ -604,11 +604,11 @@ foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
 	}
 }
 
-sl_check( 'every tab is reachable from the navigation', array(), $unlinked );
+ow_check( 'every tab is reachable from the navigation', array(), $unlinked );
 
 // A child tab must also link back to the rest of its family, or the split has
 // produced four screens with no way between them.
-$sub = sl_capture(
+$sub = ow_capture(
 	static function (): void {
 		// Any surviving child of the delivery family. 20.4 moved the automation
 		// screen out of it, so the fixture that used to stand here is now a
@@ -625,16 +625,16 @@ foreach ( array( 'delivery', 'delivery-email', 'delivery-mail' ) as $sibling ) {
 	}
 }
 
-sl_check( 'a second-level tab links to its siblings', array(), $siblings_missing );
+ow_check( 'a second-level tab links to its siblings', array(), $siblings_missing );
 
-sl_assert(
+ow_assert(
 	'and the parent is highlighted in the top strip',
 	false !== strpos( $sub['html'], 'nav-tab nav-tab-active' ),
 	'With no top-level tab marked active, the whole delivery family looks unselected while one of its screens is open.'
 );
 
 // ---------------------------------------------------------------------
-sl_section( 'Splitting the delivery screen kept every invariant' );
+ow_section( 'Splitting the delivery screen kept every invariant' );
 
 /*
  * The property FieldRegistry exists to guarantee, checked across the split
@@ -645,7 +645,7 @@ sl_section( 'Splitting the delivery screen kept every invariant' );
 $drawn_on = array();
 
 foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
-	$html = sl_capture(
+	$html = ow_capture(
 		static function () use ( $screen, $tab ): void {
 			$screen->render( $tab );
 		}
@@ -654,11 +654,11 @@ foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
 	foreach ( FieldRegistry::all() as $path => $field ) {
 		// `show_if` fields answer this question in their own pass, where the
 		// condition is set. Here they would read as "drawn nowhere".
-		if ( '' === (string) ( $field['tab'] ?? '' ) || ! empty( $field['conditional'] ) || ! sl_show_if_holds( $field ) ) {
+		if ( '' === (string) ( $field['tab'] ?? '' ) || ! empty( $field['conditional'] ) || ! ow_show_if_holds( $field ) ) {
 			continue;
 		}
 
-		if ( false !== strpos( $html, 'name="' . \SmartLogin\Admin\FieldRenderer::name( $path ) ) ) {
+		if ( false !== strpos( $html, 'name="' . \OmniWP\Admin\FieldRenderer::name( $path ) ) ) {
 			$drawn_on[ $path ][] = $tab;
 		}
 	}
@@ -667,7 +667,7 @@ foreach ( array_keys( FieldRegistry::tabs() ) as $tab ) {
 $wrong_home = array();
 
 foreach ( FieldRegistry::all() as $path => $field ) {
-	if ( '' === (string) ( $field['tab'] ?? '' ) || ! empty( $field['conditional'] ) || ! sl_show_if_holds( $field ) ) {
+	if ( '' === (string) ( $field['tab'] ?? '' ) || ! empty( $field['conditional'] ) || ! ow_show_if_holds( $field ) ) {
 		continue;
 	}
 
@@ -676,7 +676,7 @@ foreach ( FieldRegistry::all() as $path => $field ) {
 	}
 }
 
-sl_check( 'every field is drawn by exactly the tab that claims it', array(), $wrong_home );
+ow_check( 'every field is drawn by exactly the tab that claims it', array(), $wrong_home );
 
 // Saving one screen of a family must not disturb its siblings. This is the
 // whole reason each is a real tab rather than a JS filter over one form.
@@ -703,7 +703,7 @@ update_option(
 			Settings::TAB_FIELD => 'delivery-sms',
 			'sms'               => array(
 				'enabled' => 1,
-				'preset'  => \SmartLogin\GatewayPresets::CUSTOM,
+				'preset'  => \OmniWP\GatewayPresets::CUSTOM,
 				'url'     => 'https://gateway.example.test/changed',
 			),
 		)
@@ -721,28 +721,28 @@ foreach ( $before_siblings as $path => $value ) {
 	}
 }
 
-sl_check( 'saving the SMS screen leaves its sibling screens untouched', array(), $disturbed );
-sl_check( 'and the screen that was saved did change', 'https://gateway.example.test/changed', Settings::get( 'sms.url' ) );
+ow_check( 'saving the SMS screen leaves its sibling screens untouched', array(), $disturbed );
+ow_check( 'and the screen that was saved did change', 'https://gateway.example.test/changed', Settings::get( 'sms.url' ) );
 
 // ---------------------------------------------------------------------
-sl_section( 'A fresh install opens on the easy gateway screen' );
+ow_section( 'A fresh install opens on the easy gateway screen' );
 
 // The default moved off `custom`, which used to present thirteen raw fields
 // including a free-text JSON body to whoever had configured the least.
-sl_check( 'the shipped default preset is the generic webhook', 'generic', FieldRegistry::get( 'sms.preset' )['default'] );
+ow_check( 'the shipped default preset is the generic webhook', 'generic', FieldRegistry::get( 'sms.preset' )['default'] );
 
 delete_option( Settings::OPTION );
 Settings::flush_cache();
 
-$fresh = sl_capture(
+$fresh = ow_capture(
 	static function () use ( $screen ): void {
 		$screen->render( 'delivery-sms' );
 	}
 )['html'];
 
-sl_assert(
+ow_assert(
 	'a fresh install asks for one endpoint, not a JSON body',
-	false !== strpos( $fresh, \SmartLogin\Admin\FieldRenderer::name( 'sms.credentials' ) . '[endpoint]' ),
+	false !== strpos( $fresh, \OmniWP\Admin\FieldRenderer::name( 'sms.credentials' ) . '[endpoint]' ),
 	'The generic preset asks for a single URL; anything else means the default did not take.'
 );
 
@@ -753,27 +753,27 @@ update_option(
 	Settings::sanitize(
 		array(
 			Settings::TAB_FIELD => 'delivery-sms',
-			'sms'               => array( 'preset' => \SmartLogin\GatewayPresets::CUSTOM ),
+			'sms'               => array( 'preset' => \OmniWP\GatewayPresets::CUSTOM ),
 		)
 	)
 );
 Settings::flush_cache();
 
-sl_check( 'an existing choice of Tuỳ chỉnh survives the new default', \SmartLogin\GatewayPresets::CUSTOM, Settings::get( 'sms.preset' ) );
+ow_check( 'an existing choice of Tuỳ chỉnh survives the new default', \OmniWP\GatewayPresets::CUSTOM, Settings::get( 'sms.preset' ) );
 
 // ---------------------------------------------------------------------
-sl_section( 'The mail screen' );
+ow_section( 'The mail screen' );
 
 delete_option( Settings::OPTION );
 Settings::flush_cache();
 
-$mail_html = sl_capture(
+$mail_html = ow_capture(
 	static function () use ( $screen ): void {
 		$screen->render( 'delivery-mail' );
 	}
 );
 
-sl_assert( 'the mail screen renders', null === $mail_html['error'], (string) $mail_html['error'] );
+ow_assert( 'the mail screen renders', null === $mail_html['error'], (string) $mail_html['error'] );
 
 $mail_markup = $mail_html['html'];
 
@@ -794,14 +794,14 @@ foreach ( array( 'Mẫu mặc định', 'Mã xác thực', 'Giao diện email HT
 
 // The alerts did not vanish with their heading — they are in the list.
 foreach ( array( 'budget_halted', 'breaker_open' ) as $alert ) {
-	sl_assert(
+	ow_assert(
 		sprintf( 'the "%s" alert is listed with the other messages', $alert ),
 		false !== strpos( $mail_markup, 'data-mail-message="' . $alert . '"' ),
 		'Dropping its section heading must not drop the message.'
 	);
 }
 
-sl_check(
+ow_check(
 	'every group has a heading',
 	array(),
 	array_keys( array_filter( $section_order, static fn( $at ): bool => false === $at ) )
@@ -810,7 +810,7 @@ sl_check(
 $ordered = array_values( $section_order );
 sort( $ordered );
 
-sl_check(
+ow_check(
 	'and they appear in reading order',
 	$ordered,
 	array_values( $section_order )
@@ -822,20 +822,20 @@ sl_check(
  * faced with eight blank fields pastes the default into all of them and loses
  * the inheritance the registry was built to provide.
  */
-sl_assert(
+ow_assert(
 	'an un-overridden template shows what it will actually send',
 	false !== strpos( $mail_markup, 'placeholder="Mã đặt lại mật khẩu {{code}} - {{site_name}}"' ),
 	'The recover subject box is empty and should be showing its inherited value as a placeholder.'
 );
 
 // Scoped tokens, beside the body they belong to.
-sl_assert(
+ow_assert(
 	'each body offers the tokens its own message declares',
 	substr_count( $mail_markup, 'sl-message-tokens' ) >= 6,
 	'Six messages have a body field; each should carry its own collapsed token list.'
 );
 
-sl_assert(
+ow_assert(
 	'and an operational token is not offered beside an OTP body',
 	substr_count( $mail_markup, '{{ceiling}}' ) === substr_count( $mail_markup, '{{halt_minutes}}' )
 		&& substr_count( $mail_markup, '{{ceiling}}' ) > 0
@@ -867,12 +867,12 @@ update_option(
 );
 Settings::flush_cache();
 
-sl_check( 'saving the mail screen leaves the SMS gateway alone', 'https://gateway.example.test/keep', Settings::get( 'sms.url' ) );
-sl_check( 'and the automation endpoint alone', 'https://hooks.example.test/keep', Settings::get( 'automation.url' ) );
-sl_check( 'and the override it was given is stored', 'Đặt lại: {{code}}', Settings::get( 'email.templates.recover.subject' ) );
+ow_check( 'saving the mail screen leaves the SMS gateway alone', 'https://gateway.example.test/keep', Settings::get( 'sms.url' ) );
+ow_check( 'and the automation endpoint alone', 'https://hooks.example.test/keep', Settings::get( 'automation.url' ) );
+ow_check( 'and the override it was given is stored', 'Đặt lại: {{code}}', Settings::get( 'email.templates.recover.subject' ) );
 
 // ---------------------------------------------------------------------
-sl_section( 'The provider badge cannot disagree with the runtime' );
+ow_section( 'The provider badge cannot disagree with the runtime' );
 
 /*
  * The card read ProviderCredentials::is_configured() — credentials only — while
@@ -902,18 +902,18 @@ foreach (
 	);
 
 	if ( '' !== $state['client_id'] ) {
-		\SmartLogin\Auth\Providers\ProviderCredentials::store_secret( 'google', 'google-secret' );
+		\OmniWP\Auth\Providers\ProviderCredentials::store_secret( 'google', 'google-secret' );
 	} else {
-		\SmartLogin\Auth\Providers\ProviderCredentials::clear_secret( 'google' );
+		\OmniWP\Auth\Providers\ProviderCredentials::clear_secret( 'google' );
 	}
 
-	$card = sl_capture(
+	$card = ow_capture(
 		static function () use ( $screen ): void {
 			$screen->render( 'providers' );
 		}
 	)['html'];
 
-	$runtime_ready = array_key_exists( 'google', ( new \SmartLogin\Auth\Providers\ProviderRegistry() )->available() );
+	$runtime_ready = array_key_exists( 'google', ( new \OmniWP\Auth\Providers\ProviderRegistry() )->available() );
 	$badge_ready   = false !== strpos( $card, 'sl-provider-status is-ready' );
 
 	$badge_states[ $label ] = array(
@@ -935,18 +935,18 @@ foreach ( $badge_states as $label => $state ) {
 	}
 }
 
-sl_check( 'the ready badge agrees with ProviderRegistry::available()', array(), $disagreements );
+ow_check( 'the ready badge agrees with ProviderRegistry::available()', array(), $disagreements );
 
 // Three states, not two: "credentials saved but switched off" is the one the
 // old badge could not express, and it is the one an administrator hits.
-sl_assert(
+ow_assert(
 	'a configured but disabled provider says so rather than showing green',
 	false === $badge_states['off, credentials set']['badge'],
 	'This is the defect: credentials present, Kích hoạt off, and the card claimed Sẵn sàng while no button rendered anywhere.'
 );
 
 // ---------------------------------------------------------------------
-sl_section( 'The provider screen puts its controls where they belong (12.1)' );
+ow_section( 'The provider screen puts its controls where they belong (12.1)' );
 
 Settings::update(
 	array(
@@ -955,7 +955,7 @@ Settings::update(
 	)
 );
 
-$providers_html = sl_capture(
+$providers_html = ow_capture(
 	static function () use ( $screen ): void {
 		$screen->render( 'providers' );
 	}
@@ -968,10 +968,10 @@ $providers_html = sl_capture(
  * two belong beside each other.
  */
 $header_at = strpos( $providers_html, 'sl-provider-card__header' );
-$switch_at = strpos( $providers_html, 'name="' . \SmartLogin\Admin\FieldRenderer::name( 'providers.google.enabled' ) . '"' );
+$switch_at = strpos( $providers_html, 'name="' . \OmniWP\Admin\FieldRenderer::name( 'providers.google.enabled' ) . '"' );
 $panel_at  = strpos( $providers_html, 'data-provider-panel="setup"' );
 
-sl_assert(
+ow_assert(
 	'the master switch sits in the card header, not in the table',
 	false !== $header_at && false !== $switch_at && false !== $panel_at
 		&& $switch_at > $header_at && $switch_at < $panel_at,
@@ -984,10 +984,10 @@ sl_assert(
  * setting on the screen, currently rendered as a section below the grid where it
  * reads as a footnote to the second card.
  */
-$policy_at = strpos( $providers_html, 'name="' . \SmartLogin\Admin\FieldRenderer::name( 'providers.auto_link_email' ) . '"' );
+$policy_at = strpos( $providers_html, 'name="' . \OmniWP\Admin\FieldRenderer::name( 'providers.auto_link_email' ) . '"' );
 $first_card = strpos( $providers_html, 'sl-provider-card' );
 
-sl_assert(
+ow_assert(
 	'a policy that governs both cards renders above both cards',
 	false !== $policy_at && false !== $first_card && $policy_at < $first_card,
 	'Rendered below the grid, it reads as belonging to the last card rather than to every one of them.'
@@ -1012,7 +1012,7 @@ $saved_off = Settings::sanitize(
 	)
 );
 
-sl_check( 'a provider can be switched off from the header', 0, $saved_off['providers']['google']['enabled'] ?? 'missing' );
+ow_check( 'a provider can be switched off from the header', 0, $saved_off['providers']['google']['enabled'] ?? 'missing' );
 
 $saved_on = Settings::sanitize(
 	array(
@@ -1021,7 +1021,7 @@ $saved_on = Settings::sanitize(
 	)
 );
 
-sl_check( 'and switched back on', 1, $saved_on['providers']['google']['enabled'] ?? 'missing' );
+ow_check( 'and switched back on', 1, $saved_on['providers']['google']['enabled'] ?? 'missing' );
 
 /*
  * Exactly two inputs carry this name: the hidden `0` and the checkbox `1`. Four
@@ -1033,14 +1033,14 @@ sl_check( 'and switched back on', 1, $saved_on['providers']['google']['enabled']
  * lines, so a contiguous `name="…" value="1"` never appears and asserting on it
  * would have failed against correct markup.
  */
-sl_check(
+ow_check(
 	'the switch is drawn in one place only',
 	2,
-	substr_count( $providers_html, 'name="' . \SmartLogin\Admin\FieldRenderer::name( 'providers.google.enabled' ) . '"' )
+	substr_count( $providers_html, 'name="' . \OmniWP\Admin\FieldRenderer::name( 'providers.google.enabled' ) . '"' )
 );
 
 // ---------------------------------------------------------------------
-sl_section( 'A connection test cannot sign anybody in (12.2)' );
+ow_section( 'A connection test cannot sign anybody in (12.2)' );
 
 /*
  * The whole safety argument of 12.2, and the rule that has to exist before the
@@ -1059,8 +1059,8 @@ sl_section( 'A connection test cannot sign anybody in (12.2)' );
  * the first thing that writes. Asserted on ordering inside callback(), because
  * "there is a branch" says nothing about which side of the writes it is on.
  */
-$callback_body = sl_method_body(
-	sl_source( 'includes/Auth/class-provider-auth-controller.php' ),
+$callback_body = ow_method_body(
+	ow_source( 'includes/Auth/class-provider-auth-controller.php' ),
 	'callback'
 );
 
@@ -1068,13 +1068,13 @@ $test_branch_at  = strpos( $callback_body, 'report_test' );
 $provisioner_at  = strpos( $callback_body, 'AccountProvisioner' );
 $issuer_at       = strpos( $callback_body, 'SessionIssuer' );
 
-sl_assert(
+ow_assert(
 	'a test transaction returns before the session issuer',
 	false !== $test_branch_at && false !== $issuer_at && $test_branch_at < $issuer_at,
 	'callback() reaches SessionIssuer::issue(). A diagnostic that fell through would sign the administrator in.'
 );
 
-sl_assert(
+ow_assert(
 	'and before anything that creates a user or an identity',
 	false !== $test_branch_at && false !== $provisioner_at && $test_branch_at < $provisioner_at,
 	'AccountProvisioner resolves or provisions. A test that reached it would create an account, and nobody would notice — signing in successfully is what success looks like.'
@@ -1086,38 +1086,38 @@ sl_assert(
  * way would turn every in-flight redirect across the deploy into a test that
  * silently refused to sign its user in.
  */
-sl_check(
+ow_check(
 	'a transaction with no mode still signs its user in',
 	false,
-	\SmartLogin\Auth\OAuthTransactionStore::is_test( array( 'provider' => 'google' ) )
+	\OmniWP\Auth\OAuthTransactionStore::is_test( array( 'provider' => 'google' ) )
 );
 
-sl_check(
+ow_check(
 	'a login transaction is not a test',
 	false,
-	\SmartLogin\Auth\OAuthTransactionStore::is_test( ( new \SmartLogin\Auth\OAuthTransactionStore() )->create( 'google' ) )
+	\OmniWP\Auth\OAuthTransactionStore::is_test( ( new \OmniWP\Auth\OAuthTransactionStore() )->create( 'google' ) )
 );
 
-sl_check(
+ow_check(
 	'a test transaction is',
 	true,
-	\SmartLogin\Auth\OAuthTransactionStore::is_test(
-		( new \SmartLogin\Auth\OAuthTransactionStore( \SmartLogin\Auth\OAuthTransactionStore::MODE_TEST ) )->create( 'google' )
+	\OmniWP\Auth\OAuthTransactionStore::is_test(
+		( new \OmniWP\Auth\OAuthTransactionStore( \OmniWP\Auth\OAuthTransactionStore::MODE_TEST ) )->create( 'google' )
 	)
 );
 
 // An unknown value must not become a test by accident — the constructor
 // normalises rather than trusting whatever it is handed.
-sl_check(
+ow_check(
 	'only the exact test mode counts as one',
 	false,
-	\SmartLogin\Auth\OAuthTransactionStore::is_test(
-		( new \SmartLogin\Auth\OAuthTransactionStore( 'TEST' ) )->create( 'google' )
+	\OmniWP\Auth\OAuthTransactionStore::is_test(
+		( new \OmniWP\Auth\OAuthTransactionStore( 'TEST' ) )->create( 'google' )
 	)
 );
 
 // ---------------------------------------------------------------------
-sl_section( 'A preset does not overwrite the fields it shares a tab with (15.5)' );
+ow_section( 'A preset does not overwrite the fields it shares a tab with (15.5)' );
 
 /*
  * Reported from a real screen: fill the inputs on Gửi mã, press Lưu thay đổi, and
@@ -1135,7 +1135,7 @@ Settings::update(
 	)
 );
 
-$sl_edit = Settings::sanitize(
+$ow_edit = Settings::sanitize(
 	array(
 		Settings::TAB_FIELD => 'delivery',
 		'otp'               => array(
@@ -1145,17 +1145,17 @@ $sl_edit = Settings::sanitize(
 	)
 );
 
-sl_check(
+ow_check(
 	'a hand-edited OTP value survives the save',
 	301,
-	(int) ( $sl_edit['otp']['ttl'] ?? 0 )
+	(int) ( $ow_edit['otp']['ttl'] ?? 0 )
 );
 
 // And the screen must not go on claiming a profile the stored values no longer match.
-sl_check(
+ow_check(
 	'and the profile says custom once a value diverges from it',
-	\SmartLogin\OtpPresets::CUSTOM,
-	(string) ( $sl_edit['otp']['preset'] ?? '' )
+	\OmniWP\OtpPresets::CUSTOM,
+	(string) ( $ow_edit['otp']['preset'] ?? '' )
 );
 
 /*
@@ -1171,44 +1171,44 @@ sl_check(
  */
 Settings::update( array( 'otp.preset' => 'balanced', 'otp.ttl' => 300, 'otp.length' => 6 ) );
 
-$sl_partial = Settings::sanitize(
+$ow_partial = Settings::sanitize(
 	array(
 		Settings::TAB_FIELD => 'delivery',
 		'otp'               => array( 'preset' => 'balanced' ),
 	)
 );
 
-sl_check(
+ow_check(
 	'a field the post omits keeps its stored value, not its minimum',
 	300,
-	(int) ( $sl_partial['otp']['ttl'] ?? 0 )
+	(int) ( $ow_partial['otp']['ttl'] ?? 0 )
 );
 
-sl_check(
+ow_check(
 	'and so does another on the same tab',
 	6,
-	(int) ( $sl_partial['otp']['length'] ?? 0 )
+	(int) ( $ow_partial['otp']['length'] ?? 0 )
 );
 
 // The exception that stops this becoming "ignore absent fields": a browser posts
 // nothing for an unchecked box, so absence is the value.
 Settings::update( array( 'sms.enabled' => 1 ) );
 
-$sl_unchecked = Settings::sanitize(
+$ow_unchecked = Settings::sanitize(
 	array(
 		Settings::TAB_FIELD => 'delivery-sms',
 		'sms'               => array( 'preset' => 'custom' ),
 	)
 );
 
-sl_check(
+ow_check(
 	'an unchecked checkbox still turns off',
 	0,
-	(int) ( $sl_unchecked['sms']['enabled'] ?? -1 )
+	(int) ( $ow_unchecked['sms']['enabled'] ?? -1 )
 );
 
 // The other direction still has to work, or choosing a profile stops meaning anything.
-$sl_pick = Settings::sanitize(
+$ow_pick = Settings::sanitize(
 	array(
 		Settings::TAB_FIELD => 'delivery',
 		'otp'               => array(
@@ -1218,33 +1218,33 @@ $sl_pick = Settings::sanitize(
 	)
 );
 
-sl_check(
+ow_check(
 	'choosing a different profile applies it',
 	120,
-	(int) ( $sl_pick['otp']['ttl'] ?? 0 )
+	(int) ( $ow_pick['otp']['ttl'] ?? 0 )
 );
 
-sl_check(
+ow_check(
 	'and the chosen profile is what gets stored',
 	'strict',
-	(string) ( $sl_pick['otp']['preset'] ?? '' )
+	(string) ( $ow_pick['otp']['preset'] ?? '' )
 );
 
 // ---------------------------------------------------------------------
-sl_section( 'Saving survives WordPress sanitising twice (15.6)' );
+ow_section( 'Saving survives WordPress sanitising twice (15.6)' );
 
 /*
  * Captured from the real screen: choose "Cả hai", press Lưu thay đổi, and the page
  * comes back saying "Chỉ số điện thoại". The log of that request is the whole story.
  *
- *   sanitize IN  _sl_tab "auth"        -> OUT identity {"mode":"both"}
- *   sanitize IN  _sl_tab "(MISSING)"   -> OUT identity {"mode":"phone_only"}
+ *   sanitize IN  _ow_tab "auth"        -> OUT identity {"mode":"both"}
+ *   sanitize IN  _ow_tab "(MISSING)"   -> OUT identity {"mode":"phone_only"}
  *
  * WordPress applies a sanitize filter more than once. `update_option()` sanitises,
  * then — when the stored value equals the value registered as the setting's default —
  * routes the write through `add_option()`, which sanitises **again**
  * (wp-includes/option.php:884 and :1111). The second pass receives the first pass's
- * output, which carries no `_sl_tab`, so `posted_fields()` found nothing, `$clean`
+ * output, which carries no `_ow_tab`, so `posted_fields()` found nothing, `$clean`
  * stayed at the stored values, and the correct answer was thrown away.
  *
  * The trigger is "stored == registered default", which is exactly the state a freshly
@@ -1253,7 +1253,7 @@ sl_section( 'Saving survives WordPress sanitising twice (15.6)' );
  */
 Settings::update( array( 'identity.mode' => 'phone_only' ) );
 
-$sl_posted = array(
+$ow_posted = array(
 	Settings::TAB_FIELD => 'auth',
 	'identity'          => array(
 		'mode'                  => 'both',
@@ -1263,42 +1263,42 @@ $sl_posted = array(
 	),
 );
 
-$sl_first = Settings::sanitize( $sl_posted );
+$ow_first = Settings::sanitize( $ow_posted );
 
-sl_check(
+ow_check(
 	'the first pass takes the posted value',
 	'both',
-	(string) ( $sl_first['identity']['mode'] ?? '' )
+	(string) ( $ow_first['identity']['mode'] ?? '' )
 );
 
 // The second pass is handed the first pass's output. It has no tab, because the
-// output is registry-shaped and _sl_tab is not a registry field.
-sl_assert(
+// output is registry-shaped and _ow_tab is not a registry field.
+ow_assert(
 	'and its output carries no tab field, which is what breaks the second pass',
-	! isset( $sl_first[ Settings::TAB_FIELD ] )
+	! isset( $ow_first[ Settings::TAB_FIELD ] )
 );
 
-$sl_second = Settings::sanitize( $sl_first );
+$ow_second = Settings::sanitize( $ow_first );
 
-sl_check(
+ow_check(
 	'the second pass keeps it',
 	'both',
-	(string) ( $sl_second['identity']['mode'] ?? '' )
+	(string) ( $ow_second['identity']['mode'] ?? '' )
 );
 
 // Idempotent, not merely non-destructive: a third application must agree with the
 // second, or the value depends on how many times WordPress happens to filter it.
-sl_check(
+ow_check(
 	'and a third pass agrees with the second',
-	json_encode( $sl_second ),
-	json_encode( Settings::sanitize( $sl_second ) )
+	json_encode( $ow_second ),
+	json_encode( Settings::sanitize( $ow_second ) )
 );
 
 // The tab scope still has to work, or this fix would have traded one bug for a
 // bigger one: a save on one tab must not write another tab's fields.
 Settings::update( array( 'identity.mode' => 'phone_only', 'otp.ttl' => 300 ) );
 
-$sl_scoped = Settings::sanitize(
+$ow_scoped = Settings::sanitize(
 	array(
 		Settings::TAB_FIELD => 'auth',
 		'identity'          => array( 'mode' => 'both' ),
@@ -1307,11 +1307,11 @@ $sl_scoped = Settings::sanitize(
 	)
 );
 
-sl_check( 'a tab-scoped save writes its own tab', 'both', (string) ( $sl_scoped['identity']['mode'] ?? '' ) );
-sl_check( 'and does not write another tab field', 300, (int) ( $sl_scoped['otp']['ttl'] ?? 0 ) );
+ow_check( 'a tab-scoped save writes its own tab', 'both', (string) ( $ow_scoped['identity']['mode'] ?? '' ) );
+ow_check( 'and does not write another tab field', 300, (int) ( $ow_scoped['otp']['ttl'] ?? 0 ) );
 
 // ---------------------------------------------------------------------
-sl_section( 'A conditional field is drawn when its condition holds (20.2)' );
+ow_section( 'A conditional field is drawn when its condition holds (20.2)' );
 
 /*
  * The other half of the `show_if` invariant. The coverage loop above skips a
@@ -1319,44 +1319,44 @@ sl_section( 'A conditional field is drawn when its condition holds (20.2)' );
  * way to make a field disappear from the gate entirely — which is exactly the
  * failure that gate exists to catch, wearing a new hat.
  */
-$sl_conditional_fields = array_filter(
+$ow_conditional_fields = array_filter(
 	FieldRegistry::all(),
 	static fn( array $field ): bool => ! empty( $field['show_if'] )
 );
 
-sl_assert(
+ow_assert(
 	'at least one field declares a condition',
-	array() !== $sl_conditional_fields,
+	array() !== $ow_conditional_fields,
 	'Nothing to check, so the assertions below would pass vacuously.'
 );
 
-$sl_undrawn_when_shown = array();
+$ow_undrawn_when_shown = array();
 
-foreach ( $sl_conditional_fields as $sl_path => $sl_field ) {
-	$sl_restore = array();
+foreach ( $ow_conditional_fields as $ow_path => $ow_field ) {
+	$ow_restore = array();
 
-	foreach ( (array) $sl_field['show_if'] as $sl_dep => $sl_value ) {
-		$sl_restore[ $sl_dep ] = Settings::get( $sl_dep );
-		Settings::update( array( $sl_dep => $sl_value ) );
+	foreach ( (array) $ow_field['show_if'] as $ow_dep => $ow_value ) {
+		$ow_restore[ $ow_dep ] = Settings::get( $ow_dep );
+		Settings::update( array( $ow_dep => $ow_value ) );
 	}
 
-	$sl_shown_html = sl_capture(
-		static function () use ( $screen, $sl_field ): void {
-			$screen->render( (string) $sl_field['tab'] );
+	$ow_shown_html = ow_capture(
+		static function () use ( $screen, $ow_field ): void {
+			$screen->render( (string) $ow_field['tab'] );
 		}
 	)['html'];
 
-	if ( false === strpos( $sl_shown_html, 'name="' . \SmartLogin\Admin\FieldRenderer::name( $sl_path ) ) ) {
-		$sl_undrawn_when_shown[] = $sl_path;
+	if ( false === strpos( $ow_shown_html, 'name="' . \OmniWP\Admin\FieldRenderer::name( $ow_path ) ) ) {
+		$ow_undrawn_when_shown[] = $ow_path;
 	}
 
-	Settings::update( $sl_restore );
+	Settings::update( $ow_restore );
 }
 
-sl_check( 'every conditional field is drawn once its condition holds', array(), $sl_undrawn_when_shown );
+ow_check( 'every conditional field is drawn once its condition holds', array(), $ow_undrawn_when_shown );
 
 // ---------------------------------------------------------------------
-sl_section( 'Rule 16 — one label per concept (20.5)' );
+ow_section( 'Rule 16 — one label per concept (20.5)' );
 
 /*
  * A string check, and it will annoy somebody in six months. The reason is
@@ -1367,20 +1367,20 @@ sl_section( 'Rule 16 — one label per concept (20.5)' );
  * Every visible string in the registry, by owner, so a failure names the thing
  * that has to change rather than the count that changed.
  */
-$sl_visible_strings = array();
+$ow_visible_strings = array();
 
-foreach ( FieldRegistry::tabs() as $sl_slug => $sl_label ) {
-	$sl_visible_strings[ 'tab:' . $sl_slug ] = array( $sl_label );
+foreach ( FieldRegistry::tabs() as $ow_slug => $ow_label ) {
+	$ow_visible_strings[ 'tab:' . $ow_slug ] = array( $ow_label );
 }
 
-foreach ( FieldRegistry::sections() as $sl_slug => $sl_label ) {
-	$sl_visible_strings[ 'section:' . $sl_slug ] = array( $sl_label );
+foreach ( FieldRegistry::sections() as $ow_slug => $ow_label ) {
+	$ow_visible_strings[ 'section:' . $ow_slug ] = array( $ow_label );
 }
 
-foreach ( FieldRegistry::all() as $sl_key => $sl_field ) {
-	$sl_visible_strings[ $sl_key ] = array_merge(
-		array( (string) ( $sl_field['label'] ?? '' ), (string) ( $sl_field['help'] ?? '' ) ),
-		array_values( (array) ( $sl_field['choices'] ?? array() ) )
+foreach ( FieldRegistry::all() as $ow_key => $ow_field ) {
+	$ow_visible_strings[ $ow_key ] = array_merge(
+		array( (string) ( $ow_field['label'] ?? '' ), (string) ( $ow_field['help'] ?? '' ) ),
+		array_values( (array) ( $ow_field['choices'] ?? array() ) )
 	);
 }
 
@@ -1390,7 +1390,7 @@ foreach ( FieldRegistry::all() as $sl_key => $sl_field ) {
  * @param array<string,string[]> $strings
  * @return string[]
  */
-function sl_owners_showing( array $strings, string $needle, bool $exact ): array {
+function ow_owners_showing( array $strings, string $needle, bool $exact ): array {
 	$owners = array();
 
 	foreach ( $strings as $owner => $values ) {
@@ -1407,39 +1407,39 @@ function sl_owners_showing( array $strings, string $needle, bool $exact ): array
 
 // Today: the identity provider's section, the SMS vendor, and the captcha
 // vendor. Three concepts, one word, and two of them sit on delivery screens.
-sl_check(
+ow_check(
 	'"Nhà cung cấp" names at most one concept',
 	array(),
-	array_slice( sl_owners_showing( $sl_visible_strings, 'Nhà cung cấp', true ), 1 )
+	array_slice( ow_owners_showing( $ow_visible_strings, 'Nhà cung cấp', true ), 1 )
 );
 
 // "Webhook" belongs to the event tab. On an SMS screen it is the word that sent
 // an n8n URL to the wrong half of the plugin.
-sl_check(
+ow_check(
 	'no SMS setting says "Webhook"',
 	array(),
 	array_values(
 		array_filter(
-			sl_owners_showing( $sl_visible_strings, 'Webhook', false ),
+			ow_owners_showing( $ow_visible_strings, 'Webhook', false ),
 			static fn( string $owner ): bool => 0 === strpos( $owner, 'sms.' )
 		)
 	)
 );
 
 // "Automation" named a category of product rather than a behaviour.
-sl_check(
+ow_check(
 	'no tab or section is called "Automation"',
 	array(),
 	array_values(
 		array_filter(
-			sl_owners_showing( $sl_visible_strings, 'Automation', false ),
+			ow_owners_showing( $ow_visible_strings, 'Automation', false ),
 			static fn( string $owner ): bool => 0 === strpos( $owner, 'tab:' ) || 0 === strpos( $owner, 'section:' )
 		)
 	)
 );
 
 // ---------------------------------------------------------------------
-sl_section( 'Rule 17 — an enabled channel says whether it is serving anything (20.6)' );
+ow_section( 'Rule 17 — an enabled channel says whether it is serving anything (20.6)' );
 
 /*
  * delivery-routing.md D2 required this two phases ago and no screen does it:
@@ -1450,7 +1450,7 @@ sl_section( 'Rule 17 — an enabled channel says whether it is serving anything 
  * a real gateway URL saved, and routing pointed somewhere else — because that is
  * the state the administrator was looking at while nothing was being delivered.
  */
-$sl_status_restore = array(
+$ow_status_restore = array(
 	'identity.mode' => Settings::get( 'identity.mode' ),
 	'sms.enabled'   => Settings::get( 'sms.enabled' ),
 	'sms.url'       => Settings::get( 'sms.url' ),
@@ -1460,8 +1460,8 @@ $sl_status_restore = array(
 /**
  * Render one channel tab and return its markup.
  */
-function sl_channel_html( SettingsScreen $screen, string $tab ): string {
-	return sl_capture(
+function ow_channel_html( SettingsScreen $screen, string $tab ): string {
+	return ow_capture(
 		static function () use ( $screen, $tab ): void {
 			$screen->render( $tab );
 		}
@@ -1495,31 +1495,31 @@ Settings::update(
 	)
 );
 
-$sl_idle_html = sl_channel_html( $screen, 'delivery-sms' );
+$ow_idle_html = ow_channel_html( $screen, 'delivery-sms' );
 
 Settings::update( array( 'identity.mode' => 'both' ) );
 
-$sl_serving_html = sl_channel_html( $screen, 'delivery-sms' );
+$ow_serving_html = ow_channel_html( $screen, 'delivery-sms' );
 
-Settings::update( $sl_status_restore );
+Settings::update( $ow_status_restore );
 
-sl_assert(
+ow_assert(
 	'a channel screen declares whether it is serving a channel',
-	false !== strpos( $sl_idle_html, 'data-sl-channel-status' ),
+	false !== strpos( $ow_idle_html, 'data-sl-channel-status' ),
 	'The screen renders no status at all, so an administrator cannot tell a configured channel from a serving one.'
 );
 
-sl_assert(
+ow_assert(
 	'an enabled channel nothing can reach renders as idle',
-	false !== strpos( $sl_idle_html, 'data-sl-channel-status="idle"' ),
+	false !== strpos( $ow_idle_html, 'data-sl-channel-status="idle"' ),
 	'Enabled, a real gateway saved, and no phone identity accepted — the screen must say so. "Configured but not delivering" and "broken" look identical otherwise.'
 );
 
-sl_assert(
+ow_assert(
 	'and the same channel renders as serving once it is reachable',
-	false !== strpos( $sl_serving_html, 'data-sl-channel-status="serving"' ),
+	false !== strpos( $ow_serving_html, 'data-sl-channel-status="serving"' ),
 	'Without this the rule is satisfied by a status line hard-coded to "idle", which would be worse than no status at all.'
 );
 
 // ---------------------------------------------------------------------
-sl_summary( 'Admin screens' );
+ow_summary( 'Admin screens' );

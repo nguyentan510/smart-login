@@ -30,8 +30,8 @@ it where the reader is**, and refuse to let the two disagree.
 
 `Shortcodes::register()` registers nine tags
 (`includes/Frontend/class-shortcodes.php:21-29`). `README.md:36-38` names
-`smart_auth`, `smart_login`, `smart_register`, `smart_verify_otp`,
-`smart_forgot_password` and `smart_profile`; `[smart_login_button]` gets its own
+`smart_auth`, `OMNIWP`, `smart_register`, `smart_verify_otp`,
+`smart_forgot_password` and `smart_profile`; `[OMNIWP_button]` gets its own
 section at `:69`. `[smart_account]` and `[smart_address]` are named **nowhere**,
 though `render_account()` carries the comment explaining why it exists
 (`class-shortcodes.php:116-123`) and `[smart_address]` silently renders nothing

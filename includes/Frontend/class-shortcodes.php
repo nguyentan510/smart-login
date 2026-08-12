@@ -2,16 +2,17 @@
 /**
  * Shortcodes rendering the auth flow anywhere on the site.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Frontend;
+namespace OmniWP\Frontend;
 
-use SmartLogin\Address\AddressFields;
-use SmartLogin\Auth\PendingSession;
-use SmartLogin\Identity\UserManager;
-use SmartLogin\OTP\OtpService;
-use SmartLogin\Settings;
+use OmniWP\Address\AddressFields;
+use OmniWP\Auth\PendingSession;
+use OmniWP\Frontend\Flow;
+use OmniWP\Identity\UserManager;
+use OmniWP\OTP\OtpService;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -36,49 +37,124 @@ class Shortcodes {
 	 * @var array<string,array{callback:string,atts:array<string,string>}>
 	 */
 	public const CATALOG = array(
-		'smart_auth'            => array(
+		'smart_auth'             => array(
 			'callback' => 'render_login',
 			'atts'     => array(),
 		),
-		'smart_login'           => array(
+		'smart_login'            => array(
 			'callback' => 'render_login',
 			'atts'     => array(),
 		),
-		'smart_register'        => array(
+		'omniwp_auth'            => array(
+			'callback' => 'render_login',
+			'atts'     => array(),
+		),
+		'omniwp_login'           => array(
+			'callback' => 'render_login',
+			'atts'     => array(),
+		),
+		'smart_register'         => array(
 			'callback' => 'render_register',
 			'atts'     => array(),
 		),
-		'smart_verify_otp'      => array(
+		'omniwp_register'        => array(
+			'callback' => 'render_register',
+			'atts'     => array(),
+		),
+		'smart_verify_otp'       => array(
 			'callback' => 'render_otp',
 			'atts'     => array(),
 		),
-		'smart_forgot_password' => array(
+		'omniwp_verify_otp'      => array(
+			'callback' => 'render_otp',
+			'atts'     => array(),
+		),
+		'smart_forgot_password'  => array(
 			'callback' => 'render_forgot',
 			'atts'     => array(),
 		),
-		'smart_profile'         => array(
+		'omniwp_forgot_password' => array(
+			'callback' => 'render_forgot',
+			'atts'     => array(),
+		),
+		'smart_profile'          => array(
 			'callback' => 'render_profile',
 			'atts'     => array(),
 		),
-		'smart_account'         => array(
+		'omniwp_profile'         => array(
+			'callback' => 'render_profile',
+			'atts'     => array(),
+		),
+		'smart_account'          => array(
 			'callback' => 'render_account',
 			'atts'     => array(),
 		),
-		'smart_address'         => array(
+		'omniwp_account'         => array(
+			'callback' => 'render_account',
+			'atts'     => array(),
+		),
+		'smart_address'          => array(
 			'callback' => 'render_address',
 			'atts'     => array( 'required' => 'yes' ),
 		),
-		'smart_login_button'    => array(
+		'omniwp_address'         => array(
+			'callback' => 'render_address',
+			'atts'     => array( 'required' => 'yes' ),
+		),
+		'smart_vouchers'         => array(
+			'callback' => 'render_vouchers',
+			'atts'     => array(),
+		),
+		'omniwp_vouchers'        => array(
+			'callback' => 'render_vouchers',
+			'atts'     => array(),
+		),
+		'smart_login_button'     => array(
 			'callback' => 'render_button',
-			// `label` defaults to '' rather than to "Đăng nhập": a translated
-			// string is not a constant expression, so render_button() fills it
-			// in — and pushing it here would translate it on every front-end
-			// request for the benefit of one admin screen.
 			'atts'     => array(
 				'step'     => Flow::STEP_IDENTIFY,
 				'label'    => '',
 				'class'    => '',
 				'collapse' => 'mobile',
+			),
+		),
+		'omniwp_button'          => array(
+			'callback' => 'render_button',
+			'atts'     => array(
+				'step'     => Flow::STEP_IDENTIFY,
+				'label'    => '',
+				'class'    => '',
+				'collapse' => 'mobile',
+			),
+		),
+		'smart_cart'             => array(
+			'callback' => 'render_cart',
+			'atts'     => array(),
+		),
+		'omniwp_cart'            => array(
+			'callback' => 'render_cart',
+			'atts'     => array(),
+		),
+		'smart_checkout'         => array(
+			'callback' => 'render_checkout',
+			'atts'     => array(),
+		),
+		'omniwp_checkout'        => array(
+			'callback' => 'render_checkout',
+			'atts'     => array(),
+		),
+		'smart_cart_button'      => array(
+			'callback' => 'render_cart_button',
+			'atts'     => array(
+				'label' => '',
+				'class' => '',
+			),
+		),
+		'omniwp_cart_button'     => array(
+			'callback' => 'render_cart_button',
+			'atts'     => array(
+				'label' => '',
+				'class' => '',
 			),
 		),
 	);
@@ -93,7 +169,7 @@ class Shortcodes {
 	 * A trigger for the dialog, for a site nobody can edit templates on.
 	 *
 	 * Every other trigger in the contract requires markup: a `data-` attribute,
-	 * a hand-written `#login`, a call into `window.SmartLogin`. Somebody building
+	 * a hand-written `#login`, a call into `window.OmniWP`. Somebody building
 	 * a page in an editor has none of those, and telling them to ask a developer
 	 * for a button is how a feature goes unused.
 	 *
@@ -105,9 +181,9 @@ class Shortcodes {
 	 */
 	public function render_button( $atts = array() ): string {
 		$atts = shortcode_atts(
-			self::CATALOG['smart_login_button']['atts'],
+			self::CATALOG['omniwp_button']['atts'],
 			(array) $atts,
-			'smart_login_button'
+			'omniwp_button'
 		);
 
 		Assets::enqueue_button();
@@ -133,9 +209,9 @@ class Shortcodes {
 			array(
 				'label'    => '' !== trim( (string) $atts['label'] )
 					? (string) $atts['label']
-					: __( 'Đăng nhập', 'smart-login' ),
+					: __( 'Đăng nhập', 'omniwp' ),
 				'step'     => $step,
-				'href'     => '' !== $href ? add_query_arg( 'smart_login_step', $step, $href ) : '#login',
+				'href'     => '' !== $href ? add_query_arg( 'OMNIWP_step', $step, $href ) : '#login',
 				'class'    => trim( (string) $atts['class'] ),
 				'collapse' => $collapse,
 			)
@@ -181,15 +257,9 @@ class Shortcodes {
 			return $this->render_flow( Flow::STEP_IDENTIFY, (array) $atts );
 		}
 
-		Assets::enqueue();
-
-		return TemplateLoader::render(
-			'account',
-			array(
-				'sl_form' => new AccountForm( get_current_user_id(), AccountForm::CONTEXT_STANDALONE ),
-				'notices' => Notices::all(),
-			)
-		);
+		ob_start();
+		AccountHub::render( (array) $atts );
+		return (string) ob_get_clean();
 	}
 
 	/**
@@ -219,6 +289,37 @@ class Shortcodes {
 				'required' => 'no' !== $atts['required'],
 			)
 		);
+	}
+
+	/**
+	 * Render the standalone Voucher list.
+	 */
+	public function render_vouchers( $atts = array() ): string {
+		$atts = shortcode_atts( array(), (array) $atts, 'omniwp_vouchers' );
+		unset( $atts );
+		if ( ! is_user_logged_in() ) {
+			return '<p class="sl-guest-notice">' . esc_html__( 'Bạn cần đăng nhập để xem các mã giảm giá dành riêng cho mình.', 'omniwp' ) . '</p>';
+		}
+
+		AccountHub::enqueue_assets();
+
+		$user = wp_get_current_user();
+
+		ob_start();
+		echo '<div class="omniwp omniwp--vouchers-standalone">';
+		TemplateLoader::output(
+			'account-hub/tab-vouchers',
+			array(
+				'user' => $user,
+				'tab'  => array(
+					'key'   => 'vouchers',
+					'label' => __( 'Mã giảm giá', 'omniwp' ),
+				),
+			)
+		);
+		TemplateLoader::output( 'account-hub/voucher-modal', array( 'user' => $user ) );
+		echo '</div>';
+		return (string) ob_get_clean();
 	}
 
 	public function render_login( $atts = array() ): string {
@@ -280,7 +381,7 @@ class Shortcodes {
 				array(
 					'user'       => wp_get_current_user(),
 					'notices'    => Notices::all(),
-					'my_account' => \SmartLogin\Auth\LoginHandler::post_login_redirect(),
+					'my_account' => \OmniWP\Auth\LoginHandler::post_login_redirect(),
 				)
 			);
 		}
@@ -347,19 +448,19 @@ class Shortcodes {
 
 	/**
 	 * Arguments for the welcome screen, whether it was reached in place after a
-	 * registration or by landing on the account page with ?smartlogin_welcome=1.
+	 * registration or by landing on the account page with ?OmniWP_welcome=1.
 	 */
 	/**
 	 * Whether this request is a member returning from registration.
 	 */
 	public static function is_welcome_request(): bool {
 		// phpcs:ignore WordPress.Security.NonceVerification -- read-only presentation switch.
-		return is_user_logged_in() && ! empty( $_GET['smartlogin_welcome'] );
+		return is_user_logged_in() && ! empty( $_GET['OmniWP_welcome'] );
 	}
 
 	public static function onboarding_args(): array {
 		$user_id  = (int) Flow::data( 'user_id', get_current_user_id() );
-		$profiles = new \SmartLogin\Auth\ProfileCompletionService();
+		$profiles = new \OmniWP\Auth\ProfileCompletionService();
 		$fields   = Flow::data( 'fields', null );
 
 		// Marked here rather than before the redirect that brought us: the welcome
@@ -374,7 +475,7 @@ class Shortcodes {
 			// Where "Hoàn tất" and "Để sau" both lead. post_register_redirect()
 			// honours signup.redirect_register for a new account and is side-effect
 			// free once the welcome has been marked seen just above.
-			'redirect'      => (string) Flow::data( 'redirect', \SmartLogin\Auth\RegisterHandler::post_register_redirect( $user_id ) ),
+			'redirect'      => (string) Flow::data( 'redirect', \OmniWP\Auth\RegisterHandler::post_register_redirect( $user_id ) ),
 			'address'       => Settings::is_on( 'address.enabled' )
 				? AddressFields::get_for_user( $user_id )
 				: array(),
@@ -402,7 +503,7 @@ class Shortcodes {
 
 			if ( $row ) {
 				$intent     = $session['intent'];
-				$masked     = \SmartLogin\Security\RateLimiter::mask_identity( $row['destination'] );
+				$masked     = \OmniWP\Security\RateLimiter::mask_identity( $row['destination'] );
 				$expires_in = $service->seconds_left( $row );
 				$transport  = $row['transport'];
 			} else {
@@ -433,7 +534,7 @@ class Shortcodes {
 		}
 
 		$user_id = get_current_user_id();
-		$status  = ( new \SmartLogin\Auth\ProfileCompletionService() )->status( $user_id );
+		$status  = ( new \OmniWP\Auth\ProfileCompletionService() )->status( $user_id );
 
 		return TemplateLoader::render(
 			'profile-summary',
@@ -442,11 +543,93 @@ class Shortcodes {
 				'notices'   => Notices::all(),
 				'missing'   => UserManager::missing_profile_fields( $user_id ),
 				'status'    => $status,
-				'pending'   => ( new \SmartLogin\Auth\ContactVerificationService() )->pending( $user_id ),
+				'pending'   => ( new \OmniWP\Auth\ContactVerificationService() )->pending( $user_id ),
 				'phone'     => (string) get_user_meta( $user_id, UserManager::META_PHONE, true ),
 				'synthetic' => UserManager::user_has_synthetic_email( $user_id ),
-				'welcome'   => ! empty( $_GET['smartlogin_welcome'] ), // phpcs:ignore WordPress.Security.NonceVerification
+				'welcome'   => ! empty( $_GET['OmniWP_welcome'] ), // phpcs:ignore WordPress.Security.NonceVerification
 			)
+		);
+	}
+
+	public function render_cart( $atts = array() ): string {
+		$atts = shortcode_atts( array(), (array) $atts, 'omniwp_cart' );
+		unset( $atts );
+
+		if ( is_admin() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+			return '<div class="omniwp-cart-preview" style="padding:24px;text-align:center;border:1px dashed #cbd5e1;border-radius:8px;color:#64748b;"><strong>' . esc_html__( '[Giỏ hàng OmniWP Cart]', 'omniwp' ) . '</strong></div>';
+		}
+
+		return TemplateLoader::render( 'ecommerce/cart-page' );
+	}
+
+	public function render_checkout( $atts = array() ): string {
+		$atts = shortcode_atts( array(), (array) $atts, 'omniwp_checkout' );
+		unset( $atts );
+
+		if ( is_admin() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+			return '<div class="omniwp-checkout-preview" style="padding:24px;text-align:center;border:1px dashed #cbd5e1;border-radius:8px;color:#64748b;"><strong>' . esc_html__( '[Trang thanh toán OmniWP Checkout]', 'omniwp' ) . '</strong></div>';
+		}
+
+		if ( function_exists( 'is_wc_endpoint_url' ) && is_wc_endpoint_url( 'order-received' ) ) {
+			return $this->render_thankyou();
+		}
+
+		return TemplateLoader::render( 'ecommerce/checkout-page' );
+	}
+
+	/**
+	 * Render Thank You / Order Received page content.
+	 */
+	public function render_thankyou(): string {
+		global $wp;
+
+		$order_id  = isset( $wp->query_vars['order-received'] ) ? absint( $wp->query_vars['order-received'] ) : 0;
+		$order_key = isset( $_GET['key'] ) ? wc_clean( wp_unslash( $_GET['key'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		if ( ! $order_id && isset( $_GET['order_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$order_id = absint( $_GET['order_id'] );
+		}
+
+		$order = $order_id > 0 ? wc_get_order( $order_id ) : false;
+
+		if ( $order && $order_key && ! hash_equals( (string) $order->get_order_key(), $order_key ) ) {
+			$order = false;
+		}
+
+		if ( ! $order ) {
+			return '<div class="omniwp sl-thankyou-wrapper" style="padding:30px;text-align:center;"><p>' . esc_html__( 'Không tìm thấy thông tin đơn hàng.', 'omniwp' ) . '</p></div>';
+		}
+
+		ob_start();
+		do_action( 'woocommerce_before_thankyou', $order->get_id() );
+
+		if ( \OmniWP\Settings::is_on( 'ecommerce.thankyou_custom_enabled', true ) ) {
+			( new \OmniWP\Ecommerce\ThankYouService() )->render_custom_thankyou( $order->get_id() );
+		} else {
+			wc_get_template( 'checkout/thankyou.php', array( 'order' => $order ) );
+		}
+
+		return (string) ob_get_clean();
+	}
+
+	public function render_cart_button( $atts = array() ): string {
+		$atts = shortcode_atts(
+			self::CATALOG['omniwp_cart_button']['atts'],
+			(array) $atts,
+			'omniwp_cart_button'
+		);
+
+		$count = function_exists( 'WC' ) && WC()->cart ? (int) WC()->cart->get_cart_contents_count() : 0;
+		$label = ! empty( $atts['label'] ) ? esc_html( $atts['label'] ) : __( 'Giỏ hàng', 'omniwp' );
+		$class = ! empty( $atts['class'] ) ? ' ' . esc_attr( $atts['class'] ) : '';
+
+		return sprintf(
+			'<button type="button" class="sl-btn sl-btn--outline sl-cart-trigger%s" data-omniwp="cart">
+				🛒 %s <span class="sl-cart-badge">(%d)</span>
+			</button>',
+			$class,
+			$label,
+			$count
 		);
 	}
 }

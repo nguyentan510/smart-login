@@ -14,13 +14,13 @@
  * message cannot be editable without being declared, and cannot be declared
  * without being editable, because both read this array.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Mail;
+namespace OmniWP\Mail;
 
-use SmartLogin\Auth\AuthAction;
-use SmartLogin\Settings;
+use OmniWP\Auth\AuthAction;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -93,8 +93,8 @@ final class MailRegistry {
 			'register'      => array(
 				'group'     => 'otp',
 				'intent'    => AuthAction::REGISTER,
-				'label'     => __( 'Mã đăng ký', 'smart-login' ),
-				'when'      => __( 'Khi người dùng bắt đầu tạo tài khoản mới.', 'smart-login' ),
+				'label'     => __( 'Mã đăng ký', 'omniwp' ),
+				'when'      => __( 'Khi người dùng bắt đầu tạo tài khoản mới.', 'omniwp' ),
 				'preheader' => 'Mã xác thực để hoàn tất đăng ký, hiệu lực {{ttl_minutes}} phút.',
 				'tokens'    => self::OTP_TOKENS,
 				'subject'   => 'Mã xác thực đăng ký {{code}} - {{site_name}}',
@@ -111,8 +111,8 @@ Nếu bạn không yêu cầu tạo tài khoản, hãy bỏ qua email này — k
 			'login'         => array(
 				'group'     => 'otp',
 				'intent'    => AuthAction::LOGIN,
-				'label'     => __( 'Mã đăng nhập', 'smart-login' ),
-				'when'      => __( 'Khi người dùng đăng nhập bằng mã thay cho mật khẩu, hoặc từ thiết bị lạ.', 'smart-login' ),
+				'label'     => __( 'Mã đăng nhập', 'omniwp' ),
+				'when'      => __( 'Khi người dùng đăng nhập bằng mã thay cho mật khẩu, hoặc từ thiết bị lạ.', 'omniwp' ),
 				'preheader' => 'Mã đăng nhập một lần, hiệu lực {{ttl_minutes}} phút.',
 				'tokens'    => self::OTP_TOKENS,
 				'subject'   => 'Mã đăng nhập {{code}} - {{site_name}}',
@@ -129,8 +129,8 @@ Nếu không phải bạn đang đăng nhập, hãy đổi mật khẩu ngay —
 			'recover'       => array(
 				'group'     => 'otp',
 				'intent'    => AuthAction::RECOVER,
-				'label'     => __( 'Đặt lại mật khẩu', 'smart-login' ),
-				'when'      => __( 'Khi người dùng bấm Quên mật khẩu.', 'smart-login' ),
+				'label'     => __( 'Đặt lại mật khẩu', 'omniwp' ),
+				'when'      => __( 'Khi người dùng bấm Quên mật khẩu.', 'omniwp' ),
 				'preheader' => 'Mã xác nhận để đặt lại mật khẩu, hiệu lực {{ttl_minutes}} phút.',
 				'tokens'    => self::OTP_TOKENS,
 				'subject'   => 'Mã đặt lại mật khẩu {{code}} - {{site_name}}',
@@ -147,8 +147,8 @@ Nếu bạn không yêu cầu, hãy bỏ qua email này. Mật khẩu hiện t�
 			'add_identity'  => array(
 				'group'     => 'otp',
 				'intent'    => AuthAction::ADD_IDENTITY,
-				'label'     => __( 'Xác minh liên hệ mới', 'smart-login' ),
-				'when'      => __( 'Khi người dùng thêm hoặc đổi số điện thoại, email trong tài khoản.', 'smart-login' ),
+				'label'     => __( 'Xác minh liên hệ mới', 'omniwp' ),
+				'when'      => __( 'Khi người dùng thêm hoặc đổi số điện thoại, email trong tài khoản.', 'omniwp' ),
 				'preheader' => 'Mã xác minh liên hệ mới, hiệu lực {{ttl_minutes}} phút.',
 				'tokens'    => self::OTP_TOKENS,
 				'subject'   => 'Mã xác minh {{destination}} - {{site_name}}',
@@ -165,34 +165,34 @@ Nếu bạn không thêm liên hệ này, hãy kiểm tra lại tài khoản c�
 			'budget_halted' => array(
 				'group'      => 'admin',
 				'switchable' => true,
-				'label'      => __( 'Cảnh báo chạm trần gửi', 'smart-login' ),
-				'when'       => __( 'Gửi tới email quản trị một lần mỗi lần site chạm trần và tạm dừng gửi mã.', 'smart-login' ),
+				'label'      => __( 'Cảnh báo chạm trần gửi', 'omniwp' ),
+				'when'       => __( 'Gửi tới email quản trị một lần mỗi lần site chạm trần và tạm dừng gửi mã.', 'omniwp' ),
 				'preheader'  => 'Site đã chạm trần gửi mã và đang tạm dừng.',
 				'tokens'     => self::ADMIN_TOKENS,
 				'subject'    => '[{{site_name}}] Đã tạm dừng gửi mã xác thực',
-				'body'       => 'Smart Login đã chạm trần {{ceiling}} mã xác thực trong một {{window}} và tạm dừng gửi trong {{halt_minutes}} phút.
+				'body'       => 'OmniWP đã chạm trần {{ceiling}} mã xác thực trong một {{window}} và tạm dừng gửi trong {{halt_minutes}} phút.
 
 Trong lúc này không ai đăng ký hoặc đăng nhập bằng mã được.
 
 Đây thường là dấu hiệu bị lạm dụng để đốt tin nhắn. Hãy xem lưu lượng gần đây trước khi nâng trần — nâng trần khi đang bị tấn công chỉ làm hoá đơn to hơn.
 
-Nhật ký: {{site_url}}wp-admin/admin.php?page=smart-login-audit',
+Nhật ký: {{site_url}}wp-admin/admin.php?page=omniwp-audit',
 			),
 			'breaker_open'  => array(
 				'group'      => 'admin',
 				'switchable' => true,
-				'label'      => __( 'Cảnh báo ngắt mạch kênh gửi', 'smart-login' ),
-				'when'       => __( 'Gửi một lần khi một kênh gửi bị tạm ngắt sau nhiều lần thất bại liên tiếp.', 'smart-login' ),
+				'label'      => __( 'Cảnh báo ngắt mạch kênh gửi', 'omniwp' ),
+				'when'       => __( 'Gửi một lần khi một kênh gửi bị tạm ngắt sau nhiều lần thất bại liên tiếp.', 'omniwp' ),
 				'preheader'  => 'Một kênh gửi mã vừa bị tạm ngắt vì lỗi liên tiếp.',
 				'tokens'     => self::ADMIN_TOKENS,
 				'subject'    => '[{{site_name}}] Kênh gửi mã đang lỗi liên tục',
-				'body'       => 'Smart Login đã tạm ngắt kênh "{{transport}}" sau nhiều lần gửi thất bại liên tiếp, và sẽ tự thử lại sau {{cooldown}} giây.
+				'body'       => 'OmniWP đã tạm ngắt kênh "{{transport}}" sau nhiều lần gửi thất bại liên tiếp, và sẽ tự thử lại sau {{cooldown}} giây.
 
 Trong lúc này người dùng không nhận được mã qua kênh đó.
 
 Hãy kiểm tra nhà cung cấp, rồi dùng nút Gửi thử ở tab Gửi mã để xác nhận — nút đó không bị ngắt mạch chặn, nên nó là cách biết kênh đã sống lại chưa.
 
-Cấu hình: {{site_url}}wp-admin/admin.php?page=smart-login&tab=delivery',
+Cấu hình: {{site_url}}wp-admin/admin.php?page=omniwp&tab=delivery',
 			),
 		);
 
@@ -205,7 +205,7 @@ Cấu hình: {{site_url}}wp-admin/admin.php?page=smart-login&tab=delivery',
 		 *
 		 * @param array<string,array> $messages
 		 */
-		return (array) apply_filters( 'smart_login_mail_messages', $messages );
+		return (array) apply_filters( 'OMNIWP_mail_messages', $messages );
 	}
 
 	public static function get( string $id ): ?array {
@@ -232,8 +232,8 @@ Cấu hình: {{site_url}}wp-admin/admin.php?page=smart-login&tab=delivery',
 					'tab'     => 'delivery-mail',
 					'section' => self::section_for( $row ),
 					/* translators: %s: message name. */
-					'label'   => sprintf( __( '%s — gửi email', 'smart-login' ), $row['label'] ),
-					'help'    => __( 'Tắt nếu bạn đã nhận sự kiện này qua tab Thông báo & Tích hợp. Nhật ký và sự kiện vẫn được ghi như cũ — đây chỉ là email.', 'smart-login' ),
+					'label'   => sprintf( __( '%s — gửi email', 'omniwp' ), $row['label'] ),
+					'help'    => __( 'Tắt nếu bạn đã nhận sự kiện này qua tab Thông báo & Tích hợp. Nhật ký và sự kiện vẫn được ghi như cũ — đây chỉ là email.', 'omniwp' ),
 				);
 			}
 
@@ -243,7 +243,7 @@ Cấu hình: {{site_url}}wp-admin/admin.php?page=smart-login&tab=delivery',
 				'tab'     => 'delivery-mail',
 				'section' => self::section_for( $row ),
 				/* translators: %s: message name. */
-				'label'   => sprintf( __( '%s — tiêu đề', 'smart-login' ), $row['label'] ),
+				'label'   => sprintf( __( '%s — tiêu đề', 'omniwp' ), $row['label'] ),
 				'help'    => $row['when'],
 				// Read by FieldRenderer to show what this box inherits while it is
 				// empty, and which tokens the message actually understands.
@@ -258,9 +258,9 @@ Cấu hình: {{site_url}}wp-admin/admin.php?page=smart-login&tab=delivery',
 				'tab'      => 'delivery-mail',
 				'section'  => self::section_for( $row ),
 				/* translators: %s: message name. */
-				'label'    => sprintf( __( '%s — nội dung', 'smart-login' ), $row['label'] ),
+				'label'    => sprintf( __( '%s — nội dung', 'omniwp' ), $row['label'] ),
 				'sanitize' => 'rich_text',
-				'help'     => __( 'Để trống để dùng mẫu đang hiển thị mờ bên trong ô.', 'smart-login' ),
+				'help'     => __( 'Để trống để dùng mẫu đang hiển thị mờ bên trong ô.', 'omniwp' ),
 				'message'  => $id,
 				'part'     => 'body',
 			);
@@ -429,7 +429,7 @@ Cấu hình: {{site_url}}wp-admin/admin.php?page=smart-login&tab=delivery',
 		}
 
 		$shared     = (string) Settings::get( $shared_path, '' );
-		$ships_with = (string) ( \SmartLogin\FieldRegistry::get( $shared_path )['default'] ?? '' );
+		$ships_with = (string) ( \OmniWP\FieldRegistry::get( $shared_path )['default'] ?? '' );
 
 		if ( '' !== trim( $shared ) && $shared !== $ships_with ) {
 			return $shared;

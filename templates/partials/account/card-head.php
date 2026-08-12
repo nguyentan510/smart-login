@@ -13,20 +13,20 @@
  * The `<h3>` is a real heading in the document outline; the mark is
  * `aria-hidden` because it repeats what the heading already says.
  *
- * Override at yourtheme/smart-login/partials/account/card-head.php
+ * Override at yourtheme/omniwp/partials/account/card-head.php
  *
- * @var string $sl_section One of profile, contact, address, password.
+ * @var string $ow_section One of profile, contact, address, password.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-use SmartLogin\Frontend\AccountForm;
+use OmniWP\Frontend\AccountForm;
 
 defined( 'ABSPATH' ) || exit;
 
-$sl_meta = AccountForm::sections_meta()[ (string) ( $sl_section ?? '' ) ] ?? null;
+$ow_meta = AccountForm::sections_meta()[ (string) ( $ow_section ?? '' ) ] ?? null;
 
-if ( null === $sl_meta ) {
+if ( null === $ow_meta ) {
 	return;
 }
 ?>
@@ -34,6 +34,6 @@ if ( null === $sl_meta ) {
 	<?php
 	// Markup by definition, and it comes from plugin code — never from a request.
 	?>
-	<span class="sl-card__icon" aria-hidden="true"><?php echo $sl_meta['icon']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
-	<?php echo esc_html( $sl_meta['label'] ); ?>
+	<span class="sl-card__icon" aria-hidden="true"><?php echo $ow_meta['icon']; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
+	<?php echo esc_html( $ow_meta['label'] ); ?>
 </h3>

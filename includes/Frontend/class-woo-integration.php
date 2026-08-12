@@ -3,16 +3,16 @@
  * WooCommerce integration: My Account screens, phone sync, and keeping
  * transactional mail away from placeholder addresses.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Frontend;
+namespace OmniWP\Frontend;
 
-use SmartLogin\Address\AddressFields;
-use SmartLogin\Identity\Phone;
-use SmartLogin\Identity\ProfileSeeder;
-use SmartLogin\Identity\UserManager;
-use SmartLogin\Settings;
+use OmniWP\Address\AddressFields;
+use OmniWP\Identity\Phone;
+use OmniWP\Identity\ProfileSeeder;
+use OmniWP\Identity\UserManager;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -46,6 +46,7 @@ class WooIntegration {
 
 		add_filter( 'woocommerce_billing_fields', array( $this, 'filter_billing_fields' ), 20, 1 );
 		add_filter( 'woocommerce_shipping_fields', array( $this, 'ensure_shipping_phone' ), 20, 1 );
+		add_filter( 'woocommerce_checkout_get_value', array( $this, 'clear_synthetic_checkout_email' ), 10, 2 );
 
 		// The account template is loaded by Woo, not by a shortcode, so it needs
 		// the plugin's styles and scripts enqueued explicitly.
@@ -57,6 +58,15 @@ class WooIntegration {
 			add_filter( 'wp_mail', array( $this, 'strip_synthetic_recipients' ), 5, 1 );
 			add_filter( 'pre_wp_mail', array( $this, 'abort_empty_mail' ), 5, 2 );
 		}
+
+		add_action( 'init', array( $this, 'register_custom_order_statuses' ) );
+		add_filter( 'wc_order_statuses', array( $this, 'add_custom_order_statuses' ) );
+		add_action( 'woocommerce_before_checkout_billing_form', array( $this, 'render_checkout_address_picker' ) );
+
+		// Initialize OmniWP E-Commerce Suite
+		( new \OmniWP\Ecommerce\SlideCart() )->register();
+		( new \OmniWP\Ecommerce\CheckoutService() )->register();
+		( new \OmniWP\Ecommerce\ThankYouService() )->register();
 	}
 
 	// -----------------------------------------------------------------
@@ -78,6 +88,14 @@ class WooIntegration {
 			'myaccount/form-edit-account.php' => 'woocommerce/form-edit-account.php',
 		);
 
+		if ( Settings::is_on( 'ecommerce.override_cart_template', false ) ) {
+			$ours['cart/cart.php'] = 'ecommerce/cart-page.php';
+		}
+
+		if ( Settings::is_on( 'ecommerce.override_checkout_template', false ) ) {
+			$ours['checkout/form-checkout.php'] = 'ecommerce/checkout-page.php';
+		}
+
 		if ( ! isset( $ours[ $template_name ] ) ) {
 			return $template;
 		}
@@ -94,7 +112,7 @@ class WooIntegration {
 			return $template;
 		}
 
-		$candidate = SMART_LOGIN_DIR . 'templates/' . $ours[ $template_name ];
+		$candidate = OMNIWP_DIR . 'templates/' . $ours[ $template_name ];
 
 		return is_readable( $candidate ) ? $candidate : $template;
 	}
@@ -111,7 +129,7 @@ class WooIntegration {
 	 * over the account content for this one request.
 	 *
 	 * Two cases land here. A registration that finished on this page renders its
-	 * own step. And a visitor arriving with `smartlogin_welcome=1` — which is how
+	 * own step. And a visitor arriving with `OmniWP_welcome=1` — which is how
 	 * a provider signup gets here, since OAuth returns through a redirect
 	 * and cannot render anything in place — gets the same welcome screen the
 	 * native flow shows inline. Before this, that second case landed on the full
@@ -209,8 +227,8 @@ class WooIntegration {
 			$_POST['account_email'] = wp_get_current_user()->user_email;
 		}
 
-		if ( isset( $_POST['smartlogin_full_name'] ) ) {
-			$full_name = sanitize_text_field( wp_unslash( $_POST['smartlogin_full_name'] ) );
+		if ( isset( $_POST['OmniWP_full_name'] ) ) {
+			$full_name = sanitize_text_field( wp_unslash( $_POST['OmniWP_full_name'] ) );
 
 			if ( '' !== trim( $full_name ) ) {
 				$names = UserManager::split_name( $full_name );
@@ -234,7 +252,7 @@ class WooIntegration {
 		}
 		$requested = strtolower( sanitize_email( wp_unslash( $_POST['account_email'] ) ) ); // phpcs:ignore WordPress.Security.NonceVerification
 		if ( '' !== $requested && strtolower( (string) $user->user_email ) !== $requested ) {
-			$errors->add( 'smart_login_email_verification_required', __( 'Email mới phải được xác thực bằng mã OTP trước khi lưu.', 'smart-login' ) );
+			$errors->add( 'OMNIWP_email_verification_required', __( 'Email mới phải được xác thực bằng mã OTP trước khi lưu.', 'omniwp' ) );
 		}
 	}
 
@@ -245,18 +263,18 @@ class WooIntegration {
 		$user_id = (int) $user_id;
 
 		// phpcs:disable WordPress.Security.NonceVerification -- WooCommerce verified its own nonce.
-		if ( isset( $_POST['smartlogin_dob'] ) ) {
+		if ( isset( $_POST['OmniWP_dob'] ) ) {
 			// parse_dob() is the sanitiser: it returns a Y-m-d string or nothing at
 			// all, so an unparseable value cannot reach the database.
-			$dob = \SmartLogin\Auth\RegisterHandler::parse_dob( (string) wp_unslash( $_POST['smartlogin_dob'] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+			$dob = \OmniWP\Auth\RegisterHandler::parse_dob( (string) wp_unslash( $_POST['OmniWP_dob'] ) ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 
 			if ( '' !== $dob ) {
 				update_user_meta( $user_id, UserManager::META_DOB, $dob );
 			}
 		}
 
-		if ( isset( $_POST['smartlogin_gender'] ) ) {
-			$gender = sanitize_key( wp_unslash( $_POST['smartlogin_gender'] ) );
+		if ( isset( $_POST['OmniWP_gender'] ) ) {
+			$gender = sanitize_key( wp_unslash( $_POST['OmniWP_gender'] ) );
 
 			if ( in_array( $gender, array( 'male', 'female', 'other' ), true ) ) {
 				update_user_meta( $user_id, UserManager::META_GENDER, $gender );
@@ -373,6 +391,24 @@ class WooIntegration {
 	}
 
 	/**
+	 * Do not pre-fill placeholder (@phone.invalid) addresses on the checkout form.
+	 *
+	 * Returning empty string allows the user to see a clean field or placeholder
+	 * rather than an ugly internal synthetic email string.
+	 *
+	 * @param mixed  $value
+	 * @param string $key
+	 * @return mixed
+	 */
+	public function clear_synthetic_checkout_email( $value, $key ) {
+		if ( 'billing_email' === $key && '' !== $value && UserManager::is_synthetic_email( (string) $value ) ) {
+			return '';
+		}
+
+		return $value;
+	}
+
+	/**
 	 * Give the recipient's phone number a field of its own.
 	 *
 	 * `billing_phone` is now seeded from the login phone and never overwritten,
@@ -394,7 +430,7 @@ class WooIntegration {
 		}
 
 		$fields['shipping_phone'] = array(
-			'label'        => __( 'Số điện thoại người nhận', 'smart-login' ),
+			'label'        => __( 'Số điện thoại người nhận', 'omniwp' ),
 			'required'     => false,
 			'type'         => 'tel',
 			'class'        => array( 'form-row-wide' ),
@@ -470,5 +506,92 @@ class WooIntegration {
 		}
 
 		return $recipient;
+	}
+
+	public function register_custom_order_statuses(): void {
+		if ( ! function_exists( 'register_post_status' ) ) {
+			return;
+		}
+
+		register_post_status(
+			'wc-packed',
+			array(
+				'label'                     => _x( 'Đã đóng gói', 'Order status', 'omniwp' ),
+				'public'                    => true,
+				'exclude_from_search'       => false,
+				'show_in_admin_all_list'    => true,
+				'show_in_admin_status_list' => true,
+				/* translators: %s: number of orders */
+				'label_count'               => _n_noop( 'Đã đóng gói <span class="count">(%s)</span>', 'Đã đóng gói <span class="count">(%s)</span>', 'omniwp' ),
+			)
+		);
+
+		register_post_status(
+			'wc-shipping',
+			array(
+				'label'                     => _x( 'Đang giao', 'Order status', 'omniwp' ),
+				'public'                    => true,
+				'exclude_from_search'       => false,
+				'show_in_admin_all_list'    => true,
+				'show_in_admin_status_list' => true,
+				/* translators: %s: number of orders */
+				'label_count'               => _n_noop( 'Đang giao <span class="count">(%s)</span>', 'Đang giao <span class="count">(%s)</span>', 'omniwp' ),
+			)
+		);
+	}
+
+	public function add_custom_order_statuses( array $order_statuses ): array {
+		$new_statuses = array();
+
+		foreach ( $order_statuses as $key => $status ) {
+			$new_statuses[ $key ] = $status;
+			if ( 'wc-processing' === $key ) {
+				$new_statuses['wc-packed']   = _x( 'Đã đóng gói', 'Order status', 'omniwp' );
+				$new_statuses['wc-shipping'] = _x( 'Đang giao', 'Order status', 'omniwp' );
+			}
+		}
+
+		return $new_statuses;
+	}
+
+	public function render_checkout_address_picker(): void {
+		if ( Settings::is_on( 'ecommerce.clean_checkout_enabled', true ) ) {
+			return;
+		}
+
+		if ( ! is_user_logged_in() ) {
+			return;
+		}
+
+		$user_id   = get_current_user_id();
+		$addresses = \OmniWP\Address\AddressBook::get_addresses( $user_id );
+
+		if ( empty( $addresses ) || count( $addresses ) <= 1 ) {
+			return;
+		}
+
+		?>
+		<div class="sl-checkout-address-picker" style="margin-bottom: 20px; padding: 14px 16px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px;">
+			<label style="font-weight:600; font-size:0.9rem; color:#0f172a; display:block; margin-bottom:6px;">
+				<?php esc_html_e( '📍 Chọn nhanh từ Sổ địa chỉ OmniWP:', 'omniwp' ); ?>
+			</label>
+			<select class="sl-select" id="sl-checkout-address-select" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid #cbd5e1;">
+				<?php foreach ( $addresses as $addr ) : ?>
+					<?php
+					$label = sprintf(
+						'%s (%s) — %s, %s',
+						$addr['tag'] ?? 'Địa chỉ',
+						$addr['phone'] ?? '',
+						$addr['address_1'] ?? '',
+						$addr['city'] ?? ''
+					);
+					?>
+					<option value="<?php echo esc_attr( (string) wp_json_encode( $addr ) ); ?>" <?php selected( ! empty( $addr['is_default'] ) ); ?>>
+						<?php echo esc_html( $label ); ?>
+					</option>
+				<?php endforeach; ?>
+			</select>
+		</div>
+		<?php
 	}
 }

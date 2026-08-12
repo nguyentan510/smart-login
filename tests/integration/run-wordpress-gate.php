@@ -6,20 +6,20 @@
  * WordPress bootstrap and a real MySQL connection, then exercises the
  * migration, external identity repository, and profile completeness boundary.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 declare( strict_types=1 );
 
-$wp_root  = rtrim( (string) getenv( 'SMART_LOGIN_WP_ROOT' ), "\\/" );
-$db_host  = (string) getenv( 'SMART_LOGIN_DB_HOST' );
-$db_name  = (string) getenv( 'SMART_LOGIN_DB_NAME' );
-$db_user  = (string) getenv( 'SMART_LOGIN_DB_USER' );
-$db_pass  = (string) getenv( 'SMART_LOGIN_DB_PASSWORD' );
-$prefix   = (string) getenv( 'SMART_LOGIN_DB_PREFIX' );
-$plugin_root = rtrim( (string) getenv( 'SMART_LOGIN_PLUGIN_ROOT' ), "\\/" );
+$wp_root  = rtrim( (string) getenv( 'OMNIWP_WP_ROOT' ), "\\/" );
+$db_host  = (string) getenv( 'OMNIWP_DB_HOST' );
+$db_name  = (string) getenv( 'OMNIWP_DB_NAME' );
+$db_user  = (string) getenv( 'OMNIWP_DB_USER' );
+$db_pass  = (string) getenv( 'OMNIWP_DB_PASSWORD' );
+$prefix   = (string) getenv( 'OMNIWP_DB_PREFIX' );
+$plugin_root = rtrim( (string) getenv( 'OMNIWP_PLUGIN_ROOT' ), "\\/" );
 /*
- * `$sl_plugin`, not `$plugin`.
+ * `$ow_plugin`, not `$plugin`.
  *
  * wp-settings.php uses $plugin as the loop variable for active plugins and
  * unset()s it afterwards, and this file requires it into the same scope. So the
@@ -28,36 +28,36 @@ $plugin_root = rtrim( (string) getenv( 'SMART_LOGIN_PLUGIN_ROOT' ), "\\/" );
  * and reported `TypeError: is_file(): Argument #1 must be of type string, null
  * given` instead of the clean blocker it was written to give.
  */
-$sl_plugin = $plugin_root . DIRECTORY_SEPARATOR . 'smart-login.php';
+$ow_plugin = $plugin_root . DIRECTORY_SEPARATOR . 'omniwp.php';
 
 $blocked = static function ( string $message ): never {
-	echo "SMART_LOGIN_AUTH_INTEGRATION_BLOCKED\n";
+	echo "OMNIWP_AUTH_INTEGRATION_BLOCKED\n";
 	echo 'reason=' . $message . "\n";
 	exit( 2 );
 };
 
 $failed = static function ( string $message ): never {
-	echo "SMART_LOGIN_AUTH_INTEGRATION_FAILED\n";
+	echo "OMNIWP_AUTH_INTEGRATION_FAILED\n";
 	echo 'reason=' . $message . "\n";
 	exit( 1 );
 };
 
 if ( '' === $wp_root || ! is_file( $wp_root . DIRECTORY_SEPARATOR . 'wp-settings.php' ) ) {
-	$blocked( 'SMART_LOGIN_WP_ROOT must point to a WordPress public root' );
+	$blocked( 'OMNIWP_WP_ROOT must point to a WordPress public root' );
 }
-if ( '' === $plugin_root || ! is_file( $sl_plugin ) ) {
-	$blocked( 'SMART_LOGIN_PLUGIN_ROOT must point to the current plugin source' );
+if ( '' === $plugin_root || ! is_file( $ow_plugin ) ) {
+	$blocked( 'OMNIWP_PLUGIN_ROOT must point to the current plugin source' );
 }
 
 if ( '' === $db_host || '' === $db_name || '' === $db_user ) {
-	$blocked( 'SMART_LOGIN_DB_HOST, SMART_LOGIN_DB_NAME and SMART_LOGIN_DB_USER are required' );
+	$blocked( 'OMNIWP_DB_HOST, OMNIWP_DB_NAME and OMNIWP_DB_USER are required' );
 }
 
 if ( '' === $prefix ) {
 	$prefix = 'wp_';
 }
 if ( ! preg_match( '/^[A-Za-z0-9_]+$/', $prefix ) ) {
-	$blocked( 'SMART_LOGIN_DB_PREFIX contains unsupported characters' );
+	$blocked( 'OMNIWP_DB_PREFIX contains unsupported characters' );
 }
 
 if ( ! extension_loaded( 'mysqli' ) && ! extension_loaded( 'pdo_mysql' ) ) {
@@ -82,11 +82,11 @@ try {
 	$blocked( 'WordPress bootstrap failed: ' . $exception->getMessage() );
 }
 
-if ( ! class_exists( 'SmartLogin\\Installer' ) ) {
-	if ( ! is_file( $sl_plugin ) ) {
+if ( ! class_exists( 'OmniWP\\Installer' ) ) {
+	if ( ! is_file( $ow_plugin ) ) {
 		$blocked( 'Smart Login plugin is not present in the WordPress installation' );
 	}
-	require_once $sl_plugin;
+	require_once $ow_plugin;
 }
 
 global $wpdb;
@@ -99,10 +99,10 @@ if ( '' !== (string) $wpdb->last_error ) {
 }
 
 try {
-	\SmartLogin\Installer::maybe_upgrade();
+	\OmniWP\Installer::maybe_upgrade();
 
-	$identities = \SmartLogin\Installer::identities_table();
-	$history    = \SmartLogin\Installer::identity_history_table();
+	$identities = \OmniWP\Installer::identities_table();
+	$history    = \OmniWP\Installer::identity_history_table();
 
 	$columns = $wpdb->get_col( "SHOW COLUMNS FROM {$identities}", 0 ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 	foreach ( array( 'user_id', 'channel', 'subject', 'is_primary', 'verified_at', 'linked_by', 'created_at' ) as $column ) {
@@ -126,25 +126,25 @@ try {
 	}
 
 	// The superseded table must be gone, not merely unused.
-	$legacy = $wpdb->prefix . 'smart_login_external_identities';
+	$legacy = $wpdb->prefix . 'OMNIWP_external_identities';
 	if ( $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $legacy ) ) ) { // phpcs:ignore WordPress.DB
 		$failed( 'the superseded external identities table still exists' );
 	}
 
 	// A second call proves the upgrade path is idempotent for the installed schema.
-	\SmartLogin\Installer::maybe_upgrade();
-	if ( (string) get_option( \SmartLogin\Installer::DB_VERSION_OPTION, '' ) !== (string) SMART_LOGIN_DB_VERSION ) {
-		$failed( 'database version option does not match SMART_LOGIN_DB_VERSION' );
+	\OmniWP\Installer::maybe_upgrade();
+	if ( (string) get_option( \OmniWP\Installer::DB_VERSION_OPTION, '' ) !== (string) OMNIWP_DB_VERSION ) {
+		$failed( 'database version option does not match OMNIWP_DB_VERSION' );
 	}
 
 	// Measured, not assumed: a definition dbDelta cannot match would issue an
 	// ALTER TABLE on every request.
-	$pending = \SmartLogin\Installer::pending_schema_changes();
+	$pending = \OmniWP\Installer::pending_schema_changes();
 	if ( $pending ) {
 		$failed( 'dbDelta is not idempotent; pending changes: ' . implode( ' | ', $pending ) );
 	}
 
-	$login = 'sl_gate_' . strtolower( wp_generate_password( 10, false, false ) );
+	$login = 'ow_gate_' . strtolower( wp_generate_password( 10, false, false ) );
 	$email = $login . '@example.test';
 	$user_id = wp_insert_user(
 		array(
@@ -159,15 +159,15 @@ try {
 		$failed( 'temporary WordPress user could not be created: ' . $user_id->get_error_message() );
 	}
 
-	$repository = new \SmartLogin\Identity\IdentityRepository();
+	$repository = new \OmniWP\Identity\IdentityRepository();
 	$history_log = $repository->history();
 	$subject     = 'gate-' . wp_generate_uuid4();
-	$claim       = \SmartLogin\Identity\Claim::canonical( 'google', $subject );
+	$claim       = \OmniWP\Identity\Claim::canonical( 'google', $subject );
 
-	$record = \SmartLogin\Identity\IdentityRecord::create(
+	$record = \OmniWP\Identity\IdentityRecord::create(
 		(int) $user_id,
-		\SmartLogin\Identity\VerifiedClaim::from( $claim, \SmartLogin\Identity\VerifiedClaim::PROOF_OAUTH ),
-		\SmartLogin\Identity\IdentityRecord::BY_OAUTH,
+		\OmniWP\Identity\VerifiedClaim::from( $claim, \OmniWP\Identity\VerifiedClaim::PROOF_OAUTH ),
+		\OmniWP\Identity\IdentityRecord::BY_OAUTH,
 		true,
 		array( 'source' => 'integration-gate' )
 	);
@@ -202,10 +202,10 @@ try {
 		$failed( 'rival user could not be created: ' . $rival_id->get_error_message() );
 	}
 
-	$rival_record = \SmartLogin\Identity\IdentityRecord::create(
+	$rival_record = \OmniWP\Identity\IdentityRecord::create(
 		(int) $rival_id,
-		\SmartLogin\Identity\VerifiedClaim::from( $claim, \SmartLogin\Identity\VerifiedClaim::PROOF_OAUTH ),
-		\SmartLogin\Identity\IdentityRecord::BY_OAUTH
+		\OmniWP\Identity\VerifiedClaim::from( $claim, \OmniWP\Identity\VerifiedClaim::PROOF_OAUTH ),
+		\OmniWP\Identity\IdentityRecord::BY_OAUTH
 	);
 	if ( $repository->claim( $rival_record ) ) {
 		$failed( 'UNIQUE KEY subject_owner allowed a second owner for one subject' );
@@ -214,7 +214,7 @@ try {
 		$failed( 'a losing claim changed the existing owner' );
 	}
 
-	$status = ( new \SmartLogin\Auth\ProfileCompletionService() )->status( (int) $user_id );
+	$status = ( new \OmniWP\Auth\ProfileCompletionService() )->status( (int) $user_id );
 	if ( ! isset( $status['complete'], $status['required_missing'], $status['recommended_missing'] ) || ! is_array( $status['required_missing'] ) ) {
 		$failed( 'profile completion service returned an invalid status contract' );
 	}
@@ -226,7 +226,7 @@ try {
 	if ( null !== $repository->find( $claim ) ) {
 		$failed( 'a retired subject still has an owner' );
 	}
-	if ( 1 !== $history_log->count_events( $claim, \SmartLogin\Identity\IdentityHistory::RETIRED ) ) {
+	if ( 1 !== $history_log->count_events( $claim, \OmniWP\Identity\IdentityHistory::RETIRED ) ) {
 		$failed( 'retiring an identity did not write exactly one history row' );
 	}
 
@@ -248,7 +248,7 @@ try {
 	// Phase 6: no sequence of unlinks can leave an account with nothing.
 	// ---------------------------------------------------------------
 	$guard_pass  = wp_generate_password( 24, true, true );
-	$guard_login = 'sl_gate_guard_' . strtolower( wp_generate_password( 8, false, false ) );
+	$guard_login = 'ow_gate_guard_' . strtolower( wp_generate_password( 8, false, false ) );
 	$guard_id    = wp_insert_user(
 		array(
 			'user_login'   => $guard_login,
@@ -262,18 +262,18 @@ try {
 		$failed( 'guard user could not be created: ' . $guard_id->get_error_message() );
 	}
 
-	$guard_service = new \SmartLogin\Auth\IdentityLinkService();
+	$guard_service = new \OmniWP\Auth\IdentityLinkService();
 	$guard_claims  = array(
-		\SmartLogin\Identity\Claim::canonical( 'google', 'guard-' . wp_generate_uuid4() ),
-		\SmartLogin\Identity\Claim::canonical( 'google', 'guard-' . wp_generate_uuid4() ),
+		\OmniWP\Identity\Claim::canonical( 'google', 'guard-' . wp_generate_uuid4() ),
+		\OmniWP\Identity\Claim::canonical( 'google', 'guard-' . wp_generate_uuid4() ),
 	);
 
 	foreach ( $guard_claims as $guard_claim ) {
 		$ok = $repository->claim(
-			\SmartLogin\Identity\IdentityRecord::create(
+			\OmniWP\Identity\IdentityRecord::create(
 				(int) $guard_id,
-				\SmartLogin\Identity\VerifiedClaim::from( $guard_claim, \SmartLogin\Identity\VerifiedClaim::PROOF_OAUTH ),
-				\SmartLogin\Identity\IdentityRecord::BY_OAUTH
+				\OmniWP\Identity\VerifiedClaim::from( $guard_claim, \OmniWP\Identity\VerifiedClaim::PROOF_OAUTH ),
+				\OmniWP\Identity\IdentityRecord::BY_OAUTH
 			)
 		);
 		if ( ! $ok ) {
@@ -287,7 +287,7 @@ try {
 
 	// A wrong password must not detach anything, even with a spare identity.
 	$wrong = $guard_service->unlink( (int) $guard_id, 'google', $guard_claims[0]->subject(), 'not-the-password' );
-	if ( ! is_wp_error( $wrong ) || 'smart_login_bad_password' !== $wrong->get_error_code() ) {
+	if ( ! is_wp_error( $wrong ) || 'OMNIWP_bad_password' !== $wrong->get_error_code() ) {
 		$failed( 'unlink accepted a wrong password' );
 	}
 	if ( 2 !== $repository->count_for_user( (int) $guard_id ) ) {
@@ -296,7 +296,7 @@ try {
 
 	// Someone else's identity must not be detachable through your own session.
 	$foreign = $guard_service->unlink( (int) $guard_id, 'google', $subject, $guard_pass );
-	if ( ! is_wp_error( $foreign ) || 'smart_login_not_linked' !== $foreign->get_error_code() ) {
+	if ( ! is_wp_error( $foreign ) || 'OMNIWP_not_linked' !== $foreign->get_error_code() ) {
 		$failed( 'unlink accepted an identity belonging to another account' );
 	}
 
@@ -311,7 +311,7 @@ try {
 
 	// The second must be refused, whatever the caller does.
 	$second = $guard_service->unlink( (int) $guard_id, 'google', $guard_claims[1]->subject(), $guard_pass );
-	if ( ! is_wp_error( $second ) || 'smart_login_last_identity' !== $second->get_error_code() ) {
+	if ( ! is_wp_error( $second ) || 'OMNIWP_last_identity' !== $second->get_error_code() ) {
 		$failed( 'unlink removed the last identity and orphaned the account' );
 	}
 	if ( 1 !== $repository->count_for_user( (int) $guard_id ) ) {
@@ -341,7 +341,7 @@ try {
 	 * Deliberately its own fixture rather than reusing the accounts above: those are
 	 * torn down by the gate itself, and a rule about deletion must own the deletion.
 	 */
-	$release_login = 'sl_release_' . strtolower( wp_generate_password( 8, false, false ) );
+	$release_login = 'ow_release_' . strtolower( wp_generate_password( 8, false, false ) );
 	$release_phone = '849' . str_pad( (string) random_int( 10000000, 99999999 ), 8, '0' );
 	$release_id    = wp_insert_user(
 		array(
@@ -355,12 +355,12 @@ try {
 		$failed( 'could not create the identity-release fixture user' );
 	}
 
-	$release_claim = \SmartLogin\Identity\Claim::canonical( 'phone', $release_phone );
+	$release_claim = \OmniWP\Identity\Claim::canonical( 'phone', $release_phone );
 	if ( ! $repository->claim(
-		\SmartLogin\Identity\IdentityRecord::create(
+		\OmniWP\Identity\IdentityRecord::create(
 			(int) $release_id,
-			\SmartLogin\Identity\VerifiedClaim::from( $release_claim, \SmartLogin\Identity\VerifiedClaim::PROOF_OTP ),
-			\SmartLogin\Identity\IdentityRecord::BY_REGISTRATION,
+			\OmniWP\Identity\VerifiedClaim::from( $release_claim, \OmniWP\Identity\VerifiedClaim::PROOF_OTP ),
+			\OmniWP\Identity\IdentityRecord::BY_REGISTRATION,
 			true
 		)
 	) ) {
@@ -378,8 +378,8 @@ try {
 	}
 
 	// And the subject is genuinely available again, not merely absent from the table.
-	$release_state = ( new \SmartLogin\Identity\IdentityDirectory() )->resolve( $release_claim )->state();
-	if ( \SmartLogin\Identity\Resolution::STATE_KNOWN === $release_state ) {
+	$release_state = ( new \OmniWP\Identity\IdentityDirectory() )->resolve( $release_claim )->state();
+	if ( \OmniWP\Identity\Resolution::STATE_KNOWN === $release_state ) {
 		$history_log->forget_user( (int) $release_id );
 		$failed( 'the released subject still resolves as owned: ' . $release_state );
 	}
@@ -398,7 +398,7 @@ try {
 	 * checked the mirror on an empty profile would pass while the documented
 	 * consequence quietly stopped happening.
 	 */
-	$address_login = 'sl_addr_' . strtolower( wp_generate_password( 8, false, false ) );
+	$address_login = 'ow_addr_' . strtolower( wp_generate_password( 8, false, false ) );
 	$address_id    = wp_insert_user(
 		array(
 			'user_login' => $address_login,
@@ -414,15 +414,15 @@ try {
 	// A customer who deliberately delivers somewhere else.
 	update_user_meta( (int) $address_id, 'shipping_address_1', 'Số 9, ngõ cũ' );
 
-	$province = (string) array_key_first( \SmartLogin\Address\AddressRepository::provinces() );
-	$wards    = \SmartLogin\Address\AddressRepository::wards( $province );
+	$province = (string) array_key_first( \OmniWP\Address\AddressRepository::provinces() );
+	$wards    = \OmniWP\Address\AddressRepository::wards( $province );
 	$ward     = (string) array_key_first( $wards );
 
-	$clean = \SmartLogin\Address\AddressFields::validate(
+	$clean = \OmniWP\Address\AddressFields::validate(
 		array(
-			\SmartLogin\Address\AddressFields::FIELD_PROVINCE => $province,
-			\SmartLogin\Address\AddressFields::FIELD_WARD     => $ward,
-			\SmartLogin\Address\AddressFields::FIELD_STREET   => '12 Trần Duy Hưng',
+			\OmniWP\Address\AddressFields::FIELD_PROVINCE => $province,
+			\OmniWP\Address\AddressFields::FIELD_WARD     => $ward,
+			\OmniWP\Address\AddressFields::FIELD_STREET   => '12 Trần Duy Hưng',
 		)
 	);
 
@@ -431,7 +431,7 @@ try {
 		$failed( 'the address fixture did not validate: ' . $clean->get_error_message() );
 	}
 
-	\SmartLogin\Address\AddressFields::save_for_user( (int) $address_id, $clean );
+	\OmniWP\Address\AddressFields::save_for_user( (int) $address_id, $clean );
 
 	foreach ( array( 'state', 'city', 'address_1' ) as $part ) {
 		$billing  = (string) get_user_meta( (int) $address_id, 'billing_' . $part, true );
@@ -443,9 +443,9 @@ try {
 		}
 	}
 
-	if ( \SmartLogin\Address\AddressFields::META_WARD_CODE
-		&& (string) get_user_meta( (int) $address_id, \SmartLogin\Address\AddressFields::META_WARD_CODE, true )
-			!== (string) get_user_meta( (int) $address_id, \SmartLogin\Address\AddressFields::META_SHIPPING_WARD_CODE, true ) ) {
+	if ( \OmniWP\Address\AddressFields::META_WARD_CODE
+		&& (string) get_user_meta( (int) $address_id, \OmniWP\Address\AddressFields::META_WARD_CODE, true )
+			!== (string) get_user_meta( (int) $address_id, \OmniWP\Address\AddressFields::META_SHIPPING_WARD_CODE, true ) ) {
 		wp_delete_user( (int) $address_id );
 		$failed( 'the ward code was not mirrored onto the shipping side' );
 	}
@@ -491,8 +491,8 @@ try {
 	$failed( 'integration assertion raised an exception: ' . $exception->getMessage() );
 }
 
-echo "SMART_LOGIN_AUTH_INTEGRATION_OK\n";
+echo "OMNIWP_AUTH_INTEGRATION_OK\n";
 echo 'wordpress=' . get_bloginfo( 'version' ) . "\n";
-echo 'identities_table=' . \SmartLogin\Installer::identities_table() . "\n";
-echo 'identity_history_table=' . \SmartLogin\Installer::identity_history_table() . "\n";
-echo 'db_version=' . get_option( \SmartLogin\Installer::DB_VERSION_OPTION ) . "\n";
+echo 'identities_table=' . \OmniWP\Installer::identities_table() . "\n";
+echo 'identity_history_table=' . \OmniWP\Installer::identity_history_table() . "\n";
+echo 'db_version=' . get_option( \OmniWP\Installer::DB_VERSION_OPTION ) . "\n";

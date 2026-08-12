@@ -20,13 +20,13 @@
  * **And not a key on `IdentityLinkService::linked()`.** That payload also serves
  * the REST route; markup does not belong in it.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Frontend;
+namespace OmniWP\Frontend;
 
-use SmartLogin\Auth\Providers\LoginProviderInterface;
-use SmartLogin\Auth\Providers\ProviderRegistry;
+use OmniWP\Auth\Providers\LoginProviderInterface;
+use OmniWP\Auth\Providers\ProviderRegistry;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -60,7 +60,7 @@ final class ProviderMark {
 		 * @param string $svg
 		 * @param string $provider_id
 		 */
-		return (string) apply_filters( 'smart_login_provider_icon_svg', $provider->icon_svg(), $provider->id() );
+		return (string) apply_filters( 'OMNIWP_provider_icon_svg', $provider->icon_svg(), $provider->id() );
 	}
 
 	/**

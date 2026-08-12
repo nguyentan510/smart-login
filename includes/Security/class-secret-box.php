@@ -10,10 +10,10 @@
  * AES-256-GCM: the tag is what makes a tampered ciphertext fail to decrypt at all
  * rather than decrypt into something attacker-chosen.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Security;
+namespace OmniWP\Security;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -26,7 +26,7 @@ final class SecretBox {
 	 * cannot be decrypted there.
 	 */
 	private static function key(): string {
-		return hash( 'sha256', wp_salt( 'auth' ) . '|' . wp_salt( 'secure_auth' ) . '|' . SMART_LOGIN_BASENAME, true );
+		return hash( 'sha256', wp_salt( 'auth' ) . '|' . wp_salt( 'secure_auth' ) . '|' . OMNIWP_BASENAME, true );
 	}
 
 	/**

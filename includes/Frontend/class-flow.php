@@ -2,10 +2,10 @@
 /**
  * Which step of the auth flow the current request should render.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Frontend;
+namespace OmniWP\Frontend;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -59,7 +59,7 @@ class Flow {
 	 * The constant stays private — it is the authority, and a caller that could
 	 * edit it would be a second one. Returning a copy means the dialog's script
 	 * can be localized with this list rather than carrying its own, which is
-	 * rule 9: `?smart_login_step=` was already allowlisted here, and a second
+	 * rule 9: `?OMNIWP_step=` was already allowlisted here, and a second
 	 * copy in JavaScript is how the two drift.
 	 *
 	 * @return string[]
@@ -82,7 +82,7 @@ class Flow {
 	 *
 	 * `url()` below computes step links against the current URL, which is the
 	 * right answer inside a page render and the wrong one inside a REST request:
-	 * there, the "current URL" is `/wp-json/smart-login/v1/step`. A fragment
+	 * there, the "current URL" is `/wp-json/omniwp/v1/step`. A fragment
 	 * fetched for a product page would emit links into the API, and a
 	 * registration finished through it would redirect the visitor there.
 	 *
@@ -112,7 +112,7 @@ class Flow {
 			return self::$step;
 		}
 
-		$requested = isset( $_GET['smart_login_step'] ) ? sanitize_key( wp_unslash( $_GET['smart_login_step'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
+		$requested = isset( $_GET['OMNIWP_step'] ) ? sanitize_key( wp_unslash( $_GET['OMNIWP_step'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification
 
 		return in_array( $requested, self::PUBLIC_STEPS, true ) ? self::canonical( $requested ) : self::canonical( $fallback );
 	}
@@ -195,17 +195,17 @@ class Flow {
 	 * Link to another step of the flow on the page this render belongs to.
 	 */
 	public static function url( string $step ): string {
-		$strip = array( 'smart_login_step', 'smartlogin_welcome' );
+		$strip = array( 'OMNIWP_step', 'OmniWP_welcome' );
 		$base  = '' !== self::$base
 			? remove_query_arg( $strip, self::$base )
 			: remove_query_arg( $strip );
-		$url   = add_query_arg( 'smart_login_step', $step, $base );
+		$url   = add_query_arg( 'OMNIWP_step', $step, $base );
 
 		/**
 		 * @param string $url
 		 * @param string $step
 		 */
-		return (string) apply_filters( 'smart_login_step_url', $url, $step );
+		return (string) apply_filters( 'OMNIWP_step_url', $url, $step );
 	}
 
 	/**
@@ -233,12 +233,12 @@ class Flow {
 		 *
 		 * @param string $url
 		 */
-		$filtered = (string) apply_filters( 'smart_login_login_url', '' );
+		$filtered = (string) apply_filters( 'OMNIWP_login_url', '' );
 
 		if ( '' !== $filtered ) {
 			return $filtered;
 		}
 
-		return SitePage::url( array( 'smart_login', 'smart_auth' ), 'smart_login_login_page' );
+		return SitePage::url( array( 'OMNIWP', 'smart_auth' ), 'OMNIWP_login_page' );
 	}
 }

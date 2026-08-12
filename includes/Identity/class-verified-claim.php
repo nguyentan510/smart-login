@@ -4,17 +4,17 @@
  *
  * Produced only by the PROVE phase — an OTP that verified, or an OAuth callback
  * whose signature, audience and nonce all checked out. Everything downstream
- * that writes to smartlogin_identities requires one of these, so an unproven
+ * that writes to OmniWP_identities requires one of these, so an unproven
  * subject cannot reach the identity table.
  *
  * The timestamp uses gmdate() rather than current_time() to keep the identity
  * core free of WordPress runtime dependencies. Both yield UTC; gmdate() is what
  * OtpService already uses for the same reason.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Identity;
+namespace OmniWP\Identity;
 
 defined( 'ABSPATH' ) || exit;
 

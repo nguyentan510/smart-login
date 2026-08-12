@@ -9,7 +9,7 @@
  *
  * Run with:  php tests/run-lint.php
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 $root     = dirname( __DIR__ );

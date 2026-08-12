@@ -9,16 +9,16 @@
  * exists to decline, and declining it in writing is cheaper than answering a
  * performance complaint later.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Frontend;
+namespace OmniWP\Frontend;
 
 defined( 'ABSPATH' ) || exit;
 
 class LoginDialog {
 
-	const HANDLE = 'smart-login-launcher';
+	const HANDLE = 'omniwp-launcher';
 
 	public function register(): void {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_launcher' ) );
@@ -48,7 +48,7 @@ class LoginDialog {
 		 *
 		 * @param bool $wanted
 		 */
-		return (bool) apply_filters( 'smart_login_popup_enabled', $wanted );
+		return (bool) apply_filters( 'omniwp_popup_enabled', $wanted );
 	}
 
 	/**
@@ -56,7 +56,7 @@ class LoginDialog {
 	 *
 	 * This is the cost of the canonical trigger being a query parameter, and the
 	 * sub-phase that chose it owns the cost rather than leaving it to be found in
-	 * Search Console: `?smart_login_step=identify` makes a second URL for the
+	 * Search Console: `?OMNIWP_step=identify` makes a second URL for the
 	 * same content. The page's own canonical tag is untouched, so the two are
 	 * already declared to be one page; this stops the variant being crawled at
 	 * all.
@@ -71,7 +71,7 @@ class LoginDialog {
 		$robots = (array) $robots;
 
 		// phpcs:ignore WordPress.Security.NonceVerification -- read-only presentation switch.
-		if ( ! empty( $_GET['smart_login_step'] ) ) {
+		if ( ! empty( $_GET['OMNIWP_step'] ) ) {
 			$robots['noindex'] = true;
 		}
 
@@ -94,13 +94,13 @@ class LoginDialog {
 
 		wp_enqueue_script(
 			self::HANDLE,
-			SMART_LOGIN_URL . 'assets/js/smart-login-launcher.js',
+			OMNIWP_URL . 'assets/js/omniwp-launcher.js',
 			array(),
-			SMART_LOGIN_VERSION,
+			OMNIWP_VERSION,
 			true
 		);
 
-		wp_localize_script( self::HANDLE, 'SmartLoginDialog', self::contract() );
+		wp_localize_script( self::HANDLE, 'OmniWPDialog', self::contract() );
 	}
 
 	/**
@@ -118,7 +118,7 @@ class LoginDialog {
 			// The canonical trigger. `#login` is an alias the launcher resolves
 			// to this, because a fragment is never sent to the server and so can
 			// never be acted on before first paint.
-			'param'     => 'smart_login_step',
+			'param'     => 'OMNIWP_step',
 			'steps'     => Flow::public_steps(),
 			'aliases'   => self::aliases(),
 			'loginUrl'  => Flow::login_url(),
@@ -127,7 +127,7 @@ class LoginDialog {
 			// and the URL flag that authorises it. Both named here rather than
 			// spelled in JavaScript — rule 9.
 			'welcome'   => array(
-				'flag' => 'smartlogin_welcome',
+				'flag' => 'OmniWP_welcome',
 				'step' => Flow::STEP_ONBOARD,
 			),
 			// Split out in 21.1 and named separately here for the same reason it
@@ -135,13 +135,13 @@ class LoginDialog {
 			// elements by URL, so there is no dependency graph to resolve it,
 			// and a stylesheet arriving without its tokens is a surface with
 			// every colour and every distance unresolved.
-			'tokensCss' => SMART_LOGIN_URL . 'assets/css/smart-login-tokens.css',
+			'tokensCss' => OMNIWP_URL . 'assets/css/omniwp-tokens.css',
 			'assets'    => array(
-				'css' => SMART_LOGIN_URL . 'assets/css/smart-login.css',
-				'js'  => SMART_LOGIN_URL . 'assets/js/smart-login.js',
+				'css' => OMNIWP_URL . 'assets/css/omniwp.css',
+				'js'  => OMNIWP_URL . 'assets/js/omniwp.js',
 			),
-			'dialogCss' => SMART_LOGIN_URL . 'assets/css/smart-login-dialog.css',
-			'dialogJs'  => SMART_LOGIN_URL . 'assets/js/smart-login-dialog.js',
+			'dialogCss' => OMNIWP_URL . 'assets/css/omniwp-dialog.css',
+			'dialogJs'  => OMNIWP_URL . 'assets/js/omniwp-dialog.js',
 
 			/*
 			 * A third stage, for the same reason there is a second one.
@@ -163,9 +163,9 @@ class LoginDialog {
 			// with the page. The dialog keeps submit disabled until the fragment
 			// it is showing is old enough, so a visitor whose password manager
 			// fills instantly never meets "Bạn thao tác quá nhanh".
-			'minFill'   => \SmartLogin\Security\RequestGuard::MIN_FILL_SECONDS,
+			'minFill'   => \OmniWP\Security\RequestGuard::MIN_FILL_SECONDS,
 			'i18n'      => array(
-				'failed' => __( 'Không tải được biểu mẫu. Vui lòng thử lại.', 'smart-login' ),
+				'failed' => __( 'Không tải được biểu mẫu. Vui lòng thử lại.', 'omniwp' ),
 			),
 		);
 	}
@@ -212,7 +212,7 @@ class LoginDialog {
 		 *
 		 * @param string[] $urls
 		 */
-		$urls = (array) apply_filters( 'smart_login_capture_links', $urls );
+		$urls = (array) apply_filters( 'omniwp_capture_links', $urls );
 
 		return array_values( array_unique( array_filter( array_map( 'strval', $urls ) ) ) );
 	}
@@ -241,7 +241,7 @@ class LoginDialog {
 		 *
 		 * @param array<string,string> $map
 		 */
-		$map = (array) apply_filters( 'smart_login_dialog_aliases', $map );
+		$map = (array) apply_filters( 'omniwp_dialog_aliases', $map );
 
 		return array_filter(
 			$map,

@@ -11,7 +11,7 @@
  *
  * So this renders nothing until a site says what its own reasons are:
  *
- *     add_filter( 'smart_login_dialog_benefits', function () {
+ *     add_filter( 'OMNIWP_dialog_benefits', function () {
  *         return array(
  *             array( 'icon' => '🚚', 'label' => 'Miễn phí vận chuyển' ),
  *             array( 'icon' => '⭐', 'label' => 'Ưu đãi riêng cho thành viên' ),
@@ -23,9 +23,9 @@
  * `wp_kses_post()`, so a filter can supply a real icon without the partial
  * having to know about images.
  *
- * Override at yourtheme/smart-login/partials/dialog-benefits.php.
+ * Override at yourtheme/omniwp/partials/dialog-benefits.php.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -38,7 +38,7 @@ defined( 'ABSPATH' ) || exit;
  * be driven by a filter is a template that suite can only ever see empty.
  */
 if ( isset( $benefits ) && is_array( $benefits ) && array() !== $benefits ) {
-	$sl_benefits = $benefits;
+	$ow_benefits = $benefits;
 } else {
 	/**
 	 * Reasons to sign in, shown as a row of badges in the dialog.
@@ -48,24 +48,24 @@ if ( isset( $benefits ) && is_array( $benefits ) && array() !== $benefits ) {
 	 *
 	 * @param array<int,array{icon:string,label:string}> $benefits
 	 */
-	$sl_benefits = (array) apply_filters( 'smart_login_dialog_benefits', array() );
+	$ow_benefits = (array) apply_filters( 'OMNIWP_dialog_benefits', array() );
 }
 
-if ( array() === $sl_benefits ) {
+if ( array() === $ow_benefits ) {
 	return;
 }
 
 // Three is what the row is built for; more wraps, which is worse than fewer.
-$sl_benefits = array_slice( $sl_benefits, 0, 3 );
+$ow_benefits = array_slice( $ow_benefits, 0, 3 );
 ?>
 <ul class="sl-benefits" role="list">
-	<?php foreach ( $sl_benefits as $sl_benefit ) : ?>
+	<?php foreach ( $ow_benefits as $ow_benefit ) : ?>
 		<li class="sl-benefit">
 			<span class="sl-benefit__mark" aria-hidden="true">
-				<?php echo wp_kses_post( (string) ( $sl_benefit['icon'] ?? '' ) ); ?>
+				<?php echo wp_kses_post( (string) ( $ow_benefit['icon'] ?? '' ) ); ?>
 			</span>
 			<span class="sl-benefit__label">
-				<?php echo esc_html( (string) ( $sl_benefit['label'] ?? '' ) ); ?>
+				<?php echo esc_html( (string) ( $ow_benefit['label'] ?? '' ) ); ?>
 			</span>
 		</li>
 	<?php endforeach; ?>

@@ -1,0 +1,190 @@
+<?php
+/**
+ * Slide Cart (Drawer Cart) and Floating Cart bubble renderer & Ajax controller.
+ *
+ * @package OmniWP
+ */
+
+namespace OmniWP\Ecommerce;
+
+use OmniWP\Frontend\TemplateLoader;
+use OmniWP\Frontend\VoucherService;
+use OmniWP\Settings;
+
+defined( 'ABSPATH' ) || exit;
+
+class SlideCart {
+
+	public function register(): void {
+		if ( ! Settings::is_on( 'ecommerce.slide_cart_enabled', true ) ) {
+			return;
+		}
+
+		add_action( 'wp_footer', array( $this, 'render_drawer' ), 30 );
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_assets' ), 25 );
+
+		// AJAX endpoints.
+		add_action( 'wp_ajax_omniwp_get_cart', array( $this, 'ajax_get_cart' ) );
+		add_action( 'wp_ajax_nopriv_omniwp_get_cart', array( $this, 'ajax_get_cart' ) );
+
+		add_action( 'wp_ajax_omniwp_update_cart_qty', array( $this, 'ajax_update_quantity' ) );
+		add_action( 'wp_ajax_nopriv_omniwp_update_cart_qty', array( $this, 'ajax_update_quantity' ) );
+
+		add_action( 'wp_ajax_omniwp_remove_cart_item', array( $this, 'ajax_remove_item' ) );
+		add_action( 'wp_ajax_nopriv_omniwp_remove_cart_item', array( $this, 'ajax_remove_item' ) );
+
+		add_action( 'wp_ajax_omniwp_apply_coupon', array( $this, 'ajax_apply_coupon' ) );
+		add_action( 'wp_ajax_nopriv_omniwp_apply_coupon', array( $this, 'ajax_apply_coupon' ) );
+
+		add_action( 'wp_ajax_omniwp_remove_coupon', array( $this, 'ajax_remove_coupon' ) );
+		add_action( 'wp_ajax_nopriv_omniwp_remove_coupon', array( $this, 'ajax_remove_coupon' ) );
+	}
+
+	public function enqueue_assets(): void {
+		if ( is_admin() ) {
+			return;
+		}
+
+		$ver = defined( 'OMNIWP_VERSION' ) ? OMNIWP_VERSION : '1.0.0';
+
+		wp_enqueue_style(
+			'omniwp-ecommerce',
+			plugins_url( 'assets/css/omniwp-ecommerce.css', OMNIWP_FILE ),
+			array( 'omniwp-tokens', 'omniwp-base' ),
+			$ver
+		);
+
+		wp_enqueue_script(
+			'omniwp-slide-cart',
+			plugins_url( 'assets/js/omniwp-slide-cart.js', OMNIWP_FILE ),
+			array( 'jquery' ),
+			$ver,
+			true
+		);
+
+		wp_localize_script(
+			'omniwp-slide-cart',
+			'omniwpCartConfig',
+			array(
+				'ajaxUrl'        => admin_url( 'admin-ajax.php' ),
+				'nonce'          => wp_create_nonce( 'omniwp_cart_nonce' ),
+				'autoOpen'       => Settings::is_on( 'ecommerce.auto_open_slide_cart', true ),
+				'isCartPage'     => function_exists( 'is_cart' ) && is_cart(),
+				'isCheckoutPage' => function_exists( 'is_checkout' ) && is_checkout(),
+				'i18n'           => array(
+					'updateSuccess' => __( 'Đã cập nhật giỏ hàng', 'omniwp' ),
+					'removeSuccess' => __( 'Đã xóa sản phẩm khỏi giỏ', 'omniwp' ),
+					'error'         => __( 'Có lỗi xảy ra, vui lòng thử lại', 'omniwp' ),
+				),
+			)
+		);
+	}
+
+	public function render_drawer(): void {
+		if ( is_admin() ) {
+			return;
+		}
+
+		// Don't render slide drawer or floating bubble on checkout page to reduce friction.
+		if ( function_exists( 'is_checkout' ) && is_checkout() ) {
+			return;
+		}
+
+		$cart_data = CartService::get_cart_data();
+
+		TemplateLoader::output(
+			'ecommerce/slide-cart-drawer',
+			array(
+				'cart' => $cart_data,
+			)
+		);
+
+		if ( Settings::is_on( 'ecommerce.floating_cart_enabled', true ) ) {
+			TemplateLoader::output(
+				'ecommerce/floating-cart',
+				array(
+					'cart' => $cart_data,
+				)
+			);
+		}
+	}
+
+	public function ajax_get_cart(): void {
+		check_ajax_referer( 'omniwp_cart_nonce', 'nonce' );
+		wp_send_json_success( CartService::get_cart_data() );
+	}
+
+	public function ajax_update_quantity(): void {
+		check_ajax_referer( 'omniwp_cart_nonce', 'nonce' );
+
+		$key = isset( $_POST['cart_item_key'] ) ? sanitize_text_field( wp_unslash( $_POST['cart_item_key'] ) ) : '';
+		$qty = isset( $_POST['quantity'] ) ? (int) $_POST['quantity'] : 1;
+
+		if ( empty( $key ) ) {
+			wp_send_json_error( array( 'message' => __( 'Thiếu thông tin sản phẩm.', 'omniwp' ) ) );
+		}
+
+		$result = CartService::update_quantity( $key, $qty );
+		if ( ! empty( $result['success'] ) ) {
+			wp_send_json_success( $result['cart'] );
+		} else {
+			wp_send_json_error( array( 'message' => $result['message'] ?? __( 'Lỗi cập nhật giỏ hàng.', 'omniwp' ) ) );
+		}
+	}
+
+	public function ajax_remove_item(): void {
+		check_ajax_referer( 'omniwp_cart_nonce', 'nonce' );
+
+		$key = isset( $_POST['cart_item_key'] ) ? sanitize_text_field( wp_unslash( $_POST['cart_item_key'] ) ) : '';
+		if ( empty( $key ) ) {
+			wp_send_json_error( array( 'message' => __( 'Thiếu thông tin sản phẩm.', 'omniwp' ) ) );
+		}
+
+		$result = CartService::remove_item( $key );
+		if ( ! empty( $result['success'] ) ) {
+			wp_send_json_success( $result['cart'] );
+		} else {
+			wp_send_json_error( array( 'message' => $result['message'] ?? __( 'Lỗi gỡ sản phẩm.', 'omniwp' ) ) );
+		}
+	}
+
+	public function ajax_apply_coupon(): void {
+		check_ajax_referer( 'omniwp_cart_nonce', 'nonce' );
+
+		$code = isset( $_POST['coupon_code'] ) ? sanitize_text_field( wp_unslash( $_POST['coupon_code'] ) ) : '';
+		if ( empty( $code ) ) {
+			wp_send_json_error( array( 'message' => __( 'Vui lòng nhập mã giảm giá.', 'omniwp' ) ) );
+		}
+
+		$applied = VoucherService::apply_to_cart( $code );
+		if ( ! empty( $applied['success'] ) ) {
+			wp_send_json_success(
+				array(
+					'message' => $applied['message'] ?? __( 'Áp dụng mã thành công!', 'omniwp' ),
+					'cart'    => CartService::get_cart_data(),
+				)
+			);
+		} else {
+			wp_send_json_error( array( 'message' => $applied['message'] ?? __( 'Mã giảm giá không hợp lệ hoặc đã hết hạn.', 'omniwp' ) ) );
+		}
+	}
+
+	public function ajax_remove_coupon(): void {
+		check_ajax_referer( 'omniwp_cart_nonce', 'nonce' );
+
+		$code = isset( $_POST['coupon_code'] ) ? sanitize_text_field( wp_unslash( $_POST['coupon_code'] ) ) : '';
+		if ( empty( $code ) || ! function_exists( 'WC' ) || ! WC()->cart ) {
+			wp_send_json_error( array( 'message' => __( 'Yêu cầu không hợp lệ.', 'omniwp' ) ) );
+		}
+
+		WC()->cart->remove_coupon( $code );
+		WC()->cart->calculate_totals();
+
+		wp_send_json_success(
+			array(
+				'message' => __( 'Đã gỡ mã giảm giá.', 'omniwp' ),
+				'cart'    => CartService::get_cart_data(),
+			)
+		);
+	}
+}

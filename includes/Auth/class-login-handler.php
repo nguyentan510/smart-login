@@ -5,18 +5,18 @@
  * Everything hangs off the core `authenticate` filter so wp-login.php,
  * WooCommerce and the plugin's own form all behave identically.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth;
+namespace OmniWP\Auth;
 
-use SmartLogin\Identity\IdentityDirectory;
-use SmartLogin\Identity\ProfileSeeder;
-use SmartLogin\Identity\UserManager;
-use SmartLogin\Security\AuditLog;
-use SmartLogin\Security\Client;
-use SmartLogin\Security\RateLimiter;
-use SmartLogin\Settings;
+use OmniWP\Identity\IdentityDirectory;
+use OmniWP\Identity\ProfileSeeder;
+use OmniWP\Identity\UserManager;
+use OmniWP\Security\AuditLog;
+use OmniWP\Security\Client;
+use OmniWP\Security\RateLimiter;
+use OmniWP\Settings;
 use WP_Error;
 use WP_User;
 
@@ -24,7 +24,7 @@ defined( 'ABSPATH' ) || exit;
 
 class LoginHandler {
 
-	const META_DEVICES = 'smartlogin_known_devices';
+	const META_DEVICES = 'OmniWP_known_devices';
 
 	/** Only the plugin's own forms can be interrupted for a device check. */
 	private static $enforce_device_check = false;
@@ -92,10 +92,10 @@ class LoginHandler {
 
 		if ( $ip_remaining > 0 ) {
 			return new WP_Error(
-				'smart_login_locked',
+				'OMNIWP_locked',
 				sprintf(
 					/* translators: %d: minutes remaining. */
-					__( 'Tài khoản tạm thời bị khoá do đăng nhập sai nhiều lần. Vui lòng thử lại sau %d phút.', 'smart-login' ),
+					__( 'Tài khoản tạm thời bị khoá do đăng nhập sai nhiều lần. Vui lòng thử lại sau %d phút.', 'omniwp' ),
 					max( 1, (int) ceil( $ip_remaining / MINUTE_IN_SECONDS ) )
 				)
 			);
@@ -108,10 +108,10 @@ class LoginHandler {
 		}
 
 		return new WP_Error(
-			'smart_login_locked',
+			'OMNIWP_locked',
 			sprintf(
 				/* translators: %d: minutes remaining. */
-				__( 'Tài khoản tạm thời bị khoá do đăng nhập sai nhiều lần. Vui lòng thử lại sau %d phút.', 'smart-login' ),
+				__( 'Tài khoản tạm thời bị khoá do đăng nhập sai nhiều lần. Vui lòng thử lại sau %d phút.', 'omniwp' ),
 				max( 1, (int) ceil( $remaining / MINUTE_IN_SECONDS ) )
 			)
 		);
@@ -190,8 +190,8 @@ class LoginHandler {
 		// The password was correct, so this is not a failed attempt — the caller
 		// picks up the user ID from the error data and starts an OTP step.
 		return new WP_Error(
-			'smart_login_needs_otp',
-			__( 'Chúng tôi cần xác thực thiết bị mới của bạn.', 'smart-login' ),
+			'OMNIWP_needs_otp',
+			__( 'Chúng tôi cần xác thực thiết bị mới của bạn.', 'omniwp' ),
 			array( 'user_id' => $user->ID )
 		);
 	}
@@ -206,10 +206,10 @@ class LoginHandler {
 	 */
 	private function generic_failure(): WP_Error {
 		return new WP_Error(
-			'smart_login_invalid_credentials',
+			'OMNIWP_invalid_credentials',
 			sprintf(
 				/* translators: %s: identifier label, e.g. "Số điện thoại hoặc Email". */
-				__( '%s hoặc mật khẩu không đúng.', 'smart-login' ),
+				__( '%s hoặc mật khẩu không đúng.', 'omniwp' ),
 				RegisterHandler::identifier_label()
 			)
 		);
@@ -227,7 +227,7 @@ class LoginHandler {
 		$code = ( $error instanceof WP_Error ) ? $error->get_error_code() : '';
 
 		// A pending device check is not a credential failure.
-		if ( 'smart_login_needs_otp' === $code || 'smart_login_locked' === $code ) {
+		if ( 'OMNIWP_needs_otp' === $code || 'OMNIWP_locked' === $code ) {
 			return;
 		}
 
@@ -276,15 +276,15 @@ class LoginHandler {
 			return;
 		}
 
-		$canonical = \SmartLogin\Identity\Phone::normalize( $canonical );
-		if ( '' === $canonical || ! \SmartLogin\Identity\Phone::is_valid( $canonical ) ) {
+		$canonical = \OmniWP\Identity\Phone::normalize( $canonical );
+		if ( '' === $canonical || ! \OmniWP\Identity\Phone::is_valid( $canonical ) ) {
 			return;
 		}
 
 		// Seed only. The old code short-circuited when billing already matched the
 		// login phone and otherwise overwrote it — so any deliberately different
 		// delivery contact was reset on the next profile save.
-		ProfileSeeder::seed_if_empty( (int) $user_id, 'billing_phone', \SmartLogin\Identity\Phone::to_local( $canonical ) );
+		ProfileSeeder::seed_if_empty( (int) $user_id, 'billing_phone', \OmniWP\Identity\Phone::to_local( $canonical ) );
 	}
 
 	// -----------------------------------------------------------------
@@ -340,6 +340,6 @@ class LoginHandler {
 		 * @param string $url
 		 */
 		$url = wp_validate_redirect( $url, home_url( '/' ) );
-		return wp_validate_redirect( (string) apply_filters( 'smart_login_post_login_redirect', $url ), $url );
+		return wp_validate_redirect( (string) apply_filters( 'OMNIWP_post_login_redirect', $url ), $url );
 	}
 }

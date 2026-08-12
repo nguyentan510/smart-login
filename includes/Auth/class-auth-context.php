@@ -2,10 +2,10 @@
 /**
  * Immutable description of the proof used to authenticate a visitor.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth;
+namespace OmniWP\Auth;
 
 defined( 'ABSPATH' ) || exit;
 

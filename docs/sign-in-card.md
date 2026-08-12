@@ -54,7 +54,7 @@ The payload has carried the flag that distinguishes the two kinds since Phase 6
 
 **No suite caught it because no fixture has ever held a non-federated identity.**
 `tests/identity/run-template-tests.php:213` renders the contact card with
-`sl_identities => array()`, and `:220` renders the provider partial with a single
+`ow_identities => array()`, and `:220` renders the provider partial with a single
 `google` row. This is 14.6's lesson one phase later: the fixture has to be the
 case the code gets wrong, or the assertion is decoration.
 
@@ -99,7 +99,7 @@ Four defects, all provable from the stylesheet and the partial:
 
 | Symptom | Cause |
 | --- | --- |
-| The confirm button overflows its panel | `.sl-btn` is `display:block; width:100%` with `13px 16px` padding (`assets/css/smart-login.css:343-347`) inside a panel with `12px` padding (`:1042-1049`). It fits only while `box-sizing` is `border-box`, and `.smart-login *` sets that by `inherit` at one class of specificity — the exact exposure `:251-267` already documents for `.sl-input` |
+| The confirm button overflows its panel | `.sl-btn` is `display:block; width:100%` with `13px 16px` padding (`assets/css/omniwp.css:343-347`) inside a panel with `12px` padding (`:1042-1049`). It fits only while `box-sizing` is `border-box`, and `.omniwp *` sets that by `inherit` at one class of specificity — the exact exposure `:251-267` already documents for `.sl-input` |
 | The password box is unstyled and inline with its label | The input at `templates/partials/linked-identities.php:58-64` carries no `sl-input` class and its label at `:55-57` carries no `sl-label`, so neither `width:100%` (`:225-226`) nor `display:block` (`:207-208`) applies |
 | The two groups do not share a column | `.sl-row__label` is `flex: 0 0 108px` (`:963-967`); `.sl-identity-label` has no basis at all (`:1014-1016`), so its values start wherever the word ends |
 | The rarest, most destructive control is the largest | A full-width outlined button, heavier than the page's own "Cập nhật" |

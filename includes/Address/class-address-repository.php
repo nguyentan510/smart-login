@@ -5,10 +5,10 @@
  * Data lives in plain PHP arrays under data/ so OPcache keeps them in memory:
  * no JSON parsing, no database round-trip, no network call at runtime.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Address;
+namespace OmniWP\Address;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -21,7 +21,7 @@ class AddressRepository {
 	private static $wards = array();
 
 	private static function data_dir(): string {
-		return SMART_LOGIN_DIR . 'data/';
+		return OMNIWP_DIR . 'data/';
 	}
 
 	/**
@@ -67,6 +67,33 @@ class AddressRepository {
 	}
 
 	/**
+	 * Find province code by exact name or normalized name.
+	 *
+	 * @param string $name
+	 * @return string
+	 */
+	public static function find_province_code_by_name( string $name ): string {
+		$name = trim( $name );
+		if ( '' === $name ) {
+			return '';
+		}
+
+		$provinces  = self::provinces();
+		$normalized = AddressNormalizer::normalize( $name );
+
+		foreach ( $provinces as $code => $prov ) {
+			if ( $name === $prov['name'] || $name === ( $prov['short'] ?? '' ) ) {
+				return (string) $code;
+			}
+			if ( $normalized === AddressNormalizer::normalize( $prov['name'] ) || $normalized === AddressNormalizer::normalize( $prov['short'] ?? '' ) ) {
+				return (string) $code;
+			}
+		}
+
+		return '';
+	}
+
+	/**
 	 * Wards of one province.
 	 *
 	 * @return array<string,array{name:string,type:string}>
@@ -109,6 +136,36 @@ class AddressRepository {
 		$ward = self::find_ward( $ward_code, $province_code );
 
 		return $ward ? $ward['name'] : '';
+	}
+
+	/**
+	 * Find ward code by exact name or normalized name.
+	 *
+	 * @param string $ward_name
+	 * @param string $province_code
+	 * @return string
+	 */
+	public static function find_ward_code_by_name( string $ward_name, string $province_code ): string {
+		$ward_name     = trim( $ward_name );
+		$province_code = self::province_code( $province_code );
+
+		if ( '' === $ward_name || '' === $province_code ) {
+			return '';
+		}
+
+		$wards      = self::wards( $province_code );
+		$normalized = AddressNormalizer::normalize( $ward_name );
+
+		foreach ( $wards as $code => $ward ) {
+			if ( $ward_name === $ward['name'] ) {
+				return (string) $code;
+			}
+			if ( $normalized === AddressNormalizer::normalize( $ward['name'] ) ) {
+				return (string) $code;
+			}
+		}
+
+		return '';
 	}
 
 	/**

@@ -1,5 +1,5 @@
 {
-	"name": "smart-login/smart-login",
+	"name": "omniwp/omniwp",
 	"description": "Phone/email OTP authentication for WordPress and WooCommerce.",
 	"type": "wordpress-plugin",
 	"license": "GPL-2.0-or-later",
@@ -26,7 +26,7 @@
 		}
 	},
 	"autoload": {
-		"comment": "The plugin ships its own spl_autoload_register in smart-login.php and has zero runtime Composer dependency. Classmap (not PSR-4) is used here because files are named class-otp-service.php, which PSR-4 cannot resolve.",
+		"comment": "The plugin ships its own spl_autoload_register in omniwp.php and has zero runtime Composer dependency. Classmap (not PSR-4) is used here because files are named class-otp-service.php, which PSR-4 cannot resolve.",
 		"classmap": [
 			"includes/"
 		]

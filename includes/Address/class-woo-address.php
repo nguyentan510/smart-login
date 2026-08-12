@@ -5,24 +5,24 @@
  * Strategy: reuse Woo's own fields rather than invent new ones.
  *   billing_state -> province code   (keeps shipping zones working)
  *   billing_city  -> ward name       (keeps order emails and invoices right)
- *   _smartlogin_ward_code            -> exact ward reference
+ *   _OmniWP_ward_code            -> exact ward reference
  *
  * Woo keeps ownership of the province field everywhere it renders one; only
  * the city field is converted into a ward picker.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Address;
+namespace OmniWP\Address;
 
-use SmartLogin\Frontend\Assets;
-use SmartLogin\Settings;
+use OmniWP\Frontend\Assets;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
 class WooAddress {
 
-	const ORDER_META_WARD = '_smartlogin_ward_code';
+	const ORDER_META_WARD = '_OmniWP_ward_code';
 
 	public function register(): void {
 		add_filter( 'woocommerce_states', array( $this, 'replace_states' ), 20, 1 );
@@ -99,11 +99,11 @@ class WooAddress {
 			array(
 				'state' => array(
 					'required' => true,
-					'label'    => __( 'Tỉnh/Thành phố', 'smart-login' ),
+					'label'    => __( 'Tỉnh/Thành phố', 'omniwp' ),
 				),
 				'city'  => array(
 					'required' => true,
-					'label'    => __( 'Phường/Xã', 'smart-login' ),
+					'label'    => __( 'Phường/Xã', 'omniwp' ),
 				),
 			)
 		);
@@ -166,16 +166,16 @@ class WooAddress {
 	 */
 	public function relabel_default_fields( $fields ) {
 		if ( isset( $fields['address_1'] ) ) {
-			$fields['address_1']['label']       = __( 'Số nhà, tên đường', 'smart-login' );
-			$fields['address_1']['placeholder'] = __( 'Ví dụ: 12 Trần Duy Hưng', 'smart-login' );
+			$fields['address_1']['label']       = __( 'Số nhà, tên đường', 'omniwp' );
+			$fields['address_1']['placeholder'] = __( 'Ví dụ: 12 Trần Duy Hưng', 'omniwp' );
 		}
 
 		if ( isset( $fields['city'] ) ) {
-			$fields['city']['label'] = __( 'Phường/Xã', 'smart-login' );
+			$fields['city']['label'] = __( 'Phường/Xã', 'omniwp' );
 		}
 
 		if ( isset( $fields['state'] ) ) {
-			$fields['state']['label'] = __( 'Tỉnh/Thành phố', 'smart-login' );
+			$fields['state']['label'] = __( 'Tỉnh/Thành phố', 'omniwp' );
 		}
 
 		return $fields;
@@ -242,7 +242,7 @@ class WooAddress {
 	 * @return array<string,string>
 	 */
 	private function ward_options( string $province_code ): array {
-		$options = array( '' => __( '— Chọn Phường/Xã —', 'smart-login' ) );
+		$options = array( '' => __( '— Chọn Phường/Xã —', 'omniwp' ) );
 
 		foreach ( AddressRepository::wards( $province_code ) as $code => $ward ) {
 			$options[ (string) $code ] = $ward['name'];
@@ -344,8 +344,8 @@ class WooAddress {
 		}
 
 		$errors->add(
-			'smart_login_ward_mismatch',
-			__( 'Phường/Xã không thuộc Tỉnh/Thành phố đã chọn. Vui lòng chọn lại.', 'smart-login' )
+			'OMNIWP_ward_mismatch',
+			__( 'Phường/Xã không thuộc Tỉnh/Thành phố đã chọn. Vui lòng chọn lại.', 'omniwp' )
 		);
 	}
 
@@ -371,7 +371,7 @@ class WooAddress {
 		}
 
 		if ( ! empty( $this->posted_wards['shipping'] ) ) {
-			$order->update_meta_data( '_smartlogin_shipping_ward_code', $this->posted_wards['shipping'] );
+			$order->update_meta_data( '_OmniWP_shipping_ward_code', $this->posted_wards['shipping'] );
 		}
 	}
 

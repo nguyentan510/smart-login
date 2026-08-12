@@ -13,12 +13,12 @@
  * "exactly one file posts an automation request" and mean it. Two senders would
  * be two places to forget the signature.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\OTP\Transports;
+namespace OmniWP\OTP\Transports;
 
-use SmartLogin\Settings;
+use OmniWP\Settings;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
@@ -77,7 +77,7 @@ class AutomationEndpoint {
 				'redirection' => 0,
 				'headers'     => $headers,
 				'body'        => $signed['body'],
-				'user-agent'  => 'SmartLogin/' . SMART_LOGIN_VERSION . '; ' . home_url( '/' ),
+				'user-agent'  => 'OmniWP/' . OMNIWP_VERSION . '; ' . home_url( '/' ),
 			)
 		);
 	}

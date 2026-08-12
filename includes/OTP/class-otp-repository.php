@@ -2,12 +2,12 @@
 /**
  * Data access for the OTP table.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\OTP;
+namespace OmniWP\OTP;
 
-use SmartLogin\Installer;
+use OmniWP\Installer;
 
 defined( 'ABSPATH' ) || exit;
 

@@ -21,10 +21,10 @@
  * There is deliberately no third method, and no direction from profile back to
  * identity: a billing form cannot prove ownership of anything.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Identity;
+namespace OmniWP\Identity;
 
 defined( 'ABSPATH' ) || exit;
 

@@ -2,18 +2,18 @@
 /**
  * Forgot password: OTP → short-lived grant → new password.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth;
+namespace OmniWP\Auth;
 
-use SmartLogin\Identity\IdentityDirectory;
-use SmartLogin\Identity\UserManager;
-use SmartLogin\OTP\OtpService;
-use SmartLogin\Security\AuditLog;
-use SmartLogin\Security\RateLimiter;
-use SmartLogin\Security\SecurityMeta;
-use SmartLogin\Settings;
+use OmniWP\Identity\IdentityDirectory;
+use OmniWP\Identity\UserManager;
+use OmniWP\OTP\OtpService;
+use OmniWP\Security\AuditLog;
+use OmniWP\Security\RateLimiter;
+use OmniWP\Security\SecurityMeta;
+use OmniWP\Settings;
 use WP_Error;
 use WP_Session_Tokens;
 
@@ -41,10 +41,10 @@ class PasswordResetHandler {
 
 		if ( '' === $raw ) {
 			return new WP_Error(
-				'smart_login_no_identity',
+				'OMNIWP_no_identity',
 				sprintf(
 					/* translators: %s: identifier label. */
-					__( 'Vui lòng nhập %s.', 'smart-login' ),
+					__( 'Vui lòng nhập %s.', 'omniwp' ),
 					mb_strtolower( RegisterHandler::identifier_label() )
 				)
 			);
@@ -66,7 +66,7 @@ class PasswordResetHandler {
 		$claim = $this->directory->channels()->claim_any( $raw );
 
 		if ( $claim->is_empty() ) {
-			return new WP_Error( 'smart_login_bad_identity', __( 'Thông tin không hợp lệ.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_bad_identity', __( 'Thông tin không hợp lệ.', 'omniwp' ) );
 		}
 
 		$resolution = $this->directory->resolve( $claim );
@@ -85,23 +85,23 @@ class PasswordResetHandler {
 			 *
 			 * @param bool $reveal
 			 */
-			if ( AuthAction::NO_ACCOUNT === $decision && apply_filters( 'smart_login_reset_reveal_unknown', true ) ) {
+			if ( AuthAction::NO_ACCOUNT === $decision && apply_filters( 'OMNIWP_reset_reveal_unknown', true ) ) {
 				return new WP_Error(
-					'smart_login_unknown_identity',
-					__( 'Thông tin này chưa được đăng ký. Vui lòng kiểm tra lại hoặc tạo tài khoản mới.', 'smart-login' )
+					'OMNIWP_unknown_identity',
+					__( 'Thông tin này chưa được đăng ký. Vui lòng kiểm tra lại hoặc tạo tài khoản mới.', 'omniwp' )
 				);
 			}
 
 			return new WP_Error(
-				'smart_login_reset_generic',
-				__( 'Nếu thông tin hợp lệ, mã xác thực sẽ được gửi tới bạn.', 'smart-login' )
+				'OMNIWP_reset_generic',
+				__( 'Nếu thông tin hợp lệ, mã xác thực sẽ được gửi tới bạn.', 'omniwp' )
 			);
 		}
 
 		$user = get_userdata( $resolution->user_id() );
 
 		if ( ! $user ) {
-			return new WP_Error( 'smart_login_no_user', __( 'Không tìm thấy tài khoản.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_no_user', __( 'Không tìm thấy tài khoản.', 'omniwp' ) );
 		}
 
 		$result = $this->otp->issue(
@@ -133,13 +133,13 @@ class PasswordResetHandler {
 		}
 
 		if ( OtpService::INTENT_RECOVER !== $row['intent'] ) {
-			return new WP_Error( 'smart_login_wrong_purpose', __( 'Phiên xác thực không hợp lệ.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_wrong_purpose', __( 'Phiên xác thực không hợp lệ.', 'omniwp' ) );
 		}
 
 		$user_id = (int) ( $row['payload']['user_id'] ?? 0 );
 
 		if ( $user_id <= 0 || ! get_userdata( $user_id ) ) {
-			return new WP_Error( 'smart_login_no_user', __( 'Không tìm thấy tài khoản.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_no_user', __( 'Không tìm thấy tài khoản.', 'omniwp' ) );
 		}
 
 		return PendingSession::grant_password_reset( $user_id );
@@ -155,8 +155,8 @@ class PasswordResetHandler {
 
 		if ( $user_id <= 0 ) {
 			return new WP_Error(
-				'smart_login_grant_expired',
-				__( 'Phiên đặt lại mật khẩu đã hết hạn. Vui lòng thực hiện lại.', 'smart-login' )
+				'OMNIWP_grant_expired',
+				__( 'Phiên đặt lại mật khẩu đã hết hạn. Vui lòng thực hiện lại.', 'omniwp' )
 			);
 		}
 
@@ -164,7 +164,7 @@ class PasswordResetHandler {
 		$confirm  = (string) wp_unslash( $input['password_confirm'] ?? '' );
 
 		// The same policy as registration, including the
-		// smart_login_validate_password filter, which used to apply only there.
+		// OMNIWP_validate_password filter, which used to apply only there.
 		$verdict = PasswordPolicy::validate( $password, $confirm );
 
 		if ( is_wp_error( $verdict ) ) {
@@ -198,7 +198,7 @@ class PasswordResetHandler {
 		/**
 		 * @param int $user_id
 		 */
-		do_action( 'smart_login_password_reset', $user_id );
+		do_action( 'OMNIWP_password_reset', $user_id );
 
 		return $user_id;
 	}

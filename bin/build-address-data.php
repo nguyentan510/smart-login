@@ -17,7 +17,7 @@
  * Field names vary between public datasets, so the readers below accept the
  * common spellings rather than insisting on one schema.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 if ( 'cli' !== PHP_SAPI ) {
@@ -29,7 +29,7 @@ define( 'ABSPATH', dirname( __DIR__ ) . '/' );
 
 require_once dirname( __DIR__ ) . '/includes/Address/class-address-normalizer.php';
 
-use SmartLogin\Address\AddressNormalizer;
+use OmniWP\Address\AddressNormalizer;
 
 const EXPECTED_PROVINCES = 34;
 const EXPECTED_WARDS_MIN = 3200;
@@ -336,7 +336,7 @@ if ( $problems ) {
  * Render a PHP array file with a stable, diff-friendly layout.
  */
 function write_php_file( string $target_path, string $header, array $rows ): void {
-	$out = "<?php\n/**\n * {$header}\n *\n * GENERATED FILE — do not edit by hand.\n * Regenerate with: php bin/build-address-data.php <source.json>\n *\n * @package SmartLogin\n */\n\ndefined( 'ABSPATH' ) || exit;\n\nreturn array(\n";
+	$out = "<?php\n/**\n * {$header}\n *\n * GENERATED FILE — do not edit by hand.\n * Regenerate with: php bin/build-address-data.php <source.json>\n *\n * @package OmniWP\n */\n\ndefined( 'ABSPATH' ) || exit;\n\nreturn array(\n";
 
 	foreach ( $rows as $key => $fields ) {
 		$parts = array();

@@ -3,17 +3,17 @@
  * Which page on this site hosts one of the plugin's shortcodes.
  *
  * `AccountForm::shortcode_page_url()` has done this for `[smart_account]` since
- * Phase 8. P3 needs the same answer for `[smart_login]` — the security card has
+ * Phase 8. P3 needs the same answer for `[OMNIWP]` — the security card has
  * told people to "go to the login screen" since 14.3 without being able to link
  * there, and that deferral is written into
  * `templates/partials/account/password.php`.
  *
  * One resolver rather than two copies of a LIKE query and a cached option.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Frontend;
+namespace OmniWP\Frontend;
 
 defined( 'ABSPATH' ) || exit;
 

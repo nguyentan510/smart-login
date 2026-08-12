@@ -5,18 +5,18 @@
  * The OTP token lives in an HttpOnly cookie rather than a hidden field, so it
  * never leaks through a Referer header, browser history or a copy-pasted URL.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth;
+namespace OmniWP\Auth;
 
-use SmartLogin\Settings;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
 class PendingSession {
 
-	const COOKIE = 'smart_login_flow';
+	const COOKIE = 'OMNIWP_flow';
 
 	/** Extra grace on top of the code TTL so the "expired" screen can render. */
 	const GRACE = 900;
@@ -82,7 +82,7 @@ class PendingSession {
 	public static function grant_password_reset( int $user_id ): string {
 		$grant = bin2hex( random_bytes( 32 ) );
 
-		set_transient( 'smart_login_reset_' . $grant, $user_id, 10 * MINUTE_IN_SECONDS );
+		set_transient( 'OMNIWP_reset_' . $grant, $user_id, 10 * MINUTE_IN_SECONDS );
 
 		return $grant;
 	}
@@ -102,7 +102,7 @@ class PendingSession {
 		$grant = bin2hex( random_bytes( 32 ) );
 
 		set_transient(
-			'smart_login_signup_' . $grant,
+			'OMNIWP_signup_' . $grant,
 			array(
 				'channel' => (string) ( $claim['channel'] ?? '' ),
 				'subject' => (string) ( $claim['subject'] ?? '' ),
@@ -123,7 +123,7 @@ class PendingSession {
 			return null;
 		}
 
-		$key   = 'smart_login_signup_' . $grant;
+		$key   = 'OMNIWP_signup_' . $grant;
 		$claim = get_transient( $key );
 
 		if ( ! is_array( $claim ) || empty( $claim['subject'] ) ) {
@@ -152,9 +152,9 @@ class PendingSession {
 			return 0;
 		}
 
-		$user_id = (int) get_transient( 'smart_login_reset_' . $grant );
+		$user_id = (int) get_transient( 'OMNIWP_reset_' . $grant );
 
-		if ( $user_id > 0 && delete_transient( 'smart_login_reset_' . $grant ) ) {
+		if ( $user_id > 0 && delete_transient( 'OMNIWP_reset_' . $grant ) ) {
 			return $user_id;
 		}
 

@@ -72,7 +72,7 @@ survive** — not a list of names to keep in step with the code, but a query tha
 whenever anything is forgotten.
 
 It already would have caught something: 14.5 added
-`smart_login_email_backfill_cursor` and did not add it to `uninstall.php`.
+`OMNIWP_email_backfill_cursor` and did not add it to `uninstall.php`.
 
 ## Ownership boundary
 

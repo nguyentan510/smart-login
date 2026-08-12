@@ -12,13 +12,13 @@
  * guard rail asserts that, which is what keeps "compose it inline right here"
  * from being the easy option next time.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Mail;
+namespace OmniWP\Mail;
 
-use SmartLogin\OTP\Placeholders;
-use SmartLogin\Settings;
+use OmniWP\OTP\Placeholders;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 

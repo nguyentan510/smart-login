@@ -15,21 +15,21 @@
  * each one needs, and whether it saves through the form or through its own
  * request.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Frontend;
+namespace OmniWP\Frontend;
 
-use SmartLogin\Address\AddressFields;
-use SmartLogin\Auth\ContactVerificationService;
-use SmartLogin\Auth\IdentityLinkService;
-use SmartLogin\Auth\ProfileCompletionService;
-use SmartLogin\Auth\Providers\ProviderRegistry;
-use SmartLogin\Identity\Channels\MailChannel;
-use SmartLogin\Identity\Channels\PhoneChannel;
-use SmartLogin\Identity\IdentityDirectory;
-use SmartLogin\Identity\UserManager;
-use SmartLogin\Settings;
+use OmniWP\Address\AddressFields;
+use OmniWP\Auth\ContactVerificationService;
+use OmniWP\Auth\IdentityLinkService;
+use OmniWP\Auth\ProfileCompletionService;
+use OmniWP\Auth\Providers\ProviderRegistry;
+use OmniWP\Identity\Channels\MailChannel;
+use OmniWP\Identity\Channels\PhoneChannel;
+use OmniWP\Identity\IdentityDirectory;
+use OmniWP\Identity\UserManager;
+use OmniWP\Settings;
 use WP_User;
 
 defined( 'ABSPATH' ) || exit;
@@ -111,19 +111,19 @@ final class AccountForm {
 	public static function sections_meta(): array {
 		return array(
 			'profile'  => array(
-				'label' => __( 'Thông tin cá nhân', 'smart-login' ),
+				'label' => __( 'Thông tin cá nhân', 'omniwp' ),
 				'icon'  => IconSet::get( 'user' ),
 			),
 			'contact'  => array(
-				'label' => __( 'Đăng nhập & liên hệ', 'smart-login' ),
+				'label' => __( 'Đăng nhập & liên hệ', 'omniwp' ),
 				'icon'  => IconSet::get( 'lock' ),
 			),
 			'address'  => array(
-				'label' => __( 'Địa chỉ nhận hàng', 'smart-login' ),
+				'label' => __( 'Địa chỉ nhận hàng', 'omniwp' ),
 				'icon'  => IconSet::get( 'map-pin' ),
 			),
 			'password' => array(
-				'label' => __( 'Bảo mật', 'smart-login' ),
+				'label' => __( 'Bảo mật', 'omniwp' ),
 				'icon'  => IconSet::get( 'shield' ),
 			),
 		);
@@ -177,7 +177,7 @@ final class AccountForm {
 		 * @param string[]    $sections
 		 * @param AccountForm $form
 		 */
-		return (array) apply_filters( 'smart_login_account_sections', $sections, $this );
+		return (array) apply_filters( 'OMNIWP_account_sections', $sections, $this );
 	}
 
 	private function applies( string $section ): bool {
@@ -206,46 +206,46 @@ final class AccountForm {
 	 */
 	public function args_for( string $section ): array {
 		$common = array(
-			'sl_user'      => $this->user,
-			'sl_context'   => $this->context,
-			'sl_saves_own' => self::saves_own( $section ),
+			'ow_user'      => $this->user,
+			'ow_context'   => $this->context,
+			'ow_saves_own' => self::saves_own( $section ),
 		);
 
 		switch ( $section ) {
 			case 'profile':
 				return $common + array(
-					'sl_gender' => (string) get_user_meta( $this->user_id, UserManager::META_GENDER, true ),
-					'sl_dob'    => $this->dob(),
+					'ow_gender' => (string) get_user_meta( $this->user_id, UserManager::META_GENDER, true ),
+					'ow_dob'    => $this->dob(),
 				);
 
 			case 'contact':
 				return $common + array(
-					'sl_phone'      => (string) get_user_meta( $this->user_id, UserManager::META_PHONE, true ),
-					'sl_synthetic'  => UserManager::is_synthetic_email( (string) $this->user->user_email ),
-					'sl_pending'    => ( new ContactVerificationService() )->pending( $this->user_id ),
-					'sl_otp_length' => Settings::get_int( 'otp.length', 6 ),
-					'sl_providers'  => $this->args_for( 'providers' ),
+					'ow_phone'      => (string) get_user_meta( $this->user_id, UserManager::META_PHONE, true ),
+					'ow_synthetic'  => UserManager::is_synthetic_email( (string) $this->user->user_email ),
+					'ow_pending'    => ( new ContactVerificationService() )->pending( $this->user_id ),
+					'ow_otp_length' => Settings::get_int( 'otp.length', 6 ),
+					'ow_providers'  => $this->args_for( 'providers' ),
 				);
 
 			case 'providers':
 				$links = new IdentityLinkService();
 
 				return $common + array(
-					'sl_identities'     => $links->linked( $this->user_id ),
-					'sl_can_unlink'     => $links->can_unlink( $this->user_id ),
-					'sl_redirect'       => $this->redirect_url(),
-					'sl_link_providers' => $this->link_providers(),
+					'ow_identities'     => $links->linked( $this->user_id ),
+					'ow_can_unlink'     => $links->can_unlink( $this->user_id ),
+					'ow_redirect'       => $this->redirect_url(),
+					'ow_link_providers' => $this->link_providers(),
 				);
 
 			case 'address':
 				return $common + array(
-					'sl_values'   => AddressFields::get_for_user( $this->user_id ),
-					'sl_required' => Settings::is_on( 'address.required_in_profile' ),
+					'ow_values'   => AddressFields::get_for_user( $this->user_id ),
+					'ow_required' => Settings::is_on( 'address.required_in_profile' ),
 				);
 
 			case 'password':
 				return $common + array(
-					'sl_has_contact' => $this->has_contact_identity(),
+					'ow_has_contact' => $this->has_contact_identity(),
 				);
 
 			default:
@@ -331,12 +331,12 @@ final class AccountForm {
 	 */
 	public function status_args(): array {
 		return array(
-			'sl_status'   => ( new ProfileCompletionService() )->status( $this->user_id ),
-			'sl_pending'  => ( new ContactVerificationService() )->pending( $this->user_id ),
+			'ow_status'   => ( new ProfileCompletionService() )->status( $this->user_id ),
+			'ow_pending'  => ( new ContactVerificationService() )->pending( $this->user_id ),
 			// phpcs:ignore WordPress.Security.NonceVerification -- read-only presentation switch.
-			'sl_welcome'  => ! empty( $_GET['smartlogin_welcome'] ),
+			'ow_welcome'  => ! empty( $_GET['OmniWP_welcome'] ),
 			// On the editing surface itself there is nowhere to send anybody.
-			'sl_edit_url' => $this->is_editing_surface() ? '' : self::edit_url(),
+			'ow_edit_url' => $this->is_editing_surface() ? '' : self::edit_url(),
 		);
 	}
 
@@ -349,33 +349,45 @@ final class AccountForm {
 	}
 
 	/**
-	 * Where "Cập nhật ngay" leads, or '' when there is nowhere to send anybody.
+	 * Where "Cập nhật ngay" and Account Menu links lead.
 	 *
-	 * This used to fall back to admin_url( 'profile.php' ) — sending a customer
-	 * into wp-admin, which is a leak rather than a fallback. Returning '' is the
-	 * honest answer, and every caller already renders no link for it.
+	 * Prioritizes the page hosting the [smart_account] (Smart Account Hub) shortcode,
+	 * supporting deep linking (?tab=...), then falls back to WooCommerce or home_url.
 	 *
-	 * Resolution order: an explicit filter, then WooCommerce's endpoint, then a
-	 * page hosting the [smart_account] shortcode.
+	 * @param string $tab Optional tab identifier (e.g. 'orders', 'address', 'profile', 'security').
+	 * @return string
 	 */
-	public static function edit_url(): string {
+	public static function edit_url( string $tab = '' ): string {
 		/**
 		 * Point the account links at a specific page.
 		 *
 		 * @param string $url
+		 * @param string $tab
 		 */
-		$filtered = (string) apply_filters( 'smart_login_account_url', '' );
+		$filtered = (string) apply_filters( 'OMNIWP_account_url', '', $tab );
 
 		if ( '' !== $filtered ) {
-			return $filtered;
+			return ! empty( $tab ) ? add_query_arg( 'tab', $tab, $filtered ) : $filtered;
 		}
 
+		// 1. Prioritize Smart Account Hub page ([smart_account])
+		$shortcode_url = self::shortcode_page_url();
+		if ( '' !== $shortcode_url ) {
+			return ! empty( $tab ) ? add_query_arg( 'tab', $tab, $shortcode_url ) : $shortcode_url;
+		}
+
+		// 2. Fallback to WooCommerce account endpoint if shortcode page is not found
 		if ( function_exists( 'wc_get_account_endpoint_url' ) ) {
-			return (string) wc_get_account_endpoint_url( 'edit-account' );
+			if ( 'vouchers' === $tab ) {
+				return add_query_arg( 'tab', 'vouchers', (string) wc_get_account_endpoint_url( 'edit-account' ) );
+			}
+			$wc_endpoint = 'orders' === $tab ? 'orders' : ( 'address' === $tab ? 'edit-address' : 'edit-account' );
+			return (string) wc_get_account_endpoint_url( $wc_endpoint );
 		}
 
-		return self::shortcode_page_url();
+		return (string) home_url( '/' );
 	}
+
 
 	/**
 	 * The first published page containing [smart_account].
@@ -385,7 +397,7 @@ final class AccountForm {
 	 * every notice that wants to link somewhere.
 	 */
 	private static function shortcode_page_url(): string {
-		return SitePage::url( array( 'smart_account' ), 'smart_login_account_page' );
+		return SitePage::url( array( 'smart_account' ), 'OMNIWP_account_page' );
 	}
 
 	private function redirect_url(): string {

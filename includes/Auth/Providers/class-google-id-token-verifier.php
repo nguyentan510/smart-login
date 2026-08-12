@@ -2,10 +2,10 @@
 /**
  * Verifies Google ID-token signatures and returns trusted claims.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth\Providers;
+namespace OmniWP\Auth\Providers;
 
 use WP_Error;
 
@@ -13,7 +13,7 @@ defined( 'ABSPATH' ) || exit;
 
 final class GoogleIdTokenVerifier {
 
-	const CERT_TRANSIENT = 'smart_login_google_certs';
+	const CERT_TRANSIENT = 'OMNIWP_google_certs';
 
 	/** @return array|WP_Error */
 	public function verify( string $jwt ) {
@@ -62,15 +62,15 @@ final class GoogleIdTokenVerifier {
 			return $cached;
 		}
 
-		$url      = (string) apply_filters( 'smart_login_google_certificates_url', 'https://www.googleapis.com/oauth2/v1/certs' );
+		$url      = (string) apply_filters( 'OMNIWP_google_certificates_url', 'https://www.googleapis.com/oauth2/v1/certs' );
 		$response = wp_remote_get( $url, array( 'timeout' => 15 ) );
 		if ( is_wp_error( $response ) ) {
-			return new WP_Error( 'smart_login_google_keys', __( 'Không thể tải khóa xác thực của Google.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_google_keys', __( 'Không thể tải khóa xác thực của Google.', 'omniwp' ) );
 		}
 		$status = (int) wp_remote_retrieve_response_code( $response );
 		$certs  = json_decode( (string) wp_remote_retrieve_body( $response ), true );
 		if ( 200 !== $status || ! is_array( $certs ) || empty( $certs ) ) {
-			return new WP_Error( 'smart_login_google_keys', __( 'Khóa xác thực của Google không hợp lệ.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_google_keys', __( 'Khóa xác thực của Google không hợp lệ.', 'omniwp' ) );
 		}
 
 		$ttl = $this->cache_ttl( (string) wp_remote_retrieve_header( $response, 'cache-control' ) );
@@ -107,6 +107,6 @@ final class GoogleIdTokenVerifier {
 	}
 
 	private function invalid(): WP_Error {
-		return new WP_Error( 'smart_login_google_claims', __( 'Google ID token không đạt điều kiện xác thực.', 'smart-login' ) );
+		return new WP_Error( 'OMNIWP_google_claims', __( 'Google ID token không đạt điều kiện xác thực.', 'omniwp' ) );
 	}
 }

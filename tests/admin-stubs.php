@@ -6,15 +6,15 @@
  * front-end suites do not pay for the settings API, the submit button helpers
  * or the environment probes.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-if ( ! defined( 'SMART_LOGIN_VERSION' ) ) {
-	define( 'SMART_LOGIN_VERSION', '1.0.1-test' );
+if ( ! defined( 'OMNIWP_VERSION' ) ) {
+	define( 'OMNIWP_VERSION', '1.0.1-test' );
 }
 
-if ( ! defined( 'SMART_LOGIN_BASENAME' ) ) {
-	define( 'SMART_LOGIN_BASENAME', 'smart-login/smart-login.php' );
+if ( ! defined( 'OMNIWP_BASENAME' ) ) {
+	define( 'OMNIWP_BASENAME', 'omniwp/omniwp.php' );
 }
 
 function current_user_can( $capability, ...$args ) {
@@ -37,11 +37,11 @@ function submit_button( $text = null, $type = 'primary', $name = 'submit', $wrap
 }
 
 function add_settings_error( $setting, $code, $message, $type = 'error' ) {
-	$GLOBALS['sl_settings_errors'][] = compact( 'setting', 'code', 'message', 'type' );
+	$GLOBALS['ow_settings_errors'][] = compact( 'setting', 'code', 'message', 'type' );
 }
 
 function wp_next_scheduled( $hook, $args = array() ) {
-	return $GLOBALS['sl_next_scheduled'] ?? false;
+	return $GLOBALS['ow_next_scheduled'] ?? false;
 }
 
 function wp_die( $message = '', $title = '', $args = array() ) {
@@ -56,11 +56,11 @@ function wp_die( $message = '', $title = '', $args = array() ) {
 // removed" cannot assert that MailTransport takes its SMTP clamp back off.
 
 function add_menu_page( ...$args ) {
-	return 'toplevel_page_smart-login';
+	return 'toplevel_page_omniwp';
 }
 
 function add_submenu_page( ...$args ) {
-	return 'smart-login_page_stub';
+	return 'omniwp_page_stub';
 }
 
 function register_setting( $group, $option, $args = array() ) {
@@ -76,7 +76,7 @@ function wp_localize_script( $handle, $name, $data ) {
  * "keep an unrecognised stored URL as its own option" branch is reachable.
  */
 function get_pages( $args = array() ) {
-	return $GLOBALS['sl_pages'] ?? array(
+	return $GLOBALS['ow_pages'] ?? array(
 		(object) array(
 			'ID'         => 11,
 			'post_title' => 'Điều khoản sử dụng',

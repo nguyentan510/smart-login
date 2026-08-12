@@ -2,27 +2,30 @@
 /**
  * Plugin container: builds the services and wires every hook.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin;
+namespace OmniWP;
 
-use SmartLogin\Address\AddressRest;
-use SmartLogin\Address\WooAddress;
-use SmartLogin\Admin\SettingsPage;
-use SmartLogin\Admin\UsersColumn;
-use SmartLogin\Admin\WebhookTester;
-use SmartLogin\Auth\LoginHandler;
-use SmartLogin\Auth\ProviderAuthController;
-use SmartLogin\Frontend\Assets;
-use SmartLogin\Frontend\FormController;
-use SmartLogin\Frontend\LoginDialog;
-use SmartLogin\Frontend\NavMenuItem;
-use SmartLogin\Frontend\RestController;
-use SmartLogin\Frontend\Shortcodes;
-use SmartLogin\Frontend\WooIntegration;
-use SmartLogin\Identity\IdentityRepository;
-use SmartLogin\Security\AuditLog;
+use OmniWP\Address\AddressRest;
+use OmniWP\Address\WooAddress;
+use OmniWP\Admin\SettingsPage;
+use OmniWP\Admin\SmartMenuFields;
+use OmniWP\Admin\SmartMenuMetaBox;
+use OmniWP\Admin\UsersColumn;
+use OmniWP\Admin\WebhookTester;
+use OmniWP\Auth\LoginHandler;
+use OmniWP\Auth\ProviderAuthController;
+use OmniWP\Frontend\Assets;
+use OmniWP\Frontend\FormController;
+use OmniWP\Frontend\LoginDialog;
+use OmniWP\Frontend\NavMenuItem;
+use OmniWP\Frontend\RestController;
+use OmniWP\Frontend\Shortcodes;
+use OmniWP\Frontend\SmartMenuRenderer;
+use OmniWP\Frontend\WooIntegration;
+use OmniWP\Identity\IdentityRepository;
+use OmniWP\Security\AuditLog;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -53,14 +56,15 @@ final class Plugin {
 		// fails leaves the identities where they were.
 		add_action( 'deleted_user', array( $this, 'release_identities' ), 10, 1 );
 
-		$this->services['login']     = new LoginHandler();
-		$this->services['providers'] = new ProviderAuthController();
-		$this->services['forms']     = new FormController();
-		$this->services['rest']      = new RestController();
-		$this->services['assets']    = new Assets();
-		$this->services['codes']     = new Shortcodes();
-		$this->services['dialog']    = new LoginDialog();
-		$this->services['nav_item']  = new NavMenuItem();
+		$this->services['login']               = new LoginHandler();
+		$this->services['providers']           = new ProviderAuthController();
+		$this->services['forms']               = new FormController();
+		$this->services['rest']                = new RestController();
+		$this->services['assets']              = new Assets();
+		$this->services['codes']               = new Shortcodes();
+		$this->services['dialog']              = new LoginDialog();
+		$this->services['nav_item']            = new NavMenuItem();
+		$this->services['smart_menu_renderer'] = new SmartMenuRenderer();
 
 		if ( Settings::is_on( 'address.enabled' ) ) {
 			$this->services['address_rest'] = new AddressRest();
@@ -93,6 +97,12 @@ final class Plugin {
 			// column and identity-aware search to stay usable.
 			$this->services['users_column'] = new UsersColumn();
 			$this->services['users_column']->register();
+
+			$this->services['smart_menu_metabox'] = new SmartMenuMetaBox();
+			$this->services['smart_menu_metabox']->register();
+
+			$this->services['smart_menu_fields'] = new SmartMenuFields();
+			$this->services['smart_menu_fields']->register();
 		}
 
 		add_action( 'wp_loaded', array( $this, 'maybe_flush_rewrite' ), 99 );
@@ -144,12 +154,13 @@ final class Plugin {
 	}
 
 	public function load_textdomain(): void {
-		load_plugin_textdomain( 'smart-login', false, dirname( SMART_LOGIN_BASENAME ) . '/languages' );
+		load_plugin_textdomain( 'omniwp', false, dirname( OMNIWP_BASENAME ) . '/languages' );
 	}
 
 	public function maybe_flush_rewrite(): void {
-		if ( get_transient( 'smart_login_flush_rewrite' ) ) {
-			delete_transient( 'smart_login_flush_rewrite' );
+		if ( get_transient( 'omniwp_flush_rewrite' ) || get_transient( 'OMNIWP_flush_rewrite' ) ) {
+			delete_transient( 'omniwp_flush_rewrite' );
+			delete_transient( 'OMNIWP_flush_rewrite' );
 			flush_rewrite_rules( false );
 		}
 	}

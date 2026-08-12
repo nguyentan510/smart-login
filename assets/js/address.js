@@ -8,7 +8,7 @@
 ( function () {
 	'use strict';
 
-	var cfg = window.SmartLoginAddress || {};
+	var cfg = window.OmniWPAddress || {};
 	var i18n = cfg.i18n || {};
 
 	/** Ward lists already fetched, keyed by province code. */
@@ -488,8 +488,8 @@
 	 * Upgrade every picker inside a container.
 	 *
 	 * Scoped, and exposed below, because the dialog's markup arrives long after
-	 * DOMContentLoaded — the same reason `smart-login.js` exposes
-	 * `SmartLoginEnhance`, which this file simply never joined. Without it the
+	 * DOMContentLoaded — the same reason `omniwp.js` exposes
+	 * `OmniWPEnhance`, which this file simply never joined. Without it the
 	 * welcome screen rendered two dead selects: a province list that changed
 	 * nothing and a ward list that stayed disabled.
 	 *
@@ -527,5 +527,5 @@
 		} );
 	}
 
-	window.SmartLoginAddressEnhance = initAll;
+	window.OmniWPAddressEnhance = initAll;
 } )();

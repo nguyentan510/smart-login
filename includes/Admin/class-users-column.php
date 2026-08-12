@@ -3,24 +3,24 @@
  * Makes the Users screen usable now that user_login is opaque.
  *
  * This is the agreed cost of the structural fix in docs/identity-model.md §3:
- * `sl_9f2c…` tells support staff nothing. Two additions pay it back —
+ * `ow_9f2c…` tells support staff nothing. Two additions pay it back —
  * a column showing the account's real identities, and a search that matches
  * them, so "find the customer who called about 0969789475" still works.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Admin;
+namespace OmniWP\Admin;
 
-use SmartLogin\Identity\ChannelRegistry;
-use SmartLogin\Identity\IdentityDirectory;
-use SmartLogin\Installer;
+use OmniWP\Identity\ChannelRegistry;
+use OmniWP\Identity\IdentityDirectory;
+use OmniWP\Installer;
 
 defined( 'ABSPATH' ) || exit;
 
 final class UsersColumn {
 
-	const COLUMN = 'smartlogin_identity';
+	const COLUMN = 'OmniWP_identity';
 
 	private IdentityDirectory $directory;
 	private ChannelRegistry $channels;
@@ -40,7 +40,7 @@ final class UsersColumn {
 	 * @param array $columns
 	 */
 	public function add_column( $columns ) {
-		$columns[ self::COLUMN ] = __( 'Định danh chính', 'smart-login' );
+		$columns[ self::COLUMN ] = __( 'Định danh chính', 'omniwp' );
 
 		return $columns;
 	}
@@ -74,7 +74,7 @@ final class UsersColumn {
 		}
 
 		if ( ! $lines ) {
-			return '<span class="sl-identity sl-identity--none">' . esc_html__( '— chưa có —', 'smart-login' ) . '</span>';
+			return '<span class="sl-identity sl-identity--none">' . esc_html__( '— chưa có —', 'omniwp' ) . '</span>';
 		}
 
 		return implode( '<br />', $lines );

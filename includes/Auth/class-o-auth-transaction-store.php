@@ -2,10 +2,10 @@
 /**
  * One-time OAuth state, nonce and PKCE verifier storage.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth;
+namespace OmniWP\Auth;
 
 use WP_Error;
 
@@ -13,7 +13,7 @@ defined( 'ABSPATH' ) || exit;
 
 final class OAuthTransactionStore {
 
-	const PREFIX = 'smart_login_oauth_';
+	const PREFIX = 'OMNIWP_oauth_';
 	const TTL    = 600;
 
 	/** Sign the person in at the end. What every transaction used to be. */
@@ -37,7 +37,7 @@ final class OAuthTransactionStore {
 	 *
 	 * Providers build their own transaction inside `begin()`, and `begin()` is
 	 * on `LoginProviderInterface` — a documented extension point that
-	 * `smart_login_providers` invites third parties to implement. Widening that
+	 * `OMNIWP_providers` invites third parties to implement. Widening that
 	 * signature would break every implementation that already matches it, so the
 	 * mode arrives through the collaborator both shipped providers already take
 	 * by constructor instead.
@@ -67,7 +67,7 @@ final class OAuthTransactionStore {
 	/** @return array|WP_Error */
 	public function consume( string $state, string $provider ) {
 		if ( ! preg_match( '/^[A-Za-z0-9_-]{32,128}$/', $state ) ) {
-			return new WP_Error( 'smart_login_oauth_state', __( 'Phiên đăng nhập nhà cung cấp không hợp lệ.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_oauth_state', __( 'Phiên đăng nhập nhà cung cấp không hợp lệ.', 'omniwp' ) );
 		}
 
 		$key  = self::PREFIX . $state;
@@ -75,7 +75,7 @@ final class OAuthTransactionStore {
 		delete_transient( $key );
 
 		if ( ! is_array( $data ) || sanitize_key( $provider ) !== ( $data['provider'] ?? '' ) ) {
-			return new WP_Error( 'smart_login_oauth_state', __( 'Phiên đăng nhập nhà cung cấp đã hết hạn hoặc đã được sử dụng.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_oauth_state', __( 'Phiên đăng nhập nhà cung cấp đã hết hạn hoặc đã được sử dụng.', 'omniwp' ) );
 		}
 
 		return $data;

@@ -2,12 +2,12 @@
 /**
  * Uninstall routine. Only destroys data when the admin explicitly opted in.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 
-$smart_login_settings = get_option( 'smart_login_settings', array() );
+$OMNIWP_settings = get_option( 'OMNIWP_settings', array() );
 
 /*
  * `advanced.delete_data_on_uninstall`, not the flat key this read for years.
@@ -29,54 +29,54 @@ $smart_login_settings = get_option( 'smart_login_settings', array() );
  * against nothing: Installer::maybe_upgrade() runs on every load and migrates
  * the shape before an uninstall could ever be reached.
  */
-if ( empty( $smart_login_settings['advanced']['delete_data_on_uninstall'] ) ) {
+if ( empty( $OMNIWP_settings['advanced']['delete_data_on_uninstall'] ) ) {
 	return;
 }
 
 global $wpdb;
 
 // Tables.
-$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}smartlogin_otp" ); // phpcs:ignore WordPress.DB
-$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}smartlogin_audit" ); // phpcs:ignore WordPress.DB
-$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}smartlogin_identities" ); // phpcs:ignore WordPress.DB
-$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}smartlogin_identity_history" ); // phpcs:ignore WordPress.DB
+$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}OmniWP_otp" ); // phpcs:ignore WordPress.DB
+$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}OmniWP_audit" ); // phpcs:ignore WordPress.DB
+$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}OmniWP_identities" ); // phpcs:ignore WordPress.DB
+$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}OmniWP_identity_history" ); // phpcs:ignore WordPress.DB
 
 // Options. The two secret stores are listed separately from the settings option
 // because that is where they live: a sealed secret never round-trips through
-// smart_login_settings, so deleting that one leaves them behind. The captcha
+// OMNIWP_settings, so deleting that one leaves them behind. The captcha
 // entry is the pre-10.2 location and stays until no install can still hold one.
-delete_option( 'smart_login_settings' );
-delete_option( 'smart_login_provider_secrets' );
-delete_option( 'smart_login_field_secrets' );
-delete_option( 'smart_login_captcha_secret' );
-delete_option( 'smart_login_db_version' );
+delete_option( 'OMNIWP_settings' );
+delete_option( 'OMNIWP_provider_secrets' );
+delete_option( 'OMNIWP_field_secrets' );
+delete_option( 'OMNIWP_captcha_secret' );
+delete_option( 'OMNIWP_db_version' );
 // The page cache AccountForm::shortcode_page_url() writes. Missing here since Phase 8,
 // and found by the install gate's after-uninstall survey rather than by reading: the
 // rule asks the database what survived instead of asking the code what it wrote.
-delete_option( 'smart_login_account_page' );
+delete_option( 'OMNIWP_account_page' );
 
 // User meta created by the plugin.
-$smart_login_meta_keys = array(
-	'smartlogin_phone',
-	'smartlogin_phone_verified_at',
-	'smartlogin_email_verified_at',
-	'smartlogin_dob',
-	'smartlogin_gender',
-	'smartlogin_referral_code',
-	'smartlogin_synthetic_email',
-	'smartlogin_known_devices',
-	'smartlogin_ward_code',
-	'smartlogin_shipping_ward_code',
-	'_smartlogin_onboarding_seen_at',
-	'_smartlogin_onboarding_source',
-	'_smartlogin_profile_notice_version',
-	'_smartlogin_profile_gate',
-	'_smartlogin_pending_contact',
+$OMNIWP_meta_keys = array(
+	'OmniWP_phone',
+	'OmniWP_phone_verified_at',
+	'OmniWP_email_verified_at',
+	'OmniWP_dob',
+	'OmniWP_gender',
+	'OmniWP_referral_code',
+	'OmniWP_synthetic_email',
+	'OmniWP_known_devices',
+	'OmniWP_ward_code',
+	'OmniWP_shipping_ward_code',
+	'_OmniWP_onboarding_seen_at',
+	'_OmniWP_onboarding_source',
+	'_OmniWP_profile_notice_version',
+	'_OmniWP_profile_gate',
+	'_OmniWP_pending_contact',
 );
 
-foreach ( $smart_login_meta_keys as $smart_login_meta_key ) {
-	$wpdb->delete( $wpdb->usermeta, array( 'meta_key' => $smart_login_meta_key ) ); // phpcs:ignore WordPress.DB
+foreach ( $OMNIWP_meta_keys as $OMNIWP_meta_key ) {
+	$wpdb->delete( $wpdb->usermeta, array( 'meta_key' => $OMNIWP_meta_key ) ); // phpcs:ignore WordPress.DB
 }
 
 // Scheduled events.
-wp_clear_scheduled_hook( 'smart_login_cleanup' );
+wp_clear_scheduled_hook( 'OMNIWP_cleanup' );

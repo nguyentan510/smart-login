@@ -17,7 +17,7 @@
  * Requires tests/stubs.php and tests/template-stubs.php to have been loaded:
  * several entries construct WP_User.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -33,7 +33,7 @@ return array(
 	// wrapper differs, because FormController saves this one and WC_Form_Handler
 	// saves the other.
 	'account'                        => array(
-		'sl_form' => new \SmartLogin\Frontend\AccountForm( 7, \SmartLogin\Frontend\AccountForm::CONTEXT_STANDALONE ),
+		'ow_form' => new \OmniWP\Frontend\AccountForm( 7, \OmniWP\Frontend\AccountForm::CONTEXT_STANDALONE ),
 		'notices' => array(),
 	),
 	'form-auth'                      => array(
@@ -150,7 +150,7 @@ return array(
 	'login-button'                   => array(
 		'label'    => 'Đăng nhập',
 		'step'     => 'identify',
-		'href'     => 'https://example.test/dang-nhap?smart_login_step=identify',
+		'href'     => 'https://example.test/dang-nhap?OMNIWP_step=identify',
 		'class'    => '',
 		'collapse' => true,
 	),
@@ -222,27 +222,27 @@ return array(
 		'wards'        => array( '00076' => array( 'name' => 'Phường Cầu Giấy', 'type' => 'phuong' ) ),
 	),
 	'partials/account/status'        => array(
-		'sl_status'   => array(
+		'ow_status'   => array(
 			'complete'            => false,
 			'required_missing'    => array( array( 'key' => 'full_name', 'label' => 'Họ tên' ) ),
 			'recommended_missing' => array( array( 'key' => 'dob', 'label' => 'Ngày sinh' ) ),
 		),
-		'sl_pending'  => array( 'type' => 'email', 'masked' => 'ng•••@example.test' ),
-		'sl_welcome'  => false,
-		'sl_edit_url' => 'https://example.test/my-account/edit-account/',
+		'ow_pending'  => array( 'type' => 'email', 'masked' => 'ng•••@example.test' ),
+		'ow_welcome'  => false,
+		'ow_edit_url' => 'https://example.test/my-account/edit-account/',
 	),
 	'partials/account/contact'       => array(
-		'sl_user'       => new WP_User( 7, 'Nguyễn Như' ),
-		'sl_phone'      => '84969789475',
-		'sl_synthetic'  => false,
-		'sl_pending'    => array( 'type' => 'email', 'masked' => 'ng•••@example.test' ),
-		'sl_otp_length' => 6,
-		'sl_providers'  => array(
+		'ow_user'       => new WP_User( 7, 'Nguyễn Như' ),
+		'ow_phone'      => '84969789475',
+		'ow_synthetic'  => false,
+		'ow_pending'    => array( 'type' => 'email', 'masked' => 'ng•••@example.test' ),
+		'ow_otp_length' => 6,
+		'ow_providers'  => array(
 			// Held an empty list from 8.2 until 16.0, so the smoke test never
 			// executed the branch where a contact channel also owns an identity
 			// row — the shape 14.4 and 14.5 gave nearly every account, and the one
 			// that printed the address twice for four phases.
-			'sl_identities'     => array(
+			'ow_identities'     => array(
 				array(
 					'channel'     => 'email',
 					'subject'     => 'user@example.test',
@@ -255,13 +255,13 @@ return array(
 					'removable'   => true,
 				),
 			),
-			'sl_can_unlink'     => false,
-			'sl_redirect'       => 'https://example.test/my-account/',
-			'sl_link_providers' => array(),
+			'ow_can_unlink'     => false,
+			'ow_redirect'       => 'https://example.test/my-account/',
+			'ow_link_providers' => array(),
 		),
 	),
 	'partials/account/providers'     => array(
-		'sl_identities'     => array(
+		'ow_identities'     => array(
 			array(
 				'channel'     => 'google',
 				'subject'     => 'sub-1',
@@ -274,36 +274,36 @@ return array(
 				'removable'   => true,
 			),
 		),
-		'sl_can_unlink'     => true,
-		'sl_redirect'       => 'https://example.test/my-account/',
+		'ow_can_unlink'     => true,
+		'ow_redirect'       => 'https://example.test/my-account/',
 		// Deliberately empty: the "everything is already linked" case is the one
 		// the WooCommerce copy got wrong for six phases.
-		'sl_link_providers' => array(),
+		'ow_link_providers' => array(),
 	),
 	'partials/account/profile'       => array(
-		'sl_user'     => new WP_User( 7, 'Nguyễn Như' ),
-		'sl_gender'   => 'female',
-		'sl_dob'      => '05/10/1994',
+		'ow_user'     => new WP_User( 7, 'Nguyễn Như' ),
+		'ow_gender'   => 'female',
+		'ow_dob'      => '05/10/1994',
 		// Empty on purpose: the input renders only when there is no code yet,
 		// and the input is what the regression suite greps for.
-		'sl_referral' => '',
+		'ow_referral' => '',
 	),
 	'partials/account/address'       => array(
-		'sl_values'   => array(
+		'ow_values'   => array(
 			'province_code' => '01',
 			'province_name' => 'Thành phố Hà Nội',
 			'ward_code'     => '00076',
 			'ward_name'     => 'Phường Cầu Giấy',
 			'street'        => '12 Trần Duy Hưng',
 		),
-		'sl_required' => false,
+		'ow_required' => false,
 	),
 	'partials/account/password'      => array(),
 	// 17.8. The section id is the whole input: the label and the mark both come
 	// from AccountForm::sections_meta(), which is the point of the partial.
-	'partials/account/card-head'     => array( 'sl_section' => 'profile' ),
+	'partials/account/card-head'     => array( 'ow_section' => 'profile' ),
 	'partials/linked-identities'     => array(
-		'sl_identities' => array(
+		'ow_identities' => array(
 			array(
 				'channel'     => 'google',
 				'subject'     => 'sub-1',
@@ -330,7 +330,107 @@ return array(
 				'removable'   => true,
 			),
 		),
-		'sl_can_unlink' => true,
-		'sl_redirect'   => 'https://example.test/my-account/',
+		'ow_can_unlink' => true,
+		'ow_redirect'   => 'https://example.test/my-account/',
+	),
+	'ecommerce/slide-cart-drawer'    => array(
+		'cart' => \OmniWP\Ecommerce\CartService::get_cart_data(),
+	),
+	'ecommerce/floating-cart'        => array(
+		'cart' => \OmniWP\Ecommerce\CartService::get_cart_data(),
+	),
+	'ecommerce/cart-page'            => array(),
+	'ecommerce/checkout-page'        => array(),
+	'ecommerce/review-order'         => array(),
+	'ecommerce/address-modal'        => array(
+		'addresses' => array(
+			array(
+				'first_name' => 'Nguyễn Văn An',
+				'phone'      => '0901234567',
+				'address_1'  => '123 Lê Lợi',
+				'state'      => '01',
+				'city'       => 'Phường Cầu Giấy',
+				'tag'        => 'Nhà riêng',
+				'is_default' => true,
+			),
+		),
+		'provinces' => \OmniWP\Address\AddressRepository::provinces(),
+	),
+	'ecommerce/address-cards'        => array(
+		'addresses' => array(
+			array(
+				'first_name' => 'Nguyễn Văn An',
+				'phone'      => '0901234567',
+				'address_1'  => '123 Lê Lợi',
+				'state'      => '01',
+				'city'       => 'Phường Cầu Giấy',
+				'tag'        => 'Nhà riêng',
+				'is_default' => true,
+			),
+		),
+	),
+	'ecommerce/address-modal-dialog' => array(
+		'provinces' => \OmniWP\Address\AddressRepository::provinces(),
+	),
+	'ecommerce/thankyou-page'        => array(
+		'order'          => new class() {
+			public function get_order_number(): string {
+				return '1001';
+			}
+			public function get_formatted_billing_full_name(): string {
+				return 'Nguyễn Văn An';
+			}
+			public function get_billing_phone(): string {
+				return '0901234567';
+			}
+			public function get_formatted_billing_address(): string {
+				return '123 Lê Lợi, Hà Nội';
+			}
+			public function get_payment_method_title(): string {
+				return 'Chuyển khoản ngân hàng';
+			}
+			public function get_shipping_method(): string {
+				return 'Giao hàng tiêu chuẩn';
+			}
+			public function get_formatted_order_total(): string {
+				return '500.000₫';
+			}
+			public function get_payment_method(): string {
+				return 'bacs';
+			}
+			public function get_total(): float {
+				return 500000;
+			}
+			public function get_items(): array {
+				return array();
+			}
+			public function get_date_created(): object {
+				return new class() {
+					public function date( string $format ): string {
+						return '12/08/2026';
+					}
+				};
+			}
+			public function get_total_discount(): float {
+				return 0.0;
+			}
+			public function get_shipping_total(): float {
+				return 0.0;
+			}
+			public function get_billing_email(): string {
+				return 'user@example.test';
+			}
+			public function get_subtotal_to_display(): string {
+				return '500.000₫';
+			}
+		},
+		'order_id'       => 1001,
+		'status'         => 'processing',
+		'status_name'    => 'Đang xử lý',
+		'payment_method' => 'bacs',
+		'vietqr_url'     => 'https://img.vietqr.io/image/test.png',
+	),
+	'ecommerce/voucher-picker-modal' => array(
+		'vouchers' => array(),
 	),
 );

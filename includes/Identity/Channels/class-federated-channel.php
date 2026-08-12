@@ -12,18 +12,18 @@
  * because the provider defines their format and a "helpful" normalisation here
  * would silently break matching.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Identity\Channels;
+namespace OmniWP\Identity\Channels;
 
-use SmartLogin\Identity\VerifiedClaim;
+use OmniWP\Identity\VerifiedClaim;
 
 defined( 'ABSPATH' ) || exit;
 
 final class FederatedChannel implements IdentityChannel {
 
-	/** Matches the `subject` column width in smartlogin_identities. */
+	/** Matches the `subject` column width in OmniWP_identities. */
 	const MAX_SUBJECT_LENGTH = 191;
 
 	private string $id;

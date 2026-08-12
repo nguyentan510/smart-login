@@ -2,13 +2,13 @@
 /**
  * Template placeholder expansion shared by every OTP channel.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\OTP;
+namespace OmniWP\OTP;
 
-use SmartLogin\Identity\Phone;
-use SmartLogin\Settings;
+use OmniWP\Identity\Phone;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -51,7 +51,7 @@ class Placeholders {
 		 * @param string $destination
 		 * @param array  $ctx
 		 */
-		return (array) apply_filters( 'smart_login_otp_placeholders', $map, $destination, $ctx );
+		return (array) apply_filters( 'OMNIWP_otp_placeholders', $map, $destination, $ctx );
 	}
 
 	/**
@@ -108,11 +108,11 @@ class Placeholders {
 			// pointed the other way.
 			return array_intersect_key(
 				$all,
-				array_flip( self::braced( \SmartLogin\Mail\MailRegistry::OTP_TOKENS ) )
+				array_flip( self::braced( \OmniWP\Mail\MailRegistry::OTP_TOKENS ) )
 			);
 		}
 
-		$allowed = \SmartLogin\Mail\MailRegistry::tokens( $message_id );
+		$allowed = \OmniWP\Mail\MailRegistry::tokens( $message_id );
 		$scoped  = array();
 
 		foreach ( $allowed as $token ) {
@@ -142,28 +142,28 @@ class Placeholders {
 	 */
 	private static function token_table(): array {
 		return array(
-			'{{destination}}'  => __( 'Số điện thoại hoặc email nhận mã', 'smart-login' ),
-			'{{phone}}'        => __( 'SĐT dạng E.164 không dấu cộng — 84969789475', 'smart-login' ),
-			'{{phone_local}}'  => __( 'SĐT dạng nội địa — 0969789475', 'smart-login' ),
-			'{{phone_plus}}'   => __( 'SĐT dạng quốc tế — +84969789475', 'smart-login' ),
-			'{{email}}'        => __( 'Email nhận mã (rỗng nếu gửi SMS)', 'smart-login' ),
-			'{{code}}'         => __( 'Mã OTP', 'smart-login' ),
-			'{{intent}}'       => __( 'Mục đích: register / login / recover / add_identity', 'smart-login' ),
-			'{{transport}}'    => __( 'Kênh gửi: sms / email', 'smart-login' ),
-			'{{ttl_seconds}}'  => __( 'Thời gian hiệu lực tính bằng giây', 'smart-login' ),
-			'{{ttl_minutes}}'  => __( 'Thời gian hiệu lực tính bằng phút', 'smart-login' ),
-			'{{expires_at}}'   => __( 'Thời điểm hết hạn', 'smart-login' ),
-			'{{site_name}}'    => __( 'Tên website', 'smart-login' ),
-			'{{site_url}}'     => __( 'Địa chỉ website', 'smart-login' ),
-			'{{user_name}}'    => __( 'Họ và tên người dùng (nếu có)', 'smart-login' ),
-			'{{delivery_id}}'  => __( 'Mã giao nhận ổn định giữa các lần retry', 'smart-login' ),
+			'{{destination}}'  => __( 'Số điện thoại hoặc email nhận mã', 'omniwp' ),
+			'{{phone}}'        => __( 'SĐT dạng E.164 không dấu cộng — 84969789475', 'omniwp' ),
+			'{{phone_local}}'  => __( 'SĐT dạng nội địa — 0969789475', 'omniwp' ),
+			'{{phone_plus}}'   => __( 'SĐT dạng quốc tế — +84969789475', 'omniwp' ),
+			'{{email}}'        => __( 'Email nhận mã (rỗng nếu gửi SMS)', 'omniwp' ),
+			'{{code}}'         => __( 'Mã OTP', 'omniwp' ),
+			'{{intent}}'       => __( 'Mục đích: register / login / recover / add_identity', 'omniwp' ),
+			'{{transport}}'    => __( 'Kênh gửi: sms / email', 'omniwp' ),
+			'{{ttl_seconds}}'  => __( 'Thời gian hiệu lực tính bằng giây', 'omniwp' ),
+			'{{ttl_minutes}}'  => __( 'Thời gian hiệu lực tính bằng phút', 'omniwp' ),
+			'{{expires_at}}'   => __( 'Thời điểm hết hạn', 'omniwp' ),
+			'{{site_name}}'    => __( 'Tên website', 'omniwp' ),
+			'{{site_url}}'     => __( 'Địa chỉ website', 'omniwp' ),
+			'{{user_name}}'    => __( 'Họ và tên người dùng (nếu có)', 'omniwp' ),
+			'{{delivery_id}}'  => __( 'Mã giao nhận ổn định giữa các lần retry', 'omniwp' ),
 
 			// Operational alerts only. Never offered beside an OTP template,
 			// because there they would always render empty.
-			'{{ceiling}}'      => __( 'Trần vừa bị chạm', 'smart-login' ),
-			'{{window}}'       => __( 'Khoảng thời gian của trần: giờ hoặc ngày', 'smart-login' ),
-			'{{halt_minutes}}' => __( 'Số phút tạm dừng gửi', 'smart-login' ),
-			'{{cooldown}}'     => __( 'Số giây trước khi thử lại kênh gửi', 'smart-login' ),
+			'{{ceiling}}'      => __( 'Trần vừa bị chạm', 'omniwp' ),
+			'{{window}}'       => __( 'Khoảng thời gian của trần: giờ hoặc ngày', 'omniwp' ),
+			'{{halt_minutes}}' => __( 'Số phút tạm dừng gửi', 'omniwp' ),
+			'{{cooldown}}'     => __( 'Số giây trước khi thử lại kênh gửi', 'omniwp' ),
 		);
 	}
 }

@@ -11,7 +11,7 @@
  * of this file renders as a wall of unstyled text in the one client a Vietnamese
  * shop's customers are most likely to be using.
  *
- * Override it from a theme at `smart-login/mail/layout.php` — that escape hatch
+ * Override it from a theme at `omniwp/mail/layout.php` — that escape hatch
  * is what keeps the three settings defensible instead of the ten somebody will
  * eventually ask for.
  *
@@ -32,7 +32,7 @@
  * @var string $site      Site name.
  * @var string $marker    Comment that marks this message as already wrapped.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 defined( 'ABSPATH' ) || exit;

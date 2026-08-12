@@ -55,7 +55,7 @@
     scripts/run-auth-integration-gate.ps1 owns all of that.
 #>
 param(
-    [string]$Php = $env:SMART_LOGIN_PHP,
+    [string]$Php = $env:OMNIWP_PHP,
     [string]$Suite = 'tests/run-all.php',
     [switch]$Strict
 )
@@ -158,7 +158,7 @@ foreach ($candidate in $candidates) {
 
 if (-not $chosen) {
     $needed = $Required -join ', '
-    Write-Output 'SMART_LOGIN_TESTS_BLOCKED'
+    Write-Output 'OMNIWP_TESTS_BLOCKED'
     Write-Output "reason=no PHP on this machine loads all of: $needed"
     Write-Output 'Running anyway would fail roughly five suites on the environment, not on the code.'
     Write-Output ''
@@ -169,14 +169,14 @@ if (-not $chosen) {
     Write-Output '  - install XAMPP (its php.ini already loads both), or'
     Write-Output '  - set PHPRC to a directory holding a php.ini that sets extension_dir'
     Write-Output "    to the binary's ext\ and enables openssl and mbstring, or"
-    Write-Output '  - point SMART_LOGIN_PHP at a binary that already has them.'
+    Write-Output '  - point OMNIWP_PHP at a binary that already has them.'
     exit 2
 }
 
 $target = Join-Path $PluginRoot $Suite
 
 if (-not (Test-Path -LiteralPath $target)) {
-    Write-Output 'SMART_LOGIN_TESTS_BLOCKED'
+    Write-Output 'OMNIWP_TESTS_BLOCKED'
     Write-Output "reason=suite not found: $target"
     exit 2
 }

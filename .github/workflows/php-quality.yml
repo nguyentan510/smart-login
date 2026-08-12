@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 8.0 is the floor declared in smart-login.php; 8.3 catches deprecations early.
+        # 8.0 is the floor declared in omniwp.php; 8.3 catches deprecations early.
         php: ['8.0', '8.3']
 
     name: PHP ${{ matrix.php }}

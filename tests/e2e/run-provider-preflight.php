@@ -5,34 +5,34 @@
  * Credentials are resolved from encrypted Settings or deployment overrides
  * and are never printed.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 declare( strict_types=1 );
 
-$wp_root     = rtrim( (string) getenv( 'SMART_LOGIN_WP_ROOT' ), "\\/" );
-$plugin_root = rtrim( (string) getenv( 'SMART_LOGIN_PLUGIN_ROOT' ), "\\/" );
-$db_host     = (string) getenv( 'SMART_LOGIN_DB_HOST' );
-$db_name     = (string) getenv( 'SMART_LOGIN_DB_NAME' );
-$db_user     = (string) getenv( 'SMART_LOGIN_DB_USER' );
-$db_pass     = (string) getenv( 'SMART_LOGIN_DB_PASSWORD' );
-$prefix      = (string) ( getenv( 'SMART_LOGIN_DB_PREFIX' ) ?: 'wp_' );
-$site_url    = rtrim( (string) getenv( 'SMART_LOGIN_E2E_SITE_URL' ), '/' );
-$selection   = strtolower( preg_replace( '/[^a-z0-9_-]/i', '', (string) ( getenv( 'SMART_LOGIN_E2E_PROVIDER' ) ?: 'both' ) ) );
+$wp_root     = rtrim( (string) getenv( 'OMNIWP_WP_ROOT' ), "\\/" );
+$plugin_root = rtrim( (string) getenv( 'OMNIWP_PLUGIN_ROOT' ), "\\/" );
+$db_host     = (string) getenv( 'OMNIWP_DB_HOST' );
+$db_name     = (string) getenv( 'OMNIWP_DB_NAME' );
+$db_user     = (string) getenv( 'OMNIWP_DB_USER' );
+$db_pass     = (string) getenv( 'OMNIWP_DB_PASSWORD' );
+$prefix      = (string) ( getenv( 'OMNIWP_DB_PREFIX' ) ?: 'wp_' );
+$site_url    = rtrim( (string) getenv( 'OMNIWP_E2E_SITE_URL' ), '/' );
+$selection   = strtolower( preg_replace( '/[^a-z0-9_-]/i', '', (string) ( getenv( 'OMNIWP_E2E_PROVIDER' ) ?: 'both' ) ) );
 
 $blocked = static function ( string $reason ): never {
-	echo "SMART_LOGIN_PROVIDER_E2E_BLOCKED\n";
+	echo "OMNIWP_PROVIDER_E2E_BLOCKED\n";
 	echo 'reason=' . $reason . "\n";
 	exit( 2 );
 };
 
 if ( ! in_array( $selection, array( 'google', 'both' ), true ) ) {
-	$blocked( 'SMART_LOGIN_E2E_PROVIDER must be google or both' );
+	$blocked( 'OMNIWP_E2E_PROVIDER must be google or both' );
 }
 if ( ! is_file( $wp_root . DIRECTORY_SEPARATOR . 'wp-settings.php' ) ) {
 	$blocked( 'WordPress runtime is missing' );
 }
-if ( ! is_file( $plugin_root . DIRECTORY_SEPARATOR . 'smart-login.php' ) ) {
+if ( ! is_file( $plugin_root . DIRECTORY_SEPARATOR . 'omniwp.php' ) ) {
 	$blocked( 'current Smart Login source is missing' );
 }
 if ( '' === $site_url || 'https' !== strtolower( (string) parse_url( $site_url, PHP_URL_SCHEME ) ) ) {
@@ -43,9 +43,9 @@ if ( ! preg_match( '/^[A-Za-z0-9_]+$/', $prefix ) ) {
 }
 
 $constant_map = array(
-	'SMART_LOGIN_GOOGLE_CLIENT_ID',
-	'SMART_LOGIN_GOOGLE_CLIENT_SECRET',
-	'SMART_LOGIN_GOOGLE_REDIRECT_URI',
+	'OMNIWP_GOOGLE_CLIENT_ID',
+	'OMNIWP_GOOGLE_CLIENT_SECRET',
+	'OMNIWP_GOOGLE_REDIRECT_URI',
 );
 foreach ( $constant_map as $constant_name ) {
 	$value = (string) getenv( $constant_name );
@@ -80,7 +80,7 @@ if (
 }
 
 $providers = array(
-	'google' => new \SmartLogin\Auth\Providers\GoogleProvider(),
+	'google' => new \OmniWP\Auth\Providers\GoogleProvider(),
 );
 $selected = 'both' === $selection ? array_keys( $providers ) : array( $selection );
 
@@ -96,7 +96,7 @@ foreach ( $selected as $provider_id ) {
 		'https' !== strtolower( (string) wp_parse_url( $callback, PHP_URL_SCHEME ) )
 		|| strtolower( (string) wp_parse_url( $callback, PHP_URL_HOST ) ) !== strtolower( (string) wp_parse_url( $site_url, PHP_URL_HOST ) )
 		|| '/wp-admin/admin-post.php' !== (string) wp_parse_url( $callback, PHP_URL_PATH )
-		|| 'smart_login_provider_callback' !== (string) ( $query['action'] ?? '' )
+		|| 'OMNIWP_provider_callback' !== (string) ( $query['action'] ?? '' )
 		|| $provider_id !== (string) ( $query['provider'] ?? '' )
 	) {
 		$blocked( $provider_id . ' callback URI does not match the HTTPS site callback contract' );
@@ -105,4 +105,4 @@ foreach ( $selected as $provider_id ) {
 	echo 'provider.' . $provider_id . '.callback=' . $callback . "\n";
 }
 
-echo "SMART_LOGIN_PROVIDER_E2E_PREFLIGHT_OK\n";
+echo "OMNIWP_PROVIDER_E2E_PREFLIGHT_OK\n";

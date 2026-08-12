@@ -2,12 +2,12 @@
 /**
  * Decides the next safe page after a successful authentication.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth;
+namespace OmniWP\Auth;
 
-use SmartLogin\Settings;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -18,7 +18,7 @@ final class PostAuthRedirector {
 	 * they were heading.
 	 *
 	 * There is deliberately no branch here that traps an account with an
-	 * incomplete profile. That used to exist — it set a `smartlogin_gate` flag
+	 * incomplete profile. That used to exist — it set a `OmniWP_gate` flag
 	 * nothing ever read, so the UI said "bắt buộc" while nothing enforced it.
 	 * Onboarding asks, and takes no for an answer.
 	 */
@@ -47,8 +47,8 @@ final class PostAuthRedirector {
 
 		if ( $result->is_new_user && ! $profiles->has_seen( $result->user_id ) ) {
 			$profiles->mark_seen( $result->user_id, $result->auth_method );
-			$url                  = add_query_arg( 'smartlogin_welcome', '1', self::profile_url() );
-			$filtered             = (string) apply_filters( 'smart_login_post_register_redirect', $url, $result->user_id );
+			$url                  = add_query_arg( 'OmniWP_welcome', '1', self::profile_url() );
+			$filtered             = (string) apply_filters( 'OMNIWP_post_register_redirect', $url, $result->user_id );
 			$result->redirect_url = $this->safe( $filtered, $url );
 			return $result->redirect_url;
 		}
@@ -74,7 +74,7 @@ final class PostAuthRedirector {
 			$url = '' !== $configured ? $configured : ( function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'myaccount' ) : home_url( '/' ) );
 		}
 
-		$filtered             = (string) apply_filters( 'smart_login_post_login_redirect', $url );
+		$filtered             = (string) apply_filters( 'OMNIWP_post_login_redirect', $url );
 		$result->redirect_url = $this->safe( $filtered, home_url( '/' ) );
 		return $result->redirect_url;
 	}

@@ -4,7 +4,7 @@
  *
  * @var array $notices
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 defined( 'ABSPATH' ) || exit;

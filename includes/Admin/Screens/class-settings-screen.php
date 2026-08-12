@@ -13,26 +13,26 @@
  * from before_section()/after_section() rather than from the registry, which
  * stays pure data.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Admin\Screens;
+namespace OmniWP\Admin\Screens;
 
-use SmartLogin\Address\AddressRepository;
-use SmartLogin\Admin\FieldRenderer;
-use SmartLogin\Admin\MailMessages;
-use SmartLogin\Admin\ProviderCards;
-use SmartLogin\Admin\SettingsPage;
-use SmartLogin\FieldRegistry;
-use SmartLogin\GatewayPresets;
-use SmartLogin\Identity\Channels\MailChannel;
-use SmartLogin\Identity\Channels\PhoneChannel;
-use SmartLogin\Installer;
-use SmartLogin\OTP\Placeholders;
-use SmartLogin\OTP\Transports\EventBus;
-use SmartLogin\OTP\Transports\TransportRouter;
-use SmartLogin\OtpPresets;
-use SmartLogin\Settings;
+use OmniWP\Address\AddressRepository;
+use OmniWP\Admin\FieldRenderer;
+use OmniWP\Admin\MailMessages;
+use OmniWP\Admin\ProviderCards;
+use OmniWP\Admin\SettingsPage;
+use OmniWP\FieldRegistry;
+use OmniWP\GatewayPresets;
+use OmniWP\Identity\Channels\MailChannel;
+use OmniWP\Identity\Channels\PhoneChannel;
+use OmniWP\Installer;
+use OmniWP\OTP\Placeholders;
+use OmniWP\OTP\Transports\EventBus;
+use OmniWP\OTP\Transports\TransportRouter;
+use OmniWP\OtpPresets;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -42,8 +42,8 @@ final class SettingsScreen {
 		$tabs = FieldRegistry::tabs();
 		$tab  = isset( $tabs[ $tab ] ) ? $tab : (string) array_key_first( $tabs );
 		?>
-		<div class="wrap smart-login-admin">
-			<h1><?php esc_html_e( 'Smart Login', 'smart-login' ); ?></h1>
+		<div class="wrap omniwp-admin">
+			<h1><?php esc_html_e( 'OmniWP', 'omniwp' ); ?></h1>
 
 			<?php SettingsPage::nav( $tab ); ?>
 
@@ -69,7 +69,7 @@ final class SettingsScreen {
 					$this->section( $tab, $section, $fields );
 				}
 
-				submit_button( __( 'Lưu thay đổi', 'smart-login' ) );
+				submit_button( __( 'Lưu thay đổi', 'omniwp' ) );
 				?>
 			</form>
 		</div>
@@ -194,13 +194,13 @@ final class SettingsScreen {
 	 */
 	private function derived_details( string $section, array $fields ): void {
 		$summary = 'otp' === $section
-			? __( 'Xem giá trị đang áp dụng', 'smart-login' )
-			: __( 'Xem request sẽ được gửi', 'smart-login' );
+			? __( 'Xem giá trị đang áp dụng', 'omniwp' )
+			: __( 'Xem request sẽ được gửi', 'omniwp' );
 		?>
 		<details class="sl-derived">
 			<summary><?php echo esc_html( $summary ); ?></summary>
 			<p class="description">
-				<?php esc_html_e( 'Các giá trị này do lựa chọn ở trên sinh ra. Chọn “Tuỳ chỉnh” nếu bạn cần tự đặt.', 'smart-login' ); ?>
+				<?php esc_html_e( 'Các giá trị này do lựa chọn ở trên sinh ra. Chọn “Tuỳ chỉnh” nếu bạn cần tự đặt.', 'omniwp' ); ?>
 			</p>
 			<table class="form-table" role="presentation">
 				<?php
@@ -251,14 +251,14 @@ final class SettingsScreen {
 	 */
 	private function channel_status( string $channel, string $enabled_path, bool $identity_enabled ): void {
 		$is_phone = PhoneChannel::ID === $channel;
-		$label    = $is_phone ? __( 'số điện thoại', 'smart-login' ) : __( 'email', 'smart-login' );
+		$label    = $is_phone ? __( 'số điện thoại', 'omniwp' ) : __( 'email', 'omniwp' );
 
 		if ( ! Settings::is_on( $enabled_path ) ) {
 			$state   = 'off';
 			$class   = 'notice-info';
 			$message = sprintf(
 				/* translators: %s: identity channel, e.g. "số điện thoại". */
-				__( 'Kênh này đang tắt. Không mã xác thực nào được gửi tới %s.', 'smart-login' ),
+				__( 'Kênh này đang tắt. Không mã xác thực nào được gửi tới %s.', 'omniwp' ),
 				$label
 			);
 		} elseif ( ! $identity_enabled ) {
@@ -268,7 +268,7 @@ final class SettingsScreen {
 			$class   = 'notice-warning';
 			$message = sprintf(
 				/* translators: %s: identity channel, e.g. "số điện thoại". */
-				__( 'Kênh này đang bật nhưng chưa có gì đi qua: website hiện không nhận %s làm cách định danh. Đổi ở tab Đăng nhập & Đăng ký, mục Định danh.', 'smart-login' ),
+				__( 'Kênh này đang bật nhưng chưa có gì đi qua: website hiện không nhận %s làm cách định danh. Đổi ở tab Đăng nhập & Đăng ký, mục Định danh.', 'omniwp' ),
 				$label
 			);
 		} else {
@@ -276,7 +276,7 @@ final class SettingsScreen {
 			$class   = 'notice-success';
 			$message = sprintf(
 				/* translators: %s: identity channel, e.g. "số điện thoại". */
-				__( 'Đang gửi mã xác thực tới %s.', 'smart-login' ),
+				__( 'Đang gửi mã xác thực tới %s.', 'omniwp' ),
 				$label
 			);
 		}
@@ -303,19 +303,19 @@ final class SettingsScreen {
 		if ( $events > 0 ) {
 			$message = sprintf(
 				/* translators: %d: number of subscribed events. */
-				_n( 'Đang gửi %d loại sự kiện ra ngoài.', 'Đang gửi %d loại sự kiện ra ngoài.', $events, 'smart-login' ),
+				_n( 'Đang gửi %d loại sự kiện ra ngoài.', 'Đang gửi %d loại sự kiện ra ngoài.', $events, 'omniwp' ),
 				$events
 			);
 			$class = 'notice-success';
 		} else {
-			$message = __( 'Chưa được dùng. Chọn sự kiện bên dưới để website gửi thông báo ra ngoài. Endpoint này không gửi mã xác thực — mã xác thực đi qua tab Kênh SMS và Kênh Email.', 'smart-login' );
+			$message = __( 'Chưa được dùng. Chọn sự kiện bên dưới để website gửi thông báo ra ngoài. Endpoint này không gửi mã xác thực — mã xác thực đi qua tab Kênh SMS và Kênh Email.', 'omniwp' );
 			$class   = 'notice-info';
 		}
 
 		if ( $events > 0 ) {
 			$message .= ' ' . sprintf(
 				/* translators: %d: number of subscribed events. */
-				_n( 'Đang theo dõi %d sự kiện.', 'Đang theo dõi %d sự kiện.', $events, 'smart-login' ),
+				_n( 'Đang theo dõi %d sự kiện.', 'Đang theo dõi %d sự kiện.', $events, 'omniwp' ),
 				$events
 			);
 		}
@@ -339,7 +339,7 @@ final class SettingsScreen {
 				break;
 
 			case 'dev':
-				printf( '<h2>%s</h2>', esc_html__( 'Tình trạng hệ thống', 'smart-login' ) );
+				printf( '<h2>%s</h2>', esc_html__( 'Tình trạng hệ thống', 'omniwp' ) );
 				$this->system_status();
 				break;
 		}
@@ -358,7 +358,7 @@ final class SettingsScreen {
 				esc_html(
 					sprintf(
 						/* translators: 1: province count, 2: ward count. */
-						__( 'Đã cài dữ liệu hành chính: %1$d tỉnh/thành, %2$d phường/xã.', 'smart-login' ),
+						__( 'Đã cài dữ liệu hành chính: %1$d tỉnh/thành, %2$d phường/xã.', 'omniwp' ),
 						count( AddressRepository::provinces() ),
 						AddressRepository::count_wards()
 					)
@@ -370,8 +370,8 @@ final class SettingsScreen {
 
 		printf(
 			'<div class="notice notice-error inline"><p><strong>%s</strong> %s</p><p><code>php bin/build-address-data.php path/to/source.json</code></p></div>',
-			esc_html__( 'Chưa có dữ liệu hành chính.', 'smart-login' ),
-			esc_html__( 'Bộ chọn địa chỉ sẽ không hiển thị gì cho tới khi bạn sinh dữ liệu bằng lệnh sau:', 'smart-login' )
+			esc_html__( 'Chưa có dữ liệu hành chính.', 'omniwp' ),
+			esc_html__( 'Bộ chọn địa chỉ sẽ không hiển thị gì cho tới khi bạn sinh dữ liệu bằng lệnh sau:', 'omniwp' )
 		);
 	}
 
@@ -392,21 +392,21 @@ final class SettingsScreen {
 
 	private function tester( string $transport ): void {
 		?>
-		<h3><?php esc_html_e( 'Gửi thử', 'smart-login' ); ?></h3>
+		<h3><?php esc_html_e( 'Gửi thử', 'omniwp' ); ?></h3>
 		<div class="sl-tester" data-transport="<?php echo esc_attr( $transport ); ?>">
 			<p class="description">
 				<?php
 				switch ( $transport ) {
 					case 'sms':
-						esc_html_e( 'Lưu cấu hình trước, sau đó gửi một mã thật tới số điện thoại của bạn để kiểm tra.', 'smart-login' );
+						esc_html_e( 'Lưu cấu hình trước, sau đó gửi một mã thật tới số điện thoại của bạn để kiểm tra.', 'omniwp' );
 						break;
 
 					case 'automation':
-						esc_html_e( 'Lưu cấu hình trước. Nút này gửi một gói tin đã ký tới endpoint bất kể Định tuyến đang trỏ đâu, và không bị ngắt mạch chặn — nên nó là cách kiểm tra xem endpoint đã sống lại chưa.', 'smart-login' );
+						esc_html_e( 'Lưu cấu hình trước. Nút này gửi một gói tin đã ký tới endpoint bất kể Định tuyến đang trỏ đâu, và không bị ngắt mạch chặn — nên nó là cách kiểm tra xem endpoint đã sống lại chưa.', 'omniwp' );
 						break;
 
 					default:
-						esc_html_e( 'Lưu cấu hình trước, sau đó gửi một mã thật tới email của bạn để kiểm tra.', 'smart-login' );
+						esc_html_e( 'Lưu cấu hình trước, sau đó gửi một mã thật tới email của bạn để kiểm tra.', 'omniwp' );
 				}
 				?>
 			</p>
@@ -416,7 +416,7 @@ final class SettingsScreen {
 					class="regular-text sl-test-destination"
 					placeholder="<?php echo esc_attr( $this->tester_placeholder( $transport ) ); ?>"
 				/>
-				<button type="button" class="button sl-test-button"><?php esc_html_e( 'Gửi thử', 'smart-login' ); ?></button>
+				<button type="button" class="button sl-test-button"><?php esc_html_e( 'Gửi thử', 'omniwp' ); ?></button>
 			</p>
 			<div class="sl-test-result" hidden></div>
 		</div>
@@ -426,15 +426,15 @@ final class SettingsScreen {
 	private function tester_placeholder( string $transport ): string {
 		switch ( $transport ) {
 			case 'sms':
-				return __( '0969789475', 'smart-login' );
+				return __( '0969789475', 'omniwp' );
 
 			case 'automation':
 				// Either shape is legitimate here: the envelope carries the
 				// channel, so the endpoint is told which one it is being handed.
-				return __( '0969789475 hoặc ban@example.com', 'smart-login' );
+				return __( '0969789475 hoặc ban@example.com', 'omniwp' );
 
 			default:
-				return __( 'ban@example.com', 'smart-login' );
+				return __( 'ban@example.com', 'omniwp' );
 		}
 	}
 
@@ -445,15 +445,15 @@ final class SettingsScreen {
 		$audit_table = Installer::audit_table();
 
 		$rows = array(
-			__( 'Phiên bản plugin', 'smart-login' )  => SMART_LOGIN_VERSION,
-			__( 'WooCommerce', 'smart-login' )       => class_exists( 'WooCommerce' ) ? __( 'Đang hoạt động', 'smart-login' ) : __( 'Không có', 'smart-login' ),
-			__( 'Môi trường', 'smart-login' )        => wp_get_environment_type(),
-			__( 'WP_DEBUG', 'smart-login' )          => ( defined( 'WP_DEBUG' ) && WP_DEBUG ) ? __( 'Bật', 'smart-login' ) : __( 'Tắt', 'smart-login' ),
-			__( 'Bảng OTP', 'smart-login' )          => $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $otp_table ) ) ? $otp_table : __( 'CHƯA TẠO', 'smart-login' ), // phpcs:ignore WordPress.DB
-			__( 'Bảng nhật ký', 'smart-login' )      => $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $audit_table ) ) ? $audit_table : __( 'CHƯA TẠO', 'smart-login' ), // phpcs:ignore WordPress.DB
-			__( 'Dọn dẹp tiếp theo', 'smart-login' ) => wp_next_scheduled( Installer::CLEANUP_HOOK )
+			__( 'Phiên bản plugin', 'omniwp' )  => OMNIWP_VERSION,
+			__( 'WooCommerce', 'omniwp' )       => class_exists( 'WooCommerce' ) ? __( 'Đang hoạt động', 'omniwp' ) : __( 'Không có', 'omniwp' ),
+			__( 'Môi trường', 'omniwp' )        => wp_get_environment_type(),
+			__( 'WP_DEBUG', 'omniwp' )          => ( defined( 'WP_DEBUG' ) && WP_DEBUG ) ? __( 'Bật', 'omniwp' ) : __( 'Tắt', 'omniwp' ),
+			__( 'Bảng OTP', 'omniwp' )          => $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $otp_table ) ) ? $otp_table : __( 'CHƯA TẠO', 'omniwp' ), // phpcs:ignore WordPress.DB
+			__( 'Bảng nhật ký', 'omniwp' )      => $wpdb->get_var( $wpdb->prepare( 'SHOW TABLES LIKE %s', $audit_table ) ) ? $audit_table : __( 'CHƯA TẠO', 'omniwp' ), // phpcs:ignore WordPress.DB
+			__( 'Dọn dẹp tiếp theo', 'omniwp' ) => wp_next_scheduled( Installer::CLEANUP_HOOK )
 				? wp_date( 'H:i d/m/Y', wp_next_scheduled( Installer::CLEANUP_HOOK ) )
-				: __( 'Chưa lên lịch', 'smart-login' ),
+				: __( 'Chưa lên lịch', 'omniwp' ),
 		);
 		?>
 		<table class="widefat striped" style="max-width:640px">

@@ -12,7 +12,7 @@ records no status — status lives in the tracker and nowhere else.
 ## The problem
 
 The identity layer is finished and sound. Ownership lives in
-`smartlogin_identities`, `user_login` is opaque, `AuthProof` makes "no proof, no
+`OmniWP_identities`, `user_login` is opaque, `AuthProof` makes "no proof, no
 session" a type error. What is missing is the layer outside it.
 
 Every abuse control the plugin has is scoped to **one** destination or **one**
@@ -99,7 +99,7 @@ being unusual*, fail closed where it is *the check itself being unavailable*.
 ### A boolean is not enough for proxy trust
 
 `Client::ip()` defaults to `REMOTE_ADDR` and the comment explaining why is
-correct. The problem is that `smart_login_trust_proxy_headers` is the only
+correct. The problem is that `OMNIWP_trust_proxy_headers` is the only
 interface — no control, no readiness check, one line in a hook list.
 
 But a plain "trust the headers" flag is worse than nothing. An attacker who finds
@@ -119,7 +119,7 @@ migration, because the resulting behaviour on an existing VN site is what it
 already does. The help text has to say so — an empty field that silently means
 "restricted" is only safe if the screen admits it.
 
-`smart_login_phone_is_valid` remains the last word, as it already is.
+`OMNIWP_phone_is_valid` remains the last word, as it already is.
 
 ### The `wp_rest` nonce is not a bot control
 

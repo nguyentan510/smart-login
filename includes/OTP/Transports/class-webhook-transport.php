@@ -2,14 +2,14 @@
 /**
  * Push OTP to an external endpoint (SMS gateway, ZNS, n8n, Zapier…).
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\OTP\Transports;
+namespace OmniWP\OTP\Transports;
 
-use SmartLogin\GatewayPresets;
-use SmartLogin\OTP\Placeholders;
-use SmartLogin\Settings;
+use OmniWP\GatewayPresets;
+use OmniWP\OTP\Placeholders;
+use OmniWP\Settings;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
@@ -55,7 +55,7 @@ class WebhookTransport implements TransportInterface, ReportsUnavailability {
 	}
 
 	public function unavailable_message(): string {
-		return __( 'Kênh SMS chưa được cấu hình. Liên hệ quản trị viên.', 'smart-login' );
+		return __( 'Kênh SMS chưa được cấu hình. Liên hệ quản trị viên.', 'omniwp' );
 	}
 
 	/**
@@ -69,8 +69,8 @@ class WebhookTransport implements TransportInterface, ReportsUnavailability {
 		}
 
 		return new WP_Error(
-			'smart_login_webhook_failed',
-			__( 'Không gửi được mã xác thực. Vui lòng thử lại sau ít phút.', 'smart-login' ),
+			'OMNIWP_webhook_failed',
+			__( 'Không gửi được mã xác thực. Vui lòng thử lại sau ít phút.', 'omniwp' ),
 			array(
 				'detail' => $result['error'],
 				'status' => $result['status'],
@@ -85,7 +85,7 @@ class WebhookTransport implements TransportInterface, ReportsUnavailability {
 	 */
 	public function dispatch( string $destination, string $code, array $ctx ): array {
 		if ( ! $this->is_available() ) {
-			return $this->failure( __( 'Kênh SMS chưa được bật hoặc chưa cấu hình nhà cung cấp.', 'smart-login' ) );
+			return $this->failure( __( 'Kênh SMS chưa được bật hoặc chưa cấu hình nhà cung cấp.', 'omniwp' ) );
 		}
 
 		$delivery_id        = bin2hex( random_bytes( 16 ) );
@@ -137,7 +137,7 @@ class WebhookTransport implements TransportInterface, ReportsUnavailability {
 			'timeout'     => $timeout,
 			'redirection' => 2,
 			'headers'     => $headers,
-			'user-agent'  => 'SmartLogin/' . SMART_LOGIN_VERSION . '; ' . home_url( '/' ),
+			'user-agent'  => 'OmniWP/' . OMNIWP_VERSION . '; ' . home_url( '/' ),
 		);
 
 		if ( 'GET' === $method ) {
@@ -153,7 +153,7 @@ class WebhookTransport implements TransportInterface, ReportsUnavailability {
 
 		if ( $is_json && 'GET' !== $method && null === json_decode( $body ) && '' !== trim( $body ) ) {
 			return $this->failure(
-				__( 'Body template không tạo ra JSON hợp lệ. Kiểm tra lại dấu ngoặc kép và dấu phẩy.', 'smart-login' ),
+				__( 'Body template không tạo ra JSON hợp lệ. Kiểm tra lại dấu ngoặc kép và dấu phẩy.', 'omniwp' ),
 				0,
 				$this->redact_request( $url, $args, $code )
 			);
@@ -166,7 +166,7 @@ class WebhookTransport implements TransportInterface, ReportsUnavailability {
 		 * @param string $url
 		 * @param array  $ctx
 		 */
-		$args = (array) apply_filters( 'smart_login_webhook_args', $args, $url, $ctx );
+		$args = (array) apply_filters( 'OMNIWP_webhook_args', $args, $url, $ctx );
 
 		$has_idempotency = '' !== $idempotency_header
 			&& ! empty( $args['headers'][ $idempotency_header ] );
@@ -259,7 +259,7 @@ class WebhookTransport implements TransportInterface, ReportsUnavailability {
 			'redirection' => 0,
 			'headers'     => $headers,
 			'body'        => $signed['body'],
-			'user-agent'  => 'SmartLogin/' . SMART_LOGIN_VERSION . '; ' . home_url( '/' ),
+			'user-agent'  => 'OmniWP/' . OMNIWP_VERSION . '; ' . home_url( '/' ),
 		);
 
 		$started  = microtime( true );
@@ -311,14 +311,14 @@ class WebhookTransport implements TransportInterface, ReportsUnavailability {
 	private function explain_failure( int $status, string $body ): string {
 		if ( $status < 200 || $status >= 300 ) {
 			/* translators: %d: HTTP status code. */
-			return sprintf( __( 'Gateway trả về HTTP %d.', 'smart-login' ), $status );
+			return sprintf( __( 'Gateway trả về HTTP %d.', 'omniwp' ), $status );
 		}
 
 		$path = trim( (string) Settings::get( 'sms.success_path', '' ) );
 
 		return sprintf(
 			/* translators: 1: JSON path, 2: expected value. */
-			__( 'HTTP 2xx nhưng điều kiện thành công không khớp (cần "%1$s" = "%2$s").', 'smart-login' ),
+			__( 'HTTP 2xx nhưng điều kiện thành công không khớp (cần "%1$s" = "%2$s").', 'omniwp' ),
 			$path,
 			(string) Settings::get( 'sms.success_value', '' )
 		);

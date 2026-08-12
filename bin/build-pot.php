@@ -1,6 +1,6 @@
 <?php
 /**
- * Generate languages/smart-login.pot without wp-cli.
+ * Generate languages/omniwp.pot without wp-cli.
  *
  * Scans the shipped source for the WordPress translation functions, collects the
  * strings with their references and any translators comments, and writes a POT
@@ -9,7 +9,7 @@
  *
  * Run with:  php bin/build-pot.php
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 // phpcs:disable WordPress.Security.EscapeOutput -- CLI output.
@@ -18,11 +18,11 @@
 // `$domain` is one WordPress owns, so assigning it here overwrites a global for
 // anything loaded afterwards.
 $root        = dirname( __DIR__ );
-$text_domain = 'smart-login';
+$text_domain = 'omniwp';
 $out         = $root . '/languages/' . $text_domain . '.pot';
 
 $scan_dirs = array( 'includes', 'templates' );
-$scan_root = array( 'smart-login.php', 'uninstall.php' );
+$scan_root = array( 'omniwp.php', 'uninstall.php' );
 
 /**
  * function name => [ index of singular arg, index of plural arg or null, index of domain arg ]
@@ -87,7 +87,7 @@ foreach ( $files as $relative ) {
 
 		list( $singular_at, $plural_at, $domain_at ) = $functions[ $token[1] ];
 
-		$args = sl_pot_read_args( $tokens, $i, $count );
+		$args = ow_pot_read_args( $tokens, $i, $count );
 
 		if ( null === $args || ! isset( $args[ $domain_at ] ) || $text_domain !== $args[ $domain_at ] ) {
 			continue;
@@ -114,7 +114,7 @@ foreach ( $files as $relative ) {
 				'plural'   => null !== $plural_at ? ( $args[ $plural_at ] ?? null ) : null,
 				'context'  => $context,
 				'refs'     => array(),
-				'comment'  => sl_pot_translator_comment( $tokens, $i ),
+				'comment'  => ow_pot_translator_comment( $tokens, $i ),
 			);
 		}
 
@@ -129,7 +129,7 @@ $pot  = "# Copyright (C) Smart Login contributors\n";
 $pot .= "# This file is distributed under the same licence as the Smart Login plugin.\n";
 $pot .= "msgid \"\"\nmsgstr \"\"\n";
 $pot .= "\"Project-Id-Version: Smart Login\\n\"\n";
-$pot .= "\"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/smart-login\\n\"\n";
+$pot .= "\"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/omniwp\\n\"\n";
 $pot .= '"POT-Creation-Date: ' . $now . "\\n\"\n";
 $pot .= "\"MIME-Version: 1.0\\n\"\n";
 $pot .= "\"Content-Type: text/plain; charset=UTF-8\\n\"\n";
@@ -150,13 +150,13 @@ foreach ( $entries as $entry ) {
 	}
 
 	if ( null !== $entry['context'] ) {
-		$pot .= 'msgctxt ' . sl_pot_quote( $entry['context'] ) . "\n";
+		$pot .= 'msgctxt ' . ow_pot_quote( $entry['context'] ) . "\n";
 	}
 
-	$pot .= 'msgid ' . sl_pot_quote( $entry['singular'] ) . "\n";
+	$pot .= 'msgid ' . ow_pot_quote( $entry['singular'] ) . "\n";
 
 	if ( null !== $entry['plural'] ) {
-		$pot .= 'msgid_plural ' . sl_pot_quote( $entry['plural'] ) . "\n";
+		$pot .= 'msgid_plural ' . ow_pot_quote( $entry['plural'] ) . "\n";
 		$pot .= "msgstr[0] \"\"\n";
 	} else {
 		$pot .= "msgstr \"\"\n";
@@ -174,13 +174,13 @@ foreach ( $entries as $entry ) {
 if ( in_array( '--check', $argv, true ) ) {
 	$current = is_readable( $out ) ? (string) file_get_contents( $out ) : '';
 
-	if ( sl_pot_strings( $current ) === sl_pot_strings( $pot ) ) {
+	if ( ow_pot_strings( $current ) === ow_pot_strings( $pot ) ) {
 		printf( "POT is current\n  %d strings from %d files\n", count( $entries ), count( $files ) );
 		exit( 0 );
 	}
 
-	$missing = array_diff( sl_pot_strings( $pot ), sl_pot_strings( $current ) );
-	$extra   = array_diff( sl_pot_strings( $current ), sl_pot_strings( $pot ) );
+	$missing = array_diff( ow_pot_strings( $pot ), ow_pot_strings( $current ) );
+	$extra   = array_diff( ow_pot_strings( $current ), ow_pot_strings( $pot ) );
 
 	printf(
 		"POT is STALE\n  %d string(s) in the tree are missing from the catalogue, %d in the catalogue are gone from the tree\n  first missing: %s\n  run: php bin/build-pot.php\n",
@@ -217,7 +217,7 @@ printf( "Wrote %s\n  %d strings from %d files\n", str_replace( $root . '/', '', 
  *
  * @return string[] Sorted msgid/msgid_plural literals, header entry excluded.
  */
-function sl_pot_strings( string $pot ): array {
+function ow_pot_strings( string $pot ): array {
 	preg_match_all( '/^msgid(?:_plural)? (".*")$/m', $pot, $matches );
 
 	$strings = array_values(
@@ -242,7 +242,7 @@ function sl_pot_strings( string $pot ): array {
  *
  * @return array<int,string>|null
  */
-function sl_pot_read_args( array $tokens, int $start, int $count ): ?array {
+function ow_pot_read_args( array $tokens, int $start, int $count ): ?array {
 	$i = $start + 1;
 
 	while ( $i < $count && is_array( $tokens[ $i ] ) && T_WHITESPACE === $tokens[ $i ][0] ) {
@@ -287,7 +287,7 @@ function sl_pot_read_args( array $tokens, int $start, int $count ): ?array {
 		}
 
 		if ( is_array( $token ) && T_CONSTANT_ENCAPSED_STRING === $token[0] ) {
-			$current = sl_pot_unquote( $token[1] );
+			$current = ow_pot_unquote( $token[1] );
 			continue;
 		}
 
@@ -300,7 +300,7 @@ function sl_pot_read_args( array $tokens, int $start, int $count ): ?array {
 /**
  * The `translators:` comment immediately above a call, if there is one.
  */
-function sl_pot_translator_comment( array $tokens, int $index ): ?string {
+function ow_pot_translator_comment( array $tokens, int $index ): ?string {
 	for ( $i = $index; $i >= 0 && $i > $index - 40; $i-- ) {
 		if ( ! is_array( $tokens[ $i ] ) || T_COMMENT !== $tokens[ $i ][0] ) {
 			continue;
@@ -318,7 +318,7 @@ function sl_pot_translator_comment( array $tokens, int $index ): ?string {
 	return null;
 }
 
-function sl_pot_unquote( string $literal ): string {
+function ow_pot_unquote( string $literal ): string {
 	$quote = $literal[0];
 	$body  = substr( $literal, 1, -1 );
 
@@ -329,7 +329,7 @@ function sl_pot_unquote( string $literal ): string {
 	return stripcslashes( $body );
 }
 
-function sl_pot_quote( string $value ): string {
+function ow_pot_quote( string $value ): string {
 	$value = str_replace( array( '\\', '"' ), array( '\\\\', '\\"' ), $value );
 	$value = str_replace( "\n", '\\n', $value );
 	$value = str_replace( "\t", '\\t', $value );

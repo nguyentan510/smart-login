@@ -2,10 +2,10 @@
 /**
  * Builds OAuth authorization URLs without leaking nested callback query args.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth\Providers;
+namespace OmniWP\Auth\Providers;
 
 defined( 'ABSPATH' ) || exit;
 

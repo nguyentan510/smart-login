@@ -14,39 +14,39 @@
  * Opt-in, like every other gate here: without the environment variables it
  * reports BLOCKED rather than passing quietly.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 declare( strict_types=1 );
 
-$wp_root     = rtrim( (string) getenv( 'SMART_LOGIN_WP_ROOT' ), "\\/" );
-$plugin_root = rtrim( (string) getenv( 'SMART_LOGIN_PLUGIN_ROOT' ), "\\/" );
+$wp_root     = rtrim( (string) getenv( 'OMNIWP_WP_ROOT' ), "\\/" );
+$plugin_root = rtrim( (string) getenv( 'OMNIWP_PLUGIN_ROOT' ), "\\/" );
 
 $blocked = static function ( string $message ): never {
-	echo "SMART_LOGIN_DIALOG_INTEGRATION_BLOCKED\n";
+	echo "OMNIWP_DIALOG_INTEGRATION_BLOCKED\n";
 	echo 'reason=' . $message . "\n";
 	exit( 2 );
 };
 
 $failed = static function ( string $message ): never {
-	echo "SMART_LOGIN_DIALOG_INTEGRATION_FAILED\n";
+	echo "OMNIWP_DIALOG_INTEGRATION_FAILED\n";
 	echo 'reason=' . $message . "\n";
 	exit( 1 );
 };
 
 if ( '' === $wp_root || ! is_file( $wp_root . DIRECTORY_SEPARATOR . 'wp-settings.php' ) ) {
-	$blocked( 'SMART_LOGIN_WP_ROOT must point to a WordPress public root' );
+	$blocked( 'OMNIWP_WP_ROOT must point to a WordPress public root' );
 }
 
-if ( '' === $plugin_root || ! is_file( $plugin_root . DIRECTORY_SEPARATOR . 'smart-login.php' ) ) {
-	$blocked( 'SMART_LOGIN_PLUGIN_ROOT must point to the current plugin source' );
+if ( '' === $plugin_root || ! is_file( $plugin_root . DIRECTORY_SEPARATOR . 'omniwp.php' ) ) {
+	$blocked( 'OMNIWP_PLUGIN_ROOT must point to the current plugin source' );
 }
 
 define( 'WP_USE_THEMES', false );
 
 require $wp_root . DIRECTORY_SEPARATOR . 'wp-load.php';
 
-if ( ! class_exists( \SmartLogin\Frontend\LoginDialog::class ) ) {
+if ( ! class_exists( \OmniWP\Frontend\LoginDialog::class ) ) {
 	$blocked( 'the plugin is not active on this install' );
 }
 
@@ -69,11 +69,11 @@ $check = static function ( string $label, bool $passed, string $detail = '' ) us
 // 1. The contract the launcher is localized with
 // ---------------------------------------------------------------------
 
-$contract = \SmartLogin\Frontend\LoginDialog::contract();
+$contract = \OmniWP\Frontend\LoginDialog::contract();
 
 $check(
 	'the fragment endpoint is a real REST url',
-	'' !== $contract['endpoint'] && false !== strpos( $contract['endpoint'], 'smart-login/v1/step' ),
+	'' !== $contract['endpoint'] && false !== strpos( $contract['endpoint'], 'omniwp/v1/step' ),
 	$contract['endpoint']
 );
 
@@ -121,7 +121,7 @@ $check(
 
 $check(
 	'the picker config travels with it',
-	false !== strpos( (string) ( $contract['address']['restUrl'] ?? '' ), 'smart-login/v1' )
+	false !== strpos( (string) ( $contract['address']['restUrl'] ?? '' ), 'omniwp/v1' )
 		&& '' !== (string) ( $contract['address']['i18n']['chooseWard'] ?? '' ),
 	(string) ( $contract['address']['restUrl'] ?? '' )
 );
@@ -135,10 +135,10 @@ $check(
  * read as a broken endpoint. A rule carrying its own copy of the data stops
  * testing the data.
  */
-$province_codes = array_keys( \SmartLogin\Address\AddressRepository::provinces() );
+$province_codes = array_keys( \OmniWP\Address\AddressRepository::provinces() );
 $first_province = (string) ( $province_codes[0] ?? '' );
 
-$wards     = rest_do_request( new WP_REST_Request( 'GET', '/smart-login/v1/address/wards/' . $first_province ) );
+$wards     = rest_do_request( new WP_REST_Request( 'GET', '/omniwp/v1/address/wards/' . $first_province ) );
 $ward_list = (array) $wards->get_data();
 
 $check(
@@ -153,7 +153,7 @@ $check(
 
 $page = home_url( '/' );
 
-$request = new WP_REST_Request( 'GET', '/smart-login/v1/step' );
+$request = new WP_REST_Request( 'GET', '/omniwp/v1/step' );
 $request->set_param( 'step', 'identify' );
 $request->set_param( 'page', $page );
 $request->set_param( 'redirect_to', $page );
@@ -164,14 +164,14 @@ $html     = (string) ( $body['data']['html'] ?? '' );
 
 $check( 'the fragment route answers 200', 200 === $response->get_status(), (string) $response->get_status() );
 $check( 'the fragment carries markup', '' !== $html, strlen( $html ) . ' bytes' );
-$check( 'the fragment carries a fresh nonce', false !== strpos( $html, 'smart_login_nonce' ) );
+$check( 'the fragment carries a fresh nonce', false !== strpos( $html, 'OMNIWP_nonce' ) );
 $check( 'the fragment does not link into the API', false === strpos( $html, '/wp-json/' ) );
 $check( 'the fragment returns the visitor to the host page', false !== strpos( $html, $page ), $page );
 
 /*
  * The off-site check, because `page` and `redirect_to` both end up in an href.
  */
-$evil = new WP_REST_Request( 'GET', '/smart-login/v1/step' );
+$evil = new WP_REST_Request( 'GET', '/omniwp/v1/step' );
 $evil->set_param( 'step', 'identify' );
 $evil->set_param( 'page', 'https://evil.example/' );
 
@@ -183,7 +183,7 @@ $check( 'an off-site host page is refused', false === strpos( $evil_html, 'evil.
  * `onboard` is the one step a caller may name that is not on the public list.
  * Signed out, it must not render — the protection PUBLIC_STEPS was providing.
  */
-$onboard = new WP_REST_Request( 'GET', '/smart-login/v1/step' );
+$onboard = new WP_REST_Request( 'GET', '/omniwp/v1/step' );
 $onboard->set_param( 'step', 'onboard' );
 $onboard->set_param( 'page', $page );
 
@@ -199,11 +199,11 @@ $check(
 // 3. noindex on the dialog-open variant
 // ---------------------------------------------------------------------
 
-$dialog = new \SmartLogin\Frontend\LoginDialog();
+$dialog = new \OmniWP\Frontend\LoginDialog();
 
-$_GET['smart_login_step'] = 'identify';
+$_GET['OMNIWP_step'] = 'identify';
 $with                     = $dialog->no_index_dialog_urls( array() );
-unset( $_GET['smart_login_step'] );
+unset( $_GET['OMNIWP_step'] );
 $without = $dialog->no_index_dialog_urls( array() );
 
 $check( 'the dialog-open variant is noindex', ! empty( $with['noindex'] ) );
@@ -260,4 +260,4 @@ if ( $fails > 0 ) {
 	$failed( $fails . ' check(s) failed' );
 }
 
-echo "SMART_LOGIN_DIALOG_INTEGRATION_OK\n";
+echo "OMNIWP_DIALOG_INTEGRATION_OK\n";

@@ -2,15 +2,15 @@
 /**
  * Account creation and profile meta handling.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Identity;
+namespace OmniWP\Identity;
 
-use SmartLogin\Identity\Channels\MailChannel;
-use SmartLogin\Identity\Channels\PhoneChannel;
-use SmartLogin\Security\SecurityMeta;
-use SmartLogin\Settings;
+use OmniWP\Identity\Channels\MailChannel;
+use OmniWP\Identity\Channels\PhoneChannel;
+use OmniWP\Security\SecurityMeta;
+use OmniWP\Settings;
 use WP_Error;
 use WP_User;
 
@@ -18,12 +18,12 @@ defined( 'ABSPATH' ) || exit;
 
 class UserManager {
 
-	const META_PHONE          = 'smartlogin_phone';
-	const META_PHONE_VERIFIED = 'smartlogin_phone_verified_at';
-	const META_EMAIL_VERIFIED = 'smartlogin_email_verified_at';
-	const META_DOB            = 'smartlogin_dob';
-	const META_GENDER         = 'smartlogin_gender';
-	const META_SYNTHETIC      = 'smartlogin_synthetic_email';
+	const META_PHONE          = 'OmniWP_phone';
+	const META_PHONE_VERIFIED = 'OmniWP_phone_verified_at';
+	const META_EMAIL_VERIFIED = 'OmniWP_email_verified_at';
+	const META_DOB            = 'OmniWP_dob';
+	const META_GENDER         = 'OmniWP_gender';
+	const META_SYNTHETIC      = 'OmniWP_synthetic_email';
 
 	/**
 	 * Build the placeholder address used when an account has no real inbox.
@@ -43,17 +43,27 @@ class UserManager {
 	 *
 	 * @param string $opaque_token Output of OpaqueLogin::generate().
 	 */
-	public static function synthetic_email( string $opaque_token ): string {
+	public static function synthetic_email( string $opaque_token, string $phone = '' ): string {
 		$domain = (string) Settings::get( 'identity.synthetic_domain', 'phone.invalid' );
-		$email  = $opaque_token . '@' . $domain;
+		$prefix = $opaque_token;
+
+		if ( '' !== $phone ) {
+			$clean_phone = Phone::normalize( $phone );
+			if ( '' !== $clean_phone ) {
+				$prefix = $clean_phone;
+			}
+		}
+
+		$email = $prefix . '@' . $domain;
 
 		/**
 		 * Filter the generated placeholder email.
 		 *
 		 * @param string $email
 		 * @param string $opaque_token
+		 * @param string $phone
 		 */
-		return (string) apply_filters( 'smart_login_synthetic_email', $email, $opaque_token );
+		return (string) apply_filters( 'OMNIWP_synthetic_email', $email, $opaque_token, $phone );
 	}
 
 	/**
@@ -68,7 +78,7 @@ class UserManager {
 		 * @param bool   $is
 		 * @param string $email
 		 */
-		return (bool) apply_filters( 'smart_login_is_synthetic_email', $is, $email );
+		return (bool) apply_filters( 'OMNIWP_is_synthetic_email', $is, $email );
 	}
 
 	public static function user_has_synthetic_email( int $user_id ): bool {
@@ -100,22 +110,27 @@ class UserManager {
 		$subject   = $claim->subject();
 
 		if ( '' === $subject ) {
-			return new WP_Error( 'smart_login_no_identity', __( 'Thiếu thông tin định danh.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_no_identity', __( 'Thiếu thông tin định danh.', 'omniwp' ) );
 		}
 
 		// Ownership is the directory's question, not a uniqueness check here.
 		if ( $directory->resolve( $claim->claim() )->has_owner() ) {
-			return new WP_Error( 'smart_login_exists', __( 'Tài khoản đã tồn tại.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_exists', __( 'Tài khoản đã tồn tại.', 'omniwp' ) );
 		}
 
 		// One opaque token serves as both the login and the placeholder mailbox,
 		// so neither is derivable from anything the user typed.
 		$login    = OpaqueLogin::generate();
 		$is_email = MailChannel::ID === $channel;
-		$mail     = $is_email ? $subject : self::synthetic_email( $login );
+		$mail     = $is_email ? $subject : self::synthetic_email( $login, PhoneChannel::ID === $channel ? $subject : '' );
+
+		if ( ! $is_email && email_exists( $mail ) ) {
+			// Fall back to opaque login token if phone-derived placeholder exists.
+			$mail = self::synthetic_email( $login );
+		}
 
 		if ( email_exists( $mail ) ) {
-			return new WP_Error( 'smart_login_exists', __( 'Tài khoản đã tồn tại.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_exists', __( 'Tài khoản đã tồn tại.', 'omniwp' ) );
 		}
 
 		$full_name = trim( (string) ( $data['full_name'] ?? '' ) );
@@ -147,7 +162,7 @@ class UserManager {
 			}
 			wp_delete_user( (int) $user_id );
 
-			return new WP_Error( 'smart_login_exists', __( 'Tài khoản đã tồn tại.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_exists', __( 'Tài khoản đã tồn tại.', 'omniwp' ) );
 		}
 
 		self::apply_password_hash( (int) $user_id, (string) ( $data['pass_hash'] ?? '' ) );
@@ -158,7 +173,7 @@ class UserManager {
 		// answer "who owns this subject" — see Invariant 1.
 		//
 		// This used to say the keys were documented in README as a public contract for
-		// other plugins. They are not: README names smartlogin_ward_code and nothing
+		// other plugins. They are not: README names OmniWP_ward_code and nothing
 		// else of this family. Found in 14.2, corrected in 15.4 — a comment claiming a
 		// contract that does not exist is the same defect as a README doing it.
 		if ( PhoneChannel::ID === $channel ) {
@@ -222,14 +237,14 @@ class UserManager {
 	 */
 	public static function adopt_verified_email( int $user_id, VerifiedClaim $claim, string $linked_by = IdentityRecord::BY_OTP, ?IdentityDirectory $directory = null ) {
 		if ( MailChannel::ID !== $claim->channel() ) {
-			return new WP_Error( 'smart_login_not_an_email', __( 'Kênh không phải email.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_not_an_email', __( 'Kênh không phải email.', 'omniwp' ) );
 		}
 
 		$address   = $claim->subject();
 		$directory = $directory ?? new IdentityDirectory();
 
 		if ( ! $directory->replace_in_channel( $user_id, $claim, $linked_by ) ) {
-			return new WP_Error( 'smart_login_contact_exists', __( 'Không thể cập nhật thông tin liên hệ.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_contact_exists', __( 'Không thể cập nhật thông tin liên hệ.', 'omniwp' ) );
 		}
 
 		$updated = wp_update_user(
@@ -291,7 +306,7 @@ class UserManager {
 		/**
 		 * @param string $role
 		 */
-		return (string) apply_filters( 'smart_login_default_role', $role );
+		return (string) apply_filters( 'OMNIWP_default_role', $role );
 	}
 
 	/**
@@ -333,7 +348,7 @@ class UserManager {
 	 * @return string[] Human-readable labels.
 	 */
 	public static function missing_profile_fields( int $user_id ): array {
-		$status  = ( new \SmartLogin\Auth\ProfileCompletionService() )->status( $user_id );
+		$status  = ( new \OmniWP\Auth\ProfileCompletionService() )->status( $user_id );
 		$missing = array_map(
 			static function ( array $item ): string {
 				return (string) $item['label'];
@@ -345,6 +360,6 @@ class UserManager {
 		 * @param string[] $missing
 		 * @param int      $user_id
 		 */
-		return (array) apply_filters( 'smart_login_missing_profile_fields', $missing, $user_id );
+		return (array) apply_filters( 'OMNIWP_missing_profile_fields', $missing, $user_id );
 	}
 }

@@ -19,11 +19,11 @@
  * `Esc`, the inert background and the top-layer stacking that would otherwise be
  * four hand-written behaviours for Phase 18's rules to measure.
  *
- * Override at yourtheme/smart-login/login-dialog.php.
+ * Override at yourtheme/omniwp/login-dialog.php.
  *
  * @var string $title Initial accessible name; replaced per step by the script.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 defined( 'ABSPATH' ) || exit;
@@ -38,7 +38,7 @@ defined( 'ABSPATH' ) || exit;
 				type="button"
 				class="sl-dialog__close"
 				data-sl-dialog-close
-				aria-label="<?php esc_attr_e( 'Đóng', 'smart-login' ); ?>"
+				aria-label="<?php esc_attr_e( 'Đóng', 'omniwp' ); ?>"
 			>
 				<span aria-hidden="true">&times;</span>
 			</button>
@@ -53,7 +53,7 @@ defined( 'ABSPATH' ) || exit;
 		 */
 		?>
 		<div class="sl-dialog__body" data-sl-dialog-body aria-live="polite" aria-busy="true">
-			<p class="sl-dialog__loading"><?php esc_html_e( 'Đang tải…', 'smart-login' ); ?></p>
+			<p class="sl-dialog__loading"><?php esc_html_e( 'Đang tải…', 'omniwp' ); ?></p>
 		</div>
 	</div>
 </dialog>

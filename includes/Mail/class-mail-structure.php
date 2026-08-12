@@ -18,10 +18,10 @@
  * Both are opt-in. A body using neither renders byte-identically to what it
  * rendered before they existed, which is what keeps this from being a migration.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Mail;
+namespace OmniWP\Mail;
 
 defined( 'ABSPATH' ) || exit;
 

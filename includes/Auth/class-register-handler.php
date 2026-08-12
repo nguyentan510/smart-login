@@ -2,21 +2,21 @@
 /**
  * Registration: validate → issue OTP → verify → create account → sign in.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth;
+namespace OmniWP\Auth;
 
-use SmartLogin\Identity\Channels\MailChannel;
-use SmartLogin\Identity\Claim;
-use SmartLogin\Identity\IdentityDirectory;
-use SmartLogin\Identity\IdentityHistory;
-use SmartLogin\Identity\UserManager;
-use SmartLogin\Identity\VerifiedClaim;
-use SmartLogin\OTP\OtpService;
-use SmartLogin\Security\AuditLog;
-use SmartLogin\Security\RateLimiter;
-use SmartLogin\Settings;
+use OmniWP\Identity\Channels\MailChannel;
+use OmniWP\Identity\Claim;
+use OmniWP\Identity\IdentityDirectory;
+use OmniWP\Identity\IdentityHistory;
+use OmniWP\Identity\UserManager;
+use OmniWP\Identity\VerifiedClaim;
+use OmniWP\OTP\OtpService;
+use OmniWP\Security\AuditLog;
+use OmniWP\Security\RateLimiter;
+use OmniWP\Settings;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
@@ -56,11 +56,11 @@ class RegisterHandler {
 		$full_name = sanitize_text_field( wp_unslash( $input['full_name'] ?? '' ) );
 
 		if ( '' === trim( $full_name ) ) {
-			return new WP_Error( 'smart_login_no_name', __( 'Vui lòng nhập họ tên.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_no_name', __( 'Vui lòng nhập họ tên.', 'omniwp' ) );
 		}
 
 		if ( empty( $input['terms'] ) ) {
-			return new WP_Error( 'smart_login_no_terms', __( 'Vui lòng đồng ý với các điều kiện áp dụng.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_no_terms', __( 'Vui lòng đồng ý với các điều kiện áp dụng.', 'omniwp' ) );
 		}
 
 		$payload = array(
@@ -78,7 +78,7 @@ class RegisterHandler {
 		 * @param array $payload
 		 * @param array $input
 		 */
-		$payload = (array) apply_filters( 'smart_login_registration_payload', $payload, $input );
+		$payload = (array) apply_filters( 'OMNIWP_registration_payload', $payload, $input );
 
 		AuditLog::record(
 			AuditLog::REGISTER_STARTED,
@@ -164,7 +164,7 @@ class RegisterHandler {
 		}
 
 		if ( OtpService::INTENT_REGISTER !== $row['intent'] ) {
-			return new WP_Error( 'smart_login_wrong_purpose', __( 'Phiên xác thực không hợp lệ.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_wrong_purpose', __( 'Phiên xác thực không hợp lệ.', 'omniwp' ) );
 		}
 
 		$payload = is_array( $row['payload'] ) ? $row['payload'] : array();
@@ -179,7 +179,7 @@ class RegisterHandler {
 		);
 
 		if ( $claim->is_empty() ) {
-			return new WP_Error( 'smart_login_bad_identity', __( 'Thông tin định danh không hợp lệ.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_bad_identity', __( 'Thông tin định danh không hợp lệ.', 'omniwp' ) );
 		}
 
 		if ( '' !== (string) ( $payload['pass_hash'] ?? '' ) ) {
@@ -211,25 +211,25 @@ class RegisterHandler {
 
 		if ( null === $proven ) {
 			return new WP_Error(
-				'smart_login_grant_expired',
-				__( 'Phiên đăng ký đã hết hạn. Vui lòng thực hiện lại.', 'smart-login' )
+				'OMNIWP_grant_expired',
+				__( 'Phiên đăng ký đã hết hạn. Vui lòng thực hiện lại.', 'omniwp' )
 			);
 		}
 
 		$claim = $this->directory->channels()->claim( $proven['channel'], $proven['subject'] );
 
 		if ( $claim->is_empty() ) {
-			return new WP_Error( 'smart_login_bad_identity', __( 'Thông tin định danh không hợp lệ.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_bad_identity', __( 'Thông tin định danh không hợp lệ.', 'omniwp' ) );
 		}
 
 		$full_name = sanitize_text_field( wp_unslash( $input['full_name'] ?? '' ) );
 
 		if ( '' === trim( $full_name ) ) {
-			return $this->retry_signup( 'smart_login_no_name', __( 'Vui lòng nhập họ tên.', 'smart-login' ), $proven );
+			return $this->retry_signup( 'OMNIWP_no_name', __( 'Vui lòng nhập họ tên.', 'omniwp' ), $proven );
 		}
 
 		if ( empty( $input['terms'] ) ) {
-			return $this->retry_signup( 'smart_login_no_terms', __( 'Vui lòng đồng ý với các điều kiện áp dụng.', 'smart-login' ), $proven );
+			return $this->retry_signup( 'OMNIWP_no_terms', __( 'Vui lòng đồng ý với các điều kiện áp dụng.', 'omniwp' ), $proven );
 		}
 
 		$password = $this->validate_password( $input );
@@ -248,7 +248,7 @@ class RegisterHandler {
 		);
 
 		/** This filter documented on start(); the deferred flow honours it too. */
-		$payload = (array) apply_filters( 'smart_login_registration_payload', $payload, $input );
+		$payload = (array) apply_filters( 'OMNIWP_registration_payload', $payload, $input );
 
 		return $this->provision( $claim, $payload );
 	}
@@ -285,8 +285,8 @@ class RegisterHandler {
 		// Reached only if a caller pairs start_identity() with complete(); the two
 		// halves belong to different flows.
 		return new WP_Error(
-			'smart_login_signup_incomplete',
-			__( 'Chưa đủ thông tin để tạo tài khoản.', 'smart-login' )
+			'OMNIWP_signup_incomplete',
+			__( 'Chưa đủ thông tin để tạo tài khoản.', 'omniwp' )
 		);
 	}
 
@@ -304,7 +304,7 @@ class RegisterHandler {
 		$resolution = $this->directory->resolve( $claim );
 
 		if ( AuthAction::ALREADY_REGISTERED === AuthAction::for_resolution( AuthAction::REGISTER, $resolution ) ) {
-			return new WP_Error( 'smart_login_exists', __( 'Tài khoản đã tồn tại.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_exists', __( 'Tài khoản đã tồn tại.', 'omniwp' ) );
 		}
 
 		if ( AuthAction::CREATE_NEW_USER === AuthAction::for_resolution( AuthAction::REGISTER, $resolution ) ) {
@@ -336,7 +336,7 @@ class RegisterHandler {
 		 * @param int   $user_id
 		 * @param array $payload
 		 */
-		do_action( 'smart_login_user_registered', $user_id, $payload );
+		do_action( 'OMNIWP_user_registered', $user_id, $payload );
 
 		$this->sign_in( $user_id, AuthProof::from_otp( $verified, $user_id ) );
 
@@ -403,10 +403,10 @@ class RegisterHandler {
 
 		if ( '' === $raw ) {
 			return new WP_Error(
-				'smart_login_no_identity',
+				'OMNIWP_no_identity',
 				Settings::phone_enabled()
-					? __( 'Vui lòng nhập số điện thoại.', 'smart-login' )
-					: __( 'Vui lòng nhập địa chỉ email.', 'smart-login' )
+					? __( 'Vui lòng nhập số điện thoại.', 'omniwp' )
+					: __( 'Vui lòng nhập địa chỉ email.', 'omniwp' )
 			);
 		}
 
@@ -414,10 +414,10 @@ class RegisterHandler {
 
 		if ( $claim->is_empty() ) {
 			return new WP_Error(
-				'smart_login_bad_identity',
+				'OMNIWP_bad_identity',
 				sprintf(
 					/* translators: %s: identifier label, e.g. "Số điện thoại". */
-					__( '%s không hợp lệ.', 'smart-login' ),
+					__( '%s không hợp lệ.', 'omniwp' ),
 					self::identifier_label()
 				)
 			);
@@ -430,12 +430,12 @@ class RegisterHandler {
 
 			case AuthAction::ALREADY_REGISTERED:
 				return new WP_Error(
-					'smart_login_identity_taken',
-					__( 'Thông tin này đã được đăng ký. Vui lòng đăng nhập.', 'smart-login' )
+					'OMNIWP_identity_taken',
+					__( 'Thông tin này đã được đăng ký. Vui lòng đăng nhập.', 'omniwp' )
 				);
 
 			default:
-				return new WP_Error( 'smart_login_bad_identity', __( 'Không thể đăng ký với thông tin này.', 'smart-login' ) );
+				return new WP_Error( 'OMNIWP_bad_identity', __( 'Không thể đăng ký với thông tin này.', 'omniwp' ) );
 		}
 	}
 
@@ -486,8 +486,8 @@ class RegisterHandler {
 		);
 
 		return new WP_Error(
-			'smart_login_identity_taken',
-			__( 'Thông tin này đã được đăng ký. Vui lòng đăng nhập.', 'smart-login' )
+			'OMNIWP_identity_taken',
+			__( 'Thông tin này đã được đăng ký. Vui lòng đăng nhập.', 'omniwp' )
 		);
 	}
 
@@ -499,10 +499,10 @@ class RegisterHandler {
 		$email = Settings::email_enabled();
 
 		if ( $phone && $email ) {
-			return __( 'Số điện thoại hoặc Email', 'smart-login' );
+			return __( 'Số điện thoại hoặc Email', 'omniwp' );
 		}
 
-		return $email ? __( 'Email', 'smart-login' ) : __( 'Số điện thoại', 'smart-login' );
+		return $email ? __( 'Email', 'omniwp' ) : __( 'Số điện thoại', 'omniwp' );
 	}
 
 	/**

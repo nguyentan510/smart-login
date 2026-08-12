@@ -15,13 +15,13 @@
  *
  * Run with:  php tests/identity/run-account-surface-tests.php
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 require __DIR__ . '/../harness.php';
 
 // ---------------------------------------------------------------------
-sl_section( 'One section, one template (Phase 8.2 turns these green)' );
+ow_section( 'One section, one template (Phase 8.2 turns these green)' );
 
 // The account surface exists twice: templates/profile-summary.php and
 // templates/woocommerce/form-edit-account.php. Only the first was kept current.
@@ -35,13 +35,13 @@ sl_section( 'One section, one template (Phase 8.2 turns these green)' );
 // way into the site, not a way to attach a provider to an account you are
 // already signed into. Same markup, different concern, and a rule that cannot
 // tell the two apart only teaches people to add allowlist entries.
-sl_require_single_template(
+ow_require_single_template(
 	'the provider link invitation lives in one template',
 	'/data-sl-provider-mode="link"/',
 	'partials/linked-identities.php owns what is already linked; one partial must own the invitation to link. The Woo copy calls ProviderRegistry::available() raw and never filters unlinked_providers().'
 );
 
-sl_require_single_template(
+ow_require_single_template(
 	'the profile-status notice lives in one template',
 	'/recommended_missing/',
 	'One copy renders a heading, a sentence and an action link; the other renders implode() of the labels and drops the reason string ProfileCompletionService::onboarding_reasons() exists to supply.'
@@ -49,35 +49,35 @@ sl_require_single_template(
 
 // Green today. The rule is what keeps it green through the extraction: the
 // contact panel is the block most likely to be copied into a second surface.
-sl_require_single_template(
+ow_require_single_template(
 	'the contact verification panel lives in one template',
 	'/data-sl-contact=/',
-	'assets/js/smart-login.js binds every [data-sl-contact] panel it finds, and each panel holds its own OTP token. A second copy on one page would wire two panels to one flow.'
+	'assets/js/omniwp.js binds every [data-sl-contact] panel it finds, and each panel holds its own OTP token. A second copy on one page would wire two panels to one flow.'
 );
 
 // ---------------------------------------------------------------------
-sl_section( 'The Woo template is the only editing surface (Phase 8.3 turns this green)' );
+ow_section( 'The Woo template is the only editing surface (Phase 8.3 turns this green)' );
 
-$controller = sl_source( 'includes/Frontend/class-form-controller.php' );
+$controller = ow_source( 'includes/Frontend/class-form-controller.php' );
 
-sl_assert(
+ow_assert(
 	'FormController can save a profile without WooCommerce',
 	false !== strpos( $controller, "case 'save_profile'" ),
 	'Profile editing runs entirely through WC_Form_Handler::save_account_details. Deactivate WooCommerce and there is no way to edit a profile at all.'
 );
 
-$summary = sl_source( 'templates/profile-summary.php' );
+$summary = ow_source( 'templates/profile-summary.php' );
 
-sl_assert(
+ow_assert(
 	'the profile summary never sends a customer into wp-admin',
 	false === strpos( $summary, "admin_url( 'profile.php' )" ),
 	'The "Cập nhật ngay" link falls back to wp-admin when WooCommerce is inactive. That is a leak, not a fallback.'
 );
 
 // ---------------------------------------------------------------------
-sl_section( 'The WooCommerce adapter still speaks WooCommerce (Phase 8.4)' );
+ow_section( 'The WooCommerce adapter still speaks WooCommerce (Phase 8.4)' );
 
-$woo = sl_source( 'includes/Frontend/class-woo-integration.php' );
+$woo = ow_source( 'includes/Frontend/class-woo-integration.php' );
 
 // WooCommerce 10.9.4 registers save_account_details with no priority, so it runs
 // at 10. This ran at 10 too, and equal priorities fall back to registration
@@ -85,10 +85,10 @@ $woo = sl_source( 'includes/Frontend/class-woo-integration.php' );
 // The result was "First name is a required field" on every save, from a form
 // that had posted a name. An explicit lower priority makes the ordering a
 // property of the code rather than of the load order.
-sl_assert(
+ow_assert(
 	'prepare_account_post runs before WooCommerce validates',
-	(bool) preg_match( "/'template_redirect',\s*array\(\s*\\\$this,\s*'prepare_account_post'\s*\),\s*([0-9])\s*\)/", $woo, $sl_priority )
-		&& (int) $sl_priority[1] < 10,
+	(bool) preg_match( "/'template_redirect',\s*array\(\s*\\\$this,\s*'prepare_account_post'\s*\),\s*([0-9])\s*\)/", $woo, $ow_priority )
+		&& (int) $ow_priority[1] < 10,
 	'WooCommerce hooks the same action at the default priority 10.'
 );
 
@@ -110,7 +110,7 @@ sl_assert(
  * check: the assignment must exist, and the method must not consult
  * `synthetic` anywhere while deciding to make it.
  */
-preg_match( '/function prepare_account_post\(\).*?\n\t\}/s', $woo, $sl_prepare );
+preg_match( '/function prepare_account_post\(\).*?\n\t\}/s', $woo, $ow_prepare );
 
 /*
  * Comments stripped, or the second assertion fails against correct code: the
@@ -119,32 +119,32 @@ preg_match( '/function prepare_account_post\(\).*?\n\t\}/s', $woo, $sl_prepare )
  * that documents why the word is not a condition. Phase 21 hit this three
  * times; it is the same mistake and it is cheap to keep avoiding.
  */
-$sl_prepare_body = (string) preg_replace(
+$ow_prepare_body = (string) preg_replace(
 	array( '#/\*.*?\*/#s', '#//[^\n]*#' ),
 	'',
-	$sl_prepare[0] ?? ''
+	$ow_prepare[0] ?? ''
 );
 
-sl_assert(
+ow_assert(
 	'prepare_account_post backfills account_email from the address on file',
-	'' !== $sl_prepare_body
-		&& (bool) preg_match( "/\\\$_POST\['account_email'\]\s*=\s*wp_get_current_user\(\)->user_email/", $sl_prepare_body ),
+	'' !== $ow_prepare_body
+		&& (bool) preg_match( "/\\\$_POST\['account_email'\]\s*=\s*wp_get_current_user\(\)->user_email/", $ow_prepare_body ),
 	'The account form cannot change an email at all, so the address on file is always what it is submitting.'
 );
 
-sl_assert(
+ow_assert(
 	'and it does so whatever kind of address that is',
-	'' !== $sl_prepare_body && false === stripos( $sl_prepare_body, 'synthetic' ),
+	'' !== $ow_prepare_body && false === stripos( $ow_prepare_body, 'synthetic' ),
 	'Backfilling only for synthetic addresses left every real account failing WooCommerce\'s required-field check.'
 );
 
 // ---------------------------------------------------------------------
-sl_section( 'A refused address says why (P10)' );
+ow_section( 'A refused address says why (P10)' );
 
 /*
  * Written after a false alarm, and worth keeping for that reason.
  *
- * A probe posting `smartlogin_address_1` with no `smartlogin_province_code`
+ * A probe posting `OmniWP_address_1` with no `OmniWP_province_code`
  * key at all saved nothing and reported nothing, which looked like a silent
  * failure. It is not: both save paths guard with
  *
@@ -163,7 +163,7 @@ sl_section( 'A refused address says why (P10)' );
  * calls validate() must report what it refuses. A caller that swallows the
  * WP_Error would produce exactly the silence this went looking for.
  */
-$sl_validate_callers = array(
+$ow_validate_callers = array(
 	'includes/Frontend/class-woo-integration.php' => array( 'save_account_address', 'wc_add_notice' ),
 	// save_onboarding(), not handle_save_profile(): the standalone page's own
 	// save delegates the profile fields and the address to it, so one method
@@ -181,16 +181,16 @@ $sl_validate_callers = array(
 	'includes/Auth/class-flow-engine.php'         => array( 'save_onboarding', '->notice(' ),
 );
 
-foreach ( $sl_validate_callers as $sl_file => $sl_expect ) {
-	$sl_body = sl_method_body( sl_source( $sl_file ), $sl_expect[0] );
+foreach ( $ow_validate_callers as $ow_file => $ow_expect ) {
+	$ow_body = ow_method_body( ow_source( $ow_file ), $ow_expect[0] );
 
-	sl_assert(
-		sprintf( '%s reports what the address validator refuses', basename( $sl_file ) ),
-		'' !== $sl_body
-			&& false !== strpos( $sl_body, 'AddressFields::validate' )
-			&& false !== strpos( $sl_body, 'is_wp_error' )
-			&& false !== strpos( $sl_body, $sl_expect[1] ),
-		'A validator whose refusal nobody prints is a form that discards what somebody typed and says nothing. Expected ' . $sl_expect[1] . ' in ' . $sl_expect[0] . '().'
+	ow_assert(
+		sprintf( '%s reports what the address validator refuses', basename( $ow_file ) ),
+		'' !== $ow_body
+			&& false !== strpos( $ow_body, 'AddressFields::validate' )
+			&& false !== strpos( $ow_body, 'is_wp_error' )
+			&& false !== strpos( $ow_body, $ow_expect[1] ),
+		'A validator whose refusal nobody prints is a form that discards what somebody typed and says nothing. Expected ' . $ow_expect[1] . ' in ' . $ow_expect[0] . '().'
 	);
 }
 
@@ -199,7 +199,7 @@ foreach ( $sl_validate_callers as $sl_file => $sl_expect ) {
  * the notice API differs between them — Woo owns its own — and a rule that only
  * knew the two would not notice a third.
  */
-sl_require_companion(
+ow_require_companion(
 	'every file that validates an address also reports a refusal',
 	'/AddressFields::validate\(/',
 	// `->notice(` joined the two in 19.1: a step that serves both a page and a
@@ -211,4 +211,4 @@ sl_require_companion(
 );
 
 // ---------------------------------------------------------------------
-sl_summary( 'Account surface' );
+ow_summary( 'Account surface' );

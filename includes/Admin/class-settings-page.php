@@ -8,33 +8,33 @@
  * system status table and the audit log. Each of those has moved to something
  * that does one of them.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Admin;
+namespace OmniWP\Admin;
 
-use SmartLogin\Admin\Screens\AuditScreen;
-use SmartLogin\Admin\Screens\GuideScreen;
-use SmartLogin\Admin\Screens\OverviewScreen;
-use SmartLogin\Admin\Screens\SettingsScreen;
-use SmartLogin\FieldRegistry;
-use SmartLogin\Installer;
-use SmartLogin\Settings;
+use OmniWP\Admin\Screens\AuditScreen;
+use OmniWP\Admin\Screens\GuideScreen;
+use OmniWP\Admin\Screens\OverviewScreen;
+use OmniWP\Admin\Screens\SettingsScreen;
+use OmniWP\FieldRegistry;
+use OmniWP\Installer;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
 class SettingsPage {
 
-	const SLUG       = 'smart-login';
-	const AUDIT_SLUG = 'smart-login-audit';
-	const GUIDE_SLUG = 'smart-login-guide';
-	const GROUP      = 'smart_login_group';
+	const SLUG       = 'omniwp';
+	const AUDIT_SLUG = 'omniwp-audit';
+	const GUIDE_SLUG = 'omniwp-guide';
+	const GROUP      = 'OMNIWP_group';
 
 	/** The readiness screen. It holds no fields, so it is not a registry tab. */
 	const OVERVIEW = 'overview';
 
 	/** admin-post action that clears what an upgrade left behind. */
-	const DISMISS_NOTICE = 'smart_login_dismiss_migration_notice';
+	const DISMISS_NOTICE = 'OMNIWP_dismiss_migration_notice';
 
 	public function register(): void {
 		// The overview screen owns one admin-post handler (resume sending), which
@@ -47,13 +47,13 @@ class SettingsPage {
 		add_action( 'admin_notices', array( $this, 'dev_mode_notice' ) );
 		add_action( 'admin_notices', array( $this, 'migration_notices' ) );
 		add_action( 'admin_post_' . self::DISMISS_NOTICE, array( $this, 'dismiss_migration_notices' ) );
-		add_filter( 'plugin_action_links_' . SMART_LOGIN_BASENAME, array( $this, 'action_links' ) );
+		add_filter( 'plugin_action_links_' . OMNIWP_BASENAME, array( $this, 'action_links' ) );
 	}
 
 	public function add_menu(): void {
 		add_menu_page(
-			__( 'Smart Login', 'smart-login' ),
-			__( 'Smart Login', 'smart-login' ),
+			__( 'OmniWP', 'omniwp' ),
+			__( 'OmniWP', 'omniwp' ),
 			'manage_options',
 			self::SLUG,
 			array( $this, 'render' ),
@@ -63,8 +63,8 @@ class SettingsPage {
 
 		add_submenu_page(
 			self::SLUG,
-			__( 'Cài đặt', 'smart-login' ),
-			__( 'Cài đặt', 'smart-login' ),
+			__( 'Cài đặt', 'omniwp' ),
+			__( 'Cài đặt', 'omniwp' ),
 			'manage_options',
 			self::SLUG,
 			array( $this, 'render' )
@@ -72,8 +72,8 @@ class SettingsPage {
 
 		add_submenu_page(
 			self::SLUG,
-			__( 'Hướng dẫn', 'smart-login' ),
-			__( 'Hướng dẫn', 'smart-login' ),
+			__( 'Hướng dẫn', 'omniwp' ),
+			__( 'Hướng dẫn', 'omniwp' ),
 			'manage_options',
 			self::GUIDE_SLUG,
 			array( $this, 'render_guide' )
@@ -81,8 +81,8 @@ class SettingsPage {
 
 		add_submenu_page(
 			self::SLUG,
-			__( 'Nhật ký', 'smart-login' ),
-			__( 'Nhật ký', 'smart-login' ),
+			__( 'Nhật ký', 'omniwp' ),
+			__( 'Nhật ký', 'omniwp' ),
 			'manage_options',
 			self::AUDIT_SLUG,
 			array( $this, 'render_audit' )
@@ -106,20 +106,20 @@ class SettingsPage {
 			return;
 		}
 
-		wp_enqueue_style( 'smart-login-admin', SMART_LOGIN_URL . 'assets/css/admin.css', array(), SMART_LOGIN_VERSION );
-		wp_enqueue_script( 'smart-login-admin', SMART_LOGIN_URL . 'assets/js/admin.js', array(), SMART_LOGIN_VERSION, true );
+		wp_enqueue_style( 'omniwp-admin', OMNIWP_URL . 'assets/css/admin.css', array(), OMNIWP_VERSION );
+		wp_enqueue_script( 'omniwp-admin', OMNIWP_URL . 'assets/js/admin.js', array(), OMNIWP_VERSION, true );
 
 		wp_localize_script(
-			'smart-login-admin',
-			'SmartLoginAdmin',
+			'omniwp-admin',
+			'OmniWPAdmin',
 			array(
 				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
 				'nonce'   => wp_create_nonce( WebhookTester::NONCE ),
 				'i18n'    => array(
-					'sending' => __( 'Đang gửi…', 'smart-login' ),
-					'test'    => __( 'Gửi thử', 'smart-login' ),
-					'failed'  => __( 'Không kết nối được tới máy chủ.', 'smart-login' ),
-					'prompt'  => __( 'Nhập số điện thoại hoặc email để gửi thử.', 'smart-login' ),
+					'sending' => __( 'Đang gửi…', 'omniwp' ),
+					'test'    => __( 'Gửi thử', 'omniwp' ),
+					'failed'  => __( 'Không kết nối được tới máy chủ.', 'omniwp' ),
+					'prompt'  => __( 'Nhập số điện thoại hoặc email để gửi thử.', 'omniwp' ),
 				),
 			)
 		);
@@ -128,7 +128,7 @@ class SettingsPage {
 	public function action_links( $links ) {
 		array_unshift(
 			$links,
-			'<a href="' . esc_url( admin_url( 'admin.php?page=' . self::SLUG ) ) . '">' . esc_html__( 'Cài đặt', 'smart-login' ) . '</a>'
+			'<a href="' . esc_url( admin_url( 'admin.php?page=' . self::SLUG ) ) . '">' . esc_html__( 'Cài đặt', 'omniwp' ) . '</a>'
 		);
 
 		return $links;
@@ -142,14 +142,14 @@ class SettingsPage {
 			return;
 		}
 
-		if ( ! ( new \SmartLogin\OTP\OtpService() )->dev_mode_active() ) {
+		if ( ! ( new \OmniWP\OTP\OtpService() )->dev_mode_active() ) {
 			return;
 		}
 
 		printf(
 			'<div class="notice notice-warning"><p><strong>%s</strong> %s</p></div>',
-			esc_html__( 'Smart Login:', 'smart-login' ),
-			esc_html__( 'Chế độ DEV đang bật — mã OTP được hiển thị trực tiếp trên màn hình. Hãy tắt trước khi đưa lên môi trường thật.', 'smart-login' )
+			esc_html__( 'OmniWP:', 'omniwp' ),
+			esc_html__( 'Chế độ DEV đang bật — mã OTP được hiển thị trực tiếp trên màn hình. Hãy tắt trước khi đưa lên môi trường thật.', 'omniwp' )
 		);
 	}
 
@@ -185,7 +185,7 @@ class SettingsPage {
 		printf(
 			'<div class="notice notice-warning"><p><a href="%s">%s</a></p></div>',
 			esc_url( wp_nonce_url( admin_url( 'admin-post.php?action=' . self::DISMISS_NOTICE ), self::DISMISS_NOTICE ) ),
-			esc_html__( 'Tôi đã đọc — ẩn thông báo này', 'smart-login' )
+			esc_html__( 'Tôi đã đọc — ẩn thông báo này', 'omniwp' )
 		);
 	}
 
@@ -241,7 +241,7 @@ class SettingsPage {
 	 * @return array<string,string>
 	 */
 	public static function tabs(): array {
-		return array( self::OVERVIEW => __( 'Tổng quan', 'smart-login' ) ) + FieldRegistry::tabs();
+		return array( self::OVERVIEW => __( 'Tổng quan', 'omniwp' ) ) + FieldRegistry::tabs();
 	}
 
 	public function render_audit(): void {
@@ -317,7 +317,7 @@ class SettingsPage {
 
 	private static function require_capability(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'Bạn không có quyền truy cập trang này.', 'smart-login' ) );
+			wp_die( esc_html__( 'Bạn không có quyền truy cập trang này.', 'omniwp' ) );
 		}
 	}
 }

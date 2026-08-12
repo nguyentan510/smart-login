@@ -32,7 +32,7 @@
  * not replace tests/integration/, and a green picture says nothing about what a
  * live database holds.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 declare( strict_types=1 );
@@ -41,13 +41,13 @@ if ( 'cli' !== PHP_SAPI ) {
 	exit( 1 );
 }
 
-$sl_root = dirname( __DIR__, 2 ) . '/';
+$ow_root = dirname( __DIR__, 2 ) . '/';
 
-require $sl_root . 'tests/stubs.php';
-require $sl_root . 'tests/template-stubs.php';
+require $ow_root . 'tests/stubs.php';
+require $ow_root . 'tests/template-stubs.php';
 
-use SmartLogin\Auth\Providers\ProviderRegistry;
-use SmartLogin\Settings;
+use OmniWP\Auth\Providers\ProviderRegistry;
+use OmniWP\Settings;
 
 /*
  * Everything on, because the job is to see the screen at its fullest. A surface
@@ -67,13 +67,13 @@ Settings::update(
 /* The entry screen only draws a provider button for a provider that is
  * *configured*, and ProviderCredentials::is_configured() reads these constants.
  * Same values run-template-tests.php uses; nothing here dials anything. */
-define( 'SMART_LOGIN_GOOGLE_CLIENT_ID', 'google-client-for-render' );
-define( 'SMART_LOGIN_GOOGLE_CLIENT_SECRET', 'google-secret-for-render' );
+define( 'OMNIWP_GOOGLE_CLIENT_ID', 'google-client-for-render' );
+define( 'OMNIWP_GOOGLE_CLIENT_SECRET', 'google-secret-for-render' );
 
-$GLOBALS['sl_logged_in']       = true;
-$GLOBALS['sl_current_user_id'] = 7;
+$GLOBALS['ow_logged_in']       = true;
+$GLOBALS['ow_current_user_id'] = 7;
 
-$sl_fixtures = require $sl_root . 'tests/template-fixtures.php';
+$ow_fixtures = require $ow_root . 'tests/template-fixtures.php';
 
 /**
  * The provider rows the account card draws, which the smoke fixtures leave
@@ -81,7 +81,7 @@ $sl_fixtures = require $sl_root . 'tests/template-fixtures.php';
  * link list, because "everything is already linked" is the case the WooCommerce
  * copy got wrong for six phases. A picture wants both halves.
  */
-$sl_identity = static function ( string $channel, string $label, bool $federated, bool $primary = false ): array {
+$ow_identity = static function ( string $channel, string $label, bool $federated, bool $primary = false ): array {
 	return array(
 		'channel'     => $channel,
 		'subject'     => 'sub-1',
@@ -96,16 +96,16 @@ $sl_identity = static function ( string $channel, string $label, bool $federated
 	);
 };
 
-$sl_offerable = ( new ProviderRegistry() )->get( 'google' );
+$ow_offerable = ( new ProviderRegistry() )->get( 'google' );
 
-$sl_providers = array(
-	'sl_identities'     => array(
-		$sl_identity( 'email', 'Email', false, true ),
-		$sl_identity( 'google', 'Google', true ),
+$ow_providers = array(
+	'ow_identities'     => array(
+		$ow_identity( 'email', 'Email', false, true ),
+		$ow_identity( 'google', 'Google', true ),
 	),
-	'sl_can_unlink'     => true,
-	'sl_redirect'       => 'https://example.test/my-account/',
-	'sl_link_providers' => null === $sl_offerable ? array() : array( $sl_offerable ),
+	'ow_can_unlink'     => true,
+	'ow_redirect'       => 'https://example.test/my-account/',
+	'ow_link_providers' => null === $ow_offerable ? array() : array( $ow_offerable ),
 );
 
 /**
@@ -118,23 +118,23 @@ $sl_providers = array(
  * Arguments default to the smoke fixture and are overridden only where a picture
  * needs a fuller case than a smoke test does.
  */
-$sl_surfaces = array(
-	'status'    => array( 'partials/account/status', $sl_fixtures['partials/account/status'] ),
-	'profile'   => array( 'partials/account/profile', $sl_fixtures['partials/account/profile'] ),
+$ow_surfaces = array(
+	'status'    => array( 'partials/account/status', $ow_fixtures['partials/account/status'] ),
+	'profile'   => array( 'partials/account/profile', $ow_fixtures['partials/account/profile'] ),
 	'contact'   => array(
 		'partials/account/contact',
-		array( 'sl_providers' => $sl_providers ) + $sl_fixtures['partials/account/contact'],
+		array( 'ow_providers' => $ow_providers ) + $ow_fixtures['partials/account/contact'],
 	),
 	'providers' => array(
 		'partials/account/providers',
-		$sl_providers,
+		$ow_providers,
 	),
-	'address'   => array( 'partials/account/address', $sl_fixtures['partials/account/address'] ),
+	'address'   => array( 'partials/account/address', $ow_fixtures['partials/account/address'] ),
 	'password'  => array(
 		'partials/account/password',
-		array( 'sl_user' => new WP_User( 7, 'Nguyễn Như' ), 'sl_has_contact' => true ),
+		array( 'ow_user' => new WP_User( 7, 'Nguyễn Như' ), 'ow_has_contact' => true ),
 	),
-	'card-head' => array( 'partials/account/card-head', array( 'sl_section' => 'profile' ) ),
+	'card-head' => array( 'partials/account/card-head', array( 'ow_section' => 'profile' ) ),
 
 	/*
 	 * The whole standalone surface, wrapper and save bar included.
@@ -144,7 +144,7 @@ $sl_surfaces = array(
 	 * the five cards together itself — could not show it. A composite of parts is
 	 * not the page.
 	 */
-	'page'      => array( 'account', $sl_fixtures['account'], null ),
+	'page'      => array( 'account', $ow_fixtures['account'], null ),
 
 	/*
 	 * The sign-in screens, added in P5. Phase 18's spec left pointing the tool at
@@ -155,12 +155,12 @@ $sl_surfaces = array(
 	 * Rule 1 only requires the account partials, so these are here because they
 	 * are useful rather than because anything fails without them.
 	 */
-	'sign-in'   => array( 'form-auth', $sl_fixtures['form-auth'], 'identify' ),
-	'sign-in-password' => array( 'form-password', $sl_fixtures['form-password'], 'password' ),
-	'signup'    => array( 'form-signup', $sl_fixtures['form-signup'], 'signup' ),
-	'otp'       => array( 'form-otp', $sl_fixtures['form-otp'], 'otp' ),
-	'forgot'    => array( 'form-forgot', $sl_fixtures['form-forgot'], 'forgot' ),
-	'onboarding' => array( 'onboarding', $sl_fixtures['onboarding'], 'onboarding' ),
+	'sign-in'   => array( 'form-auth', $ow_fixtures['form-auth'], 'identify' ),
+	'sign-in-password' => array( 'form-password', $ow_fixtures['form-password'], 'password' ),
+	'signup'    => array( 'form-signup', $ow_fixtures['form-signup'], 'signup' ),
+	'otp'       => array( 'form-otp', $ow_fixtures['form-otp'], 'otp' ),
+	'forgot'    => array( 'form-forgot', $ow_fixtures['form-forgot'], 'forgot' ),
+	'onboarding' => array( 'onboarding', $ow_fixtures['onboarding'], 'onboarding' ),
 
 	/*
 	 * The dialog, added in 19.7. It is the one surface here that is not a
@@ -174,7 +174,7 @@ $sl_surfaces = array(
 	 * attribute renders without a backdrop and without the top layer — so a
 	 * picture taken that way would be a picture of a different element.
 	 */
-	'dialog'    => array( 'login-dialog', $sl_fixtures['login-dialog'], null ),
+	'dialog'    => array( 'login-dialog', $ow_fixtures['login-dialog'], null ),
 );
 
 /**
@@ -184,27 +184,27 @@ $sl_surfaces = array(
  * says nothing about whether the four of them look like one screen, which is
  * the question Phase 17 was about.
  */
-$sl_composites = array(
+$ow_composites = array(
 	'account' => array( 'status', 'profile', 'contact', 'address', 'password' ),
 );
 
 /**
  * Render one template with the stubs loaded, returning its markup.
  */
-$sl_render = static function ( string $template, array $args ) use ( $sl_root ): string {
+$ow_render = static function ( string $template, array $args ) use ( $ow_root ): string {
 	ob_start();
 
 	try {
-		( static function ( string $sl_file, array $sl_args ): void {
-			extract( $sl_args, EXTR_SKIP ); // phpcs:ignore WordPress.PHP.DontExtract
-			include $sl_file;
-		} )( $sl_root . 'templates/' . $template . '.php', $args );
+		( static function ( string $ow_file, array $ow_args ): void {
+			extract( $ow_args, EXTR_SKIP ); // phpcs:ignore WordPress.PHP.DontExtract
+			include $ow_file;
+		} )( $ow_root . 'templates/' . $template . '.php', $args );
 
 		return (string) ob_get_clean();
-	} catch ( Throwable $sl_error ) {
+	} catch ( Throwable $ow_error ) {
 		ob_end_clean();
 
-		return '<pre style="color:#b42318">' . htmlspecialchars( get_class( $sl_error ) . ': ' . $sl_error->getMessage() ) . '</pre>';
+		return '<pre style="color:#b42318">' . htmlspecialchars( get_class( $ow_error ) . ': ' . $ow_error->getMessage() ) . '</pre>';
 	}
 };
 
@@ -212,21 +212,21 @@ $sl_render = static function ( string $template, array $args ) use ( $sl_root ):
  * Wrap markup in a standalone document carrying the real stylesheet inline.
  */
 /*
- * $modifier null means the surface already carries its own `.smart-login`
+ * $modifier null means the surface already carries its own `.omniwp`
  * wrapper — account.php does — and nesting a second one would apply the
  * max-width and the padding twice, which is a picture of a page that does not
  * exist.
  */
-$sl_page = static function ( string $name, string $body, ?string $modifier = 'account' ) use ( $sl_root ): string {
+$ow_page = static function ( string $name, string $body, ?string $modifier = 'account' ) use ( $ow_root ): string {
 	/*
 	 * Tokens first, and separately, since 21.1 split them out of
-	 * `.smart-login`. In a real page WordPress resolves this from the registered
+	 * `.omniwp`. In a real page WordPress resolves this from the registered
 	 * dependency; here there is no dependency graph, so a picture built without
 	 * this file is a picture with every colour, space and font size unresolved.
 	 */
-	$css = (string) file_get_contents( $sl_root . 'assets/css/smart-login-tokens.css' );
-
-	$css .= "\n" . (string) file_get_contents( $sl_root . 'assets/css/smart-login.css' );
+	$css = (string) file_get_contents( $ow_root . 'assets/css/omniwp-tokens.css' );
+	$css .= "\n" . (string) file_get_contents( $ow_root . 'assets/css/omniwp-base.css' );
+	$css .= "\n" . (string) file_get_contents( $ow_root . 'assets/css/omniwp.css' );
 
 	/*
 	 * The dialog ships its own stylesheet, and the two-stage asset load is why:
@@ -237,13 +237,13 @@ $sl_page = static function ( string $name, string $body, ?string $modifier = 'ac
 	 * gap in the tool.
 	 */
 	if ( 'dialog' === $name ) {
-		$css .= "\n" . (string) file_get_contents( $sl_root . 'assets/css/smart-login-dialog.css' );
+		$css .= "\n" . (string) file_get_contents( $ow_root . 'assets/css/omniwp-dialog.css' );
 	}
 
 	return "<!doctype html>\n"
 		. '<html lang="vi"><head><meta charset="utf-8">'
 		. '<meta name="viewport" content="width=device-width, initial-scale=1">'
-		. '<title>' . htmlspecialchars( $name ) . ' — smart-login</title>'
+		. '<title>' . htmlspecialchars( $name ) . ' — omniwp</title>'
 		. '<style>' . $css . '</style>'
 		/*
 		 * The page chrome is deliberately plain and deliberately not the
@@ -254,7 +254,7 @@ $sl_page = static function ( string $name, string $body, ?string $modifier = 'ac
 		. '<style>body{margin:0;padding:24px;background:#f1f2f4;'
 		. 'font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}</style>'
 				. '</head><body>'
-		. ( null === $modifier ? '' : '<div class="smart-login smart-login--' . $modifier . '">' )
+		. ( null === $modifier ? '' : '<div class="omniwp omniwp--' . $modifier . '">' )
 		. $body
 		. ( null === $modifier ? '' : '</div>' )
 		. ( 'dialog' === $name ? '<script>document.querySelector("dialog").showModal()</script>' : '' )
@@ -263,47 +263,47 @@ $sl_page = static function ( string $name, string $body, ?string $modifier = 'ac
 
 // ---------------------------------------------------------------------
 
-$sl_argv   = array_slice( $argv, 1 );
-$sl_stdout = in_array( '--stdout', $sl_argv, true );
-$sl_names  = array_values( array_filter( $sl_argv, static fn( string $a ): bool => '-' !== substr( $a, 0, 1 ) ) );
+$ow_argv   = array_slice( $argv, 1 );
+$ow_stdout = in_array( '--stdout', $ow_argv, true );
+$ow_names  = array_values( array_filter( $ow_argv, static fn( string $a ): bool => '-' !== substr( $a, 0, 1 ) ) );
 
-if ( in_array( '--all', $sl_argv, true ) ) {
-	$sl_names = array_merge( array_keys( $sl_composites ), array_keys( $sl_surfaces ) );
+if ( in_array( '--all', $ow_argv, true ) ) {
+	$ow_names = array_merge( array_keys( $ow_composites ), array_keys( $ow_surfaces ) );
 }
 
-if ( ! $sl_names ) {
+if ( ! $ow_names ) {
 	printf(
 		"Usage: php tests/visual/render.php <surface> [--stdout]\n\n  composites: %s\n  surfaces:   %s\n  --all       every one of them\n\n",
-		implode( ', ', array_keys( $sl_composites ) ),
-		implode( ', ', array_keys( $sl_surfaces ) )
+		implode( ', ', array_keys( $ow_composites ) ),
+		implode( ', ', array_keys( $ow_surfaces ) )
 	);
 	exit( 1 );
 }
 
-$sl_out_dir = $sl_root . 'build/visual';
+$ow_out_dir = $ow_root . 'build/visual';
 
-if ( ! $sl_stdout && ! is_dir( $sl_out_dir ) && ! mkdir( $sl_out_dir, 0777, true ) && ! is_dir( $sl_out_dir ) ) {
-	fwrite( STDERR, "Cannot create {$sl_out_dir}\n" );
+if ( ! $ow_stdout && ! is_dir( $ow_out_dir ) && ! mkdir( $ow_out_dir, 0777, true ) && ! is_dir( $ow_out_dir ) ) {
+	fwrite( STDERR, "Cannot create {$ow_out_dir}\n" );
 	exit( 1 );
 }
 
-foreach ( $sl_names as $sl_name ) {
-	if ( isset( $sl_composites[ $sl_name ] ) ) {
-		$sl_body     = '';
-		$sl_modifier = 'account';
+foreach ( $ow_names as $ow_name ) {
+	if ( isset( $ow_composites[ $ow_name ] ) ) {
+		$ow_body     = '';
+		$ow_modifier = 'account';
 
-		foreach ( $sl_composites[ $sl_name ] as $sl_part ) {
-			$sl_body .= $sl_render( $sl_surfaces[ $sl_part ][0], $sl_surfaces[ $sl_part ][1] );
+		foreach ( $ow_composites[ $ow_name ] as $ow_part ) {
+			$ow_body .= $ow_render( $ow_surfaces[ $ow_part ][0], $ow_surfaces[ $ow_part ][1] );
 		}
-	} elseif ( isset( $sl_surfaces[ $sl_name ] ) ) {
-		$sl_body     = $sl_render( $sl_surfaces[ $sl_name ][0], $sl_surfaces[ $sl_name ][1] );
-		$sl_modifier = array_key_exists( 2, $sl_surfaces[ $sl_name ] ) ? $sl_surfaces[ $sl_name ][2] : 'account';
+	} elseif ( isset( $ow_surfaces[ $ow_name ] ) ) {
+		$ow_body     = $ow_render( $ow_surfaces[ $ow_name ][0], $ow_surfaces[ $ow_name ][1] );
+		$ow_modifier = array_key_exists( 2, $ow_surfaces[ $ow_name ] ) ? $ow_surfaces[ $ow_name ][2] : 'account';
 	} else {
-		fwrite( STDERR, "Unknown surface: {$sl_name}\n" );
+		fwrite( STDERR, "Unknown surface: {$ow_name}\n" );
 		exit( 1 );
 	}
 
-	if ( 'dialog' === $sl_name ) {
+	if ( 'dialog' === $ow_name ) {
 		/*
 		 * The shell holds a step, because a picture of an empty container says
 		 * nothing about the thing anybody looks at — and it holds the *dialog*
@@ -312,7 +312,7 @@ foreach ( $sl_names as $sl_name ) {
 		 * variant inside the dialog's chrome, which is a screen that does not
 		 * exist.
 		 */
-		\SmartLogin\Frontend\Flow::set_base( 'https://example.test/san-pham/ao-thun/' );
+		\OmniWP\Frontend\Flow::set_base( 'https://example.test/san-pham/ao-thun/' );
 
 		/*
 		 * Three benefits, so the row can be looked at. The plugin ships none —
@@ -320,8 +320,7 @@ foreach ( $sl_names as $sl_name ) {
 		 * this would be a picture of the default, which is a dialog with a gap
 		 * where the row is not.
 		 */
-		add_filter(
-			'smart_login_dialog_benefits',
+		add_filter( 'omniwp_dialog_benefits',
 			static function (): array {
 				return array(
 					array(
@@ -340,26 +339,26 @@ foreach ( $sl_names as $sl_name ) {
 			}
 		);
 
-		$sl_step = $sl_render( 'form-auth', $sl_fixtures['form-auth'] );
+		$ow_step = $ow_render( 'form-auth', $ow_fixtures['form-auth'] );
 
-		\SmartLogin\Frontend\Flow::set_base( '' );
+		\OmniWP\Frontend\Flow::set_base( '' );
 
-		$sl_body = str_replace(
+		$ow_body = str_replace(
 			'<p class="sl-dialog__loading">Đang tải…</p>',
-			$sl_step,
-			$sl_body
+			$ow_step,
+			$ow_body
 		);
 	}
 
-	$sl_html = $sl_page( $sl_name, $sl_body, $sl_modifier );
+	$ow_html = $ow_page( $ow_name, $ow_body, $ow_modifier );
 
-	if ( $sl_stdout ) {
-		echo $sl_html;
+	if ( $ow_stdout ) {
+		echo $ow_html;
 		continue;
 	}
 
-	$sl_file = $sl_out_dir . '/' . $sl_name . '.html';
-	file_put_contents( $sl_file, $sl_html );
+	$ow_file = $ow_out_dir . '/' . $ow_name . '.html';
+	file_put_contents( $ow_file, $ow_html );
 
-	printf( "%s  (%d bytes)\n", $sl_file, strlen( $sl_html ) );
+	printf( "%s  (%d bytes)\n", $ow_file, strlen( $ow_html ) );
 }

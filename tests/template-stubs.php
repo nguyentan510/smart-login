@@ -5,7 +5,7 @@
  * Kept separate so the pure-logic suites stay lean: only the template smoke test
  * pays for this.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 if ( ! class_exists( 'WP_User' ) ) {
@@ -24,7 +24,7 @@ if ( ! class_exists( 'WP_User' ) ) {
 
 		public function __construct( int $id = 1, string $display_name = 'Người dùng' ) {
 			$this->ID           = $id;
-			$this->user_login   = 'sl_' . str_repeat( 'a1', 12 );
+			$this->user_login   = 'ow_' . str_repeat( 'a1', 12 );
 			$this->user_email   = 'user@example.test';
 			$this->display_name = $display_name;
 			$this->first_name   = 'Như';
@@ -122,11 +122,11 @@ function disabled( $disabled, $current = true, $display = true ) {
 }
 
 function is_user_logged_in() {
-	return ! empty( $GLOBALS['sl_logged_in'] );
+	return ! empty( $GLOBALS['ow_logged_in'] );
 }
 
 function get_current_user_id() {
-	return (int) ( $GLOBALS['sl_current_user_id'] ?? 0 );
+	return (int) ( $GLOBALS['ow_current_user_id'] ?? 0 );
 }
 
 function wp_get_current_user() {
@@ -269,7 +269,7 @@ function sanitize_html_class( $class_name, $fallback = '' ) {
 }
 
 /**
- * Added in 21.0, because `[smart_login_button]` was the first shortcode any
+ * Added in 21.0, because `[OMNIWP_button]` was the first shortcode any
  * suite had rendered directly. Without it `render_button()` threw, the suite
  * caught the throw, and three of the button rules "passed" against an empty
  * string — a false green of exactly the kind the phase is guarding against.
@@ -286,3 +286,93 @@ function shortcode_atts( $pairs, $atts, $shortcode = '' ) {
 
 	return $out;
 }
+
+if ( ! function_exists( 'woocommerce_checkout_payment' ) ) {
+	function woocommerce_checkout_payment() {
+		echo '<div class="woocommerce-checkout-payment">Payment Stub</div>';
+	}
+}
+
+if ( ! function_exists( 'WC' ) ) {
+	function WC() {
+		static $wc = null;
+		if ( null === $wc ) {
+			$wc = new class() {
+				public $cart;
+				public function __construct() {
+					$this->cart = new class() {
+						public function get_coupons(): array {
+							return array();
+						}
+						public function get_coupon_discount_amount( $code ): float {
+							return 0.0;
+						}
+						public function needs_shipping(): bool {
+							return false;
+						}
+						public function show_shipping(): bool {
+							return false;
+						}
+						public function get_cart_contents_count(): int {
+							return 1;
+						}
+						public function get_cart(): array {
+							return array();
+						}
+						public function get_subtotal(): float {
+							return 0.0;
+						}
+						public function get_product_price( $product ): string {
+							return '0₫';
+						}
+						public function get_product_subtotal( $product, $qty ): string {
+							return '0₫';
+						}
+						public function get_applied_coupons(): array {
+							return array();
+						}
+						public function is_empty(): bool {
+							return true;
+						}
+						public function get_total( $context = 'view' ): string {
+							return '0₫';
+						}
+						public function get_discount_total(): float {
+							return 0.0;
+						}
+						public function get_fees(): array {
+							return array();
+						}
+					};
+				}
+			};
+		}
+		return $wc;
+	}
+}
+
+if ( ! function_exists( 'wc_cart_totals_subtotal_html' ) ) {
+	function wc_cart_totals_subtotal_html() {
+		echo '100.000₫';
+	}
+}
+
+if ( ! function_exists( 'wc_format_datetime' ) ) {
+	function wc_format_datetime( $date, $format = '' ) {
+		return '12/08/2026';
+	}
+}
+
+if ( ! function_exists( 'wc_tax_enabled' ) ) {
+	function wc_tax_enabled(): bool {
+		return false;
+	}
+}
+
+if ( ! function_exists( 'wc_cart_totals_order_total_html' ) ) {
+	function wc_cart_totals_order_total_html() {
+		echo '100.000₫';
+	}
+}
+
+

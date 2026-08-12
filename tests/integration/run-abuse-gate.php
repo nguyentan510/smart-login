@@ -16,25 +16,25 @@
  * Mirrors run-wordpress-gate.php's contract: BLOCKED for an environment
  * problem, FAILED for a defect, OK plus facts on success.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 declare( strict_types=1 );
 
-$wp_root     = rtrim( (string) getenv( 'SMART_LOGIN_WP_ROOT' ), "\\/" );
-$db_host     = (string) getenv( 'SMART_LOGIN_DB_HOST' );
-$db_name     = (string) getenv( 'SMART_LOGIN_DB_NAME' );
-$db_user     = (string) getenv( 'SMART_LOGIN_DB_USER' );
-$db_pass     = (string) getenv( 'SMART_LOGIN_DB_PASSWORD' );
-$prefix      = (string) getenv( 'SMART_LOGIN_DB_PREFIX' );
-$plugin_root = rtrim( (string) getenv( 'SMART_LOGIN_PLUGIN_ROOT' ), "\\/" );
+$wp_root     = rtrim( (string) getenv( 'OMNIWP_WP_ROOT' ), "\\/" );
+$db_host     = (string) getenv( 'OMNIWP_DB_HOST' );
+$db_name     = (string) getenv( 'OMNIWP_DB_NAME' );
+$db_user     = (string) getenv( 'OMNIWP_DB_USER' );
+$db_pass     = (string) getenv( 'OMNIWP_DB_PASSWORD' );
+$prefix      = (string) getenv( 'OMNIWP_DB_PREFIX' );
+$plugin_root = rtrim( (string) getenv( 'OMNIWP_PLUGIN_ROOT' ), "\\/" );
 
-// `$sl_plugin`, not `$plugin`: wp-settings.php uses $plugin as a loop variable
+// `$ow_plugin`, not `$plugin`: wp-settings.php uses $plugin as a loop variable
 // and unset()s it. See the note in run-wordpress-gate.php.
-$sl_plugin = $plugin_root . DIRECTORY_SEPARATOR . 'smart-login.php';
+$ow_plugin = $plugin_root . DIRECTORY_SEPARATOR . 'omniwp.php';
 
 $blocked = static function ( string $message ): never {
-	echo "SMART_LOGIN_ABUSE_GATE_BLOCKED\n";
+	echo "OMNIWP_ABUSE_GATE_BLOCKED\n";
 	echo 'reason=' . $message . "\n";
 	exit( 2 );
 };
@@ -50,19 +50,19 @@ $ok = static function ( string $label ): void {
 };
 
 if ( '' === $wp_root || ! is_file( $wp_root . DIRECTORY_SEPARATOR . 'wp-settings.php' ) ) {
-	$blocked( 'SMART_LOGIN_WP_ROOT must point to a WordPress public root' );
+	$blocked( 'OMNIWP_WP_ROOT must point to a WordPress public root' );
 }
-if ( '' === $plugin_root || ! is_file( $sl_plugin ) ) {
-	$blocked( 'SMART_LOGIN_PLUGIN_ROOT must point to the current plugin source' );
+if ( '' === $plugin_root || ! is_file( $ow_plugin ) ) {
+	$blocked( 'OMNIWP_PLUGIN_ROOT must point to the current plugin source' );
 }
 if ( '' === $db_host || '' === $db_name || '' === $db_user ) {
-	$blocked( 'SMART_LOGIN_DB_HOST, SMART_LOGIN_DB_NAME and SMART_LOGIN_DB_USER are required' );
+	$blocked( 'OMNIWP_DB_HOST, OMNIWP_DB_NAME and OMNIWP_DB_USER are required' );
 }
 
 $prefix = '' === $prefix ? 'wp_' : $prefix;
 
 if ( ! preg_match( '/^[A-Za-z0-9_]+$/', $prefix ) ) {
-	$blocked( 'SMART_LOGIN_DB_PREFIX contains unsupported characters' );
+	$blocked( 'OMNIWP_DB_PREFIX contains unsupported characters' );
 }
 
 define( 'ABSPATH', $wp_root . DIRECTORY_SEPARATOR );
@@ -83,8 +83,8 @@ try {
 	$blocked( 'WordPress bootstrap failed: ' . $exception->getMessage() );
 }
 
-if ( ! class_exists( 'SmartLogin\\Installer' ) ) {
-	require_once $sl_plugin;
+if ( ! class_exists( 'OmniWP\\Installer' ) ) {
+	require_once $ow_plugin;
 }
 
 global $wpdb;
@@ -93,14 +93,14 @@ if ( ! isset( $wpdb ) || ! $wpdb instanceof wpdb ) {
 	$blocked( 'WordPress did not initialise wpdb' );
 }
 
-\SmartLogin\Installer::maybe_upgrade();
+\OmniWP\Installer::maybe_upgrade();
 
 echo "Phase 9 — abuse boundary, against WordPress " . get_bloginfo( 'version' ) . "\n\n";
 
 // ---------------------------------------------------------------------
 echo "9.1 — schema\n";
 
-$otp_table = \SmartLogin\Installer::otp_table();
+$otp_table = \OmniWP\Installer::otp_table();
 $indexes   = $wpdb->get_results( "SHOW INDEX FROM {$otp_table}", ARRAY_A ); // phpcs:ignore WordPress.DB
 $by_name   = array();
 
@@ -130,7 +130,7 @@ if ( 'created_at' === $chosen ) {
 	echo '  note  optimiser chose "' . ( '' === $chosen ? 'none' : $chosen ) . '" — expected on a small table' . "\n";
 }
 
-$pending = \SmartLogin\Installer::pending_schema_changes();
+$pending = \OmniWP\Installer::pending_schema_changes();
 
 if ( $pending ) {
 	$fail( 'dbDelta still wants changes after upgrade: ' . wp_json_encode( $pending ) );
@@ -147,10 +147,10 @@ if ( $pending ) {
  * whether the schema is current is `pending_schema_changes()` above, and that stayed
  * green throughout. A literal made it a tripwire for every future bump instead.
  */
-$stored_version = (string) get_option( \SmartLogin\Installer::DB_VERSION_OPTION );
+$stored_version = (string) get_option( \OmniWP\Installer::DB_VERSION_OPTION );
 
-if ( (string) SMART_LOGIN_DB_VERSION !== $stored_version ) {
-	$fail( 'db_version is ' . $stored_version . ', expected ' . SMART_LOGIN_DB_VERSION );
+if ( (string) OMNIWP_DB_VERSION !== $stored_version ) {
+	$fail( 'db_version is ' . $stored_version . ', expected ' . OMNIWP_DB_VERSION );
 } else {
 	$ok( 'db_version is ' . $stored_version );
 }
@@ -158,7 +158,7 @@ if ( (string) SMART_LOGIN_DB_VERSION !== $stored_version ) {
 // ---------------------------------------------------------------------
 echo "\n9.1 — count_recent_all() as real SQL\n";
 
-$repo = new \SmartLogin\OTP\OtpRepository();
+$repo = new \OmniWP\OTP\OtpRepository();
 
 try {
 	$before = $repo->count_recent_all( HOUR_IN_SECONDS );
@@ -224,7 +224,7 @@ $expected_fields = array(
 	'identity.allowed_country_codes',
 );
 
-$declared = \SmartLogin\FieldRegistry::all();
+$declared = \OmniWP\FieldRegistry::all();
 
 foreach ( $expected_fields as $path ) {
 	if ( ! isset( $declared[ $path ] ) ) {
@@ -232,7 +232,7 @@ foreach ( $expected_fields as $path ) {
 	}
 }
 
-$security_tab = \SmartLogin\FieldRegistry::for_tab( 'security' );
+$security_tab = \OmniWP\FieldRegistry::for_tab( 'security' );
 
 if ( count( $security_tab ) < 8 ) {
 	$fail( 'the security tab draws only ' . count( $security_tab ) . ' fields' );
@@ -242,7 +242,7 @@ if ( count( $security_tab ) < 8 ) {
 
 // Every field a tab claims must sit under a section that tab renders, or it
 // silently vanishes from the form — the defect FieldRegistry exists to prevent.
-$sections = \SmartLogin\FieldRegistry::sections();
+$sections = \OmniWP\FieldRegistry::sections();
 
 foreach ( $security_tab as $path => $field ) {
 	if ( ! isset( $sections[ $field['section'] ] ) ) {
@@ -256,7 +256,7 @@ $ok( 'every security field sits under a declared section' );
 echo "\n9.1 / 9.5 — readiness rows execute against the real site\n";
 
 try {
-	$checks = ( new \SmartLogin\Admin\Readiness() )->checks();
+	$checks = ( new \OmniWP\Admin\Readiness() )->checks();
 	$keys   = array_column( $checks, 'key' );
 
 	foreach ( array( 'budget', 'proxy' ) as $needed ) {
@@ -293,7 +293,7 @@ $cidr_cases = array(
 $cidr_ok = true;
 
 foreach ( $cidr_cases as $case ) {
-	if ( \SmartLogin\Security\Client::in_cidr( $case[0], $case[1] ) !== $case[2] ) {
+	if ( \OmniWP\Security\Client::in_cidr( $case[0], $case[1] ) !== $case[2] ) {
 		$fail( 'in_cidr( ' . $case[0] . ', ' . $case[1] . ' ) is wrong on PHP ' . PHP_VERSION );
 		$cidr_ok = false;
 	}
@@ -306,11 +306,11 @@ if ( $cidr_ok ) {
 // ---------------------------------------------------------------------
 echo "\n9.1 — the kill switch, end to end\n";
 
-$halt_before = get_option( \SmartLogin\Security\RateLimiter::HALT_OPTION );
+$halt_before = get_option( \OmniWP\Security\RateLimiter::HALT_OPTION );
 
-\SmartLogin\Security\RateLimiter::resume();
+\OmniWP\Security\RateLimiter::resume();
 
-$limiter = new \SmartLogin\Security\RateLimiter( $repo );
+$limiter = new \OmniWP\Security\RateLimiter( $repo );
 
 if ( $limiter->halted_for() > 0 ) {
 	$fail( 'resume() did not clear the halt option' );
@@ -319,7 +319,7 @@ if ( $limiter->halted_for() > 0 ) {
 }
 
 // Drive the real option round trip rather than the stub's array.
-update_option( \SmartLogin\Security\RateLimiter::HALT_OPTION, time() + 600, false );
+update_option( \OmniWP\Security\RateLimiter::HALT_OPTION, time() + 600, false );
 
 if ( $limiter->halted_for() <= 0 ) {
 	$fail( 'a stored halt deadline is not read back' );
@@ -329,16 +329,16 @@ if ( $limiter->halted_for() <= 0 ) {
 
 $refused = $limiter->check_otp_send( '84969789475', 'register' );
 
-if ( ! is_wp_error( $refused ) || 'smart_login_unavailable' !== $refused->get_error_code() ) {
+if ( ! is_wp_error( $refused ) || 'OMNIWP_unavailable' !== $refused->get_error_code() ) {
 	$fail( 'a halted site still allowed a send' );
 } else {
-	$ok( 'a halted site refuses with smart_login_unavailable' );
+	$ok( 'a halted site refuses with OMNIWP_unavailable' );
 }
 
-\SmartLogin\Security\RateLimiter::resume();
+\OmniWP\Security\RateLimiter::resume();
 
 if ( false !== $halt_before ) {
-	update_option( \SmartLogin\Security\RateLimiter::HALT_OPTION, $halt_before, false );
+	update_option( \OmniWP\Security\RateLimiter::HALT_OPTION, $halt_before, false );
 }
 
 $ok( 'halt state restored' );
@@ -347,7 +347,7 @@ $ok( 'halt state restored' );
 echo "\n";
 
 if ( $failures ) {
-	echo "SMART_LOGIN_ABUSE_GATE_FAILED\n";
+	echo "OMNIWP_ABUSE_GATE_FAILED\n";
 
 	foreach ( $failures as $message ) {
 		echo 'reason=' . $message . "\n";
@@ -356,8 +356,8 @@ if ( $failures ) {
 	exit( 1 );
 }
 
-echo "SMART_LOGIN_ABUSE_GATE_OK\n";
+echo "OMNIWP_ABUSE_GATE_OK\n";
 echo 'wordpress=' . get_bloginfo( 'version' ) . "\n";
 echo 'php=' . PHP_VERSION . "\n";
-echo 'db_version=' . get_option( \SmartLogin\Installer::DB_VERSION_OPTION ) . "\n";
+echo 'db_version=' . get_option( \OmniWP\Installer::DB_VERSION_OPTION ) . "\n";
 echo 'otp_table=' . $otp_table . "\n";

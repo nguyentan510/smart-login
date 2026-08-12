@@ -2,7 +2,7 @@
 /**
  * The external accounts attached to this one, with a way to detach one.
  *
- * Override at yourtheme/smart-login/partials/linked-identities.php
+ * Override at yourtheme/omniwp/partials/linked-identities.php
  *
  * Before this existed the UI offered "link" unconditionally and never showed what
  * was already linked, so nobody could tell an account with two providers from one
@@ -18,24 +18,24 @@
  * service: `can_unlink()` counts every identity, and the REST route serves
  * callers that are not this card. See docs/sign-in-card.md, decision 2.
  *
- * @var array<int,array<string,mixed>> $sl_identities Output of IdentityLinkService::linked()
- * @var bool                           $sl_can_unlink
- * @var string                         $sl_redirect
+ * @var array<int,array<string,mixed>> $ow_identities Output of IdentityLinkService::linked()
+ * @var bool                           $ow_can_unlink
+ * @var string                         $ow_redirect
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-use SmartLogin\Frontend\DeferredForms;
-use SmartLogin\Frontend\FormController;
-use SmartLogin\Frontend\ProviderMark;
+use OmniWP\Frontend\DeferredForms;
+use OmniWP\Frontend\FormController;
+use OmniWP\Frontend\ProviderMark;
 
 defined( 'ABSPATH' ) || exit;
 
-$sl_identities = array_values(
+$ow_identities = array_values(
 	array_filter(
-		isset( $sl_identities ) && is_array( $sl_identities ) ? $sl_identities : array(),
-		static function ( $sl_candidate ): bool {
-			return is_array( $sl_candidate ) && ! empty( $sl_candidate['federated'] );
+		isset( $ow_identities ) && is_array( $ow_identities ) ? $ow_identities : array(),
+		static function ( $ow_candidate ): bool {
+			return is_array( $ow_candidate ) && ! empty( $ow_candidate['federated'] );
 		}
 	)
 );
@@ -43,7 +43,7 @@ $sl_identities = array_values(
 // After the filter, not before: "nothing federated" and "nothing at all" are
 // different states, and an account whose only identity is its phone must render
 // no heading rather than an empty one.
-if ( empty( $sl_identities ) ) {
+if ( empty( $ow_identities ) ) {
 	return;
 }
 ?>
@@ -57,9 +57,9 @@ if ( empty( $sl_identities ) ) {
 	 */
 	?>
 	<ul class="sl-identity-list">
-		<?php foreach ( $sl_identities as $sl_identity ) : ?>
-			<?php $sl_field_id = 'sl-unlink-pass-' . md5( $sl_identity['channel'] . $sl_identity['subject'] ); ?>
-			<li class="sl-identity sl-identity--<?php echo esc_attr( $sl_identity['channel'] ); ?>">
+		<?php foreach ( $ow_identities as $ow_identity ) : ?>
+			<?php $ow_field_id = 'sl-unlink-pass-' . md5( $ow_identity['channel'] . $ow_identity['subject'] ); ?>
+			<li class="sl-identity sl-identity--<?php echo esc_attr( $ow_identity['channel'] ); ?>">
 				<div class="sl-row">
 					<?php
 					/*
@@ -68,9 +68,9 @@ if ( empty( $sl_identities ) ) {
 					 * mark inside it would move where "Google" starts relative to
 					 * "Email" — the misalignment 16.3 exists to have removed.
 					 */
-					ProviderMark::output( (string) $sl_identity['channel'] );
+					ProviderMark::output( (string) $ow_identity['channel'] );
 					?>
-					<span class="sl-row__label"><?php echo esc_html( $sl_identity['label'] ); ?></span>
+					<span class="sl-row__label"><?php echo esc_html( $ow_identity['label'] ); ?></span>
 					<?php
 					/*
 					 * `display` names the account; `masked` is the provider's `sub`
@@ -80,16 +80,16 @@ if ( empty( $sl_identities ) ) {
 					 */
 					?>
 					<span class="sl-row__value">
-						<?php echo esc_html( '' !== (string) ( $sl_identity['display'] ?? '' ) ? $sl_identity['display'] : $sl_identity['masked'] ); ?>
+						<?php echo esc_html( '' !== (string) ( $ow_identity['display'] ?? '' ) ? $ow_identity['display'] : $ow_identity['masked'] ); ?>
 					</span>
 
-					<?php if ( ! empty( $sl_identity['is_primary'] ) ) : ?>
-						<span class="sl-badge sl-badge--primary"><?php esc_html_e( 'Chính', 'smart-login' ); ?></span>
+					<?php if ( ! empty( $ow_identity['is_primary'] ) ) : ?>
+						<span class="sl-badge sl-badge--primary"><?php esc_html_e( 'Chính', 'omniwp' ); ?></span>
 					<?php endif; ?>
 
-					<?php if ( empty( $sl_identity['removable'] ) ) : ?>
+					<?php if ( empty( $ow_identity['removable'] ) ) : ?>
 						<span class="sl-muted sl-identity-note">
-							<?php esc_html_e( 'Không thể bỏ — đây là cách đăng nhập duy nhất', 'smart-login' ); ?>
+							<?php esc_html_e( 'Không thể bỏ — đây là cách đăng nhập duy nhất', 'omniwp' ); ?>
 						</span>
 					<?php else : ?>
 						<details class="sl-identity-unlink">
@@ -102,7 +102,7 @@ if ( empty( $sl_identities ) ) {
 							 * weight beside "Đổi" and "Liên kết".
 							 */
 							?>
-							<summary class="sl-action sl-action--summary sl-action--danger"><?php esc_html_e( 'Bỏ liên kết', 'smart-login' ); ?></summary>
+							<summary class="sl-action sl-action--summary sl-action--danger"><?php esc_html_e( 'Bỏ liên kết', 'omniwp' ); ?></summary>
 
 							<?php
 							/*
@@ -126,38 +126,38 @@ if ( empty( $sl_identities ) ) {
 							 * closed. Nothing about this control's position or its
 							 * no-JavaScript behaviour changes.
 							 */
-							$sl_unlink_form = 'sl-unlink-form-' . md5( $sl_identity['channel'] . $sl_identity['subject'] );
+							$ow_unlink_form = 'sl-unlink-form-' . md5( $ow_identity['channel'] . $ow_identity['subject'] );
 
 							ob_start();
 							?>
-							<form method="post" class="sl-identity-unlink-form" id="<?php echo esc_attr( $sl_unlink_form ); ?>">
-								<?php wp_nonce_field( 'smart_login_unlink_identity' ); ?>
+							<form method="post" class="sl-identity-unlink-form" id="<?php echo esc_attr( $ow_unlink_form ); ?>">
+								<?php wp_nonce_field( 'OMNIWP_unlink_identity' ); ?>
 								<input type="hidden" name="<?php echo esc_attr( FormController::ACTION_FIELD ); ?>" value="unlink_identity" />
-								<input type="hidden" name="channel" value="<?php echo esc_attr( $sl_identity['channel'] ); ?>" />
-								<input type="hidden" name="subject" value="<?php echo esc_attr( $sl_identity['subject'] ); ?>" />
-								<input type="hidden" name="_redirect" value="<?php echo esc_url( $sl_redirect ); ?>" />
+								<input type="hidden" name="channel" value="<?php echo esc_attr( $ow_identity['channel'] ); ?>" />
+								<input type="hidden" name="subject" value="<?php echo esc_attr( $ow_identity['subject'] ); ?>" />
+								<input type="hidden" name="_redirect" value="<?php echo esc_url( $ow_redirect ); ?>" />
 							</form>
 							<?php
-							DeferredForms::add( $sl_unlink_form, (string) ob_get_clean() );
+							DeferredForms::add( $ow_unlink_form, (string) ob_get_clean() );
 							?>
 
 							<div class="sl-field">
-								<label class="sl-label" for="<?php echo esc_attr( $sl_field_id ); ?>">
-									<?php esc_html_e( 'Nhập mật khẩu để xác nhận', 'smart-login' ); ?>
+								<label class="sl-label" for="<?php echo esc_attr( $ow_field_id ); ?>">
+									<?php esc_html_e( 'Nhập mật khẩu để xác nhận', 'omniwp' ); ?>
 								</label>
 								<input
 									type="password"
 									class="sl-input"
-									id="<?php echo esc_attr( $sl_field_id ); ?>"
+									id="<?php echo esc_attr( $ow_field_id ); ?>"
 									name="password"
 									autocomplete="current-password"
-									form="<?php echo esc_attr( $sl_unlink_form ); ?>"
+									form="<?php echo esc_attr( $ow_unlink_form ); ?>"
 									required
 								/>
 							</div>
 
-							<button type="submit" class="sl-btn sl-btn--outline sl-btn--danger sl-btn--inline" form="<?php echo esc_attr( $sl_unlink_form ); ?>">
-								<?php esc_html_e( 'Xác nhận bỏ liên kết', 'smart-login' ); ?>
+							<button type="submit" class="sl-btn sl-btn--outline sl-btn--danger sl-btn--inline" form="<?php echo esc_attr( $ow_unlink_form ); ?>">
+								<?php esc_html_e( 'Xác nhận bỏ liên kết', 'omniwp' ); ?>
 							</button>
 
 						</details>

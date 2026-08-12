@@ -15,14 +15,14 @@
  *   - the outbound call is clamped like WebhookTransport, because a hanging
  *     captcha endpoint is the same worker-exhaustion bug wearing a new hat
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Security;
+namespace OmniWP\Security;
 
-use SmartLogin\OTP\OtpRepository;
-use SmartLogin\OTP\Transports\CircuitBreaker;
-use SmartLogin\Settings;
+use OmniWP\OTP\OtpRepository;
+use OmniWP\OTP\Transports\CircuitBreaker;
+use OmniWP\Settings;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
@@ -154,7 +154,7 @@ final class Captcha {
 		$ip           = Client::ip();
 
 		if ( $identify_max > 0 && '' !== $ip ) {
-			$spent = (int) get_transient( 'smart_login_idfy_' . md5( $ip . '|' . gmdate( 'YmdH' ) ) );
+			$spent = (int) get_transient( 'OMNIWP_idfy_' . md5( $ip . '|' . gmdate( 'YmdH' ) ) );
 
 			if ( $spent >= (int) ceil( $identify_max * self::PRESSURE_RATIO ) ) {
 				return true;
@@ -181,8 +181,8 @@ final class Captcha {
 
 		if ( '' === $token ) {
 			return new WP_Error(
-				'smart_login_captcha_missing',
-				__( 'Vui lòng hoàn tất bước xác minh chống robot.', 'smart-login' )
+				'OMNIWP_captcha_missing',
+				__( 'Vui lòng hoàn tất bước xác minh chống robot.', 'omniwp' )
 			);
 		}
 
@@ -190,8 +190,8 @@ final class Captcha {
 			AuditLog::record( AuditLog::RATE_LIMITED, '', array( 'reason' => 'captcha' ) );
 
 			return new WP_Error(
-				'smart_login_captcha_failed',
-				__( 'Xác minh chống robot không thành công. Vui lòng thử lại.', 'smart-login' )
+				'OMNIWP_captcha_failed',
+				__( 'Xác minh chống robot không thành công. Vui lòng thử lại.', 'omniwp' )
 			);
 		}
 

@@ -6,16 +6,16 @@
  * (phone_only / email_only / both) cannot express a fourth channel. Enablement
  * becomes per channel, so adding one does not require a new setting shape.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Identity;
+namespace OmniWP\Identity;
 
-use SmartLogin\Identity\Channels\FederatedChannel;
-use SmartLogin\Identity\Channels\IdentityChannel;
-use SmartLogin\Identity\Channels\MailChannel;
-use SmartLogin\Identity\Channels\PhoneChannel;
-use SmartLogin\Settings;
+use OmniWP\Identity\Channels\FederatedChannel;
+use OmniWP\Identity\Channels\IdentityChannel;
+use OmniWP\Identity\Channels\MailChannel;
+use OmniWP\Identity\Channels\PhoneChannel;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -42,7 +42,7 @@ final class ChannelRegistry {
 		return array(
 			new PhoneChannel(),
 			new MailChannel(),
-			new FederatedChannel( 'google', __( 'Google', 'smart-login' ) ),
+			new FederatedChannel( 'google', __( 'Google', 'omniwp' ) ),
 		);
 	}
 
@@ -108,7 +108,7 @@ final class ChannelRegistry {
 		 * @param bool   $enabled
 		 * @param string $id
 		 */
-		return (bool) apply_filters( 'smart_login_channel_enabled', $enabled, $id );
+		return (bool) apply_filters( 'OMNIWP_channel_enabled', $enabled, $id );
 	}
 
 	/**

@@ -16,7 +16,7 @@
  *
  * Run with:  php tests/mail/run-template-tests.php
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
 require __DIR__ . '/../stubs.php';
@@ -28,15 +28,15 @@ require __DIR__ . '/../template-stubs.php';
 require __DIR__ . '/../admin-stubs.php';
 require __DIR__ . '/../harness.php';
 
-use SmartLogin\Auth\AuthAction;
-use SmartLogin\FieldRegistry;
-use SmartLogin\OTP\Transports\MailTransport;
-use SmartLogin\Settings;
+use OmniWP\Auth\AuthAction;
+use OmniWP\FieldRegistry;
+use OmniWP\OTP\Transports\MailTransport;
+use OmniWP\Settings;
 
-const SL_MAIL_REGISTRY = 'SmartLogin\\Mail\\MailRegistry';
+const ow_MAIL_REGISTRY = 'OmniWP\\Mail\\MailRegistry';
 
 // =====================================================================
-sl_section( 'Rule 1 — every message the plugin sends comes from the registry (11.3)' );
+ow_section( 'Rule 1 — every message the plugin sends comes from the registry (11.3)' );
 
 /*
  * Two callers compose their own subject and body inline, so an administrator
@@ -59,10 +59,10 @@ sl_section( 'Rule 1 — every message the plugin sends comes from the registry (
  *
  * @return string[] `relative/path.php:line` for each call site.
  */
-function sl_find_calls( string $function, array $allowed_files = array() ): array {
+function ow_find_calls( string $function, array $allowed_files = array() ): array {
 	$offenders = array();
 
-	foreach ( sl_plugin_sources() as $relative => $contents ) {
+	foreach ( ow_plugin_sources() as $relative => $contents ) {
 		if ( in_array( $relative, $allowed_files, true ) ) {
 			continue;
 		}
@@ -99,7 +99,7 @@ function sl_find_calls( string $function, array $allowed_files = array() ): arra
 	return $offenders;
 }
 
-$sl_mail_callers = sl_find_calls(
+$ow_mail_callers = ow_find_calls(
 	'wp_mail',
 	array(
 		// Delivers a code. Its subject and body come from the registry.
@@ -111,119 +111,119 @@ $sl_mail_callers = sl_find_calls(
 	)
 );
 
-sl_assert(
+ow_assert(
 	'no file composes its own mail outside the mail layer',
-	array() === $sl_mail_callers,
-	'A message written inline is a message no screen can reach. 11.3 adds Mailer for operational alerts; until then these are the defect: ' . implode( ', ', $sl_mail_callers )
+	array() === $ow_mail_callers,
+	'A message written inline is a message no screen can reach. 11.3 adds Mailer for operational alerts; until then these are the defect: ' . implode( ', ', $ow_mail_callers )
 );
 
 // =====================================================================
-sl_section( 'Rule 2 — every intent resolves to a template (11.1)' );
+ow_section( 'Rule 2 — every intent resolves to a template (11.1)' );
 
-$sl_has_registry = class_exists( SL_MAIL_REGISTRY );
+$ow_has_registry = class_exists( ow_MAIL_REGISTRY );
 
-sl_assert(
+ow_assert(
 	'a mail registry exists',
-	$sl_has_registry,
+	$ow_has_registry,
 	'One array must declare every message: its id, group, when it fires, its defaults and the tokens it may use. Four hand-written field pairs is the four-way drift FieldRegistry was written to remove.'
 );
 
-$sl_intents = array(
+$ow_intents = array(
 	AuthAction::REGISTER,
 	AuthAction::LOGIN,
 	AuthAction::RECOVER,
 	AuthAction::ADD_IDENTITY,
 );
 
-if ( ! $sl_has_registry ) {
-	foreach ( $sl_intents as $sl_intent ) {
-		sl_pending(
-			sprintf( 'intent "%s" resolves to a subject and a body', $sl_intent ),
+if ( ! $ow_has_registry ) {
+	foreach ( $ow_intents as $ow_intent ) {
+		ow_pending(
+			sprintf( 'intent "%s" resolves to a subject and a body', $ow_intent ),
 			'MailRegistry — 11.1'
 		);
 	}
 } else {
-	foreach ( $sl_intents as $sl_intent ) {
-		$sl_resolved = call_user_func( array( SL_MAIL_REGISTRY, 'resolve_intent' ), $sl_intent );
+	foreach ( $ow_intents as $ow_intent ) {
+		$ow_resolved = call_user_func( array( ow_MAIL_REGISTRY, 'resolve_intent' ), $ow_intent );
 
-		sl_assert(
-			sprintf( 'intent "%s" resolves to a subject and a body', $sl_intent ),
-			is_array( $sl_resolved )
-				&& '' !== trim( (string) ( $sl_resolved['subject'] ?? '' ) )
-				&& '' !== trim( (string) ( $sl_resolved['body'] ?? '' ) ),
+		ow_assert(
+			sprintf( 'intent "%s" resolves to a subject and a body', $ow_intent ),
+			is_array( $ow_resolved )
+				&& '' !== trim( (string) ( $ow_resolved['subject'] ?? '' ) )
+				&& '' !== trim( (string) ( $ow_resolved['body'] ?? '' ) ),
 			'Falling back to the shared pair is a resolution; being absent is not. This guards the fallback against being dropped once four overrides exist.'
 		);
 	}
 }
 
 // =====================================================================
-sl_section( 'Rule 3 — a template uses only the tokens its row declares (11.1)' );
+ow_section( 'Rule 3 — a template uses only the tokens its row declares (11.1)' );
 
 /*
  * The brief said this rule would "pass vacuously and say so". That is the
  * mistake 10.0 made with its own rule 5 and had to correct: a rule that passes
  * because its subject does not exist states the opposite of the truth. Pending.
  */
-if ( ! $sl_has_registry ) {
-	sl_pending(
+if ( ! $ow_has_registry ) {
+	ow_pending(
 		'no shipped default uses a token its message does not declare',
 		'MailRegistry — 11.1'
 	);
 } else {
-	$sl_undeclared = array();
+	$ow_undeclared = array();
 
-	foreach ( call_user_func( array( SL_MAIL_REGISTRY, 'all' ) ) as $sl_id => $sl_row ) {
-		$sl_allowed = (array) ( $sl_row['tokens'] ?? array() );
+	foreach ( call_user_func( array( ow_MAIL_REGISTRY, 'all' ) ) as $ow_id => $ow_row ) {
+		$ow_allowed = (array) ( $ow_row['tokens'] ?? array() );
 
 		// The preheader is rendered through the same expander, so a token it
 		// declares nothing about fails the same silent way.
-		foreach ( array( 'subject', 'body', 'preheader' ) as $sl_part ) {
-			if ( ! preg_match_all( '/\{\{([a-z_:]+)\}\}/', (string) ( $sl_row[ $sl_part ] ?? '' ), $sl_found ) ) {
+		foreach ( array( 'subject', 'body', 'preheader' ) as $ow_part ) {
+			if ( ! preg_match_all( '/\{\{([a-z_:]+)\}\}/', (string) ( $ow_row[ $ow_part ] ?? '' ), $ow_found ) ) {
 				continue;
 			}
 
-			foreach ( $sl_found[1] as $sl_token ) {
-				if ( ! in_array( $sl_token, $sl_allowed, true ) ) {
-					$sl_undeclared[] = $sl_id . '.' . $sl_part . ' → {{' . $sl_token . '}}';
+			foreach ( $ow_found[1] as $ow_token ) {
+				if ( ! in_array( $ow_token, $ow_allowed, true ) ) {
+					$ow_undeclared[] = $ow_id . '.' . $ow_part . ' → {{' . $ow_token . '}}';
 				}
 			}
 		}
 	}
 
-	sl_assert(
+	ow_assert(
 		'no shipped default uses a token its message does not declare',
-		array() === $sl_undeclared,
-		'A token outside the message\'s set renders as a silent empty string, which is the failure this phase exists to prevent: ' . implode( ', ', $sl_undeclared )
+		array() === $ow_undeclared,
+		'A token outside the message\'s set renders as a silent empty string, which is the failure this phase exists to prevent: ' . implode( ', ', $ow_undeclared )
 	);
 }
 
 // =====================================================================
-sl_section( 'Rule 4 — every declared message is reachable from a screen (11.4)' );
+ow_section( 'Rule 4 — every declared message is reachable from a screen (11.4)' );
 
-if ( ! $sl_has_registry ) {
-	sl_pending(
+if ( ! $ow_has_registry ) {
+	ow_pending(
 		'every generated template field is declared and drawn',
 		'MailRegistry::fields() — 11.1'
 	);
 } else {
-	$sl_declared = FieldRegistry::all();
-	$sl_orphans  = array();
+	$ow_declared = FieldRegistry::all();
+	$ow_orphans  = array();
 
-	foreach ( call_user_func( array( SL_MAIL_REGISTRY, 'fields' ) ) as $sl_path => $sl_field ) {
-		if ( ! isset( $sl_declared[ $sl_path ] ) ) {
-			$sl_orphans[] = $sl_path;
+	foreach ( call_user_func( array( ow_MAIL_REGISTRY, 'fields' ) ) as $ow_path => $ow_field ) {
+		if ( ! isset( $ow_declared[ $ow_path ] ) ) {
+			$ow_orphans[] = $ow_path;
 		}
 	}
 
-	sl_assert(
+	ow_assert(
 		'every generated template field is declared and drawn',
-		array() === $sl_orphans,
-		'A generated field missing from the registry is stored by nothing and dropped on the next read: ' . implode( ', ', $sl_orphans )
+		array() === $ow_orphans,
+		'A generated field missing from the registry is stored by nothing and dropped on the next read: ' . implode( ', ', $ow_orphans )
 	);
 }
 
 // =====================================================================
-sl_section( 'Rule 5 — the layout wraps exactly once (11.2)' );
+ow_section( 'Rule 5 — the layout wraps exactly once (11.2)' );
 
 Settings::update(
 	array(
@@ -236,42 +236,42 @@ Settings::update(
 	)
 );
 
-$GLOBALS['sl_mails'] = array();
+$GLOBALS['ow_mails'] = array();
 
 ( new MailTransport() )->send( 'nguoi.dung@example.com', '482913', array( 'intent' => 'recover' ) );
 
-$sl_html = $GLOBALS['sl_mails'][0]['message'] ?? '';
+$ow_html = $GLOBALS['ow_mails'][0]['message'] ?? '';
 
-sl_check(
+ow_check(
 	'an HTML message is wrapped exactly once',
 	1,
-	substr_count( $sl_html, SmartLogin\Mail\MailLayout::MARKER )
+	substr_count( $ow_html, OmniWP\Mail\MailLayout::MARKER )
 );
 
-sl_assert(
+ow_assert(
 	'the configured accent and footer reach the message',
-	false !== strpos( $sl_html, '#123456' ) && false !== strpos( $sl_html, 'Cửa hàng ví dụ' ),
+	false !== strpos( $ow_html, '#123456' ) && false !== strpos( $ow_html, 'Cửa hàng ví dụ' ),
 	'The three settings exist to be visible; if they are not in the output they are decoration.'
 );
 
-sl_assert(
+ow_assert(
 	'the body survived inside the layout',
-	false !== strpos( $sl_html, '482913' ),
+	false !== strpos( $ow_html, '482913' ),
 	'A layout that loses the code is worse than no layout.'
 );
 
 // The shipped bodies are written as plain text, so their blank lines are the
 // only structure they have. Handing them to a layout unconverted is what made
 // "turn HTML on" produce one run-on paragraph.
-sl_assert(
+ow_assert(
 	'plain-text line breaks became paragraphs',
-	substr_count( $sl_html, '<p style=' ) > 1,
+	substr_count( $ow_html, '<p style=' ) > 1,
 	'The default bodies have blank lines between blocks; without conversion the whole message renders as one paragraph.'
 );
 
 // An administrator pasting a complete document must not get it nested inside
 // another one.
-$GLOBALS['sl_mails'] = array();
+$GLOBALS['ow_mails'] = array();
 
 Settings::update(
 	array( 'email.templates.recover.body' => "<html><body><p>Mã: {{code}}</p></body></html>" )
@@ -279,15 +279,15 @@ Settings::update(
 
 ( new MailTransport() )->send( 'nguoi.dung@example.com', '482913', array( 'intent' => 'recover' ) );
 
-$sl_pasted = $GLOBALS['sl_mails'][0]['message'] ?? '';
+$ow_pasted = $GLOBALS['ow_mails'][0]['message'] ?? '';
 
-sl_check(
+ow_check(
 	'a body that is already a document is not wrapped again',
 	0,
-	substr_count( $sl_pasted, SmartLogin\Mail\MailLayout::MARKER )
+	substr_count( $ow_pasted, OmniWP\Mail\MailLayout::MARKER )
 );
 
-sl_check( 'and it is sent as written', 1, substr_count( $sl_pasted, '<html>' ) );
+ow_check( 'and it is sent as written', 1, substr_count( $ow_pasted, '<html>' ) );
 
 // A colour that would escape the style attribute must not reach it.
 Settings::update(
@@ -297,16 +297,16 @@ Settings::update(
 	)
 );
 
-sl_check(
+ow_check(
 	'an invalid accent falls back rather than reaching the style attribute',
 	'#2271b1',
-	SmartLogin\Mail\MailLayout::accent()
+	OmniWP\Mail\MailLayout::accent()
 );
 
 Settings::update( array( 'email.accent_color' => '#2271b1' ) );
 
 // =====================================================================
-sl_section( 'Rule 6 — plain text never carries markup (11.2)' );
+ow_section( 'Rule 6 — plain text never carries markup (11.2)' );
 
 /*
  * Assertable today, and the brief was wrong to predict PENDING for it:
@@ -323,46 +323,46 @@ Settings::update(
 	)
 );
 
-$GLOBALS['sl_mails'] = array();
+$GLOBALS['ow_mails'] = array();
 
 ( new MailTransport() )->send( 'nguoi.dung@example.com', '482913', array( 'intent' => 'login' ) );
 
-$sl_sent = $GLOBALS['sl_mails'][0]['message'] ?? '';
+$ow_sent = $GLOBALS['ow_mails'][0]['message'] ?? '';
 
-sl_check(
+ow_check(
 	'a text message carries no markup',
 	true,
-	'' !== $sl_sent && $sl_sent === wp_strip_all_tags( $sl_sent )
+	'' !== $ow_sent && $ow_sent === wp_strip_all_tags( $ow_sent )
 );
 
-sl_check(
+ow_check(
 	'and the code still reached it',
 	true,
-	false !== strpos( $sl_sent, '482913' )
+	false !== strpos( $ow_sent, '482913' )
 );
 
 // =====================================================================
-sl_section( 'Resolution — three levels, and each one reachable (11.1)' );
+ow_section( 'Resolution — three levels, and each one reachable (11.1)' );
 
-if ( ! $sl_has_registry ) {
-	sl_pending( 'a reset code is worded differently from a login code', 'MailRegistry — 11.1' );
+if ( ! $ow_has_registry ) {
+	ow_pending( 'a reset code is worded differently from a login code', 'MailRegistry — 11.1' );
 } else {
 	// Nothing customised anywhere: each message uses its own default.
 	delete_option( Settings::OPTION );
 	Settings::flush_cache();
 
-	$sl_login   = call_user_func( array( SL_MAIL_REGISTRY, 'resolve' ), 'login' );
-	$sl_recover = call_user_func( array( SL_MAIL_REGISTRY, 'resolve' ), 'recover' );
+	$ow_login   = call_user_func( array( ow_MAIL_REGISTRY, 'resolve' ), 'login' );
+	$ow_recover = call_user_func( array( ow_MAIL_REGISTRY, 'resolve' ), 'recover' );
 
-	sl_assert(
+	ow_assert(
 		'a reset code is worded differently from a login code',
-		$sl_login['subject'] !== $sl_recover['subject'] && $sl_login['body'] !== $sl_recover['body'],
+		$ow_login['subject'] !== $ow_recover['subject'] && $ow_login['body'] !== $ow_recover['body'],
 		'This is the defect the phase exists for: PasswordResetHandler goes through issue() with intent recover and arrived reading "Mã xác thực của bạn là…", identical to a login code.'
 	);
 
-	sl_assert(
+	ow_assert(
 		'the reset wording actually mentions the password',
-		false !== strpos( $sl_recover['subject'] . $sl_recover['body'], 'mật khẩu' ),
+		false !== strpos( $ow_recover['subject'] . $ow_recover['body'], 'mật khẩu' ),
 		'Different is not enough; it has to say what it is.'
 	);
 
@@ -370,102 +370,102 @@ if ( ! $sl_has_registry ) {
 	// the no-migration property. Asserted rather than assumed.
 	Settings::update( array( 'email.subject' => 'Mã của {{site_name}}: {{code}}' ) );
 
-	sl_check(
+	ow_check(
 		'an edited shared subject still governs every message',
 		'Mã của {{site_name}}: {{code}}',
-		call_user_func( array( SL_MAIL_REGISTRY, 'resolve' ), 'recover' )['subject']
+		call_user_func( array( ow_MAIL_REGISTRY, 'resolve' ), 'recover' )['subject']
 	);
 
 	// And an override beats both.
 	Settings::update( array( 'email.templates.recover.subject' => 'Đặt lại mật khẩu: {{code}}' ) );
 
-	sl_check(
+	ow_check(
 		'a per-message override beats the shared pair',
 		'Đặt lại mật khẩu: {{code}}',
-		call_user_func( array( SL_MAIL_REGISTRY, 'resolve' ), 'recover' )['subject']
+		call_user_func( array( ow_MAIL_REGISTRY, 'resolve' ), 'recover' )['subject']
 	);
 
-	sl_check(
+	ow_check(
 		'and its siblings are unaffected',
 		'Mã của {{site_name}}: {{code}}',
-		call_user_func( array( SL_MAIL_REGISTRY, 'resolve' ), 'login' )['subject']
+		call_user_func( array( ow_MAIL_REGISTRY, 'resolve' ), 'login' )['subject']
 	);
 
 	// Clearing the override restores inheritance rather than emptying the mail.
 	Settings::update( array( 'email.templates.recover.subject' => '' ) );
 
-	sl_check(
+	ow_check(
 		'clearing an override restores inheritance',
 		'Mã của {{site_name}}: {{code}}',
-		call_user_func( array( SL_MAIL_REGISTRY, 'resolve' ), 'recover' )['subject']
+		call_user_func( array( ow_MAIL_REGISTRY, 'resolve' ), 'recover' )['subject']
 	);
 
 	// The tester sends intent `test`, which has no row. It must still render.
 	delete_option( Settings::OPTION );
 	Settings::flush_cache();
 
-	$sl_test = call_user_func( array( SL_MAIL_REGISTRY, 'resolve_intent' ), 'test' );
+	$ow_test = call_user_func( array( ow_MAIL_REGISTRY, 'resolve_intent' ), 'test' );
 
-	sl_assert(
+	ow_assert(
 		'an intent with no row still resolves, so the admin tester works',
-		'' !== trim( $sl_test['subject'] ) && '' !== trim( $sl_test['body'] ),
+		'' !== trim( $ow_test['subject'] ) && '' !== trim( $ow_test['body'] ),
 		'The Gửi thử button sends intent "test". A tester that cannot render is a tester nobody can check a gateway with.'
 	);
 }
 
 // =====================================================================
-sl_section( 'Token scoping (11.1)' );
+ow_section( 'Token scoping (11.1)' );
 
-if ( $sl_has_registry ) {
-	$sl_scoped = \SmartLogin\OTP\Placeholders::available_tokens( 'recover' );
-	$sl_global = \SmartLogin\OTP\Placeholders::available_tokens();
+if ( $ow_has_registry ) {
+	$ow_scoped = \OmniWP\OTP\Placeholders::available_tokens( 'recover' );
+	$ow_global = \OmniWP\OTP\Placeholders::available_tokens();
 
-	sl_assert(
+	ow_assert(
 		'a message shows only the tokens it declares',
-		count( $sl_scoped ) > 0 && count( $sl_scoped ) <= count( $sl_global ),
+		count( $ow_scoped ) > 0 && count( $ow_scoped ) <= count( $ow_global ),
 		'Showing every token beside every template is how {{ip}} ends up in an OTP mail and renders as nothing.'
 	);
 
-	sl_check(
+	ow_check(
 		'and the unscoped list is unchanged for the SMS section',
 		true,
-		isset( $sl_global['{{code}}'] ) && isset( $sl_global['{{phone_local}}'] )
+		isset( $ow_global['{{code}}'] ) && isset( $ow_global['{{phone_local}}'] )
 	);
 }
 
 // =====================================================================
-sl_section( 'The operational alerts still fire, and can now be silenced (11.3)' );
+ow_section( 'The operational alerts still fire, and can now be silenced (11.3)' );
 
 delete_option( Settings::OPTION );
 Settings::flush_cache();
 update_option( 'admin_email', 'quantri@example.com' );
 
-$GLOBALS['sl_mails'] = array();
+$GLOBALS['ow_mails'] = array();
 
 // The breaker opens on the threshold-th consecutive failure and announces once.
-$sl_breaker = new SmartLogin\OTP\Transports\CircuitBreaker( 'sms' );
+$ow_breaker = new OmniWP\OTP\Transports\CircuitBreaker( 'sms' );
 
-for ( $sl_i = 0; $sl_i < Settings::get_int( 'security.breaker_threshold', 5 ); $sl_i++ ) {
-	$sl_breaker->record_failure();
+for ( $ow_i = 0; $ow_i < Settings::get_int( 'security.breaker_threshold', 5 ); $ow_i++ ) {
+	$ow_breaker->record_failure();
 }
 
-sl_check( 'opening the breaker sends exactly one mail', 1, count( $GLOBALS['sl_mails'] ) );
+ow_check( 'opening the breaker sends exactly one mail', 1, count( $GLOBALS['ow_mails'] ) );
 
-$sl_alert = $GLOBALS['sl_mails'][0] ?? array();
+$ow_alert = $GLOBALS['ow_mails'][0] ?? array();
 
-sl_check( 'and it goes to the site admin', 'quantri@example.com', $sl_alert['to'] ?? '' );
+ow_check( 'and it goes to the site admin', 'quantri@example.com', $ow_alert['to'] ?? '' );
 
-sl_assert(
+ow_assert(
 	'the wording survived the move to the registry',
-	false !== strpos( (string) ( $sl_alert['subject'] ?? '' ), 'Kênh gửi mã đang lỗi liên tục' )
-		&& false !== strpos( (string) ( $sl_alert['message'] ?? '' ), 'ngắt mạch chặn' ),
-	'Moving a message behind a registry must not reword it: ' . ( $sl_alert['subject'] ?? '' )
+	false !== strpos( (string) ( $ow_alert['subject'] ?? '' ), 'Kênh gửi mã đang lỗi liên tục' )
+		&& false !== strpos( (string) ( $ow_alert['message'] ?? '' ), 'ngắt mạch chặn' ),
+	'Moving a message behind a registry must not reword it: ' . ( $ow_alert['subject'] ?? '' )
 );
 
-sl_assert(
+ow_assert(
 	'its tokens expanded rather than printing as braces',
-	false === strpos( (string) ( $sl_alert['subject'] ?? '' ) . ( $sl_alert['message'] ?? '' ), '{{' ),
-	'An unexpanded token is the silent-empty-string failure with the braces left in: ' . ( $sl_alert['message'] ?? '' )
+	false === strpos( (string) ( $ow_alert['subject'] ?? '' ) . ( $ow_alert['message'] ?? '' ), '{{' ),
+	'An unexpanded token is the silent-empty-string failure with the braces left in: ' . ( $ow_alert['message'] ?? '' )
 );
 
 // Off. This is the part that did not exist: both events already reach an
@@ -473,28 +473,28 @@ sl_assert(
 // each alert twice and could silence neither.
 Settings::update( array( 'email.templates.breaker_open.enabled' => 0 ) );
 
-$GLOBALS['sl_mails'] = array();
-$GLOBALS['sl_transients'] = array();
+$GLOBALS['ow_mails'] = array();
+$GLOBALS['ow_transients'] = array();
 
-$sl_off = new SmartLogin\OTP\Transports\CircuitBreaker( 'sms' );
+$ow_off = new OmniWP\OTP\Transports\CircuitBreaker( 'sms' );
 
-for ( $sl_i = 0; $sl_i < Settings::get_int( 'security.breaker_threshold', 5 ); $sl_i++ ) {
-	$sl_off->record_failure();
+for ( $ow_i = 0; $ow_i < Settings::get_int( 'security.breaker_threshold', 5 ); $ow_i++ ) {
+	$ow_off->record_failure();
 }
 
-sl_check( 'switching the alert off stops the mail', 0, count( $GLOBALS['sl_mails'] ) );
+ow_check( 'switching the alert off stops the mail', 0, count( $GLOBALS['ow_mails'] ) );
 
 // The record is not the notification. Turning the mail off must not blind the
 // log, which is the evidence an operator reads afterwards.
-$sl_logged = false;
+$ow_logged = false;
 
-foreach ( (array) ( $GLOBALS['wpdb']->writes ?? array() ) as $sl_write ) {
-	if ( 'insert' === ( $sl_write['op'] ?? '' ) && 'transport_breaker_open' === ( $sl_write['data']['event'] ?? '' ) ) {
-		$sl_logged = true;
+foreach ( (array) ( $GLOBALS['wpdb']->writes ?? array() ) as $ow_write ) {
+	if ( 'insert' === ( $ow_write['op'] ?? '' ) && 'transport_breaker_open' === ( $ow_write['data']['event'] ?? '' ) ) {
+		$ow_logged = true;
 	}
 }
 
-sl_check( 'and the audit record is still written', true, $sl_logged );
+ow_check( 'and the audit record is still written', true, $ow_logged );
 
 // An override reaches an operational alert like any other message.
 Settings::update(
@@ -504,64 +504,64 @@ Settings::update(
 	)
 );
 
-$GLOBALS['sl_mails']      = array();
-$GLOBALS['sl_transients'] = array();
+$GLOBALS['ow_mails']      = array();
+$GLOBALS['ow_transients'] = array();
 
-$sl_custom = new SmartLogin\OTP\Transports\CircuitBreaker( 'automation' );
+$ow_custom = new OmniWP\OTP\Transports\CircuitBreaker( 'automation' );
 
-for ( $sl_i = 0; $sl_i < Settings::get_int( 'security.breaker_threshold', 5 ); $sl_i++ ) {
-	$sl_custom->record_failure();
+for ( $ow_i = 0; $ow_i < Settings::get_int( 'security.breaker_threshold', 5 ); $ow_i++ ) {
+	$ow_custom->record_failure();
 }
 
-sl_check(
+ow_check(
 	'an administrator override reaches an operational alert',
 	'GẤP: kênh automation chết',
-	$GLOBALS['sl_mails'][0]['subject'] ?? ''
+	$GLOBALS['ow_mails'][0]['subject'] ?? ''
 );
 
 // No recipient configured is not an error, and must not be a fatal.
 update_option( 'admin_email', '' );
-$GLOBALS['sl_mails'] = array();
+$GLOBALS['ow_mails'] = array();
 
-sl_check(
+ow_check(
 	'no admin address means no mail and no failure',
 	false,
-	SmartLogin\Mail\Mailer::send( 'budget_halted', SmartLogin\Mail\Mailer::admin_address(), array() )
+	OmniWP\Mail\Mailer::send( 'budget_halted', OmniWP\Mail\Mailer::admin_address(), array() )
 );
 
-sl_check( 'and nothing was sent', 0, count( $GLOBALS['sl_mails'] ) );
+ow_check( 'and nothing was sent', 0, count( $GLOBALS['ow_mails'] ) );
 
 // =====================================================================
-sl_section( 'Rule 1 — every message is reachable from the list (13.1)' );
+ow_section( 'Rule 1 — every message is reachable from the list (13.1)' );
 
 delete_option( Settings::OPTION );
 Settings::flush_cache();
 
-$sl_screen = sl_capture(
+$ow_screen = ow_capture(
 	static function (): void {
-		( new \SmartLogin\Admin\Screens\SettingsScreen() )->render( 'delivery-mail' );
+		( new \OmniWP\Admin\Screens\SettingsScreen() )->render( 'delivery-mail' );
 	}
 );
 
-sl_assert( 'the mail screen renders', null === $sl_screen['error'], (string) $sl_screen['error'] );
+ow_assert( 'the mail screen renders', null === $ow_screen['error'], (string) $ow_screen['error'] );
 
-$sl_mail_markup = $sl_screen['html'];
-$sl_unlisted    = array();
+$ow_mail_markup = $ow_screen['html'];
+$ow_unlisted    = array();
 
-foreach ( array_keys( call_user_func( array( SL_MAIL_REGISTRY, 'all' ) ) ) as $sl_id ) {
-	if ( false === strpos( $sl_mail_markup, 'data-mail-message="' . $sl_id . '"' ) ) {
-		$sl_unlisted[] = $sl_id;
+foreach ( array_keys( call_user_func( array( ow_MAIL_REGISTRY, 'all' ) ) ) as $ow_id ) {
+	if ( false === strpos( $ow_mail_markup, 'data-mail-message="' . $ow_id . '"' ) ) {
+		$ow_unlisted[] = $ow_id;
 	}
 }
 
-sl_check(
+ow_check(
 	'every registry row appears in the list',
 	array(),
-	$sl_unlisted
+	$ow_unlisted
 );
 
 // =====================================================================
-sl_section( 'Rule 2 — hiding a panel does not hide it from the save (13.1)' );
+ow_section( 'Rule 2 — hiding a panel does not hide it from the save (13.1)' );
 
 /*
  * Passes today, and that is the point of landing it now: rendering only the
@@ -572,22 +572,22 @@ sl_section( 'Rule 2 — hiding a panel does not hide it from the save (13.1)' );
  * A rule that arrives alongside the feature it guards cannot catch that feature
  * breaking it. 11.0's rule 6 made the same argument.
  */
-$sl_missing_inputs = array();
+$ow_missing_inputs = array();
 
-foreach ( array_keys( call_user_func( array( SL_MAIL_REGISTRY, 'all' ) ) ) as $sl_id ) {
-	foreach ( array( 'subject', 'body' ) as $sl_part ) {
-		$sl_path = \SmartLogin\Mail\MailRegistry::PATH_PREFIX . $sl_id . '.' . $sl_part;
+foreach ( array_keys( call_user_func( array( ow_MAIL_REGISTRY, 'all' ) ) ) as $ow_id ) {
+	foreach ( array( 'subject', 'body' ) as $ow_part ) {
+		$ow_path = \OmniWP\Mail\MailRegistry::PATH_PREFIX . $ow_id . '.' . $ow_part;
 
-		if ( false === strpos( $sl_mail_markup, 'name="' . \SmartLogin\Admin\FieldRenderer::name( $sl_path ) . '"' ) ) {
-			$sl_missing_inputs[] = $sl_path;
+		if ( false === strpos( $ow_mail_markup, 'name="' . \OmniWP\Admin\FieldRenderer::name( $ow_path ) . '"' ) ) {
+			$ow_missing_inputs[] = $ow_path;
 		}
 	}
 }
 
-sl_check(
+ow_check(
 	'every message posts its fields whether or not its panel is open',
 	array(),
-	$sl_missing_inputs
+	$ow_missing_inputs
 );
 
 /*
@@ -598,38 +598,38 @@ sl_check(
  * Asserted by flipping it: state that only ever reads one way is state that
  * could be hard-coded and nobody would notice.
  */
-sl_assert(
+ow_assert(
 	'a message with no override reads as inheriting',
-	false !== strpos( $sl_mail_markup, 'sl-mail-state is-inherited' )
-		&& false === strpos( $sl_mail_markup, 'sl-mail-state is-custom' ),
+	false !== strpos( $ow_mail_markup, 'sl-mail-state is-inherited' )
+		&& false === strpos( $ow_mail_markup, 'sl-mail-state is-custom' ),
 	'Nothing is overridden at this point, so no message should claim to be customised.'
 );
 
 Settings::update( array( 'email.templates.recover.subject' => 'Đặt lại: {{code}}' ) );
 
-$sl_after_override = sl_capture(
+$ow_after_override = ow_capture(
 	static function (): void {
-		( new \SmartLogin\Admin\Screens\SettingsScreen() )->render( 'delivery-mail' );
+		( new \OmniWP\Admin\Screens\SettingsScreen() )->render( 'delivery-mail' );
 	}
 )['html'];
 
-sl_check(
+ow_check(
 	'and exactly one reads as customised once one is',
 	1,
-	substr_count( $sl_after_override, 'sl-mail-state is-custom' )
+	substr_count( $ow_after_override, 'sl-mail-state is-custom' )
 );
 
-sl_assert(
+ow_assert(
 	'the list agrees with the resolver, not with a guess',
-	\SmartLogin\Mail\MailRegistry::is_overridden( 'recover' )
-		&& ! \SmartLogin\Mail\MailRegistry::is_overridden( 'login' ),
+	\OmniWP\Mail\MailRegistry::is_overridden( 'recover' )
+		&& ! \OmniWP\Mail\MailRegistry::is_overridden( 'login' ),
 	'is_overridden() reads the same stored values resolve() does; a list that computed its own answer could disagree with what the transport sends.'
 );
 
 Settings::update( array( 'email.templates.recover.subject' => '' ) );
 
 // =====================================================================
-sl_section( 'Rule 3 — copy-to-edit has a way back (13.2)' );
+ow_section( 'Rule 3 — copy-to-edit has a way back (13.2)' );
 
 /*
  * A filled box has stopped inheriting. Pressed on all six messages — which is
@@ -640,13 +640,13 @@ sl_section( 'Rule 3 — copy-to-edit has a way back (13.2)' );
  * Counted rather than checked for presence: one revert button on the screen
  * would satisfy "there is a way back" while five fields still had none.
  */
-$sl_copies  = substr_count( $sl_mail_markup, 'data-mail-copy' );
-$sl_reverts = substr_count( $sl_mail_markup, 'data-mail-revert' );
+$ow_copies  = substr_count( $ow_mail_markup, 'data-mail-copy' );
+$ow_reverts = substr_count( $ow_mail_markup, 'data-mail-revert' );
 
-sl_assert(
+ow_assert(
 	'every copy affordance is matched by a revert affordance',
-	$sl_copies > 0 && $sl_copies === $sl_reverts,
-	sprintf( 'copy: %d, revert: %d. Copy without revert is 11.4 undone.', $sl_copies, $sl_reverts )
+	$ow_copies > 0 && $ow_copies === $ow_reverts,
+	sprintf( 'copy: %d, revert: %d. Copy without revert is 11.4 undone.', $ow_copies, $ow_reverts )
 );
 
 /*
@@ -657,27 +657,27 @@ sl_assert(
  */
 Settings::update( array( 'email.subject' => 'Mã của {{site_name}}: {{code}}' ) );
 
-$sl_with_shared = sl_capture(
+$ow_with_shared = ow_capture(
 	static function (): void {
-		( new \SmartLogin\Admin\Screens\SettingsScreen() )->render( 'delivery-mail' );
+		( new \OmniWP\Admin\Screens\SettingsScreen() )->render( 'delivery-mail' );
 	}
 )['html'];
 
-$sl_resolved_login = \SmartLogin\Mail\MailRegistry::resolve( 'login' )['subject'];
+$ow_resolved_login = \OmniWP\Mail\MailRegistry::resolve( 'login' )['subject'];
 
-sl_check( 'the shared pair is what an un-overridden message resolves to', 'Mã của {{site_name}}: {{code}}', $sl_resolved_login );
+ow_check( 'the shared pair is what an un-overridden message resolves to', 'Mã của {{site_name}}: {{code}}', $ow_resolved_login );
 
-sl_assert(
+ow_assert(
 	'and that is what the copy button carries',
-	false !== strpos( $sl_with_shared, 'data-mail-default="' . esc_attr( $sl_resolved_login ) . '"' ),
+	false !== strpos( $ow_with_shared, 'data-mail-default="' . esc_attr( $ow_resolved_login ) . '"' ),
 	'Copying the row default here would hand the administrator text the message was not sending.'
 );
 
-sl_assert(
+ow_assert(
 	'the row default is not what is offered',
 	false === strpos(
-		$sl_with_shared,
-		'data-mail-default="' . esc_attr( (string) \SmartLogin\Mail\MailRegistry::get( 'login' )['subject'] ) . '"'
+		$ow_with_shared,
+		'data-mail-default="' . esc_attr( (string) \OmniWP\Mail\MailRegistry::get( 'login' )['subject'] ) . '"'
 	),
 	'With the shared pair edited, the row default is the wrong answer and must not appear.'
 );
@@ -688,13 +688,13 @@ Settings::update( array( 'email.subject' => '' ) );
 // round trip 11.1 asserts, restated here because 13.2 is what makes an
 // administrator able to reach it by accident.
 Settings::update( array( 'email.templates.login.subject' => 'tuỳ chỉnh' ) );
-sl_check( 'an override is stored', true, \SmartLogin\Mail\MailRegistry::is_overridden( 'login' ) );
+ow_check( 'an override is stored', true, \OmniWP\Mail\MailRegistry::is_overridden( 'login' ) );
 
 Settings::update( array( 'email.templates.login.subject' => '' ) );
-sl_check( 'clearing it returns the message to inheriting', false, \SmartLogin\Mail\MailRegistry::is_overridden( 'login' ) );
+ow_check( 'clearing it returns the message to inheriting', false, \OmniWP\Mail\MailRegistry::is_overridden( 'login' ) );
 
 // =====================================================================
-sl_section( 'Rule 4 — the structure tokens are opt-in (13.3)' );
+ow_section( 'Rule 4 — the structure tokens are opt-in (13.3)' );
 
 /*
  * Also passes today — nothing uses the tokens yet — and must keep passing. It is
@@ -711,32 +711,32 @@ Settings::update(
 	)
 );
 
-$GLOBALS['sl_mails'] = array();
+$GLOBALS['ow_mails'] = array();
 ( new MailTransport() )->send( 'nguoi.dung@example.com', '482913', array( 'intent' => 'login' ) );
-$sl_plain_render = $GLOBALS['sl_mails'][0]['message'] ?? '';
+$ow_plain_render = $GLOBALS['ow_mails'][0]['message'] ?? '';
 
-sl_assert(
+ow_assert(
 	'a body using neither token renders without their markup',
-	'' !== $sl_plain_render
-		&& false === strpos( $sl_plain_render, 'sl-mail-code' )
-		&& false === strpos( $sl_plain_render, 'sl-mail-button' ),
+	'' !== $ow_plain_render
+		&& false === strpos( $ow_plain_render, 'sl-mail-code' )
+		&& false === strpos( $ow_plain_render, 'sl-mail-button' ),
 	'The shipped bodies must not start emitting the new structures on their own; opt-in is what keeps 13.3 from being a migration.'
 );
 
-sl_assert(
+ow_assert(
 	'and no token is left unexpanded in it',
-	false === strpos( $sl_plain_render, '{{' ),
+	false === strpos( $ow_plain_render, '{{' ),
 	'An unexpanded token is the silent-empty-string failure with the braces left in.'
 );
 
 // =====================================================================
-sl_section( 'Structure tokens (13.3)' );
+ow_section( 'Structure tokens (13.3)' );
 
 /**
  * Send one message with a body written for this assertion, and return what
  * wp_mail() was handed.
  */
-function sl_render_body( string $body, bool $is_html ): string {
+function ow_render_body( string $body, bool $is_html ): string {
 	Settings::update(
 		array(
 			'email.enabled'                => 1,
@@ -746,56 +746,56 @@ function sl_render_body( string $body, bool $is_html ): string {
 		)
 	);
 
-	$GLOBALS['sl_mails'] = array();
+	$GLOBALS['ow_mails'] = array();
 
 	( new MailTransport() )->send( 'nguoi.dung@example.com', '482913', array( 'intent' => 'login' ) );
 
-	return (string) ( $GLOBALS['sl_mails'][0]['message'] ?? '' );
+	return (string) ( $GLOBALS['ow_mails'][0]['message'] ?? '' );
 }
 
-$sl_code_html = sl_render_body( 'Mã của bạn:' . "\n\n" . '{{code_block}}', true );
+$ow_code_html = ow_render_body( 'Mã của bạn:' . "\n\n" . '{{code_block}}', true );
 
-sl_assert(
+ow_assert(
 	'{{code_block}} renders the code in a block, not as running text',
-	false !== strpos( $sl_code_html, 'letter-spacing' ) && false !== strpos( $sl_code_html, '482913' ),
+	false !== strpos( $ow_code_html, 'letter-spacing' ) && false !== strpos( $ow_code_html, '482913' ),
 	'An OTP email has one job. Rendering the digits mid-paragraph is that job done badly.'
 );
 
-sl_assert(
+ow_assert(
 	'and the digits are one selectable run',
-	false === strpos( $sl_code_html, '4</span>' ) && false === strpos( $sl_code_html, '4</td><td' ),
+	false === strpos( $ow_code_html, '4</span>' ) && false === strpos( $ow_code_html, '4</td><td' ),
 	'A span or cell per digit is prettier markup that copies as "4 8 2 9 1 3" on a phone, which defeats the block entirely.'
 );
 
-$sl_code_text = sl_render_body( 'Mã của bạn: {{code_block}}', false );
+$ow_code_text = ow_render_body( 'Mã của bạn: {{code_block}}', false );
 
-sl_check( 'in plain text it is the bare digits', true, false !== strpos( $sl_code_text, '482913' ) );
-sl_check( 'and carries no markup', $sl_code_text, wp_strip_all_tags( $sl_code_text ) );
+ow_check( 'in plain text it is the bare digits', true, false !== strpos( $ow_code_text, '482913' ) );
+ow_check( 'and carries no markup', $ow_code_text, wp_strip_all_tags( $ow_code_text ) );
 
-$sl_button_html = sl_render_body( '{{button:https://example.test/reset|Đặt lại mật khẩu}}', true );
+$ow_button_html = ow_render_body( '{{button:https://example.test/reset|Đặt lại mật khẩu}}', true );
 
-sl_assert(
+ow_assert(
 	'{{button:…}} renders a table, not a styled anchor',
-	false !== strpos( $sl_button_html, '<table' ) && false !== strpos( $sl_button_html, 'https://example.test/reset' ),
+	false !== strpos( $ow_button_html, '<table' ) && false !== strpos( $ow_button_html, 'https://example.test/reset' ),
 	'Outlook ignores padding on inline elements, so a styled <a> arrives as underlined text.'
 );
 
-$sl_button_text = sl_render_body( '{{button:https://example.test/reset|Đặt lại mật khẩu}}', false );
+$ow_button_text = ow_render_body( '{{button:https://example.test/reset|Đặt lại mật khẩu}}', false );
 
-sl_assert(
+ow_assert(
 	'in plain text it is a label and a copyable URL',
-	false !== strpos( $sl_button_text, 'Đặt lại mật khẩu: https://example.test/reset' ),
-	'A link the reader cannot click has to be one they can copy: ' . $sl_button_text
+	false !== strpos( $ow_button_text, 'Đặt lại mật khẩu: https://example.test/reset' ),
+	'A link the reader cannot click has to be one they can copy: ' . $ow_button_text
 );
 
 // The preheader, which is the difference between an inbox preview reading
 // "Xin chào," and reading what the message is about.
-$sl_preheader = sl_render_body( 'Xin chào,' . "\n\n" . 'Mã: {{code}}', true );
+$ow_preheader = ow_render_body( 'Xin chào,' . "\n\n" . 'Mã: {{code}}', true );
 
-sl_assert(
+ow_assert(
 	'the preheader is present and rendered',
-	false !== strpos( $sl_preheader, 'Mã đăng nhập một lần' )
-		&& false === strpos( $sl_preheader, '{{ttl_minutes}}' ),
+	false !== strpos( $ow_preheader, 'Mã đăng nhập một lần' )
+		&& false === strpos( $ow_preheader, '{{ttl_minutes}}' ),
 	'An unrendered token in the preheader is the one place a reader sees braces before opening anything.'
 );
 
@@ -806,4 +806,4 @@ Settings::update(
 	)
 );
 
-sl_summary( 'Mail templates' );
+ow_summary( 'Mail templates' );

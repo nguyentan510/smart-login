@@ -2,10 +2,10 @@
 /**
  * Contract for external identity providers, not OTP delivery channels.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth\Providers;
+namespace OmniWP\Auth\Providers;
 
 use WP_Error;
 

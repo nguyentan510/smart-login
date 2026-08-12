@@ -11,13 +11,13 @@
  * anyone who wants more. Three settings is the deliberate ceiling: a mail
  * template editor is a product, and this is a plugin.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Mail;
+namespace OmniWP\Mail;
 
-use SmartLogin\Frontend\TemplateLoader;
-use SmartLogin\Settings;
+use OmniWP\Frontend\TemplateLoader;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -31,7 +31,7 @@ final class MailLayout {
 	 * rather than to nest. Kept as a comment rather than a class or id so that
 	 * stripping it from a theme override is a deliberate act.
 	 */
-	const MARKER = '<!-- smart-login-mail -->';
+	const MARKER = '<!-- omniwp-mail -->';
 
 	/**
 	 * Wrap rendered body HTML in the shared layout.

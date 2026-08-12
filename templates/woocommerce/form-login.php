@@ -5,19 +5,19 @@
  * Override at yourtheme/woocommerce/myaccount/form-login.php — a theme copy of
  * the WooCommerce template always wins over this one.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-use SmartLogin\Frontend\Flow;
-use SmartLogin\Frontend\Shortcodes;
+use OmniWP\Frontend\Flow;
+use OmniWP\Frontend\Shortcodes;
 
 defined( 'ABSPATH' ) || exit;
 
 do_action( 'woocommerce_before_customer_login_form' );
 
-$sl_shortcodes = new Shortcodes();
+$ow_shortcodes = new Shortcodes();
 
 // Templates render trusted plugin markup that escapes its own output.
-echo $sl_shortcodes->render_flow( Flow::STEP_LOGIN ); // phpcs:ignore WordPress.Security.EscapeOutput
+echo $ow_shortcodes->render_flow( Flow::STEP_LOGIN ); // phpcs:ignore WordPress.Security.EscapeOutput
 
 do_action( 'woocommerce_after_customer_login_form' );

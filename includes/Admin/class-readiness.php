@@ -16,19 +16,19 @@
  * Returns structures, not markup, so the screen decides how to show them and the
  * tests can assert on them.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Admin;
+namespace OmniWP\Admin;
 
-use SmartLogin\Address\AddressRepository;
-use SmartLogin\Auth\Providers\ProviderCredentials;
-use SmartLogin\Auth\Providers\ProviderRegistry;
-use SmartLogin\Identity\Channels\MailChannel;
-use SmartLogin\Identity\Channels\PhoneChannel;
-use SmartLogin\Installer;
-use SmartLogin\OTP\Transports\TransportRouter;
-use SmartLogin\Settings;
+use OmniWP\Address\AddressRepository;
+use OmniWP\Auth\Providers\ProviderCredentials;
+use OmniWP\Auth\Providers\ProviderRegistry;
+use OmniWP\Identity\Channels\MailChannel;
+use OmniWP\Identity\Channels\PhoneChannel;
+use OmniWP\Installer;
+use OmniWP\OTP\Transports\TransportRouter;
+use OmniWP\Settings;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -46,7 +46,7 @@ final class Readiness {
 	/** Deliberately not in use; not a problem. */
 	const OFF = 'off';
 
-	/** @var \SmartLogin\OTP\OtpRepository */
+	/** @var \OmniWP\OTP\OtpRepository */
 	private $repo;
 
 	/**
@@ -55,8 +55,8 @@ final class Readiness {
 	 * counting by transport are indistinguishable through it, and a test driven
 	 * that way would assert nothing.
 	 */
-	public function __construct( ?\SmartLogin\OTP\OtpRepository $repo = null ) {
-		$this->repo = $repo ?? new \SmartLogin\OTP\OtpRepository();
+	public function __construct( ?\OmniWP\OTP\OtpRepository $repo = null ) {
+		$this->repo = $repo ?? new \OmniWP\OTP\OtpRepository();
 	}
 
 	/**
@@ -80,7 +80,7 @@ final class Readiness {
 		 *
 		 * @param array $checks
 		 */
-		return (array) apply_filters( 'smart_login_readiness_checks', $checks );
+		return (array) apply_filters( 'OMNIWP_readiness_checks', $checks );
 	}
 
 	/**
@@ -103,39 +103,39 @@ final class Readiness {
 	 */
 	private function identity(): array {
 		$modes = array(
-			'phone_only' => __( 'Chỉ số điện thoại', 'smart-login' ),
-			'email_only' => __( 'Chỉ email', 'smart-login' ),
-			'both'       => __( 'Số điện thoại hoặc email', 'smart-login' ),
+			'phone_only' => __( 'Chỉ số điện thoại', 'omniwp' ),
+			'email_only' => __( 'Chỉ email', 'omniwp' ),
+			'both'       => __( 'Số điện thoại hoặc email', 'omniwp' ),
 		);
 		$mode  = (string) Settings::get( 'identity.mode', 'phone_only' );
-		$codes = \SmartLogin\Identity\Phone::allowed_codes();
+		$codes = \OmniWP\Identity\Phone::allowed_codes();
 
 		// Not wrong, but it is the configuration that carries the SMS-pumping
 		// exposure, so the operator should have arrived at it on purpose.
 		if ( Settings::phone_enabled() && count( $codes ) > 5 ) {
 			return $this->check(
 				'identity',
-				__( 'Định danh', 'smart-login' ),
+				__( 'Định danh', 'omniwp' ),
 				self::WARN,
 				sprintf(
 					/* translators: 1: identity mode, 2: number of country codes. */
-					__( '%1$s. Đang chấp nhận %2$d mã quốc gia — mỗi mã mở thêm là một đường để đốt tin nhắn.', 'smart-login' ),
+					__( '%1$s. Đang chấp nhận %2$d mã quốc gia — mỗi mã mở thêm là một đường để đốt tin nhắn.', 'omniwp' ),
 					$modes[ $mode ] ?? $mode,
 					count( $codes )
 				),
 				'auth',
-				__( 'Xem danh sách', 'smart-login' )
+				__( 'Xem danh sách', 'omniwp' )
 			);
 		}
 
 		return $this->check(
 			'identity',
-			__( 'Định danh', 'smart-login' ),
+			__( 'Định danh', 'omniwp' ),
 			self::OK,
 			Settings::phone_enabled()
 				? sprintf(
 					/* translators: 1: identity mode, 2: comma-separated country codes. */
-					__( '%1$s. Mã quốc gia: %2$s.', 'smart-login' ),
+					__( '%1$s. Mã quốc gia: %2$s.', 'omniwp' ),
 					$modes[ $mode ] ?? $mode,
 					'+' . implode( ', +', $codes )
 				)
@@ -159,11 +159,11 @@ final class Readiness {
 		$channels = array();
 
 		if ( Settings::phone_enabled() ) {
-			$channels[ PhoneChannel::ID ] = __( 'Số điện thoại', 'smart-login' );
+			$channels[ PhoneChannel::ID ] = __( 'Số điện thoại', 'omniwp' );
 		}
 
 		if ( Settings::email_enabled() ) {
-			$channels[ MailChannel::ID ] = __( 'Email', 'smart-login' );
+			$channels[ MailChannel::ID ] = __( 'Email', 'omniwp' );
 		}
 
 		foreach ( $channels as $channel => $label ) {
@@ -176,7 +176,7 @@ final class Readiness {
 			if ( ! $router->is_available( $transport ) ) {
 				$broken[] = sprintf(
 					/* translators: 1: identity channel, 2: transport id. */
-					__( '%1$s (kênh gửi "%2$s")', 'smart-login' ),
+					__( '%1$s (kênh gửi "%2$s")', 'omniwp' ),
 					$label,
 					$transport
 				);
@@ -189,34 +189,34 @@ final class Readiness {
 			if ( '' !== $unproven ) {
 				return $this->check(
 					'delivery',
-					__( 'Kênh gửi mã', 'smart-login' ),
+					__( 'Kênh gửi mã', 'omniwp' ),
 					self::WARN,
 					$unproven,
 					'delivery',
-					__( 'Gửi thử', 'smart-login' )
+					__( 'Gửi thử', 'omniwp' )
 				);
 			}
 
 			return $this->check(
 				'delivery',
-				__( 'Kênh gửi mã', 'smart-login' ),
+				__( 'Kênh gửi mã', 'omniwp' ),
 				self::OK,
-				__( 'Đã sẵn sàng cho mọi hình thức định danh đang bật.', 'smart-login' ),
+				__( 'Đã sẵn sàng cho mọi hình thức định danh đang bật.', 'omniwp' ),
 				'delivery'
 			);
 		}
 
 		return $this->check(
 			'delivery',
-			__( 'Kênh gửi mã', 'smart-login' ),
+			__( 'Kênh gửi mã', 'omniwp' ),
 			self::FAIL,
 			sprintf(
 				/* translators: %s: comma-separated transport names. */
-				__( 'Chưa cấu hình: %s. Người dùng sẽ không nhận được mã xác thực.', 'smart-login' ),
+				__( 'Chưa cấu hình: %s. Người dùng sẽ không nhận được mã xác thực.', 'omniwp' ),
 				implode( ', ', $broken )
 			),
 			'delivery',
-			__( 'Cấu hình ngay', 'smart-login' )
+			__( 'Cấu hình ngay', 'omniwp' )
 		);
 	}
 
@@ -262,7 +262,7 @@ final class Readiness {
 			return '';
 		}
 
-		return __( 'Kênh email đang bật nhưng chưa từng gửi được mã nào, máy chủ không khai báo đường gửi thư và không thấy plugin SMTP nào. Bật một plugin SMTP hoặc dùng nút Gửi thử để xác nhận trước khi mở đăng ký.', 'smart-login' );
+		return __( 'Kênh email đang bật nhưng chưa từng gửi được mã nào, máy chủ không khai báo đường gửi thư và không thấy plugin SMTP nào. Bật một plugin SMTP hoặc dùng nút Gửi thử để xác nhận trước khi mở đăng ký.', 'omniwp' );
 	}
 
 	/**
@@ -279,21 +279,21 @@ final class Readiness {
 	 * gateway died.
 	 */
 	private function budget(): array {
-		$limiter   = new \SmartLogin\Security\RateLimiter();
+		$limiter   = new \OmniWP\Security\RateLimiter();
 		$remaining = $limiter->halted_for();
 
 		if ( $remaining > 0 ) {
 			return $this->check(
 				'budget',
-				__( 'Trần gửi toàn site', 'smart-login' ),
+				__( 'Trần gửi toàn site', 'omniwp' ),
 				self::WARN,
 				sprintf(
 					/* translators: %d: minutes remaining. */
-					__( 'Đã chạm trần, đang tạm dừng gửi mã. Tự mở lại sau %d phút.', 'smart-login' ),
+					__( 'Đã chạm trần, đang tạm dừng gửi mã. Tự mở lại sau %d phút.', 'omniwp' ),
 					max( 1, (int) ceil( $remaining / MINUTE_IN_SECONDS ) )
 				),
 				'security',
-				__( 'Xem trần', 'smart-login' )
+				__( 'Xem trần', 'omniwp' )
 			);
 		}
 
@@ -303,11 +303,11 @@ final class Readiness {
 		if ( $hour <= 0 && $day <= 0 ) {
 			return $this->check(
 				'budget',
-				__( 'Trần gửi toàn site', 'smart-login' ),
+				__( 'Trần gửi toàn site', 'omniwp' ),
 				self::WARN,
-				__( 'Không có trần nào. Mọi giới hạn còn lại đều tính theo một số điện thoại hoặc một IP, nên không có gì chặn được kẻ tấn công đổi cả hai.', 'smart-login' ),
+				__( 'Không có trần nào. Mọi giới hạn còn lại đều tính theo một số điện thoại hoặc một IP, nên không có gì chặn được kẻ tấn công đổi cả hai.', 'omniwp' ),
 				'security',
-				__( 'Đặt trần', 'smart-login' )
+				__( 'Đặt trần', 'omniwp' )
 			);
 		}
 
@@ -324,16 +324,16 @@ final class Readiness {
 
 		$detail = sprintf(
 			/* translators: 1: codes sent this hour, 2: hourly ceiling, 3: daily ceiling. */
-			__( 'Giờ này đã gửi %1$d. Trần %2$s mã/giờ, %3$s mã/ngày.', 'smart-login' ),
+			__( 'Giờ này đã gửi %1$d. Trần %2$s mã/giờ, %3$s mã/ngày.', 'omniwp' ),
 			$used,
-			$hour > 0 ? (string) $hour : __( 'không giới hạn', 'smart-login' ),
-			$day > 0 ? (string) $day : __( 'không giới hạn', 'smart-login' )
+			$hour > 0 ? (string) $hour : __( 'không giới hạn', 'omniwp' ),
+			$day > 0 ? (string) $day : __( 'không giới hạn', 'omniwp' )
 		);
 
 		if ( $cost > 0 && $sms > 0 ) {
 			$detail .= ' ' . sprintf(
 				/* translators: 1: SMS sent today, 2: estimated cost. */
-				__( 'Hôm nay %1$d tin SMS, ước tính %2$s đ.', 'smart-login' ),
+				__( 'Hôm nay %1$d tin SMS, ước tính %2$s đ.', 'omniwp' ),
 				$sms,
 				number_format_i18n( $sms * $cost )
 			);
@@ -343,17 +343,17 @@ final class Readiness {
 		if ( $hour > 0 && $used >= (int) ceil( $hour * 0.8 ) ) {
 			return $this->check(
 				'budget',
-				__( 'Trần gửi toàn site', 'smart-login' ),
+				__( 'Trần gửi toàn site', 'omniwp' ),
 				self::WARN,
-				$detail . ' ' . __( 'Đang sát trần — hoặc site đang bị lạm dụng, hoặc trần đặt thấp hơn nhu cầu thật.', 'smart-login' ),
+				$detail . ' ' . __( 'Đang sát trần — hoặc site đang bị lạm dụng, hoặc trần đặt thấp hơn nhu cầu thật.', 'omniwp' ),
 				'security',
-				__( 'Xem trần', 'smart-login' )
+				__( 'Xem trần', 'omniwp' )
 			);
 		}
 
 		return $this->check(
 			'budget',
-			__( 'Trần gửi toàn site', 'smart-login' ),
+			__( 'Trần gửi toàn site', 'omniwp' ),
 			self::OK,
 			$detail,
 			'security'
@@ -371,16 +371,16 @@ final class Readiness {
 	 */
 	private function proxy(): array {
 		$trusting = Settings::is_on( 'security.trust_proxy' );
-		$cidrs    = \SmartLogin\Security\Client::trusted_cidrs();
+		$cidrs    = \OmniWP\Security\Client::trusted_cidrs();
 
 		if ( $trusting && ! $cidrs ) {
 			return $this->check(
 				'proxy',
-				__( 'Proxy và địa chỉ IP', 'smart-login' ),
+				__( 'Proxy và địa chỉ IP', 'omniwp' ),
 				self::FAIL,
-				__( 'Đang bật tin proxy nhưng chưa khai dải IP nào, nên plugin không tin header của ai cả. Khai dải IP của proxy để giới hạn theo IP hoạt động đúng.', 'smart-login' ),
+				__( 'Đang bật tin proxy nhưng chưa khai dải IP nào, nên plugin không tin header của ai cả. Khai dải IP của proxy để giới hạn theo IP hoạt động đúng.', 'omniwp' ),
 				'security',
-				__( 'Khai dải IP', 'smart-login' )
+				__( 'Khai dải IP', 'omniwp' )
 			);
 		}
 
@@ -391,20 +391,20 @@ final class Readiness {
 			if ( 1 === preg_match( '#/0\s*$#', $cidr ) ) {
 				return $this->check(
 					'proxy',
-					__( 'Proxy và địa chỉ IP', 'smart-login' ),
+					__( 'Proxy và địa chỉ IP', 'omniwp' ),
 					self::FAIL,
 					sprintf(
 						/* translators: %s: the offending CIDR. */
-						__( 'Dải %s nhận mọi địa chỉ, nên bất kỳ ai cũng tự khai được IP của mình. Hãy khai đúng dải của proxy.', 'smart-login' ),
+						__( 'Dải %s nhận mọi địa chỉ, nên bất kỳ ai cũng tự khai được IP của mình. Hãy khai đúng dải của proxy.', 'omniwp' ),
 						$cidr
 					),
 					'security',
-					__( 'Sửa dải IP', 'smart-login' )
+					__( 'Sửa dải IP', 'omniwp' )
 				);
 			}
 		}
 
-		if ( ! $trusting && \SmartLogin\Security\Client::looks_proxied() ) {
+		if ( ! $trusting && \OmniWP\Security\Client::looks_proxied() ) {
 			// Worse than merely inaccurate when a per-IP ceiling is switched on:
 			// every visitor then shares one counter, so the control that exists to
 			// stop an attacker locks out the customers instead. Named on screen
@@ -415,24 +415,24 @@ final class Readiness {
 
 			return $this->check(
 				'proxy',
-				__( 'Proxy và địa chỉ IP', 'smart-login' ),
+				__( 'Proxy và địa chỉ IP', 'omniwp' ),
 				self::WARN,
 				$ip_ceilings
-					? __( 'Request này đến qua Cloudflare nhưng plugin đang bỏ qua header proxy, nên mọi khách bị tính chung một địa chỉ. Đang có giới hạn theo IP đang bật, nghĩa là chúng sẽ khoá nhầm khách thật trước khi chạm được kẻ tấn công.', 'smart-login' )
-					: __( 'Request này đến qua Cloudflare nhưng plugin đang bỏ qua header proxy, nên nhật ký ghi địa chỉ của CDN thay vì của khách.', 'smart-login' ),
+					? __( 'Request này đến qua Cloudflare nhưng plugin đang bỏ qua header proxy, nên mọi khách bị tính chung một địa chỉ. Đang có giới hạn theo IP đang bật, nghĩa là chúng sẽ khoá nhầm khách thật trước khi chạm được kẻ tấn công.', 'omniwp' )
+					: __( 'Request này đến qua Cloudflare nhưng plugin đang bỏ qua header proxy, nên nhật ký ghi địa chỉ của CDN thay vì của khách.', 'omniwp' ),
 				'security',
-				__( 'Cấu hình proxy', 'smart-login' )
+				__( 'Cấu hình proxy', 'omniwp' )
 			);
 		}
 
 		if ( $trusting ) {
 			return $this->check(
 				'proxy',
-				__( 'Proxy và địa chỉ IP', 'smart-login' ),
+				__( 'Proxy và địa chỉ IP', 'omniwp' ),
 				self::OK,
 				sprintf(
 					/* translators: %d: number of trusted ranges. */
-					_n( 'Tin header proxy từ %d dải đã khai.', 'Tin header proxy từ %d dải đã khai.', count( $cidrs ), 'smart-login' ),
+					_n( 'Tin header proxy từ %d dải đã khai.', 'Tin header proxy từ %d dải đã khai.', count( $cidrs ), 'omniwp' ),
 					count( $cidrs )
 				),
 				'security'
@@ -441,20 +441,20 @@ final class Readiness {
 
 		return $this->check(
 			'proxy',
-			__( 'Proxy và địa chỉ IP', 'smart-login' ),
+			__( 'Proxy và địa chỉ IP', 'omniwp' ),
 			self::OK,
-			__( 'Dùng địa chỉ kết nối trực tiếp. Đúng khi site không đứng sau proxy nào.', 'smart-login' ),
+			__( 'Dùng địa chỉ kết nối trực tiếp. Đúng khi site không đứng sau proxy nào.', 'omniwp' ),
 			'security'
 		);
 	}
 
 	private function form_placement(): array {
-		if ( \SmartLogin\Plugin::woocommerce_active() && Settings::is_on( 'woo.replace_login_form' ) ) {
+		if ( \OmniWP\Plugin::woocommerce_active() && Settings::is_on( 'woo.replace_login_form' ) ) {
 			return $this->check(
 				'form',
-				__( 'Form đăng nhập', 'smart-login' ),
+				__( 'Form đăng nhập', 'omniwp' ),
 				self::OK,
-				__( 'Đang thay form My Account của WooCommerce.', 'smart-login' ),
+				__( 'Đang thay form My Account của WooCommerce.', 'omniwp' ),
 				'profile'
 			);
 		}
@@ -462,20 +462,20 @@ final class Readiness {
 		if ( $this->shortcode_page_id() > 0 ) {
 			return $this->check(
 				'form',
-				__( 'Form đăng nhập', 'smart-login' ),
+				__( 'Form đăng nhập', 'omniwp' ),
 				self::OK,
-				__( 'Đã đặt shortcode trên một trang.', 'smart-login' ),
+				__( 'Đã đặt shortcode trên một trang.', 'omniwp' ),
 				'profile'
 			);
 		}
 
 		return $this->check(
 			'form',
-			__( 'Form đăng nhập', 'smart-login' ),
+			__( 'Form đăng nhập', 'omniwp' ),
 			self::FAIL,
-			__( 'Chưa có trang nào chứa [smart_auth], và tích hợp My Account đang tắt.', 'smart-login' ),
+			__( 'Chưa có trang nào chứa [smart_auth], và tích hợp My Account đang tắt.', 'omniwp' ),
 			'profile',
-			__( 'Bật tích hợp WooCommerce', 'smart-login' )
+			__( 'Bật tích hợp WooCommerce', 'omniwp' )
 		);
 	}
 
@@ -484,7 +484,7 @@ final class Readiness {
 	 * unindexed, so it should not run on every load.
 	 */
 	private function shortcode_page_id(): int {
-		$cached = get_transient( 'smart_login_form_page' );
+		$cached = get_transient( 'OMNIWP_form_page' );
 
 		if ( false !== $cached ) {
 			return (int) $cached;
@@ -499,12 +499,12 @@ final class Readiness {
 				   AND ( post_content LIKE %s OR post_content LIKE %s OR post_content LIKE %s )
 				 LIMIT 1",
 				'%[smart_auth%',
-				'%[smart_login%',
+				'%[OMNIWP%',
 				'%[smart_register%'
 			)
 		);
 
-		set_transient( 'smart_login_form_page', $id, 5 * MINUTE_IN_SECONDS );
+		set_transient( 'OMNIWP_form_page', $id, 5 * MINUTE_IN_SECONDS );
 
 		return $id;
 	}
@@ -513,9 +513,9 @@ final class Readiness {
 		if ( ! Settings::is_on( 'address.enabled' ) ) {
 			return $this->check(
 				'address',
-				__( 'Dữ liệu hành chính', 'smart-login' ),
+				__( 'Dữ liệu hành chính', 'omniwp' ),
 				self::OFF,
-				__( 'Bộ chọn địa chỉ đang tắt.', 'smart-login' ),
+				__( 'Bộ chọn địa chỉ đang tắt.', 'omniwp' ),
 				'profile'
 			);
 		}
@@ -523,21 +523,21 @@ final class Readiness {
 		if ( ! AddressRepository::is_dataset_installed() ) {
 			return $this->check(
 				'address',
-				__( 'Dữ liệu hành chính', 'smart-login' ),
+				__( 'Dữ liệu hành chính', 'omniwp' ),
 				self::FAIL,
-				__( 'Bộ chọn địa chỉ đang bật nhưng chưa có dữ liệu, nên sẽ không hiển thị gì.', 'smart-login' ),
+				__( 'Bộ chọn địa chỉ đang bật nhưng chưa có dữ liệu, nên sẽ không hiển thị gì.', 'omniwp' ),
 				'profile',
-				__( 'Xem hướng dẫn', 'smart-login' )
+				__( 'Xem hướng dẫn', 'omniwp' )
 			);
 		}
 
 		return $this->check(
 			'address',
-			__( 'Dữ liệu hành chính', 'smart-login' ),
+			__( 'Dữ liệu hành chính', 'omniwp' ),
 			self::OK,
 			sprintf(
 				/* translators: %d: province count. */
-				__( 'Đã cài %d tỉnh/thành.', 'smart-login' ),
+				__( 'Đã cài %d tỉnh/thành.', 'omniwp' ),
 				count( AddressRepository::provinces() )
 			),
 			'profile'
@@ -550,9 +550,9 @@ final class Readiness {
 		if ( ! $available ) {
 			return $this->check(
 				'providers',
-				__( 'Đăng nhập nhanh', 'smart-login' ),
+				__( 'Đăng nhập nhanh', 'omniwp' ),
 				self::OFF,
-				__( 'Chưa bật đăng nhập qua Google. Không bắt buộc.', 'smart-login' ),
+				__( 'Chưa bật đăng nhập qua Google. Không bắt buộc.', 'omniwp' ),
 				'providers'
 			);
 		}
@@ -580,11 +580,11 @@ final class Readiness {
 		if ( $confused ) {
 			return $this->check(
 				'providers',
-				__( 'Đăng nhập nhanh', 'smart-login' ),
+				__( 'Đăng nhập nhanh', 'omniwp' ),
 				self::WARN,
 				sprintf(
 					/* translators: %s: comma-separated provider names. */
-					__( '%s: secret đang trùng với ID ứng dụng, nên mọi lần đăng nhập đều bị từ chối. Hãy dán đúng App Secret Key.', 'smart-login' ),
+					__( '%s: secret đang trùng với ID ứng dụng, nên mọi lần đăng nhập đều bị từ chối. Hãy dán đúng App Secret Key.', 'omniwp' ),
 					implode( ', ', $confused )
 				),
 				'providers'
@@ -593,7 +593,7 @@ final class Readiness {
 
 		return $this->check(
 			'providers',
-			__( 'Đăng nhập nhanh', 'smart-login' ),
+			__( 'Đăng nhập nhanh', 'omniwp' ),
 			self::OK,
 			implode(
 				', ',
@@ -618,16 +618,16 @@ final class Readiness {
 		}
 
 		if ( ! $missing ) {
-			return $this->check( 'tables', __( 'Bảng dữ liệu', 'smart-login' ), self::OK, __( 'Đầy đủ.', 'smart-login' ), 'advanced' );
+			return $this->check( 'tables', __( 'Bảng dữ liệu', 'omniwp' ), self::OK, __( 'Đầy đủ.', 'omniwp' ), 'advanced' );
 		}
 
 		return $this->check(
 			'tables',
-			__( 'Bảng dữ liệu', 'smart-login' ),
+			__( 'Bảng dữ liệu', 'omniwp' ),
 			self::FAIL,
 			sprintf(
 				/* translators: %s: comma-separated table names. */
-				__( 'Thiếu: %s. Hãy tắt rồi bật lại plugin.', 'smart-login' ),
+				__( 'Thiếu: %s. Hãy tắt rồi bật lại plugin.', 'omniwp' ),
 				implode( ', ', $missing )
 			),
 			'advanced'
@@ -635,17 +635,17 @@ final class Readiness {
 	}
 
 	private function dev_mode(): array {
-		if ( ! ( new \SmartLogin\OTP\OtpService() )->dev_mode_active() ) {
-			return $this->check( 'dev', __( 'Chế độ DEV', 'smart-login' ), self::OFF, __( 'Đang tắt.', 'smart-login' ), 'advanced' );
+		if ( ! ( new \OmniWP\OTP\OtpService() )->dev_mode_active() ) {
+			return $this->check( 'dev', __( 'Chế độ DEV', 'omniwp' ), self::OFF, __( 'Đang tắt.', 'omniwp' ), 'advanced' );
 		}
 
 		return $this->check(
 			'dev',
-			__( 'Chế độ DEV', 'smart-login' ),
+			__( 'Chế độ DEV', 'omniwp' ),
 			self::WARN,
-			__( 'Mã OTP đang hiển thị thẳng trên màn hình. Tắt trước khi chạy thật.', 'smart-login' ),
+			__( 'Mã OTP đang hiển thị thẳng trên màn hình. Tắt trước khi chạy thật.', 'omniwp' ),
 			'advanced',
-			__( 'Tắt ngay', 'smart-login' )
+			__( 'Tắt ngay', 'omniwp' )
 		);
 	}
 
@@ -656,7 +656,7 @@ final class Readiness {
 			'status'       => $status,
 			'detail'       => $detail,
 			'action'       => admin_url( 'admin.php?page=' . SettingsPage::SLUG . '&tab=' . $tab ),
-			'action_label' => '' !== $action_label ? $action_label : __( 'Mở cài đặt', 'smart-login' ),
+			'action_label' => '' !== $action_label ? $action_label : __( 'Mở cài đặt', 'omniwp' ),
 		);
 	}
 }

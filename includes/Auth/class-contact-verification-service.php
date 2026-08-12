@@ -2,30 +2,30 @@
 /**
  * Verifies a newly supplied contact before changing canonical user data.
  *
- * @package SmartLogin
+ * @package OmniWP
  */
 
-namespace SmartLogin\Auth;
+namespace OmniWP\Auth;
 
-use SmartLogin\Identity\Channels\MailChannel;
-use SmartLogin\Identity\Channels\PhoneChannel;
-use SmartLogin\Identity\IdentityDirectory;
-use SmartLogin\Identity\IdentityRecord;
-use SmartLogin\Identity\Phone;
-use SmartLogin\Identity\ProfileSeeder;
-use SmartLogin\Identity\UserManager;
-use SmartLogin\Identity\VerifiedClaim;
-use SmartLogin\OTP\OtpService;
-use SmartLogin\Security\AuditLog;
-use SmartLogin\Security\RateLimiter;
-use SmartLogin\Settings;
+use OmniWP\Identity\Channels\MailChannel;
+use OmniWP\Identity\Channels\PhoneChannel;
+use OmniWP\Identity\IdentityDirectory;
+use OmniWP\Identity\IdentityRecord;
+use OmniWP\Identity\Phone;
+use OmniWP\Identity\ProfileSeeder;
+use OmniWP\Identity\UserManager;
+use OmniWP\Identity\VerifiedClaim;
+use OmniWP\OTP\OtpService;
+use OmniWP\Security\AuditLog;
+use OmniWP\Security\RateLimiter;
+use OmniWP\Settings;
 use WP_Error;
 
 defined( 'ABSPATH' ) || exit;
 
 final class ContactVerificationService {
 
-	const META_PENDING = '_smartlogin_pending_contact';
+	const META_PENDING = '_OmniWP_pending_contact';
 
 	private OtpService $otp;
 	private IdentityDirectory $directory;
@@ -47,21 +47,21 @@ final class ContactVerificationService {
 	public function start( int $user_id, string $type, string $value ) {
 		$user = get_userdata( $user_id );
 		if ( ! $user ) {
-			return new WP_Error( 'smart_login_no_user', __( 'Không tìm thấy tài khoản.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_no_user', __( 'Không tìm thấy tài khoản.', 'omniwp' ) );
 		}
 
 		if ( ! in_array( $type, array( 'phone', 'email' ), true ) ) {
-			return new WP_Error( 'smart_login_bad_contact', __( 'Thông tin liên hệ không hợp lệ.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_bad_contact', __( 'Thông tin liên hệ không hợp lệ.', 'omniwp' ) );
 		}
 
 		$claim = $this->directory->channels()->claim( $this->channel_for( $type ), $value );
 
 		if ( $claim->is_empty() ) {
 			return new WP_Error(
-				'phone' === $type ? 'smart_login_bad_phone' : 'smart_login_bad_contact',
+				'phone' === $type ? 'OMNIWP_bad_phone' : 'OMNIWP_bad_contact',
 				'phone' === $type
-					? __( 'Số điện thoại không hợp lệ.', 'smart-login' )
-					: __( 'Thông tin liên hệ không hợp lệ.', 'smart-login' )
+					? __( 'Số điện thoại không hợp lệ.', 'omniwp' )
+					: __( 'Thông tin liên hệ không hợp lệ.', 'omniwp' )
 			);
 		}
 
@@ -75,10 +75,10 @@ final class ContactVerificationService {
 
 		if ( AuthAction::LINK_TO_CURRENT !== $decision && $resolution->user_id() !== $user_id ) {
 			return new WP_Error(
-				'smart_login_contact_exists',
+				'OMNIWP_contact_exists',
 				'phone' === $type
-					? __( 'Số điện thoại này đã thuộc về tài khoản khác.', 'smart-login' )
-					: __( 'Email này đã thuộc về tài khoản khác.', 'smart-login' )
+					? __( 'Số điện thoại này đã thuộc về tài khoản khác.', 'omniwp' )
+					: __( 'Email này đã thuộc về tài khoản khác.', 'omniwp' )
 			);
 		}
 
@@ -127,8 +127,8 @@ final class ContactVerificationService {
 
 		if ( $expired || ( $pending['type'] ?? '' ) !== $type || '' === (string) ( $pending['token'] ?? '' ) ) {
 			return new WP_Error(
-				'smart_login_contact_session',
-				__( 'Không còn mã nào đang chờ xác thực. Hãy gửi mã mới.', 'smart-login' )
+				'OMNIWP_contact_session',
+				__( 'Không còn mã nào đang chờ xác thực. Hãy gửi mã mới.', 'omniwp' )
 			);
 		}
 
@@ -166,14 +166,14 @@ final class ContactVerificationService {
 	/** @return array|WP_Error */
 	public function verify( int $user_id, string $token, string $code, string $type ) {
 		if ( ! in_array( $type, array( 'phone', 'email' ), true ) ) {
-			return new WP_Error( 'smart_login_bad_contact', __( 'Thông tin liên hệ không hợp lệ.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_bad_contact', __( 'Thông tin liên hệ không hợp lệ.', 'omniwp' ) );
 		}
 		$row = $this->otp->verify( $token, $code, OtpService::INTENT_ADD_IDENTITY );
 		if ( is_wp_error( $row ) ) {
 			return $row;
 		}
 		if ( (int) ( $row['payload']['user_id'] ?? 0 ) !== $user_id || ( $row['payload']['contact_type'] ?? '' ) !== $type ) {
-			return new WP_Error( 'smart_login_contact_session', __( 'Phiên xác thực thông tin liên hệ không hợp lệ.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_contact_session', __( 'Phiên xác thực thông tin liên hệ không hợp lệ.', 'omniwp' ) );
 		}
 
 		$destination = (string) $row['destination'];
@@ -182,17 +182,17 @@ final class ContactVerificationService {
 		$claim = $this->directory->channels()->claim( $this->channel_for( $type ), $destination );
 
 		if ( $claim->is_empty() ) {
-			return new WP_Error( 'smart_login_bad_contact', __( 'Thông tin liên hệ không hợp lệ.', 'smart-login' ) );
+			return new WP_Error( 'OMNIWP_bad_contact', __( 'Thông tin liên hệ không hợp lệ.', 'omniwp' ) );
 		}
 
 		$owner = $this->directory->resolve( $claim );
 
 		if ( $owner->has_owner() && $owner->user_id() !== $user_id ) {
 			return new WP_Error(
-				'smart_login_contact_exists',
+				'OMNIWP_contact_exists',
 				'phone' === $type
-					? __( 'Số điện thoại này đã thuộc về tài khoản khác.', 'smart-login' )
-					: __( 'Email này đã thuộc về tài khoản khác.', 'smart-login' )
+					? __( 'Số điện thoại này đã thuộc về tài khoản khác.', 'omniwp' )
+					: __( 'Email này đã thuộc về tài khoản khác.', 'omniwp' )
 			);
 		}
 
@@ -214,7 +214,7 @@ final class ContactVerificationService {
 			}
 		} else {
 			if ( ! $this->directory->replace_in_channel( $user_id, $verified, IdentityRecord::BY_OTP ) ) {
-				return new WP_Error( 'smart_login_contact_exists', __( 'Không thể cập nhật thông tin liên hệ.', 'smart-login' ) );
+				return new WP_Error( 'OMNIWP_contact_exists', __( 'Không thể cập nhật thông tin liên hệ.', 'omniwp' ) );
 			}
 
 			// Derived mirrors; see UserManager::create_verified_user().
@@ -251,5 +251,25 @@ final class ContactVerificationService {
 			'masked'     => sanitize_text_field( (string) ( $pending['masked'] ?? '' ) ),
 			'expires_at' => (int) $pending['expires_at'],
 		);
+	}
+
+	/**
+	 * Cancel any pending contact verification for the account.
+	 *
+	 * @param int $user_id Account ID.
+	 * @return bool
+	 */
+	public function cancel( int $user_id ): bool {
+		$pending = get_user_meta( $user_id, self::META_PENDING, true );
+		if ( is_array( $pending ) ) {
+			delete_user_meta( $user_id, self::META_PENDING );
+			AuditLog::record(
+				AuditLog::CONTACT_CANCELLED,
+				RateLimiter::mask_identity( (string) ( $pending['masked'] ?? '' ) ),
+				array( 'type' => (string) ( $pending['type'] ?? '' ) ),
+				$user_id
+			);
+		}
+		return true;
 	}
 }

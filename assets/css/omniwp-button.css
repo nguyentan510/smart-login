@@ -1,0 +1,276 @@
+/**
+ * OmniWP Header Account Button & Menu
+ * Standardized 5px radius and modern clean dropdown menu with defensive WP theme resets.
+ *
+ * @package OmniWP
+ */
+
+.sl-account,
+.sl-account-btn {
+	--sl-account-gap: var(--sl-space-2, 8px);
+}
+
+/* ---------- the button, in both states ---------- */
+.sl-account-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--sl-account-gap);
+	box-sizing: border-box;
+	min-height: 40px;
+	min-width: 40px;
+	justify-content: center;
+	padding: var(--sl-space-2) var(--sl-space-3);
+	border: none;
+	border-radius: var(--sl-radius, 5px);
+	background: transparent;
+	color: var(--sl-text, #1f2430);
+	font-size: var(--sl-fs-md, 15px);
+	font-weight: 600;
+	line-height: 1.4;
+	text-decoration: none;
+	cursor: pointer;
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+summary.sl-account-btn {
+	list-style: none;
+}
+
+summary.sl-account-btn::-webkit-details-marker {
+	display: none;
+}
+
+summary.sl-account-btn::marker {
+	content: '';
+}
+
+.sl-account-btn:hover,
+.sl-account-btn:focus-visible {
+	color: var(--sl-accent, #e30613);
+	border-color: transparent;
+	background: transparent;
+}
+
+.sl-account-btn__icon {
+	display: inline-flex;
+	flex: none;
+}
+
+.sl-account-btn__text {
+	white-space: nowrap;
+}
+
+/* ---------- the dropdown menu ---------- */
+.sl-account {
+	position: relative !important;
+	display: inline-block !important;
+	overflow: visible !important;
+}
+
+details:not([open]) .sl-account__menu {
+	display: none !important;
+}
+
+details[open] .sl-account__menu {
+	display: block !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+	animation: slSlideDown 0.18s ease-out forwards;
+}
+
+.sl-account__menu {
+	position: absolute !important;
+	z-index: 999999 !important;
+	top: calc(100% + var(--sl-space-1, 4px)) !important;
+	right: 0 !important;
+	min-width: 15rem !important;
+	padding: var(--sl-space-2, 8px) 0 !important;
+	border: 1px solid var(--sl-border, #d9dde5) !important;
+	border-radius: var(--sl-radius-card, 5px) !important;
+	background: #ffffff !important;
+	box-shadow: var(--sl-shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.06)) !important;
+	box-sizing: border-box !important;
+	overflow: visible !important;
+	opacity: 1 !important;
+	visibility: visible !important;
+	transform: none !important;
+}
+
+/* Defensive resets for WordPress Theme navigation structures */
+.sl-account__menu ul.sl-account__list,
+.main-navigation .sl-account__menu ul.sl-account__list,
+.main-navigation ul ul.sl-account__list,
+.site-header ul.sl-account__list,
+header ul.sl-account__list,
+ul.sl-account__list {
+	display: block !important;
+	position: static !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+	transform: none !important;
+	clip: auto !important;
+	clip-path: none !important;
+	overflow: visible !important;
+	width: 100% !important;
+	height: auto !important;
+	min-height: 0 !important;
+	max-height: none !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	list-style: none !important;
+	list-style-type: none !important;
+	border: none !important;
+	background: transparent !important;
+	box-shadow: none !important;
+	pointer-events: auto !important;
+}
+
+.sl-account__menu li.sl-account__item,
+.main-navigation .sl-account__menu li.sl-account__item,
+.main-navigation ul ul li.sl-account__item,
+.site-header li.sl-account__item,
+header li.sl-account__item,
+li.sl-account__item {
+	display: block !important;
+	position: static !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+	transform: none !important;
+	clip: auto !important;
+	clip-path: none !important;
+	overflow: visible !important;
+	width: 100% !important;
+	height: auto !important;
+	min-height: 0 !important;
+	max-height: none !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	list-style: none !important;
+	list-style-type: none !important;
+	line-height: normal !important;
+	clear: both !important;
+	border: none !important;
+	background: transparent !important;
+	box-shadow: none !important;
+	pointer-events: auto !important;
+}
+
+.sl-account__menu li.sl-account__item::before,
+.sl-account__menu li.sl-account__item::after,
+li.sl-account__item::before,
+li.sl-account__item::after {
+	content: none !important;
+	display: none !important;
+}
+
+.sl-account__menu a.sl-account__link,
+.main-navigation .sl-account__menu a.sl-account__link,
+.main-navigation ul ul a.sl-account__link,
+.site-header a.sl-account__link,
+header a.sl-account__link,
+a.sl-account__link {
+	display: flex !important;
+	align-items: center !important;
+	gap: 12px !important;
+	padding: 12px 18px !important;
+	color: var(--sl-text, #1f2430) !important;
+	font-size: 0.95rem !important;
+	font-weight: 500 !important;
+	text-decoration: none !important;
+	line-height: 1.4 !important;
+	background: transparent !important;
+	border: none !important;
+	white-space: nowrap !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+	transform: none !important;
+	width: 100% !important;
+	box-sizing: border-box !important;
+	pointer-events: auto !important;
+	transition: background-color 0.15s ease, color 0.15s ease !important;
+}
+
+.sl-account__link:hover,
+.sl-account__link:focus-visible {
+	background: var(--sl-surface-2, #f8fafc) !important;
+	color: var(--sl-accent, #e30613) !important;
+}
+
+.sl-account__icon,
+.sl-account__link .sl-account__icon {
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	flex: none !important;
+	color: var(--sl-muted, #6b7280) !important;
+	visibility: visible !important;
+	opacity: 1 !important;
+	width: 20px !important;
+	height: 20px !important;
+}
+
+.sl-account__icon svg {
+	width: 20px !important;
+	height: 20px !important;
+	display: block !important;
+	stroke: currentColor !important;
+}
+
+.sl-account__link:hover .sl-account__icon {
+	color: var(--sl-accent, #e30613) !important;
+}
+
+.sl-account__item--logout {
+	margin-top: var(--sl-space-2, 8px) !important;
+	padding-top: var(--sl-space-2, 8px) !important;
+	border-top: 1px solid var(--sl-border, #d9dde5) !important;
+}
+
+@keyframes slSlideDown {
+	0% {
+		opacity: 0;
+		transform: translateY(-6px);
+	}
+	100% {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* Mobile Responsive Optimization */
+@media (max-width: 782px) {
+	.main-navigation,
+	.inside-navigation,
+	.main-nav,
+	li.sl-button-item,
+	li.sl-smart-menu-item,
+	.sl-account {
+		overflow: visible !important;
+	}
+
+	.sl-account-btn--collapse .sl-account-btn__text {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		padding: 0;
+		overflow: hidden;
+		clip: rect(0 0 0 0);
+		white-space: nowrap;
+		border: 0;
+	}
+
+	.sl-account__menu {
+		position: absolute !important;
+		top: calc(100% + 8px) !important;
+		right: 0 !important;
+		min-width: 240px !important;
+		max-width: calc(100vw - 24px) !important;
+		z-index: 999999 !important;
+	}
+
+	.sl-account__link {
+		padding: 10px 16px !important;
+		min-height: 40px !important;
+	}
+}
