@@ -35,6 +35,10 @@ final class AccountHub {
 		$tabs         = self::get_tabs();
 		$active_tab   = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'profile'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 
+		if ( 'contact' === $active_tab ) {
+			$active_tab = 'security';
+		}
+
 		if ( ! isset( $tabs[ $active_tab ] ) ) {
 			$active_tab = 'profile';
 		}
@@ -82,15 +86,9 @@ final class AccountHub {
 				'icon'     => 'map-pin',
 				'template' => 'account-hub/tab-address',
 			),
-			'contact'  => array(
-				'key'      => 'contact',
-				'label'    => __( 'Đăng nhập & liên hệ', 'omniwp' ),
-				'icon'     => 'lock',
-				'template' => 'account-hub/tab-contact',
-			),
 			'security' => array(
 				'key'      => 'security',
-				'label'    => __( 'Mật khẩu & Bảo mật', 'omniwp' ),
+				'label'    => __( 'Đăng nhập & Bảo mật', 'omniwp' ),
 				'icon'     => 'shield',
 				'template' => 'account-hub/tab-security',
 			),

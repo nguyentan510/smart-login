@@ -120,18 +120,17 @@ in; the renderer emits the form tag, the nonce and the hook points.
 
 ## Layout
 
-Section order, and the reason it differs from today's:
+Section order on full edit form / Account Hub:
 
 1. **Profile status** — only when incomplete, carrying the `reason` string the
    current notice drops
 2. **Thông tin cá nhân** — name, DOB, gender. First because it is what people
    actually come here to change
-3. **Đăng nhập & liên hệ** — phone, email, linked providers, badged as saving
-   independently. Today these three answer one question in three places and
-   three visual styles, with email appearing twice
-4. **Địa chỉ**
-5. **Bảo mật** — password, collapsed
-6. **Save bar** pinned to the viewport bottom, showing dirty state
+3. **Đăng nhập & Bảo mật** — combines **Đăng nhập & liên hệ** (phone, email, linked providers)
+   and **Mật khẩu & Phiên bảo mật** (password, security sessions) into a single unified tab
+   (`tab-security.php`, key: `security`).
+4. **Địa chỉ** — shipping/billing delivery addresses
+5. **Save bar** pinned to the viewport bottom, showing dirty state
 
 Contact changes collapse from two always-visible OTP panels into one "Đổi" per
 row that expands in place, so the current value and the new one sit together.

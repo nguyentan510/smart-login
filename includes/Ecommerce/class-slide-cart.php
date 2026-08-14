@@ -38,6 +38,15 @@ class SlideCart {
 
 		add_action( 'wp_ajax_omniwp_remove_coupon', array( $this, 'ajax_remove_coupon' ) );
 		add_action( 'wp_ajax_nopriv_omniwp_remove_coupon', array( $this, 'ajax_remove_coupon' ) );
+
+		add_action( 'wp_ajax_omniwp_change_cart_variation', array( $this, 'ajax_change_variation' ) );
+		add_action( 'wp_ajax_nopriv_omniwp_change_cart_variation', array( $this, 'ajax_change_variation' ) );
+
+		add_action( 'wp_ajax_omniwp_add_to_cart', array( $this, 'ajax_add_to_cart' ) );
+		add_action( 'wp_ajax_nopriv_omniwp_add_to_cart', array( $this, 'ajax_add_to_cart' ) );
+
+		add_action( 'wp_ajax_omniwp_restore_cart_item', array( $this, 'ajax_restore_cart_item' ) );
+		add_action( 'wp_ajax_nopriv_omniwp_restore_cart_item', array( $this, 'ajax_restore_cart_item' ) );
 	}
 
 	public function enqueue_assets(): void {
@@ -99,7 +108,7 @@ class SlideCart {
 			)
 		);
 
-		if ( Settings::is_on( 'ecommerce.floating_cart_enabled', true ) ) {
+		if ( Settings::is_on( 'ecommerce.floating_cart_enabled', true ) && ! ( function_exists( 'is_cart' ) && is_cart() ) ) {
 			TemplateLoader::output(
 				'ecommerce/floating-cart',
 				array(
@@ -117,7 +126,12 @@ class SlideCart {
 	public function ajax_update_quantity(): void {
 		check_ajax_referer( 'omniwp_cart_nonce', 'nonce' );
 
-		$key = isset( $_POST['cart_item_key'] ) ? sanitize_text_field( wp_unslash( $_POST['cart_item_key'] ) ) : '';
+		$key = '';
+		if ( isset( $_POST['cart_item_key'] ) ) {
+			$key = sanitize_text_field( wp_unslash( $_POST['cart_item_key'] ) );
+		} elseif ( isset( $_POST['key'] ) ) {
+			$key = sanitize_text_field( wp_unslash( $_POST['key'] ) );
+		}
 		$qty = isset( $_POST['quantity'] ) ? (int) $_POST['quantity'] : 1;
 
 		if ( empty( $key ) ) {
@@ -135,14 +149,25 @@ class SlideCart {
 	public function ajax_remove_item(): void {
 		check_ajax_referer( 'omniwp_cart_nonce', 'nonce' );
 
-		$key = isset( $_POST['cart_item_key'] ) ? sanitize_text_field( wp_unslash( $_POST['cart_item_key'] ) ) : '';
+		$key = '';
+		if ( isset( $_POST['cart_item_key'] ) ) {
+			$key = sanitize_text_field( wp_unslash( $_POST['cart_item_key'] ) );
+		} elseif ( isset( $_POST['key'] ) ) {
+			$key = sanitize_text_field( wp_unslash( $_POST['key'] ) );
+		}
 		if ( empty( $key ) ) {
 			wp_send_json_error( array( 'message' => __( 'Thiếu thông tin sản phẩm.', 'omniwp' ) ) );
 		}
 
 		$result = CartService::remove_item( $key );
 		if ( ! empty( $result['success'] ) ) {
-			wp_send_json_success( $result['cart'] );
+			wp_send_json_success(
+				array(
+					'cart'         => $result['cart'],
+					'removed_item' => $result['removed_item'] ?? null,
+					'message'      => __( 'Đã xóa sản phẩm khỏi giỏ.', 'omniwp' ),
+				)
+			);
 		} else {
 			wp_send_json_error( array( 'message' => $result['message'] ?? __( 'Lỗi gỡ sản phẩm.', 'omniwp' ) ) );
 		}
@@ -186,5 +211,102 @@ class SlideCart {
 				'cart'    => CartService::get_cart_data(),
 			)
 		);
+	}
+
+	public function ajax_change_variation(): void {
+		check_ajax_referer( 'omniwp_cart_nonce', 'nonce' );
+
+		$key = '';
+		if ( isset( $_POST['cart_item_key'] ) ) {
+			$key = sanitize_text_field( wp_unslash( $_POST['cart_item_key'] ) );
+		} elseif ( isset( $_POST['key'] ) ) {
+			$key = sanitize_text_field( wp_unslash( $_POST['key'] ) );
+		}
+
+		$attributes = isset( $_POST['attributes'] ) && is_array( $_POST['attributes'] ) ? array_map( 'sanitize_text_field', wp_unslash( (array) $_POST['attributes'] ) ) : array();
+
+		if ( empty( $key ) ) {
+			wp_send_json_error( array( 'message' => __( 'Thiếu thông tin sản phẩm.', 'omniwp' ) ) );
+		}
+
+		$result = CartService::switch_variation( $key, $attributes );
+		if ( ! empty( $result['success'] ) ) {
+			wp_send_json_success( $result['cart'] );
+		} else {
+			wp_send_json_error( array( 'message' => $result['message'] ?? __( 'Lỗi đổi biến thể.', 'omniwp' ) ) );
+		}
+	}
+
+	/**
+	 * Add a product to cart via AJAX (used by cross-sell buttons).
+	 */
+	public function ajax_add_to_cart(): void {
+		check_ajax_referer( 'omniwp_cart_nonce', 'nonce' );
+
+		$product_id = isset( $_POST['product_id'] ) ? absint( $_POST['product_id'] ) : 0;
+		$quantity   = isset( $_POST['quantity'] ) ? max( 1, (int) $_POST['quantity'] ) : 1;
+
+		if ( ! $product_id ) {
+			wp_send_json_error( array( 'message' => __( 'Thiếu thông tin sản phẩm.', 'omniwp' ) ) );
+		}
+
+		\OmniWP\Frontend\VoucherService::init_cart_session();
+		if ( ! function_exists( 'WC' ) || ! WC() || ! WC()->cart ) {
+			wp_send_json_error( array( 'message' => __( 'Không thể khởi tạo giỏ hàng.', 'omniwp' ) ) );
+		}
+
+		$product = wc_get_product( $product_id );
+		if ( ! $product || ! $product->is_purchasable() || ! $product->is_in_stock() ) {
+			wp_send_json_error( array( 'message' => __( 'Sản phẩm không khả dụng hoặc đã hết hàng.', 'omniwp' ) ) );
+		}
+
+		$added = WC()->cart->add_to_cart( $product_id, $quantity );
+		if ( $added ) {
+			WC()->cart->calculate_totals();
+			wp_send_json_success(
+				array(
+					'message' => __( 'Đã thêm sản phẩm vào giỏ hàng.', 'omniwp' ),
+					'cart'    => CartService::get_cart_data(),
+				)
+			);
+		} else {
+			wp_send_json_error( array( 'message' => __( 'Không thể thêm sản phẩm vào giỏ hàng.', 'omniwp' ) ) );
+		}
+	}
+
+	/**
+	 * Restore a previously removed cart item (Undo action).
+	 */
+	public function ajax_restore_cart_item(): void {
+		check_ajax_referer( 'omniwp_cart_nonce', 'nonce' );
+
+		$product_id   = isset( $_POST['product_id'] ) ? absint( $_POST['product_id'] ) : 0;
+		$variation_id = isset( $_POST['variation_id'] ) ? absint( $_POST['variation_id'] ) : 0;
+		$quantity     = isset( $_POST['quantity'] ) ? max( 1, (int) $_POST['quantity'] ) : 1;
+		$variation    = isset( $_POST['variation'] ) && is_array( $_POST['variation'] )
+			? array_map( 'sanitize_text_field', wp_unslash( (array) $_POST['variation'] ) )
+			: array();
+
+		if ( ! $product_id ) {
+			wp_send_json_error( array( 'message' => __( 'Thiếu thông tin sản phẩm.', 'omniwp' ) ) );
+		}
+
+		\OmniWP\Frontend\VoucherService::init_cart_session();
+		if ( ! function_exists( 'WC' ) || ! WC() || ! WC()->cart ) {
+			wp_send_json_error( array( 'message' => __( 'Không thể khởi tạo giỏ hàng.', 'omniwp' ) ) );
+		}
+
+		$added = WC()->cart->add_to_cart( $product_id, $quantity, $variation_id, $variation );
+		if ( $added ) {
+			WC()->cart->calculate_totals();
+			wp_send_json_success(
+				array(
+					'message' => __( 'Đã khôi phục sản phẩm vào giỏ hàng!', 'omniwp' ),
+					'cart'    => CartService::get_cart_data(),
+				)
+			);
+		} else {
+			wp_send_json_error( array( 'message' => __( 'Không thể khôi phục sản phẩm.', 'omniwp' ) ) );
+		}
 	}
 }

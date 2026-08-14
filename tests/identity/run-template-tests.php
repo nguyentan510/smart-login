@@ -351,6 +351,7 @@ $ow_uncovered_ok = array(
 	'account-hub/address-modal'  => 'account hub modal',
 	'account-hub/logout-modal'   => 'account hub modal',
 	'account-hub/order-modal'    => 'account hub modal',
+	'account-hub/settings-sheet' => 'account hub modal',
 	'account-hub/sidebar'        => 'account hub partial',
 	'account-hub/tab-address'    => 'account hub tab',
 	'account-hub/tab-contact'    => 'account hub tab',

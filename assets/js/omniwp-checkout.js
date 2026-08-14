@@ -513,9 +513,13 @@
 			data.ward_name     = wardName;
 			data.state_name    = stateName;
 
-			var namePhoneText = fullName + (phone ? ' (' + phone + ')' : '');
-
-			$('#sl-summary-name-phone').text(namePhoneText);
+			$('#sl-summary-name').text(fullName);
+			if (phone) {
+				$('#sl-summary-phone').text(phone);
+				$('#sl-summary-phone-wrap').show();
+			} else {
+				$('#sl-summary-phone-wrap').hide();
+			}
 			$('#sl-summary-full-loc').text(fullLoc || address1);
 
 			if (data.is_default) {
@@ -526,11 +530,11 @@
 
 			if (isIncomplete) {
 				$('#sl-summary-warning-badge').css('display', 'inline-flex');
-				$('#sl-btn-open-address-picker').text('Cập Nhật Ngay').addClass('sl-btn-change-address--incomplete');
+				$('#sl-btn-open-address-picker').html('Cập Nhật Ngay &gt;').addClass('sl-btn-change-address--incomplete');
 				$('#sl-co-selected-address-summary').addClass('sl-co-address-single-line--incomplete');
 			} else {
 				$('#sl-summary-warning-badge').hide();
-				$('#sl-btn-open-address-picker').text('Thay Đổi').removeClass('sl-btn-change-address--incomplete');
+				$('#sl-btn-open-address-picker').html('Thay Đổi &gt;').removeClass('sl-btn-change-address--incomplete');
 				$('#sl-co-selected-address-summary').removeClass('sl-co-address-single-line--incomplete');
 			}
 
@@ -936,13 +940,17 @@
 					},
 					success: function (res) {
 						$btn.prop('disabled', false).text('ĐỒNG Ý');
-						self.closeVoucherPickerModal();
-						$(document.body).trigger('update_checkout', { update_shipping_method: true });
+						if (res && res.success) {
+							self.closeVoucherPickerModal();
+							$(document.body).trigger('update_checkout', { update_shipping_method: true });
+						} else {
+							var errMsg = (res && res.data && res.data.message) ? res.data.message : 'Không thể áp dụng mã đã chọn.';
+							alert(errMsg);
+						}
 					},
 					error: function () {
 						$btn.prop('disabled', false).text('ĐỒNG Ý');
-						self.closeVoucherPickerModal();
-						$(document.body).trigger('update_checkout', { update_shipping_method: true });
+						alert('Không thể kết nối máy chủ. Vui lòng thử lại.');
 					}
 				});
 			});

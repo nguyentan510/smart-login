@@ -25,7 +25,7 @@
 	background: transparent;
 	color: var(--sl-text, #1f2430);
 	font-size: var(--sl-fs-md, 15px);
-	font-weight: 600;
+	font-weight: 500;
 	line-height: 1.4;
 	text-decoration: none;
 	cursor: pointer;
@@ -46,10 +46,11 @@ summary.sl-account-btn::marker {
 
 .sl-account-btn:hover,
 .sl-account-btn:focus-visible {
-	color: var(--sl-accent, #e30613);
-	border-color: transparent;
-	background: transparent;
+	color: var(--sl-accent, #e30613) !important;
+	border-color: transparent !important;
+	background: var(--sl-surface-2, #f7f8fa) !important;
 }
+
 
 .sl-account-btn__icon {
 	display: inline-flex;

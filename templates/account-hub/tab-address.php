@@ -27,7 +27,7 @@ $provinces = AddressRepository::provinces();
 			<span class="sl-hub-title__icon"><?php echo IconSet::get( 'map-pin' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
 			<span><?php esc_html_e( 'Sổ địa chỉ nhận hàng', 'omniwp' ); ?></span>
 		</h2>
-		<p class="sl-hub-subtitle"><?php esc_html_e( 'Quản lý danh sách địa chỉ giao hàng và đồng bộ tự động với WooCommerce.', 'omniwp' ); ?></p>
+		<p class="sl-hub-subtitle"><?php esc_html_e( 'Quản lý danh sách địa chỉ nhận hàng của bạn.', 'omniwp' ); ?></p>
 	</div>
 
 	<button type="button" class="sl-btn sl-btn--primary sl-btn-add-address" id="sl-btn-open-address-modal">

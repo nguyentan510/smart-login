@@ -433,4 +433,10 @@ return array(
 	'ecommerce/voucher-picker-modal' => array(
 		'vouchers' => array(),
 	),
+	'ecommerce/voucher-module'       => array(
+		'vouchers' => array(),
+	),
+	'ecommerce/checkout-stepper'     => array(
+		'active_step' => 1,
+	),
 );

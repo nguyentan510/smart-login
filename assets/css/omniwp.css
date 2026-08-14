@@ -31,7 +31,7 @@
 .sl-title {
 	margin: 0 0 var(--sl-space-5);
 	font-size: var(--sl-fs-xl);
-	font-weight: 600;
+	font-weight: 500;
 	text-align: center;
 }
 
@@ -96,7 +96,7 @@
 	border-radius: 50%;
 	background: #fff;
 	font-size: var(--sl-fs-xs);
-	font-weight: 600;
+	font-weight: 500;
 	line-height: 1;
 }
 
@@ -109,7 +109,7 @@
 
 .sl-step.is-current .sl-step__label {
 	color: var(--sl-text);
-	font-weight: 600;
+	font-weight: 500;
 }
 
 /* ---------- Entry screen ---------- */
@@ -141,7 +141,7 @@
 }
 
 .sl-identity-chip__value {
-	font-weight: 600;
+	font-weight: 500;
 	word-break: break-all;
 }
 
@@ -403,7 +403,7 @@
 	border-radius: var(--sl-radius);
 	font-size: var(--sl-fs-md);
 	line-height: 1.4;
-	font-weight: 600;
+	font-weight: 500;
 	text-align: center;
 	text-decoration: none;
 	cursor: pointer;
@@ -443,7 +443,7 @@
 	background: none;
 	border-color: transparent;
 	color: var(--sl-muted);
-	font-weight: 500;
+	font-weight: 400;
 }
 
 .sl-btn--ghost:hover {
@@ -1321,8 +1321,8 @@
 	margin: 0;
 	padding: 0;
 	border: 0;
-	background: none;
-	color: var(--sl-accent);
+	background: none !important;
+	color: var(--sl-accent) !important;
 	font: inherit;
 	font-size: var(--sl-fs-sm);
 	line-height: 1.4;
@@ -1332,11 +1332,13 @@
 }
 
 .sl-action:hover {
-	text-decoration: underline;
+	background: none !important;
+	color: var(--sl-accent) !important;
+	text-decoration: underline !important;
 }
 
 .sl-action:disabled {
-	color: var(--sl-muted);
+	color: var(--sl-muted) !important;
 	cursor: default;
 	text-decoration: none;
 }
@@ -1357,12 +1359,12 @@
    the confirmation button, applied to the control that opens it: quiet until
    somebody goes looking, and unmistakable once they do. */
 .sl-action--danger {
-	color: var(--sl-muted);
+	color: var(--sl-muted) !important;
 }
 
 .sl-action--danger:hover,
 .sl-action--danger:focus-visible {
-	color: var(--sl-accent);
+	color: var(--sl-accent) !important;
 }
 
 /* ---------- Value rows ---------- */

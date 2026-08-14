@@ -68,19 +68,6 @@ if ( ! $ow_form->user() ) {
 					</div>
 				<?php endif; ?>
 			<?php endforeach; ?>
-
-			<!-- Floating Savebar -->
-			<div class="sl-savebar" data-sl-savebar>
-				<p class="sl-savebar__state" data-sl-savebar-state role="status" aria-live="polite" hidden>
-					<span class="sl-savebar__warn" aria-hidden="true">!</span>
-					<span data-sl-savebar-text></span>
-				</p>
-				<?php wp_nonce_field( 'OMNIWP_save_profile' ); ?>
-				<input type="hidden" name="<?php echo esc_attr( FormController::ACTION_FIELD ); ?>" value="save_profile" />
-				<input type="hidden" name="_redirect" value="<?php echo esc_url( get_permalink() ?: home_url( '/' ) ); ?>" />
-				<button type="reset" class="sl-btn sl-btn--ghost sl-btn--inline" data-sl-savebar-cancel><?php esc_html_e( 'Huỷ', 'omniwp' ); ?></button>
-				<button type="submit" class="sl-btn sl-btn--primary sl-btn--inline"><?php esc_html_e( 'Lưu thay đổi', 'omniwp' ); ?></button>
-			</div>
 		</form>
 
 		<?php
@@ -102,5 +89,8 @@ if ( ! $ow_form->user() ) {
 
 	<!-- Logout Confirmation Modal -->
 	<?php TemplateLoader::output( 'account-hub/logout-modal', array( 'user' => $user ) ); ?>
+
+	<!-- Settings Bottom Sheet (Mobile) -->
+	<?php TemplateLoader::output( 'account-hub/settings-sheet', array( 'user' => $user ) ); ?>
 
 </div>

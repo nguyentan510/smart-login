@@ -11,6 +11,7 @@
  */
 
 use OmniWP\Address\AddressRepository;
+use OmniWP\Frontend\IconSet;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -82,25 +83,30 @@ if ( $selected_addr ) :
 	?>
 	<div class="sl-co-address-single-line <?php echo $is_incomplete ? 'sl-co-address-single-line--incomplete' : ''; ?>" id="sl-co-selected-address-summary" data-address="<?php echo esc_attr( (string) wp_json_encode( $addr_data ) ); ?>">
 		<div class="sl-co-address-single-line__content">
-			<strong class="sl-co-address-name-phone" id="sl-summary-name-phone">
-				<?php echo esc_html( $first_name ); ?>
-				<?php if ( '' !== $phone ) : ?>
-					<span class="sl-co-address-phone">(<?php echo esc_html( $phone ); ?>)</span>
-				<?php endif; ?>
-			</strong>
-			<span class="sl-co-address-full" id="sl-summary-full-loc"><?php echo esc_html( $full_loc ?: $address_1 ); ?></span>
-
-			<span class="sl-address-default-badge" id="sl-summary-default-badge" style="<?php echo empty( $selected_addr['is_default'] ) ? 'display:none;' : ''; ?>">
-				<?php esc_html_e( 'Mặc Định', 'omniwp' ); ?>
-			</span>
-
-			<span class="sl-address-warning-badge" id="sl-summary-warning-badge" style="<?php echo $is_incomplete ? 'display:inline-flex;' : 'display:none;'; ?>">
-				⚠️ <?php esc_html_e( 'Thiếu Phường/Xã', 'omniwp' ); ?>
-			</span>
+			<div class="sl-co-address-details">
+				<div class="sl-co-address-detail-item">
+					<span class="sl-co-address-icon" title="<?php esc_attr_e( 'Họ & tên', 'omniwp' ); ?>"><?php echo IconSet::get( 'user' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
+					<strong class="sl-co-address-value" id="sl-summary-name"><?php echo esc_html( $first_name ); ?></strong>
+					<span class="sl-address-default-badge" id="sl-summary-default-badge" style="<?php echo empty( $selected_addr['is_default'] ) ? 'display:none;' : ''; ?>">
+						<?php esc_html_e( 'Mặc Định', 'omniwp' ); ?>
+					</span>
+					<span class="sl-address-warning-badge" id="sl-summary-warning-badge" style="<?php echo $is_incomplete ? 'display:inline-flex;' : 'display:none;'; ?>">
+						⚠️ <?php esc_html_e( 'Thiếu Phường/Xã', 'omniwp' ); ?>
+					</span>
+				</div>
+				<div class="sl-co-address-detail-item" id="sl-summary-phone-wrap" style="<?php echo '' !== $phone ? '' : 'display:none;'; ?>">
+					<span class="sl-co-address-icon" title="<?php esc_attr_e( 'Số điện thoại', 'omniwp' ); ?>"><?php echo IconSet::get( 'phone' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
+					<span class="sl-co-address-value" id="sl-summary-phone"><?php echo esc_html( $phone ); ?></span>
+				</div>
+				<div class="sl-co-address-detail-item">
+					<span class="sl-co-address-icon" title="<?php esc_attr_e( 'Địa chỉ', 'omniwp' ); ?>"><?php echo IconSet::get( 'map-pin' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
+					<span class="sl-co-address-value" id="sl-summary-full-loc"><?php echo esc_html( $full_loc ?: $address_1 ); ?></span>
+				</div>
+			</div>
 		</div>
 
 		<button type="button" class="sl-btn-link sl-btn-change-address <?php echo $is_incomplete ? 'sl-btn-change-address--incomplete' : ''; ?>" id="sl-btn-open-address-picker">
-			<?php echo $is_incomplete ? esc_html__( 'Cập Nhật Ngay', 'omniwp' ) : esc_html__( 'Thay Đổi', 'omniwp' ); ?>
+			<?php echo $is_incomplete ? esc_html__( 'Cập Nhật Ngay', 'omniwp' ) . ' &gt;' : esc_html__( 'Thay Đổi', 'omniwp' ) . ' &gt;'; ?>
 		</button>
 	</div>
 <?php else : ?>

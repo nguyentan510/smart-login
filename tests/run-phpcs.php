@@ -36,7 +36,7 @@
  * written deferral and that has not changed.
  */
 const ow_PHPCS_BASELINE_ERRORS   = 89;
-const ow_PHPCS_BASELINE_WARNINGS = 20;
+const ow_PHPCS_BASELINE_WARNINGS = 18;
 
 $root   = dirname( __DIR__ );
 $phpcs  = $root . '/vendor/bin/phpcs';

@@ -180,6 +180,77 @@
 		}
 
 		// -----------------------------------------------------------------
+		// Mobile Settings Bottom Sheet (Gear ⚙️ Trigger)
+		// -----------------------------------------------------------------
+		var settingsTriggers = hub.querySelectorAll( '[data-sl-settings-trigger]' );
+		var sheetBackdrop = document.querySelector( '[data-sl-settings-sheet-backdrop]' );
+		var sheetClose = sheetBackdrop && sheetBackdrop.querySelector( '[data-sl-settings-sheet-close]' );
+		var settingsActionLinks = document.querySelectorAll( '[data-sl-settings-action]' );
+
+		function openSettingsSheet() {
+			if ( sheetBackdrop && window.innerWidth < 768 ) {
+				sheetBackdrop.removeAttribute( 'hidden' );
+				sheetBackdrop.classList.add( 'is-open' );
+				sheetBackdrop.style.setProperty( 'display', 'flex', 'important' );
+				document.body.style.overflow = 'hidden';
+			}
+		}
+
+		function closeSettingsSheet() {
+			if ( sheetBackdrop ) {
+				sheetBackdrop.setAttribute( 'hidden', '' );
+				sheetBackdrop.classList.remove( 'is-open' );
+				sheetBackdrop.style.setProperty( 'display', 'none', 'important' );
+				document.body.style.overflow = '';
+			}
+		}
+
+		// Ensure hidden initially
+		if ( sheetBackdrop ) {
+			sheetBackdrop.setAttribute( 'hidden', '' );
+			sheetBackdrop.classList.remove( 'is-open' );
+			sheetBackdrop.style.setProperty( 'display', 'none', 'important' );
+		}
+
+		settingsTriggers.forEach( function ( trigger ) {
+			trigger.addEventListener( 'click', function ( e ) {
+				e.preventDefault();
+				e.stopPropagation();
+				openSettingsSheet();
+			} );
+		} );
+
+		document.addEventListener( 'click', function ( e ) {
+			if ( e.target.closest( '[data-sl-settings-sheet-close]' ) ) {
+				e.preventDefault();
+				e.stopPropagation();
+				closeSettingsSheet();
+				return;
+			}
+			if ( sheetBackdrop && e.target === sheetBackdrop ) {
+				e.preventDefault();
+				closeSettingsSheet();
+			}
+		} );
+
+		document.addEventListener( 'keydown', function ( e ) {
+			if ( e.key === 'Escape' ) {
+				closeSettingsSheet();
+			}
+		} );
+
+		settingsActionLinks.forEach( function ( link ) {
+			link.addEventListener( 'click', function ( e ) {
+				var action = link.getAttribute( 'data-sl-settings-action' );
+				closeSettingsSheet();
+				if ( action === 'security' || action === 'password' ) {
+					e.preventDefault();
+					activateTab( 'security', action === 'password' ? 'sl-section-password' : 'sl-section-contact', action === 'password' ? 'password' : 'phone' );
+				}
+			} );
+		} );
+
+		// -----------------------------------------------------------------
 		// Order Pipeline & Live Search
 		// -----------------------------------------------------------------
 		var pipelineItems = hub.querySelectorAll( '[data-sl-order-status]' );

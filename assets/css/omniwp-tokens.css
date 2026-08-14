@@ -16,6 +16,9 @@
 	--sl-surface-2: #f7f8fa;
 	--sl-surface-3: #fafafa;
 
+	/* Standard E-Commerce Layout Container Width */
+	--sl-container-max-width: 1200px;
+
 	/* Radii - Clean 5px standardized UI */
 	--sl-radius: 5px;
 	--sl-radius-card: 5px;
@@ -34,10 +37,66 @@
 	--sl-space-5: 20px;
 	--sl-space-6: 24px;
 
-	/* Font size scale */
-	--sl-fs-xs: 12px;
-	--sl-fs-sm: 13px;
-	--sl-fs-md: 15px;
-	--sl-fs-lg: 16px;
-	--sl-fs-xl: 20px;
+	/* Semantic Text Colors */
+	--sl-color-text-primary: #0f172a;   /* Slate 900 */
+	--sl-color-text-secondary: #475569; /* Slate 600 */
+	--sl-color-text-muted: #94a3b8;     /* Slate 400 */
+
+	/* Semantic Price Colors */
+	--sl-color-price-main: #0f172a;               /* Standard price */
+	--sl-color-price-sale: var(--sl-accent, #e30613); /* Sale / Highlight price */
+	--sl-color-price-old: #94a3b8;                /* Strike-through regular price */
+	--sl-color-price-saving: #16a34a;             /* Discount / Savings green */
+
+	/* Standardized Font Size Scale (Pixel equivalent on 16px base) */
+	--sl-fs-xs: 0.6875rem; /* 11px - Badges, micro captions */
+	--sl-fs-sm: 0.8125rem; /* 13px - Subtext, helper text, old strike price */
+	--sl-fs-md: 0.875rem;  /* 14px - Body text, standard unit price, item title */
+	--sl-fs-lg: 1.000rem;  /* 16px - Subheadings, card titles, table total */
+	--sl-fs-xl: 1.125rem;  /* 18px - Section title, modal title */
+	--sl-fs-2xl: 1.375rem; /* 22px - Main page title, grand total display */
+
+	/* Standardized Font Weights */
+	--sl-fw-light: 300;
+	--sl-fw-normal: 400;
+	--sl-fw-medium: 500;
+	--sl-fw-semibold: 600;
+	--sl-fw-bold: 700;
+
+	/* Standardized Line Heights */
+	--sl-lh-tight: 1.2;
+	--sl-lh-snug: 1.35;
+	--sl-lh-normal: 1.5;
+
+	/* Button Design System Tokens */
+	--sl-btn-radius: var(--sl-radius, 5px);
+	--sl-btn-primary-bg: var(--sl-accent, #e30613);
+	--sl-btn-primary-text: #ffffff;
+	--sl-btn-primary-hover-bg: var(--sl-accent-dark, #c00410);
+	--sl-btn-primary-hover-text: #ffffff;
+
+	--sl-btn-outline-bg: #ffffff;
+	--sl-btn-outline-border: var(--sl-border, #d9dde5);
+	--sl-btn-outline-text: var(--sl-text, #1f2430);
+	--sl-btn-outline-hover-bg: var(--sl-surface-2, #f7f8fa);
+	--sl-btn-outline-hover-border: var(--sl-accent, #e30613);
+	--sl-btn-outline-hover-text: var(--sl-accent, #e30613);
+
+	--sl-btn-ghost-bg: transparent;
+	--sl-btn-ghost-text: var(--sl-color-text-secondary, #475569);
+	--sl-btn-ghost-hover-bg: var(--sl-surface-2, #f7f8fa);
+	--sl-btn-ghost-hover-text: var(--sl-color-text-primary, #0f172a);
+
+	--sl-btn-danger-bg: #fef2f2;
+	--sl-btn-danger-border: #fecaca;
+	--sl-btn-danger-text: #dc2626;
+	--sl-btn-danger-hover-bg: #dc2626;
+	--sl-btn-danger-hover-border: #dc2626;
+	--sl-btn-danger-hover-text: #ffffff;
+
+	--sl-btn-success-bg: #16a34a;
+	--sl-btn-success-text: #ffffff;
+	--sl-btn-success-hover-bg: #15803d;
+	--sl-btn-success-hover-text: #ffffff;
 }
+

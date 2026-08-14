@@ -39,6 +39,26 @@ $discount_vouchers = $vouchers['discount'] ?? array();
 
 		<!-- Scrollable Voucher Cards Area -->
 		<div class="sl-voucher-picker-body">
+			<?php
+			$freeship = $freeship ?? ( class_exists( '\OmniWP\Ecommerce\CartService' ) ? \OmniWP\Ecommerce\CartService::get_cart_data()['freeship'] ?? array() : array() );
+			if ( ! empty( $freeship['enabled'] ) ) :
+				?>
+				<!-- Top Freeship Progress Banner inside Voucher Picker Modal -->
+				<div class="sl-freeship-bar sl-freeship-bar--module <?php echo ! empty( $freeship['is_reached'] ) ? 'sl-freeship-bar--reached' : ''; ?>" id="sl-picker-freeship-bar">
+					<div class="sl-freeship-bar__header">
+						<span class="sl-freeship-bar__icon">
+							<?php echo IconSet::get( 'truck' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+						</span>
+						<div class="sl-freeship-bar__text" id="sl-picker-freeship-text">
+							<?php echo wp_kses_post( $freeship['message'] ?? '' ); ?>
+						</div>
+						<span class="sl-freeship-bar__percent" id="sl-picker-freeship-percent"><?php echo esc_html( (string) ( $freeship['percentage'] ?? 0 ) ); ?>%</span>
+					</div>
+					<div class="sl-freeship-bar__track">
+						<div class="sl-freeship-bar__progress" id="sl-picker-freeship-progress" style="width: <?php echo esc_attr( (string) ( $freeship['percentage'] ?? 0 ) ); ?>%;"></div>
+					</div>
+				</div>
+			<?php endif; ?>
 
 			<!-- Group 1: Mã Miễn Phí Vận Chuyển -->
 			<div class="sl-voucher-group sl-voucher-group--freeship">

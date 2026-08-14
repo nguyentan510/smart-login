@@ -84,9 +84,13 @@ $ow_pct    = $ow_total > 0 ? round( ( $ow_done / $ow_total ) * 100 ) : 100;
 				<span><?php esc_html_e( 'Thành viên Vàng', 'omniwp' ); ?></span>
 			</div>
 		</div>
+		<!-- Gear Settings Button (Mobile Only) -->
+		<button type="button" class="sl-hub-user-compact__settings-btn" data-sl-settings-trigger aria-label="<?php esc_attr_e( 'Cài đặt tài khoản', 'omniwp' ); ?>" title="<?php esc_attr_e( 'Cài đặt tài khoản', 'omniwp' ); ?>">
+			<?php echo IconSet::get( 'settings' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+		</button>
 	</div>
 
-	<!-- Navigation Menu Links / Mobile Sticky Pill Tab Bar -->
+	<!-- Navigation Menu Links (Full on Desktop, Sticky 4-Pill Bar on Mobile) -->
 	<ul class="sl-hub-nav">
 		<?php foreach ( $tabs as $tab_key => $nav_tab_item ) : ?>
 			<?php

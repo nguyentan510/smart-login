@@ -48,7 +48,7 @@ if ( isset( $benefits ) && is_array( $benefits ) && array() !== $benefits ) {
 	 *
 	 * @param array<int,array{icon:string,label:string}> $benefits
 	 */
-	$ow_benefits = (array) apply_filters( 'OMNIWP_dialog_benefits', array() );
+	$ow_benefits = (array) apply_filters( 'omniwp_dialog_benefits', array() );
 }
 
 if ( array() === $ow_benefits ) {

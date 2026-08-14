@@ -27,6 +27,8 @@ class CheckoutService {
 		add_filter( 'woocommerce_billing_fields', array( $this, 'filter_billing_fields' ), 40, 1 );
 		add_filter( 'woocommerce_shipping_fields', array( $this, 'filter_shipping_fields' ), 40, 1 );
 		add_filter( 'woocommerce_order_button_text', array( $this, 'filter_order_button_text' ), 40 );
+		add_filter( 'woocommerce_get_privacy_policy_text', array( $this, 'filter_privacy_policy_text' ), 30, 2 );
+		add_filter( 'woocommerce_checkout_privacy_policy_text', array( $this, 'filter_checkout_privacy_policy_text' ), 30, 1 );
 
 		// Remove default duplicate top coupon notice toggle from WooCommerce.
 		remove_action( 'woocommerce_before_checkout_form', 'woocommerce_checkout_coupon_form', 10 );
@@ -537,11 +539,12 @@ class CheckoutService {
 		$codes_raw = isset( $_POST['codes'] ) ? sanitize_text_field( wp_unslash( $_POST['codes'] ) ) : '';
 		$codes     = array_filter( array_map( 'trim', explode( ',', $codes_raw ) ) );
 
+		// Always clear existing coupons first so new selection replaces old ones
+		if ( function_exists( 'WC' ) && WC()->cart ) {
+			WC()->cart->remove_coupons();
+		}
+
 		if ( empty( $codes ) ) {
-			// Clear all applied coupons if none selected
-			if ( function_exists( 'WC' ) && WC()->cart ) {
-				WC()->cart->remove_coupons();
-			}
 			wp_send_json_success(
 				array(
 					'message' => __( 'Đã bỏ chọn tất cả mã giảm giá.', 'omniwp' ),
@@ -578,5 +581,64 @@ class CheckoutService {
 				'message' => ! empty( $errors ) ? implode( ' ', $errors ) : __( 'Không thể áp dụng mã đã chọn.', 'omniwp' ),
 			)
 		);
+	}
+
+	/**
+	 * Customize WooCommerce privacy policy template text to be concise & high-trust.
+	 *
+	 * @param string $text Existing text.
+	 * @param string $type Policy type ('checkout' or 'registration').
+	 * @return string
+	 */
+	/**
+	 * Build custom Terms & Conditions text: Nhấn "Đặt hàng" đồng nghĩa với việc bạn đồng ý tuân theo [Điều khoản domain]
+	 *
+	 * @return string
+	 */
+	private function get_custom_terms_notice_html(): string {
+		$domain = wp_parse_url( home_url(), PHP_URL_HOST );
+		if ( $domain ) {
+			$domain = preg_replace( '/^www\./i', '', (string) $domain );
+		} else {
+			$domain = get_bloginfo( 'name' );
+		}
+
+		$terms_url = function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'terms' ) : '';
+		if ( empty( $terms_url ) ) {
+			$terms_url = get_privacy_policy_url() ?: home_url( '#' );
+		}
+
+		$terms_label = sprintf( __( 'Điều khoản %s', 'omniwp' ), $domain );
+		$terms_link  = '<a class="woocommerce-privacy-policy-link" href="' . esc_url( $terms_url ) . '" target="_blank" rel="noopener">' . esc_html( $terms_label ) . '</a>';
+
+		return sprintf(
+			/* translators: %s: terms link */
+			__( 'Nhấn "Đặt hàng" đồng nghĩa với việc bạn đồng ý tuân theo %s', 'omniwp' ),
+			$terms_link
+		);
+	}
+
+	/**
+	 * Customize WooCommerce privacy policy template text to be concise & high-trust.
+	 *
+	 * @param string $text Existing text.
+	 * @param string $type Policy type ('checkout' or 'registration').
+	 * @return string
+	 */
+	public function filter_privacy_policy_text( string $text, string $type = '' ): string {
+		if ( 'checkout' === $type || empty( $type ) ) {
+			return $this->get_custom_terms_notice_html();
+		}
+		return $text;
+	}
+
+	/**
+	 * Filter raw checkout privacy policy text.
+	 *
+	 * @param string $text Filtered HTML text.
+	 * @return string
+	 */
+	public function filter_checkout_privacy_policy_text( string $text ): string {
+		return $this->get_custom_terms_notice_html();
 	}
 }

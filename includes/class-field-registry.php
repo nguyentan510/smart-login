@@ -890,7 +890,7 @@ final class FieldRegistry {
 				'tab'     => 'menu',
 				'section' => 'account_menu_presets',
 				'label'   => __( 'Đăng nhập & Bảo mật', 'omniwp' ),
-				'help'    => __( 'Hiển thị liên kết mở thẳng Tab Đổi mật khẩu & Bảo mật (<code>?tab=security</code>)', 'omniwp' ),
+				'help'    => __( 'Hiển thị liên kết mở thẳng Tab Đăng nhập & Bảo mật (<code>?tab=security</code>)', 'omniwp' ),
 			),
 			'account_menu.preset_logout'   => array(
 				'type'    => 'checkbox',
@@ -1146,6 +1146,22 @@ final class FieldRegistry {
 				'section' => 'ecommerce_cart',
 				'label'   => __( 'Bật Nút giỏ hàng nổi (Floating Bubble)', 'omniwp' ),
 				'help'    => __( 'Hiển thị nút bong bóng giỏ hàng ở góc màn hình kèm số lượng và tổng tiền.', 'omniwp' ),
+			),
+			'ecommerce.stepper_enabled'            => array(
+				'type'    => 'checkbox',
+				'default' => 1,
+				'tab'     => 'ecommerce',
+				'section' => 'ecommerce_cart',
+				'label'   => __( 'Bật Thanh tiến trình mua hàng 3 bước (Stepper)', 'omniwp' ),
+				'help'    => __( 'Hiển thị thanh tiến trình 3 bước Giỏ hàng ➔ Thanh toán ➔ Hoàn tất.', 'omniwp' ),
+			),
+			'ecommerce.mobile_dock_enabled'        => array(
+				'type'    => 'checkbox',
+				'default' => 1,
+				'tab'     => 'ecommerce',
+				'section' => 'ecommerce_cart',
+				'label'   => __( 'Bật Thanh Đặt hàng dính cố định đáy Mobile (Mobile Bottom Dock)', 'omniwp' ),
+				'help'    => __( 'Hiển thị tổng tiền và nút Đặt hàng dính đáy màn hình điện thoại.', 'omniwp' ),
 			),
 			'ecommerce.freeship_threshold'         => array(
 				'type'    => 'number',

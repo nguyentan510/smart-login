@@ -81,7 +81,7 @@ final class SmartMenuRenderer {
 		} elseif ( '#smart-account-address' === $url ) {
 			$item->url       = class_exists( '\OmniWP\Frontend\AccountForm' ) ? AccountForm::edit_url( 'address' ) : ( '' !== $account_url ? $account_url . '#address' : '#' );
 			$item->classes[] = 'sl-account-address-item';
-		} elseif ( '#smart-account-security' === $url ) {
+		} elseif ( '#smart-account-security' === $url || '#smart-account-contact' === $url ) {
 			$item->url       = class_exists( '\OmniWP\Frontend\AccountForm' ) ? AccountForm::edit_url( 'security' ) : ( '' !== $account_url ? $account_url . '#security' : '#' );
 			$item->classes[] = 'sl-account-security-item';
 		} elseif ( '#smart-account' === $url || strpos( $url, '#smart-account' ) !== false ) {

@@ -285,8 +285,8 @@ final class VoucherService {
 		$applied_list  = array();
 
 		foreach ( $raw_vouchers as $item ) {
-			$code     = strtolower( $item['code'] );
-			$coupon   = new WC_Coupon( $item['code'] );
+			$code       = strtolower( $item['code'] );
+			$coupon     = new WC_Coupon( $item['code'] );
 			$is_applied = in_array( $code, $applied_coupons, true );
 
 			$is_eligible       = true;
@@ -335,14 +335,34 @@ final class VoucherService {
 				$savings_estimate = $amount;
 			}
 
+			// Progress calculation for min_spend Quick-Win challenge
+			$min_spend          = (float) $coupon->get_minimum_amount();
+			$progress_percent   = 100;
+			$amount_needed      = 0.0;
+			$amount_needed_html = '';
+
+			if ( $min_spend > 0 ) {
+				if ( $cart_subtotal < $min_spend ) {
+					$amount_needed      = $min_spend - $cart_subtotal;
+					$amount_needed_html = function_exists( 'wc_price' ) ? wp_strip_all_tags( wc_price( $amount_needed ) ) : number_format( $amount_needed, 0, ',', '.' ) . '₫';
+					$progress_percent   = (int) round( ( $cart_subtotal / $min_spend ) * 100 );
+					$progress_percent   = max( 0, min( 99, $progress_percent ) );
+				} else {
+					$progress_percent = 100;
+				}
+			}
+
 			$entry = array_merge(
 				$item,
 				array(
-					'is_applied'        => $is_applied,
-					'is_eligible'       => $is_eligible,
-					'ineligible_reason' => $ineligible_reason,
-					'savings_estimate'  => $savings_estimate,
-					'savings_text'      => $savings_estimate > 0 ? wp_strip_all_tags( wc_price( $savings_estimate ) ) : '',
+					'is_applied'         => $is_applied,
+					'is_eligible'        => $is_eligible,
+					'ineligible_reason'  => $ineligible_reason,
+					'savings_estimate'   => $savings_estimate,
+					'savings_text'       => $savings_estimate > 0 ? wp_strip_all_tags( wc_price( $savings_estimate ) ) : '',
+					'progress_percent'   => $progress_percent,
+					'amount_needed'      => $amount_needed,
+					'amount_needed_html' => $amount_needed_html,
 				)
 			);
 

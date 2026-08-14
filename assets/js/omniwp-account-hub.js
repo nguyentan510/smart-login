@@ -180,6 +180,77 @@
 		}
 
 		// -----------------------------------------------------------------
+		// Mobile Settings Bottom Sheet (Gear ⚙️ Trigger)
+		// -----------------------------------------------------------------
+		var settingsTriggers = hub.querySelectorAll( '[data-sl-settings-trigger]' );
+		var sheetBackdrop = document.querySelector( '[data-sl-settings-sheet-backdrop]' );
+		var sheetClose = sheetBackdrop && sheetBackdrop.querySelector( '[data-sl-settings-sheet-close]' );
+		var settingsActionLinks = document.querySelectorAll( '[data-sl-settings-action]' );
+
+		function openSettingsSheet() {
+			if ( sheetBackdrop && window.innerWidth < 768 ) {
+				sheetBackdrop.removeAttribute( 'hidden' );
+				sheetBackdrop.classList.add( 'is-open' );
+				sheetBackdrop.style.setProperty( 'display', 'flex', 'important' );
+				document.body.style.overflow = 'hidden';
+			}
+		}
+
+		function closeSettingsSheet() {
+			if ( sheetBackdrop ) {
+				sheetBackdrop.setAttribute( 'hidden', '' );
+				sheetBackdrop.classList.remove( 'is-open' );
+				sheetBackdrop.style.setProperty( 'display', 'none', 'important' );
+				document.body.style.overflow = '';
+			}
+		}
+
+		// Ensure hidden initially
+		if ( sheetBackdrop ) {
+			sheetBackdrop.setAttribute( 'hidden', '' );
+			sheetBackdrop.classList.remove( 'is-open' );
+			sheetBackdrop.style.setProperty( 'display', 'none', 'important' );
+		}
+
+		settingsTriggers.forEach( function ( trigger ) {
+			trigger.addEventListener( 'click', function ( e ) {
+				e.preventDefault();
+				e.stopPropagation();
+				openSettingsSheet();
+			} );
+		} );
+
+		document.addEventListener( 'click', function ( e ) {
+			if ( e.target.closest( '[data-sl-settings-sheet-close]' ) ) {
+				e.preventDefault();
+				e.stopPropagation();
+				closeSettingsSheet();
+				return;
+			}
+			if ( sheetBackdrop && e.target === sheetBackdrop ) {
+				e.preventDefault();
+				closeSettingsSheet();
+			}
+		} );
+
+		document.addEventListener( 'keydown', function ( e ) {
+			if ( e.key === 'Escape' ) {
+				closeSettingsSheet();
+			}
+		} );
+
+		settingsActionLinks.forEach( function ( link ) {
+			link.addEventListener( 'click', function ( e ) {
+				var action = link.getAttribute( 'data-sl-settings-action' );
+				closeSettingsSheet();
+				if ( action === 'security' || action === 'password' ) {
+					e.preventDefault();
+					activateTab( 'security', action === 'password' ? 'sl-section-password' : 'sl-section-contact', action === 'password' ? 'password' : 'phone' );
+				}
+			} );
+		} );
+
+		// -----------------------------------------------------------------
 		// Order Pipeline & Live Search
 		// -----------------------------------------------------------------
 		var pipelineItems = hub.querySelectorAll( '[data-sl-order-status]' );
@@ -1028,7 +1099,7 @@
 		}
 
 		// Apply Voucher to Cart
-		function handleApplyVoucher( code, triggerBtn ) {
+		function handleApplyVoucher( code, triggerBtn, msgEl ) {
 			if ( ! code ) {
 				return;
 			}
@@ -1055,15 +1126,32 @@
 					try {
 						var res = JSON.parse( xhr.responseText );
 						if ( xhr.status === 200 && res.success ) {
-							alert( res.message || 'Áp dụng mã thành công!' );
+							if ( msgEl ) {
+								msgEl.className = 'sl-coupon-message is-success';
+								msgEl.textContent = res.message || 'Áp dụng mã thành công!';
+							} else {
+								alert( res.message || 'Áp dụng mã thành công!' );
+							}
 							if ( res.redirect_url ) {
-								window.location.href = res.redirect_url;
+								setTimeout( function () {
+									window.location.href = res.redirect_url;
+								}, 800 );
 							}
 						} else {
-							alert( res.message || 'Không thể áp dụng mã này vào giỏ hàng.' );
+							if ( msgEl ) {
+								msgEl.className = 'sl-coupon-message is-error';
+								msgEl.textContent = res.message || 'Không thể áp dụng mã này.';
+							} else {
+								alert( res.message || 'Không thể áp dụng mã này vào giỏ hàng.' );
+							}
 						}
 					} catch ( err ) {
-						alert( 'Có lỗi xảy ra khi áp dụng mã giảm giá.' );
+						if ( msgEl ) {
+							msgEl.className = 'sl-coupon-message is-error';
+							msgEl.textContent = 'Có lỗi xảy ra khi áp dụng mã giảm giá.';
+						} else {
+							alert( 'Có lỗi xảy ra khi áp dụng mã giảm giá.' );
+						}
 					}
 				}
 			};
@@ -1087,6 +1175,34 @@
 				handleApplyVoucher( code, modalApplyBtn );
 			} );
 		}
+
+		// Handle manual voucher input form submission in Account Hub
+		document.addEventListener( 'submit', function ( e ) {
+			var form = e.target.closest( '.sl-voucher-module-form' );
+			if ( ! form ) {
+				return;
+			}
+			e.preventDefault();
+			var input = form.querySelector( '.sl-voucher-module-code-input, .sl-coupon-input' );
+			var btn = form.querySelector( '.sl-coupon-btn' );
+			var wrap = form.closest( '.sl-voucher-module__input-wrap' ) || form.parentElement;
+			var msgEl = wrap ? wrap.querySelector( '.sl-voucher-module-msg, .sl-coupon-message' ) : null;
+
+			if ( ! input || ! input.value.trim() ) {
+				if ( msgEl ) {
+					msgEl.className = 'sl-coupon-message is-error';
+					msgEl.textContent = 'Vui lòng nhập mã voucher / ưu đãi.';
+				}
+				return;
+			}
+
+			if ( msgEl ) {
+				msgEl.className = 'sl-coupon-message';
+				msgEl.textContent = '';
+			}
+
+			handleApplyVoucher( input.value.trim(), btn, msgEl );
+		} );
 
 		// -----------------------------------------------------------------
 		// Logout Modal Confirmation

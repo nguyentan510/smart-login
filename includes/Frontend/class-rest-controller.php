@@ -875,7 +875,7 @@ class RestController {
 
 		ob_start();
 		?>
-		<div class="sl-hub-order-card" data-sl-order-id="<?php echo esc_attr( (string) $order_id ); ?>">
+		<div class="sl-hub-order-card" data-sl-order-id="<?php echo esc_attr( (string) $order_id ); ?>" data-sl-order-detail="<?php echo esc_attr( (string) $order_id ); ?>">
 			<!-- Dòng 1: Mã đơn, ngày đặt và trạng thái -->
 			<div class="sl-hub-order-header">
 				<div class="sl-hub-order-meta">
@@ -891,7 +891,7 @@ class RestController {
 				</span>
 			</div>
 
-			<!-- Dòng 2: Ảnh xếp lớp + Tổng số lượng + Tổng tiền + Nút Xem chi tiết (Hiển thị ngang) -->
+			<!-- Dòng 2: Ảnh xếp lớp + Tổng số lượng + Tổng tiền (Hiển thị ngang) -->
 			<div class="sl-hub-order-row2">
 				<div class="sl-hub-order-row2__left">
 					<div class="sl-order-thumbs-stack">
@@ -929,12 +929,6 @@ class RestController {
 						<?php if ( $payment_title ) : ?>
 							<span class="sl-hub-order-payment"><?php echo esc_html( $payment_title ); ?></span>
 						<?php endif; ?>
-					</div>
-					<div class="sl-hub-order-actions">
-						<button type="button" class="sl-btn sl-btn--outline-primary sl-order-detail-trigger" data-sl-order-detail="<?php echo esc_attr( (string) $order_id ); ?>">
-							<?php echo IconSet::get( 'file-text' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-							<span><?php esc_html_e( 'Xem chi tiết', 'omniwp' ); ?></span>
-						</button>
 					</div>
 				</div>
 			</div>

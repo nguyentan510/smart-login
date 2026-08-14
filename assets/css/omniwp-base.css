@@ -79,60 +79,92 @@ li.sl-account-nav__item::before {
 	align-items: center;
 	justify-content: center;
 	gap: var(--sl-space-2, 8px);
-	padding: 10px 18px;
+	padding: 9px 16px;
 	border: 1px solid transparent;
-	border-radius: var(--sl-radius, 5px);
-	font-size: var(--sl-fs-md, 15px);
+	border-radius: var(--sl-btn-radius, 5px);
+	font-size: var(--sl-fs-md, 14px);
 	line-height: 1.4;
 	font-weight: 600;
 	text-align: center;
 	text-decoration: none;
 	cursor: pointer;
 	box-sizing: border-box;
-	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+	transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
 	font-family: inherit;
 	outline: none;
 	box-shadow: none;
+	min-height: 40px;
 }
 
 .sl-btn:focus-visible {
 	box-shadow: var(--sl-shadow-focus);
 }
 
+/* Variant: Primary */
 .sl-btn--primary {
-	background: var(--sl-accent, #e30613);
-	color: #ffffff;
-	border-color: transparent;
+	background: var(--sl-btn-primary-bg, #e30613) !important;
+	color: var(--sl-btn-primary-text, #ffffff) !important;
+	border-color: transparent !important;
 }
 
 .sl-btn--primary:hover:not(:disabled) {
-	background: var(--sl-accent-dark, #c00410);
-	color: #ffffff;
+	background: var(--sl-btn-primary-hover-bg, #c00410) !important;
+	color: var(--sl-btn-primary-hover-text, #ffffff) !important;
+	border-color: transparent !important;
 }
 
+/* Variant: Outline */
 .sl-btn--outline {
-	background: #ffffff;
-	border-color: var(--sl-border, #d9dde5);
-	color: var(--sl-text, #1f2430);
+	background: var(--sl-btn-outline-bg, #ffffff) !important;
+	border: 1px solid var(--sl-btn-outline-border, #d9dde5) !important;
+	color: var(--sl-btn-outline-text, #1f2430) !important;
 }
 
 .sl-btn--outline:hover:not(:disabled) {
-	background: var(--sl-surface-2, #f7f8fa);
-	border-color: var(--sl-muted, #6b7280);
-	color: var(--sl-text, #1f2430);
+	background: var(--sl-btn-outline-hover-bg, #f7f8fa) !important;
+	border-color: var(--sl-btn-outline-hover-border, #e30613) !important;
+	color: var(--sl-btn-outline-hover-text, #e30613) !important;
 }
 
+/* Variant: Ghost */
 .sl-btn--ghost {
-	background: transparent;
-	border-color: transparent;
-	color: var(--sl-muted, #6b7280);
+	background: var(--sl-btn-ghost-bg, transparent) !important;
+	border: 1px solid transparent !important;
+	color: var(--sl-btn-ghost-text, #475569) !important;
 }
 
 .sl-btn--ghost:hover:not(:disabled) {
-	background: var(--sl-surface-2, #f7f8fa);
-	color: var(--sl-text, #1f2430);
+	background: var(--sl-btn-ghost-hover-bg, #f7f8fa) !important;
+	border-color: transparent !important;
+	color: var(--sl-btn-ghost-hover-text, #0f172a) !important;
 }
 
+/* Variant: Danger */
+.sl-btn--danger {
+	background: var(--sl-btn-danger-bg, #fef2f2) !important;
+	border: 1px solid var(--sl-btn-danger-border, #fecaca) !important;
+	color: var(--sl-btn-danger-text, #dc2626) !important;
+}
+
+.sl-btn--danger:hover:not(:disabled) {
+	background: var(--sl-btn-danger-hover-bg, #dc2626) !important;
+	border-color: var(--sl-btn-danger-hover-border, #dc2626) !important;
+	color: var(--sl-btn-danger-hover-text, #ffffff) !important;
+}
+
+/* Variant: Success */
+.sl-btn--success {
+	background: var(--sl-btn-success-bg, #16a34a) !important;
+	border: 1px solid transparent !important;
+	color: var(--sl-btn-success-text, #ffffff) !important;
+}
+
+.sl-btn--success:hover:not(:disabled) {
+	background: var(--sl-btn-success-hover-bg, #15803d) !important;
+	color: var(--sl-btn-success-hover-text, #ffffff) !important;
+}
+
+/* Sizes */
 .sl-btn--block {
 	display: flex;
 	width: 100%;
@@ -142,21 +174,23 @@ li.sl-account-nav__item::before {
 	padding: 12px 24px;
 	font-size: var(--sl-fs-lg, 16px);
 	font-weight: 700;
-	min-height: 46px;
-	border-radius: var(--sl-radius, 5px);
+	min-height: 48px;
+	border-radius: var(--sl-btn-radius, 5px);
 }
 
 .sl-btn--sm {
 	padding: 6px 12px;
 	font-size: var(--sl-fs-sm, 13px);
 	min-height: 32px;
-	border-radius: var(--sl-radius, 5px);
+	border-radius: var(--sl-btn-radius, 5px);
 }
 
-.sl-btn:disabled {
-	opacity: 0.6;
-	cursor: not-allowed;
+.sl-btn:disabled,
+.sl-btn.is-disabled {
+	opacity: 0.6 !important;
+	cursor: not-allowed !important;
 }
+
 
 /* Base Form Controls */
 .sl-label {
