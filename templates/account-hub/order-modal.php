@@ -44,11 +44,6 @@ defined( 'ABSPATH' ) || exit;
 		<!-- Modal Content Body (Scrollable E-Invoice) -->
 		<div class="sl-invoice-body" data-sl-order-modal-content style="display:none;">
 
-			<!-- Compact Order Pipeline / Timeline Strip -->
-			<div class="sl-invoice-timeline" data-sl-modal-timeline>
-				<!-- Dynamically rendered -->
-			</div>
-
 			<!-- Customer & Delivery / Payment 2-Column Section -->
 			<div class="sl-invoice-info-grid">
 				<!-- Delivery Info -->

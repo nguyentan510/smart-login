@@ -1994,14 +1994,7 @@ li.sl-hub-nav__item::before {
 
 /* Timeline Tracker (Thanh lược giản, nhỏ gọn & tinh tế) */
 .sl-invoice-timeline {
-	display: flex;
-	align-items: flex-start;
-	justify-content: space-between;
-	position: relative;
-	padding: 4px 12px 6px;
-	background: #f8fafc;
-	border-radius: 6px;
-	border: 1px solid #f1f5f9;
+	display: none !important;
 }
 
 .sl-invoice-timeline-track {
@@ -2089,11 +2082,11 @@ li.sl-hub-nav__item::before {
 	margin-top: 1px;
 }
 
-/* Customer & Delivery / Payment Grid (Chia làm 2 cột rõ ràng ở Desktop) */
+/* Customer & Delivery / Payment Grid (Chia làm 2 cột) */
 .sl-invoice-info-grid {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 14px;
+	display: grid !important;
+	grid-template-columns: 1fr 1fr !important;
+	gap: 14px !important;
 }
 
 .sl-invoice-info-card {
@@ -2868,7 +2861,7 @@ li.sl-hub-nav__item::before {
 	}
 
 	.sl-invoice-info-grid {
-		grid-template-columns: 1fr !important;
+		grid-template-columns: 1fr 1fr !important;
 		gap: 10px !important;
 	}
 
