@@ -1963,11 +1963,11 @@ li.sl-hub-nav__item::before {
 
 /* Modal Body */
 .sl-invoice-body {
-	padding: 8px 16px;
+	padding: 6px 14px;
 	overflow-y: auto;
 	display: flex;
 	flex-direction: column;
-	gap: 6px;
+	gap: 4px !important;
 	flex: 1 1 auto;
 }
 
@@ -2878,8 +2878,8 @@ li.sl-hub-nav__item::before {
 	}
 
 	.sl-invoice-body {
-		padding: 12px 14px !important;
-		gap: 10px !important;
+		padding: 6px 12px !important;
+		gap: 4px !important;
 	}
 
 	.sl-invoice-footer {
