@@ -152,7 +152,7 @@ final class ProfileCompletionService {
 				'required'              => Settings::is_on( 'address.required_in_profile' ),
 				'verification_required' => false,
 				'missing'               => ! AddressFields::is_complete( $user_id )
-					|| ! get_user_meta( $user_id, 'billing_address_1', true ),
+					|| ( ! get_user_meta( $user_id, 'shipping_address_1', true ) && ! get_user_meta( $user_id, 'billing_address_1', true ) ),
 			);
 		}
 

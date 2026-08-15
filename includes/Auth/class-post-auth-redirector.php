@@ -72,24 +72,24 @@ final class PostAuthRedirector {
 		// Scenario 2: Returning user login with incomplete basic profile.
 		// If profile is incomplete AND the user is NOT in the middle of checkout,
 		// prompt them politely to complete profile with a skip option.
-		if ( ! $result->is_new_user && ! $is_checkout_request && ! $result->in_place ) {
-			$status = $profiles->status( $result->user_id );
-			if ( ! empty( $status['required_missing'] ) || ! empty( $status['recommended_missing'] ) ) {
-				$last_prompt = (int) get_user_meta( $result->user_id, '_omniwp_incomplete_prompted_at', true );
-				if ( ( time() - $last_prompt ) > DAY_IN_SECONDS ) {
-					update_user_meta( $result->user_id, '_omniwp_incomplete_prompted_at', time() );
-					$dest = '' !== $requested ? $requested : ( function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'myaccount' ) : home_url( '/' ) );
-					$url  = add_query_arg(
-						array(
-							'OmniWP_welcome' => '1',
-							'incomplete'     => '1',
-							'redirect_to'    => rawurlencode( $dest ),
-						),
-						self::profile_url()
-					);
-					$result->redirect_url = $this->safe( $url, $dest );
-					return $result->redirect_url;
+		if ( ! $result->is_new_user && ! $is_checkout_request ) {
+			$missing_fields = $profiles->onboarding_fields( $result->user_id );
+			if ( ! empty( $missing_fields ) ) {
+				if ( $result->in_place ) {
+					$result->redirect_url = '';
+					return '';
 				}
+
+				$dest = '' !== $requested ? $requested : ( \OmniWP\Frontend\AccountForm::shortcode_page_url() ?: home_url( '/' ) );
+				$url  = add_query_arg(
+					array(
+						'OmniWP_welcome' => '1',
+						'incomplete'     => '1',
+					),
+					$dest
+				);
+				$result->redirect_url = $this->safe( $url, $dest );
+				return $result->redirect_url;
 			}
 		}
 

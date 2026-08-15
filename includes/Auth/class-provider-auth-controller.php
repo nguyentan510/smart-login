@@ -333,6 +333,8 @@ final class ProviderAuthController {
 			$args = array( 'OmniWP_welcome' => '1' );
 			if ( ! empty( $context->is_new_user ) ) {
 				$args['new'] = '1';
+			} else {
+				$args['incomplete'] = '1';
 			}
 			$destination = add_query_arg( $args, $context->intended_url );
 		}
