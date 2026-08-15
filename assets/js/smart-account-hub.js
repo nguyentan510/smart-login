@@ -463,29 +463,34 @@
 
 				// Product Items (Chia rõ 3 cột: Sản phẩm/Đơn giá | Số lượng | Thành tiền)
 				var itemsContainer = orderModal.querySelector( '[data-sl-modal-items]' );
-				if ( itemsContainer && ord.items ) {
-					var itemsHtml = '';
-					ord.items.forEach( function ( it ) {
-						itemsHtml += '<div class="sl-invoice-item-row">' +
-							'<div class="sl-invoice-product-cell">' +
-								'<div class="sl-invoice-item-thumb">' +
-								( it.image ? '<img src="' + it.image + '" alt="' + it.name + '" loading="lazy" />' : '<div class="sl-invoice-item-thumb__placeholder">📦</div>' ) +
+				if ( itemsContainer ) {
+					if ( ord.items && Array.isArray( ord.items ) && ord.items.length > 0 ) {
+						var itemsHtml = '';
+						ord.items.forEach( function ( it ) {
+							var itemTotal = it.total || it.subtotal || '';
+							itemsHtml += '<div class="sl-invoice-item-row">' +
+								'<div class="sl-invoice-product-cell">' +
+									'<div class="sl-invoice-item-thumb">' +
+									( it.image ? '<img src="' + it.image + '" alt="' + ( it.name || '' ) + '" loading="lazy" />' : '<div class="sl-invoice-item-thumb__placeholder">📦</div>' ) +
+									'</div>' +
+									'<div class="sl-invoice-item-info">' +
+										'<div class="sl-invoice-item-name">' + ( it.name || 'Sản phẩm' ) + '</div>' +
+										( it.meta ? '<div class="sl-invoice-item-meta">' + it.meta + '</div>' : '' ) +
+										( it.unit_price ? '<div class="sl-invoice-item-unit">Đơn giá: ' + it.unit_price + '</div>' : '' ) +
+									'</div>' +
 								'</div>' +
-								'<div class="sl-invoice-item-info">' +
-									'<div class="sl-invoice-item-name">' + it.name + '</div>' +
-									( it.meta ? '<div class="sl-invoice-item-meta">' + it.meta + '</div>' : '' ) +
-									( it.unit_price ? '<div class="sl-invoice-item-unit">Đơn giá: ' + it.unit_price + '</div>' : '' ) +
+								'<div class="sl-invoice-qty-cell">' +
+									'<span class="sl-invoice-qty-badge">x' + ( it.quantity || 1 ) + '</span>' +
 								'</div>' +
-							'</div>' +
-							'<div class="sl-invoice-qty-cell">' +
-								'<span class="sl-invoice-qty-badge">x' + it.quantity + '</span>' +
-							'</div>' +
-							'<div class="sl-invoice-total-cell">' +
-								'<span class="sl-invoice-item-total">' + ( it.total || it.subtotal || '' ) + '</span>' +
-							'</div>' +
-							'</div>';
-					} );
-					itemsContainer.innerHTML = itemsHtml;
+								'<div class="sl-invoice-total-cell">' +
+									'<span class="sl-invoice-item-total">' + itemTotal + '</span>' +
+								'</div>' +
+								'</div>';
+						} );
+						itemsContainer.innerHTML = itemsHtml;
+					} else {
+						itemsContainer.innerHTML = '<div style="padding:16px; text-align:center; color:#94a3b8;">Không tìm thấy chi tiết sản phẩm.</div>';
+					}
 				}
 
 				// Totals
@@ -505,6 +510,9 @@
 						discountRow.style.display = 'none';
 					}
 				}
+
+				var totalEl = orderModal.querySelector( '[data-sl-modal-total]' );
+				if ( totalEl ) { totalEl.innerHTML = ord.total || ''; }
 
 				var currentOrderId = ord.id;
 				var reorderBtn = orderModal.querySelector( '[data-sl-modal-reorder]' );

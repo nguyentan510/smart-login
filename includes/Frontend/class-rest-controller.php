@@ -1040,30 +1040,42 @@ class RestController {
 		}
 
 		$items_data = array();
-		foreach ( $order->get_items() as $item ) {
-			$product   = $item->get_product();
-			$image_url = '';
-			if ( $product ) {
-				$image_id  = $product->get_image_id();
-				$image_url = $image_id ? wp_get_attachment_image_url( $image_id, 'thumbnail' ) : ( function_exists( 'wc_placeholder_img_src' ) ? wc_placeholder_img_src() : '' );
-			} else {
-				$image_url = function_exists( 'wc_placeholder_img_src' ) ? wc_placeholder_img_src() : '';
+		$line_items = $order->get_items( 'line_item' );
+		if ( is_array( $line_items ) || $line_items instanceof \Traversable ) {
+			foreach ( $line_items as $item ) {
+				if ( ! is_object( $item ) || ! method_exists( $item, 'get_name' ) ) {
+					continue;
+				}
+
+				$product   = method_exists( $item, 'get_product' ) ? $item->get_product() : null;
+				$image_url = '';
+				if ( $product && $product instanceof \WC_Product ) {
+					$image_id  = $product->get_image_id();
+					$image_url = $image_id ? wp_get_attachment_image_url( $image_id, 'thumbnail' ) : ( function_exists( 'wc_placeholder_img_src' ) ? wc_placeholder_img_src() : '' );
+				} else {
+					$image_url = function_exists( 'wc_placeholder_img_src' ) ? wc_placeholder_img_src() : '';
+				}
+
+				$qty               = max( 1, (int) ( method_exists( $item, 'get_quantity' ) ? $item->get_quantity() : 1 ) );
+				$line_subtotal_raw = (float) ( method_exists( $item, 'get_subtotal' ) ? $item->get_subtotal() : ( method_exists( $item, 'get_total' ) ? $item->get_total() : 0 ) );
+				$line_total_raw    = (float) ( method_exists( $item, 'get_total' ) ? $item->get_total() : 0 );
+				$display_price_raw = $qty > 0 ? ( $line_subtotal_raw > 0 ? ( $line_subtotal_raw / $qty ) : ( $line_total_raw > 0 ? ( $line_total_raw / $qty ) : 0 ) ) : 0;
+
+				$subtotal_formatted = method_exists( $order, 'get_formatted_line_subtotal' ) ? $order->get_formatted_line_subtotal( $item ) : '';
+				if ( empty( $subtotal_formatted ) ) {
+					$subtotal_formatted = wc_price( $line_total_raw > 0 ? $line_total_raw : $line_subtotal_raw, array( 'currency' => $order->get_currency() ) );
+				}
+
+				$items_data[] = array(
+					'name'       => $item->get_name(),
+					'quantity'   => $qty,
+					'unit_price' => wc_price( $display_price_raw, array( 'currency' => $order->get_currency() ) ),
+					'subtotal'   => wc_price( $line_subtotal_raw, array( 'currency' => $order->get_currency() ) ),
+					'total'      => $subtotal_formatted,
+					'image'      => $image_url,
+					'meta'       => wc_display_item_meta( $item, array( 'echo' => false ) ),
+				);
 			}
-
-			$qty               = max( 1, (int) $item->get_quantity() );
-			$line_subtotal_raw = (float) $item->get_subtotal();
-			$line_total_raw    = (float) $item->get_total();
-			$display_price_raw = $line_subtotal_raw > 0 ? ( $line_subtotal_raw / $qty ) : ( $line_total_raw > 0 ? ( $line_total_raw / $qty ) : 0 );
-
-			$items_data[] = array(
-				'name'       => $item->get_name(),
-				'quantity'   => $qty,
-				'unit_price' => wc_price( $display_price_raw, array( 'currency' => $order->get_currency() ) ),
-				'subtotal'   => wc_price( $line_subtotal_raw, array( 'currency' => $order->get_currency() ) ),
-				'total'      => $order->get_formatted_line_subtotal( $item ) ?: wc_price( $line_total_raw, array( 'currency' => $order->get_currency() ) ),
-				'image'      => $image_url,
-				'meta'       => wc_display_item_meta( $item, array( 'echo' => false ) ),
-			);
 		}
 
 		$customer_name  = $order->get_formatted_billing_full_name() ?: $order->get_formatted_shipping_full_name();
