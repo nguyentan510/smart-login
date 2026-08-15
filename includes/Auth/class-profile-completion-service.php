@@ -131,7 +131,7 @@ final class ProfileCompletionService {
 
 		$fields[] = array(
 			'key'                   => 'phone',
-			'label'                 => __( 'Số điện thoại nhận hàng', 'omniwp' ),
+			'label'                 => __( 'Số điện thoại', 'omniwp' ),
 			'required'              => true,
 			'verification_required' => false,
 			'missing'               => ! $has_phone,
