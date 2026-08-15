@@ -913,6 +913,12 @@
 
 		function showToast( message, type ) {
 			type = type || 'success';
+			var iconMap = {
+				success: '✓',
+				error: '✕',
+				warning: '⚠',
+				info: 'ℹ'
+			};
 			var container = document.getElementById( 'sl-toast-container' );
 			if ( ! container ) {
 				container = document.createElement( 'div' );
@@ -922,7 +928,7 @@
 			}
 			var toast = document.createElement( 'div' );
 			toast.className = 'sl-toast sl-toast--' + type;
-			toast.innerHTML = '<span class="sl-toast__icon">✓</span>' +
+			toast.innerHTML = '<span class="sl-toast__icon">' + ( iconMap[type] || iconMap.info ) + '</span>' +
 				'<span class="sl-toast__msg">' + message + '</span>' +
 				'<button type="button" class="sl-toast__close" aria-label="Đóng">✕</button>';
 			container.appendChild( toast );

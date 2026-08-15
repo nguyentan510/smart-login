@@ -1127,12 +1127,12 @@
 							$(document.body).trigger('update_checkout', { update_shipping_method: true });
 						} else {
 							var errMsg = (res && res.data && res.data.message) ? res.data.message : 'Không thể áp dụng mã đã chọn.';
-							alert(errMsg);
+							self.showToast(errMsg, 'error');
 						}
 					},
 					error: function () {
 						$btn.prop('disabled', false).text('ĐỒNG Ý');
-						alert('Không thể kết nối máy chủ. Vui lòng thử lại.');
+						self.showToast('Không thể kết nối máy chủ. Vui lòng thử lại.', 'error');
 					}
 				});
 			});

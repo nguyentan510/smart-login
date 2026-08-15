@@ -32,7 +32,7 @@ $provinces = AddressRepository::provinces();
 
 	<button type="button" class="sl-btn sl-btn--primary sl-btn-add-address" id="sl-btn-open-address-modal">
 		<?php echo IconSet::get( 'edit' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-		<span><?php esc_html_e( '+ Thêm địa chỉ mới', 'omniwp' ); ?></span>
+		<span><?php esc_html_e( 'Thêm địa chỉ mới', 'omniwp' ); ?></span>
 	</button>
 </div>
 

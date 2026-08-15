@@ -36,6 +36,9 @@
 			? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>'
 			: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
 
+		// Escape message to prevent XSS injection from server data (e.g. product names).
+		var safeMessage = $('<span/>').text(message).html();
+
 		var undoHtml = '';
 		if (typeof undoCallback === 'function') {
 			undoHtml = '<button type="button" class="sl-toast__undo-btn">' + (config.i18n.undo || 'Hoàn tác') + '</button>';
@@ -43,13 +46,18 @@
 
 		var $toast = $('<div class="sl-toast-notification sl-toast--' + type + (undoHtml ? ' sl-toast--with-undo' : '') + '">' +
 			'<span class="sl-toast__icon">' + iconSvg + '</span>' +
-			'<span class="sl-toast__text">' + message + '</span>' +
+			'<span class="sl-toast__text">' + safeMessage + '</span>' +
 			undoHtml +
 			'</div>');
+
+		var dismissed = false;
 
 		if (undoHtml) {
 			$toast.on('click', '.sl-toast__undo-btn', function (e) {
 				e.preventDefault();
+				if (dismissed) return;
+				dismissed = true;
+				clearTimeout(autoTimer);
 				$toast.removeClass('is-visible');
 				setTimeout(function () { $toast.remove(); }, 200);
 				undoCallback();
@@ -60,7 +68,8 @@
 		setTimeout(function () { $toast.addClass('is-visible'); }, 20);
 
 		var displayDuration = undoHtml ? 5000 : 2800;
-		setTimeout(function () {
+		var autoTimer = setTimeout(function () {
+			dismissed = true;
 			$toast.removeClass('is-visible');
 			setTimeout(function () { $toast.remove(); }, 300);
 		}, displayDuration);

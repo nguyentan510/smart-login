@@ -84,6 +84,7 @@ class SlideCart {
 					'updateSuccess' => __( 'Đã cập nhật giỏ hàng', 'omniwp' ),
 					'removeSuccess' => __( 'Đã xóa sản phẩm khỏi giỏ', 'omniwp' ),
 					'error'         => __( 'Có lỗi xảy ra, vui lòng thử lại', 'omniwp' ),
+					'undo'          => __( 'Hoàn tác', 'omniwp' ),
 				),
 			)
 		);

@@ -9,62 +9,62 @@
 .omniwp--account.sl-hub,
 .omniwp.sl-hub,
 .sl-hub {
-		display: grid;
-		grid-template-columns: 280px minmax(0, 1fr);
-		gap: 28px;
-		width: 100%;
-		max-width: 100%;
-		margin: 0;
-		padding: 24px 0;
-		box-sizing: border-box;
-		font-family: var(--sl-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif);
-		color: var(--sl-text, #1f2430);
-	}
+	display: grid;
+	grid-template-columns: 280px minmax(0, 1fr);
+	gap: 28px;
+	width: 100%;
+	max-width: 100%;
+	margin: 0;
+	padding: 24px 0;
+	box-sizing: border-box;
+	font-family: var(--sl-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif);
+	color: var(--sl-text, #1f2430);
+}
 
-	.sl-hub-content {
-		display: flex;
-		flex-direction: column;
-		background: #ffffff;
-		border: 1px solid var(--sl-border, #d9dde5);
-		border-radius: var(--sl-radius-card, 5px);
-		box-shadow: var(--sl-shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.06));
-		padding: 32px;
-		min-height: 560px;
-		width: 100%;
-		max-width: 100%;
-		box-sizing: border-box;
-	}
+.sl-hub-content {
+	display: flex;
+	flex-direction: column;
+	background: #ffffff;
+	border: 1px solid var(--sl-border, #d9dde5);
+	border-radius: var(--sl-radius-card, 5px);
+	box-shadow: var(--sl-shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.06));
+	padding: 32px;
+	min-height: 560px;
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+}
 
-	.sl-hub-content .sl-form {
-		display: flex;
-		flex-direction: column;
-		flex: 1 1 auto;
-		width: 100%;
-	}
+.sl-hub-content .sl-form {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	width: 100%;
+}
 
-	.sl-hub-panel {
-		flex: 1 1 auto;
-		width: 100%;
-	}
+.sl-hub-panel {
+	flex: 1 1 auto;
+	width: 100%;
+}
 
-	.sl-hub-profile-actions {
-		display: flex;
-		align-items: center;
-		justify-content: flex-end;
-		gap: 12px;
-		margin-top: 24px;
-		padding-top: 18px;
-		border-top: 1px solid #f1f5f9;
-	}
+.sl-hub-profile-actions {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 12px;
+	margin-top: 24px;
+	padding-top: 18px;
+	border-top: 1px solid #f1f5f9;
+}
 
-	.sl-hub-profile-actions .sl-btn {
-		min-height: 42px;
-		padding: 0 20px;
-		font-size: 0.92rem;
-		font-weight: 600;
-		border-radius: var(--sl-radius, 5px);
-		box-sizing: border-box;
-	}
+.sl-hub-profile-actions .sl-btn {
+	min-height: 42px;
+	padding: 0 20px;
+	font-size: 0.92rem;
+	font-weight: 600;
+	border-radius: var(--sl-radius, 5px);
+	box-sizing: border-box;
+}
 
 
 /* -------------------------------------------------------------------
@@ -163,7 +163,8 @@
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	color: #d97706}
+	color: #d97706
+}
 
 .sl-hub-user__progress {
 	margin-top: 12px;
@@ -519,8 +520,13 @@ li.sl-hub-nav__item::before {
 }
 
 @keyframes slSheetBackdropFadeIn {
-	from { opacity: 0; }
-	to { opacity: 1; }
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
 }
 
 .sl-hub-sheet {
@@ -537,8 +543,13 @@ li.sl-hub-nav__item::before {
 }
 
 @keyframes slSheetSlideUp {
-	from { transform: translateY(100%); }
-	to { transform: translateY(0); }
+	from {
+		transform: translateY(100%);
+	}
+
+	to {
+		transform: translateY(0);
+	}
 }
 
 .sl-hub-sheet__handle-bar {
@@ -1425,7 +1436,7 @@ li.sl-hub-nav__item::before {
 	user-select: none !important;
 }
 
-.sl-radio-pill input:checked + span {
+.sl-radio-pill input:checked+span {
 	background: var(--sl-accent, #2563eb) !important;
 	border-color: var(--sl-accent, #2563eb) !important;
 	color: #ffffff !important;
@@ -1823,18 +1834,22 @@ li.sl-hub-nav__item::before {
 		align-items: stretch;
 		gap: 8px;
 	}
+
 	.sl-hub-order-row2__left {
 		justify-content: flex-start;
 	}
+
 	.sl-hub-order-row2__right {
 		justify-content: space-between;
 		padding-top: 8px;
 		border-top: 1px dashed #f1f5f9;
 		width: 100%;
 	}
+
 	.sl-hub-order-price-wrap {
 		text-align: left;
 	}
+
 	.sl-hub-order-total {
 		justify-content: flex-start;
 	}
@@ -1989,7 +2004,9 @@ li.sl-hub-nav__item::before {
 }
 
 @keyframes slSpin {
-	to { transform: rotate(360deg); }
+	to {
+		transform: rotate(360deg);
+	}
 }
 
 /* Timeline Tracker (Thanh lược giản, nhỏ gọn & tinh tế) */
@@ -2460,6 +2477,7 @@ li.sl-hub-nav__item::before {
 
 /* Tablet Breakpoint (768px - 1024px) */
 @media (max-width: 1024px) and (min-width: 768px) {
+
 	html body .omniwp--account.sl-hub,
 	html body .sl-hub,
 	.sl-hub {
@@ -2485,7 +2503,9 @@ li.sl-hub-nav__item::before {
 
 /* Mobile Breakpoint (< 768px) */
 @media (max-width: 767px) {
-	html, body {
+
+	html,
+	body {
 		overflow-x: hidden !important;
 	}
 
@@ -3686,5 +3706,3 @@ li.sl-hub-nav__item::before {
 		font-size: 0.78rem !important;
 	}
 }
-
-
