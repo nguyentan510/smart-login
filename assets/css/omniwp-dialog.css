@@ -8,9 +8,9 @@
 .sl-dialog {
 	border: 0;
 	padding: 0;
-	max-width: min(28rem, calc(100vw - 2rem));
+	max-width: min(30rem, calc(100vw - 2rem));
 	width: 100%;
-	max-height: calc(100vh - 2rem);
+	max-height: 95vh;
 	background: transparent;
 	overflow: visible;
 }
@@ -24,7 +24,7 @@
 	border-radius: var(--sl-radius-card, 5px);
 	box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.18);
 	border: none;
-	max-height: calc(100vh - 2rem);
+	max-height: 95vh;
 	overflow-y: auto;
 	overscroll-behavior: contain;
 	scrollbar-width: thin;
