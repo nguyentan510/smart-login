@@ -1992,23 +1992,23 @@ li.sl-hub-nav__item::before {
 	to { transform: rotate(360deg); }
 }
 
-/* Timeline Tracker (Thanh gọn nhẹ) */
+/* Timeline Tracker (Thanh lược giản, nhỏ gọn & tinh tế) */
 .sl-invoice-timeline {
 	display: flex;
 	align-items: flex-start;
 	justify-content: space-between;
 	position: relative;
-	padding: 5px 12px 6px;
+	padding: 6px 14px 8px;
 	background: #f8fafc;
 	border-radius: 8px;
-	border: 1px solid #e2e8f0;
+	border: 1px solid #f1f5f9;
 }
 
 .sl-invoice-timeline-track {
 	position: absolute;
-	top: 15px;
-	left: 12%;
-	right: 12%;
+	top: 13px;
+	left: 14%;
+	right: 14%;
 	height: 2px;
 	background: #e2e8f0;
 	z-index: 1;
@@ -2016,7 +2016,7 @@ li.sl-hub-nav__item::before {
 
 .sl-invoice-timeline-fill {
 	height: 100%;
-	background: #16a34a;
+	background: #10b981;
 	transition: width 0.3s ease;
 }
 
@@ -2031,15 +2031,15 @@ li.sl-hub-nav__item::before {
 }
 
 .sl-invoice-timeline-dot {
-	width: 20px;
-	height: 20px;
+	width: 14px;
+	height: 14px;
 	border-radius: 50%;
 	background: #ffffff;
 	border: 1.5px solid #cbd5e1;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-size: 0.62rem;
+	font-size: 0.55rem;
 	font-weight: 700;
 	color: #64748b;
 	margin-bottom: 3px;
@@ -2047,8 +2047,8 @@ li.sl-hub-nav__item::before {
 }
 
 .sl-invoice-timeline-step.is-done .sl-invoice-timeline-dot {
-	background: #16a34a;
-	border-color: #16a34a;
+	background: #10b981;
+	border-color: #10b981;
 	color: #ffffff;
 }
 
@@ -2056,14 +2056,14 @@ li.sl-hub-nav__item::before {
 	background: var(--sl-accent, #2563eb);
 	border-color: var(--sl-accent, #2563eb);
 	color: #ffffff;
-	box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+	box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
 .sl-invoice-timeline-step.is-cancelled .sl-invoice-timeline-dot {
 	background: #ef4444 !important;
 	border-color: #ef4444 !important;
 	color: #ffffff !important;
-	box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
+	box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15) !important;
 }
 
 .sl-invoice-timeline-step.is-cancelled .sl-invoice-timeline-label {
@@ -2071,8 +2071,8 @@ li.sl-hub-nav__item::before {
 }
 
 .sl-invoice-timeline-label {
-	font-size: 0.7rem;
-	font-weight: 600;
+	font-size: 0.68rem;
+	font-weight: 500;
 	color: #64748b;
 	line-height: 1.2;
 }
@@ -2080,6 +2080,7 @@ li.sl-hub-nav__item::before {
 .sl-invoice-timeline-step.is-done .sl-invoice-timeline-label,
 .sl-invoice-timeline-step.is-active .sl-invoice-timeline-label {
 	color: #0f172a;
+	font-weight: 600;
 }
 
 .sl-invoice-timeline-date {
@@ -2088,39 +2089,39 @@ li.sl-hub-nav__item::before {
 	margin-top: 1px;
 }
 
-/* Customer & Delivery / Payment Grid */
+/* Customer & Delivery / Payment Grid (Chia làm 2 cột rõ ràng ở Desktop) */
 .sl-invoice-info-grid {
 	display: grid;
 	grid-template-columns: 1fr 1fr;
-	gap: 8px;
+	gap: 14px;
 }
 
 .sl-invoice-info-card {
-	background: #f8fafc;
-	border: 1px solid #e2e8f0;
+	background: #fafafa;
+	border: 1px solid #f1f5f9;
 	border-radius: 8px;
-	padding: 8px 12px;
+	padding: 10px 14px;
 	font-size: 0.8rem;
 	display: flex;
 	flex-direction: column;
-	gap: 3px;
+	gap: 4px;
 }
 
 .sl-invoice-info-card__head {
 	display: flex;
 	align-items: center;
-	gap: 5px;
+	gap: 6px;
 	font-size: 0.72rem;
 	font-weight: 700;
 	color: #475569;
 	text-transform: uppercase;
 	letter-spacing: 0.03em;
-	margin-bottom: 1px;
+	margin-bottom: 2px;
 }
 
 .sl-invoice-info-card__head svg {
-	width: 12px;
-	height: 12px;
+	width: 13px;
+	height: 13px;
 	color: var(--sl-accent, #2563eb);
 }
 
@@ -2162,7 +2163,7 @@ li.sl-hub-nav__item::before {
 	align-items: center;
 	justify-content: space-between;
 	gap: 8px;
-	padding: 1px 0;
+	padding: 2px 0;
 	font-size: 0.78rem;
 }
 
@@ -2180,7 +2181,7 @@ li.sl-hub-nav__item::before {
 
 /* Product Items List Table (Bảng chi tiết hàng hóa 3 cột chuẩn) */
 .sl-invoice-items-section {
-	border: 1px solid #e2e8f0;
+	border: 1px solid #f1f5f9;
 	border-radius: 8px;
 	overflow: hidden;
 	background: #ffffff;
@@ -2192,8 +2193,8 @@ li.sl-hub-nav__item::before {
 	display: grid;
 	grid-template-columns: 1fr 85px 120px;
 	align-items: center;
-	padding: 6px 12px;
-	background: #f1f5f9;
+	padding: 8px 14px;
+	background: #f8fafc;
 	font-size: 0.7rem;
 	font-weight: 700;
 	color: #475569;
@@ -2242,7 +2243,7 @@ li.sl-hub-nav__item::before {
 	display: grid;
 	grid-template-columns: 1fr 85px 120px;
 	align-items: center;
-	padding: 7px 12px;
+	padding: 8px 14px;
 	border-bottom: 1px solid #f1f5f9;
 	background: #ffffff;
 }
@@ -2259,8 +2260,8 @@ li.sl-hub-nav__item::before {
 }
 
 .sl-invoice-item-thumb {
-	width: 34px;
-	height: 34px;
+	width: 36px;
+	height: 36px;
 	border-radius: 6px;
 	border: 1px solid #e2e8f0;
 	overflow: hidden;
@@ -2348,14 +2349,14 @@ li.sl-hub-nav__item::before {
 
 .sl-invoice-summary-card {
 	width: 100%;
-	max-width: 290px;
-	background: #f8fafc;
-	border: 1px solid #e2e8f0;
+	max-width: 310px;
+	background: #fafafa;
+	border: 1px solid #f1f5f9;
 	border-radius: 8px;
-	padding: 6px 12px;
+	padding: 8px 14px;
 	display: flex;
 	flex-direction: column;
-	gap: 3px;
+	gap: 4px;
 	font-size: 0.78rem;
 }
 
@@ -2372,19 +2373,20 @@ li.sl-hub-nav__item::before {
 }
 
 .sl-invoice-summary-row--total {
-	padding-top: 5px;
-	margin-top: 2px;
+	padding-top: 6px;
+	margin-top: 3px;
 	border-top: 1px dashed #cbd5e1;
-	font-size: 0.84rem;
+	font-size: 0.86rem;
 	color: #0f172a;
 	font-weight: 700;
 }
 
 .sl-invoice-total-amount {
-	font-size: 1.05rem;
+	font-size: 1.08rem;
 	color: #e11d48;
 	font-weight: 800;
 }
+
 
 /* Modal Footer Actions */
 .sl-invoice-footer {
