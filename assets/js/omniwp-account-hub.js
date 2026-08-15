@@ -1242,5 +1242,17 @@
 				}
 			} );
 		}
+
+		// -----------------------------------------------------------------
+		// Profile & Security Form Reset (Huỷ button)
+		// -----------------------------------------------------------------
+		hub.querySelectorAll( '.sl-hub-profile-actions button[type="reset"]' ).forEach( function ( btn ) {
+			btn.addEventListener( 'click', function () {
+				var form = btn.closest( 'form' );
+				if ( form ) {
+					form.reset();
+				}
+			} );
+		} );
 	} );
 } )();

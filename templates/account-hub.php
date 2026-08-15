@@ -48,27 +48,25 @@ if ( ! $ow_form->user() ) {
 		<!-- Progress / Completion Nudge Banner (Hoàn thiện 1/4) -->
 		<?php $ow_form->output_status(); ?>
 
-		<!-- Account Details Form -->
-		<form class="sl-form" method="post" action="">
-			<?php foreach ( $tabs as $tab_key => $hub_tab ) : ?>
-				<?php if ( empty( $hub_tab['is_logout'] ) ) : ?>
-					<div class="sl-hub-panel" data-sl-hub-panel="<?php echo esc_attr( $tab_key ); ?>" style="<?php echo $tab_key === $active_tab ? '' : 'display:none;'; ?>">
-						<?php
-						if ( ! empty( $hub_tab['template'] ) ) {
-							TemplateLoader::output(
-								$hub_tab['template'],
-								array(
-									'user'    => $user,
-									'ow_form' => $ow_form,
-									'tab'     => $hub_tab,
-								)
-							);
-						}
-						?>
-					</div>
-				<?php endif; ?>
-			<?php endforeach; ?>
-		</form>
+		<!-- Account Panels -->
+		<?php foreach ( $tabs as $tab_key => $hub_tab ) : ?>
+			<?php if ( empty( $hub_tab['is_logout'] ) ) : ?>
+				<div class="sl-hub-panel" data-sl-hub-panel="<?php echo esc_attr( $tab_key ); ?>" style="<?php echo $tab_key === $active_tab ? '' : 'display:none;'; ?>">
+					<?php
+					if ( ! empty( $hub_tab['template'] ) ) {
+						TemplateLoader::output(
+							$hub_tab['template'],
+							array(
+								'user'    => $user,
+								'ow_form' => $ow_form,
+								'tab'     => $hub_tab,
+							)
+						);
+					}
+					?>
+				</div>
+			<?php endif; ?>
+		<?php endforeach; ?>
 
 		<?php
 		/*
