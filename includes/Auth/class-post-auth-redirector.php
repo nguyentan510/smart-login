@@ -106,11 +106,18 @@ final class PostAuthRedirector {
 				? trim( (string) Settings::get( 'signup.redirect_register', '' ) )
 				: '';
 
-			if ( '' === $configured ) {
-				$configured = trim( (string) Settings::get( 'signup.redirect_login', '' ) );
+			if ( '' !== $configured ) {
+				$url = $configured;
+			} else {
+				$hub_url = \OmniWP\Frontend\AccountForm::shortcode_page_url();
+				if ( '' !== $hub_url ) {
+					$url = $hub_url;
+				} elseif ( function_exists( 'wc_get_page_permalink' ) ) {
+					$url = wc_get_page_permalink( 'myaccount' );
+				} else {
+					$url = home_url( '/' );
+				}
 			}
-
-			$url = '' !== $configured ? $configured : ( function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'myaccount' ) : home_url( '/' ) );
 		}
 
 		$filtered             = (string) apply_filters( 'OMNIWP_post_login_redirect', $url );
@@ -124,6 +131,11 @@ final class PostAuthRedirector {
 	}
 
 	public static function profile_url(): string {
+		$hub_url = \OmniWP\Frontend\AccountForm::shortcode_page_url();
+		if ( '' !== $hub_url ) {
+			return $hub_url;
+		}
+
 		if ( function_exists( 'wc_get_account_endpoint_url' ) ) {
 			return wc_get_account_endpoint_url( 'edit-account' );
 		}

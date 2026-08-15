@@ -396,7 +396,7 @@ final class AccountForm {
 	 * structure does, and the alternative is a LIKE query on post_content for
 	 * every notice that wants to link somewhere.
 	 */
-	private static function shortcode_page_url(): string {
+	public static function shortcode_page_url(): string {
 		return SitePage::url( array( 'smart_account' ), 'OMNIWP_account_page' );
 	}
 
