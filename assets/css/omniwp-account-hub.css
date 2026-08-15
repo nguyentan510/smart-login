@@ -1870,13 +1870,13 @@ li.sl-hub-nav__item::before {
 
 .sl-order-modal-dialog {
 	background: #ffffff !important;
-	border-radius: var(--sl-radius-card, 5px) !important;
-	max-width: 740px !important;
+	border-radius: 8px !important;
+	max-width: 660px !important;
 	width: 100% !important;
-	max-height: 95vh !important;
+	max-height: 90vh !important;
 	display: flex !important;
 	flex-direction: column !important;
-	box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2) !important;
+	box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.15) !important;
 	border: none !important;
 	transform: translateY(12px) scale(0.99);
 	transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1892,7 +1892,7 @@ li.sl-hub-nav__item::before {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 10px 18px;
+	padding: 8px 16px;
 	border-bottom: 1px solid #f1f5f9;
 	background: #fafafa;
 	flex-shrink: 0;
@@ -1963,11 +1963,11 @@ li.sl-hub-nav__item::before {
 
 /* Modal Body */
 .sl-invoice-body {
-	padding: 10px 18px;
+	padding: 8px 16px;
 	overflow-y: auto;
 	display: flex;
 	flex-direction: column;
-	gap: 8px;
+	gap: 6px;
 	flex: 1 1 auto;
 }
 
@@ -1998,9 +1998,9 @@ li.sl-hub-nav__item::before {
 	align-items: flex-start;
 	justify-content: space-between;
 	position: relative;
-	padding: 6px 14px 8px;
+	padding: 4px 12px 6px;
 	background: #f8fafc;
-	border-radius: 8px;
+	border-radius: 6px;
 	border: 1px solid #f1f5f9;
 }
 
@@ -2394,17 +2394,18 @@ li.sl-hub-nav__item::before {
 	align-items: center;
 	justify-content: flex-end;
 	gap: 8px;
-	padding: 8px 18px;
+	padding: 6px 16px;
 	border-top: 1px solid #f1f5f9;
-	background: #ffffff;
+	background: #fafafa;
 	flex-shrink: 0;
 }
 
-.sl-btn--sm {
-	min-height: 36px !important;
-	padding: 6px 14px !important;
-	font-size: 0.82rem !important;
-	border-radius: 6px !important;
+.sl-invoice-footer .sl-btn {
+	min-height: 32px !important;
+	height: 32px !important;
+	padding: 4px 14px !important;
+	font-size: 0.78rem !important;
+	border-radius: 5px !important;
 }
 
 .sl-btn-reorder {
