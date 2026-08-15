@@ -372,6 +372,7 @@ class WooIntegration {
 		}
 
 		ProfileSeeder::seed_if_empty( (int) $user_id, 'billing_phone', Phone::to_local( $canonical ) );
+		ProfileSeeder::seed_if_empty( (int) $user_id, 'shipping_phone', Phone::to_local( $canonical ) );
 	}
 
 	/**

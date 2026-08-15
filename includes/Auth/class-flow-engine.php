@@ -391,6 +391,16 @@ class FlowEngine {
 					'display_name' => $full_name,
 				)
 			);
+
+			\OmniWP\Identity\ProfileSeeder::set_many_from_user_input(
+				$user_id,
+				array(
+					'billing_first_name'  => $names['first'],
+					'billing_last_name'   => $names['last'],
+					'shipping_first_name' => $names['first'],
+					'shipping_last_name'  => $names['last'],
+				)
+			);
 		}
 
 		$dob = RegisterHandler::parse_dob( (string) ( $input['dob'] ?? '' ) );

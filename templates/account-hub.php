@@ -78,9 +78,6 @@ if ( ! $ow_form->user() ) {
 		?>
 	</main>
 
-	<!-- Address Form Modal Popup (Outside main form to prevent nesting) -->
-	<?php TemplateLoader::output( 'account-hub/address-modal', array( 'user' => $user ) ); ?>
-
 	<!-- Order Detail Modal Popup -->
 	<?php TemplateLoader::output( 'account-hub/order-modal', array( 'user' => $user ) ); ?>
 

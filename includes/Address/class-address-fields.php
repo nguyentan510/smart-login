@@ -42,8 +42,20 @@ class AddressFields {
 	 * @return array{province_code:string,province_name:string,ward_code:string,ward_name:string,street:string}
 	 */
 	public static function get_for_user( int $user_id ): array {
-		$province_code = (string) get_user_meta( $user_id, 'billing_state', true );
-		$ward_code     = (string) get_user_meta( $user_id, self::META_WARD_CODE, true );
+		$province_code = (string) get_user_meta( $user_id, 'shipping_state', true );
+		if ( '' === $province_code ) {
+			$province_code = (string) get_user_meta( $user_id, 'billing_state', true );
+		}
+
+		$ward_code = (string) get_user_meta( $user_id, self::META_SHIPPING_WARD_CODE, true );
+		if ( '' === $ward_code ) {
+			$ward_code = (string) get_user_meta( $user_id, self::META_WARD_CODE, true );
+		}
+
+		$street = (string) get_user_meta( $user_id, 'shipping_address_1', true );
+		if ( '' === $street ) {
+			$street = (string) get_user_meta( $user_id, 'billing_address_1', true );
+		}
 
 		// Names always come from the dataset, never from stored display text —
 		// so a renamed unit corrects itself on the next page load.
@@ -55,7 +67,7 @@ class AddressFields {
 			'province_name' => $province_name,
 			'ward_code'     => $ward_name ? $ward_code : '',
 			'ward_name'     => $ward_name,
-			'street'        => (string) get_user_meta( $user_id, 'billing_address_1', true ),
+			'street'        => $street,
 		);
 	}
 
@@ -219,6 +231,34 @@ class AddressFields {
 		// a different one per prefix — see stored_ward_code().
 		update_user_meta( $user_id, self::META_WARD_CODE, $clean['ward_code'] );
 		update_user_meta( $user_id, self::META_SHIPPING_WARD_CODE, $clean['ward_code'] );
+
+		// Also update or seed the default entry in AddressBook (_OMNIWP_address_book)
+		// so Checkout and Account Hub Sổ địa chỉ are instantly in sync!
+		$user = get_userdata( $user_id );
+		$first_name = (string) get_user_meta( $user_id, 'shipping_first_name', true ) ?: (string) get_user_meta( $user_id, 'billing_first_name', true );
+		if ( empty( $first_name ) && $user ) {
+			$first_name = $user->display_name ?: trim( $user->first_name . ' ' . $user->last_name );
+		}
+		$phone = (string) get_user_meta( $user_id, 'shipping_phone', true ) ?: (string) get_user_meta( $user_id, 'billing_phone', true );
+
+		AddressBook::save_address(
+			$user_id,
+			array(
+				'id'         => 'addr_default',
+				'tag'        => 'Nhà riêng',
+				'is_default' => true,
+				'first_name' => $first_name,
+				'phone'      => $phone,
+				'address_1'  => $clean['street'] ?? '',
+				'city'       => $clean['province_code'],
+				'state'      => $clean['province_code'],
+				'ward'       => $clean['ward_code'],
+				'ward_code'  => $clean['ward_code'],
+				'state_name' => $clean['province_name'] ?? '',
+				'ward_name'  => $clean['ward_name'] ?? '',
+				'country'    => 'VN',
+			)
+		);
 
 		/**
 		 * @param int   $user_id

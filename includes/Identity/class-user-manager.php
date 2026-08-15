@@ -182,6 +182,7 @@ class UserManager {
 
 			if ( Settings::is_on( 'woo.sync_billing_phone' ) ) {
 				ProfileSeeder::seed_if_empty( (int) $user_id, 'billing_phone', Phone::to_local( $subject ) );
+				ProfileSeeder::seed_if_empty( (int) $user_id, 'shipping_phone', Phone::to_local( $subject ) );
 			}
 		}
 
@@ -204,8 +205,10 @@ class UserManager {
 			ProfileSeeder::seed_many(
 				(int) $user_id,
 				array(
-					'billing_first_name' => $names['first'],
-					'billing_last_name'  => $names['last'],
+					'billing_first_name'  => $names['first'],
+					'billing_last_name'   => $names['last'],
+					'shipping_first_name' => $names['first'],
+					'shipping_last_name'  => $names['last'],
 				)
 			);
 		}
