@@ -2215,14 +2215,10 @@ li.sl-hub-nav__item::before {
 }
 
 .sl-invoice-items-list {
-	max-height: 250px;
-	min-height: 50px;
-	overflow-y: auto;
-	overflow-x: hidden;
+	max-height: none;
+	overflow: visible;
 	display: flex;
 	flex-direction: column;
-	scrollbar-width: thin;
-	scrollbar-color: #cbd5e1 #f8fafc;
 }
 
 .sl-invoice-items-list::-webkit-scrollbar {
@@ -2849,14 +2845,21 @@ li.sl-hub-nav__item::before {
 		width: 100% !important;
 	}
 
-	/* Invoice Modal Mobile */
+	/* Invoice Modal Mobile & Tablet Responsiveness */
+	.sl-order-modal-dialog {
+		width: 96% !important;
+		max-height: 92vh !important;
+		border-radius: 12px !important;
+	}
+
 	.sl-invoice-info-grid {
 		grid-template-columns: 1fr !important;
-		gap: 8px !important;
+		gap: 10px !important;
 	}
 
 	.sl-invoice-summary-card {
 		max-width: 100% !important;
+		width: 100% !important;
 	}
 
 	.sl-invoice-header {
@@ -2864,12 +2867,12 @@ li.sl-hub-nav__item::before {
 	}
 
 	.sl-invoice-body {
-		padding: 10px 14px !important;
-		gap: 8px !important;
+		padding: 12px 14px !important;
+		gap: 10px !important;
 	}
 
 	.sl-invoice-footer {
-		padding: 8px 14px !important;
+		padding: 10px 14px !important;
 	}
 
 	.sl-invoice-timeline {
@@ -2877,7 +2880,7 @@ li.sl-hub-nav__item::before {
 	}
 
 	.sl-invoice-timeline-track {
-		top: 15px !important;
+		top: 14px !important;
 	}
 
 	.sl-invoice-timeline-dot {
@@ -2887,13 +2890,22 @@ li.sl-hub-nav__item::before {
 	}
 
 	.sl-invoice-timeline-label {
-		font-size: 0.68rem !important;
+		font-size: 0.65rem !important;
 	}
 
 	.sl-invoice-items-header,
 	.sl-invoice-item-row {
-		grid-template-columns: 1fr 65px 95px !important;
-		padding: 6px 10px !important;
+		grid-template-columns: 1fr 50px 85px !important;
+		padding: 6px 8px !important;
+		gap: 6px !important;
+	}
+
+	.sl-invoice-item-name {
+		font-size: 0.78rem !important;
+	}
+
+	.sl-invoice-item-total {
+		font-size: 0.82rem !important;
 	}
 }
 
