@@ -1201,6 +1201,20 @@
 	border-radius: var(--sl-radius, 5px);
 }
 
+.omniwp--onboard .sl-address {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 8px;
+}
+
+.omniwp--onboard .sl-address .sl-field:last-child {
+	grid-column: span 2;
+}
+
+.omniwp--onboard [data-sl-ward-hint] {
+	display: none !important;
+}
+
 .omniwp--onboard .sl-address-grid {
 	display: grid;
 	grid-template-columns: 1fr 1fr;

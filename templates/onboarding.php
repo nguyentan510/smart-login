@@ -108,13 +108,14 @@ $ow_is_new = ! isset( $is_new_user ) || ! empty( $is_new_user );
 				<?php if ( 'full_name' === $ow_field['key'] ) : ?>
 					<div class="sl-field">
 						<label class="sl-label" for="sl-onboard-name"><?php echo esc_html( $ow_field['label'] ); ?></label>
-						<p class="sl-hint sl-hint--reason"><?php echo esc_html( $ow_field['reason'] ); ?></p>
+						<p class="sl-hint sl-hint--reason" hidden><?php echo esc_html( $ow_field['reason'] ); ?></p>
 						<input
 							type="text"
 							class="sl-input"
 							id="sl-onboard-name"
 							name="full_name"
 							value=""
+							placeholder="<?php esc_attr_e( 'Nhập họ và tên', 'omniwp' ); ?>"
 							autocomplete="name"
 						/>
 					</div>
@@ -123,7 +124,7 @@ $ow_is_new = ! isset( $is_new_user ) || ! empty( $is_new_user );
 				<?php if ( 'phone' === $ow_field['key'] ) : ?>
 					<div class="sl-field">
 						<label class="sl-label" for="sl-onboard-phone"><?php echo esc_html( $ow_field['label'] ); ?></label>
-						<p class="sl-hint sl-hint--reason"><?php echo esc_html( $ow_field['reason'] ); ?></p>
+						<p class="sl-hint sl-hint--reason" hidden><?php echo esc_html( $ow_field['reason'] ); ?></p>
 						<input
 							type="tel"
 							class="sl-input"
@@ -139,8 +140,7 @@ $ow_is_new = ! isset( $is_new_user ) || ! empty( $is_new_user );
 
 				<?php if ( 'address' === $ow_field['key'] ) : ?>
 					<div class="sl-onboard-group">
-						<p class="sl-label"><?php echo esc_html( $ow_field['label'] ); ?></p>
-						<p class="sl-hint sl-hint--reason"><?php echo esc_html( $ow_field['reason'] ); ?></p>
+						<p class="sl-hint sl-hint--reason" hidden><?php echo esc_html( $ow_field['reason'] ); ?></p>
 						<?php
 						AddressFields::output(
 							array(
@@ -155,7 +155,7 @@ $ow_is_new = ! isset( $is_new_user ) || ! empty( $is_new_user );
 				<?php if ( 'dob' === $ow_field['key'] ) : ?>
 					<div class="sl-field">
 						<label class="sl-label" for="sl-dob"><?php echo esc_html( $ow_field['label'] ); ?></label>
-						<p class="sl-hint sl-hint--reason"><?php echo esc_html( $ow_field['reason'] ); ?></p>
+						<p class="sl-hint sl-hint--reason" hidden><?php echo esc_html( $ow_field['reason'] ); ?></p>
 						<input
 							type="text"
 							class="sl-input"
@@ -172,7 +172,7 @@ $ow_is_new = ! isset( $is_new_user ) || ! empty( $is_new_user );
 				<?php if ( 'gender' === $ow_field['key'] ) : ?>
 					<fieldset class="sl-field sl-field--radio">
 						<legend class="sl-label"><?php echo esc_html( $ow_field['label'] ); ?></legend>
-						<p class="sl-hint sl-hint--reason"><?php echo esc_html( $ow_field['reason'] ); ?></p>
+						<p class="sl-hint sl-hint--reason" hidden><?php echo esc_html( $ow_field['reason'] ); ?></p>
 						<?php
 						foreach ( array(
 							'female' => __( 'Nữ', 'omniwp' ),
