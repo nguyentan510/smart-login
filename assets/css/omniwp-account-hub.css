@@ -25,9 +25,9 @@
 	display: flex;
 	flex-direction: column;
 	background: #ffffff;
-	border: 1px solid var(--sl-border, #d9dde5);
-	border-radius: var(--sl-radius-card, 5px);
-	box-shadow: var(--sl-shadow-sm, 0 2px 8px rgba(0, 0, 0, 0.06));
+	border: 1px solid var(--ow-border-default, #e2e8f0);
+	border-radius: var(--ow-radius-lg, 16px);
+	box-shadow: var(--ow-shadow-sm, 0 2px 6px -1px rgba(15, 23, 42, 0.06));
 	padding: 32px;
 	min-height: 560px;
 	width: 100%;
@@ -45,6 +45,18 @@
 .sl-hub-panel {
 	flex: 1 1 auto;
 	width: 100%;
+	animation: ow-panel-in var(--ow-dur-normal, 250ms) var(--ow-ease-spring, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+@keyframes ow-panel-in {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 
 .sl-hub-profile-actions {
@@ -62,7 +74,7 @@
 	padding: 0 20px;
 	font-size: 0.92rem;
 	font-weight: 600;
-	border-radius: var(--sl-radius, 5px);
+	border-radius: var(--ow-radius-md, 10px);
 	box-sizing: border-box;
 }
 
@@ -78,24 +90,28 @@
 
 .sl-hub-card {
 	background: #ffffff;
-	border: none;
-	border-radius: var(--sl-radius-card, 5px);
-	box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+	border: 1px solid var(--ow-border-default, #e2e8f0);
+	border-radius: var(--ow-radius-lg, 16px);
+	box-shadow: var(--ow-shadow-sm, 0 4px 16px -2px rgba(0, 0, 0, 0.05));
 	overflow: hidden;
 }
 
 .sl-hub-user {
 	padding: 24px 20px 20px;
 	text-align: center;
-	background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
-	border-bottom: 1px solid #f1f5f9;
+	background: linear-gradient(180deg, var(--ow-slate-50, #f8fafc) 0%, #ffffff 100%);
+	border-bottom: 1px solid var(--ow-border-default, #e2e8f0);
 }
 
 .sl-hub-user__avatar-wrap {
 	position: relative;
-	width: 80px;
-	height: 80px;
+	width: 84px;
+	height: 84px;
 	margin: 0 auto 14px;
+	padding: 3px;
+	border-radius: 50%;
+	background: var(--ow-brand-gradient, linear-gradient(135deg, #e30613 0%, #ff4d4f 100%));
+	box-shadow: 0 4px 14px rgba(227, 6, 19, 0.2);
 }
 
 .sl-hub-user__avatar {
@@ -103,9 +119,8 @@
 	height: 100%;
 	border-radius: 50%;
 	object-fit: cover;
-	border: 3px solid #ffffff;
-	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-	background: var(--sl-accent, #2563eb);
+	border: 2.5px solid #ffffff;
+	background: var(--ow-brand, #e30613);
 	color: #ffffff;
 	display: flex;
 	align-items: center;
@@ -118,33 +133,33 @@
 	position: absolute;
 	bottom: 0;
 	right: 0;
-	width: 26px;
-	height: 26px;
+	width: 28px;
+	height: 28px;
 	background: #ffffff;
-	border: 1px solid var(--sl-border-color, #cbd5e1);
+	border: 1px solid var(--ow-border-default, #cbd5e1);
 	border-radius: 50%;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: #64748b;
+	color: var(--ow-slate-600, #475569);
 	cursor: pointer;
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-	transition: all 0.2s ease;
+	box-shadow: var(--ow-shadow-xs, 0 2px 4px rgba(0, 0, 0, 0.1));
+	transition: all var(--ow-dur-fast, 150ms) var(--ow-ease-smooth);
 	padding: 0;
 }
 
 .sl-hub-user__avatar-edit:hover {
-	color: var(--sl-accent, #2563eb);
-	border-color: var(--sl-accent, #2563eb);
-	transform: scale(1.1);
+	color: var(--ow-brand, #e30613);
+	border-color: var(--ow-brand, #e30613);
+	transform: scale(1.12);
 }
 
 .sl-hub-user__name {
-	font-size: 1.1rem;
-	font-weight: 700;
-	color: #0f172a;
+	font-size: var(--ow-fs-lg, 1.1rem);
+	font-weight: var(--ow-fw-bold, 700);
+	color: var(--ow-text-primary, #0f172a);
 	margin: 0 0 6px;
-	line-height: 1.3;
+	line-height: var(--ow-lh-tight, 1.25);
 }
 
 .sl-hub-user__badge-wrap {
@@ -154,16 +169,17 @@
 	background: #fef3c7;
 	color: #92400e;
 	padding: 4px 12px;
-	border-radius: 20px;
-	font-size: 0.78rem;
-	font-weight: 600;
+	border-radius: var(--ow-radius-pill, 999px);
+	font-size: var(--ow-fs-xs, 0.78rem);
+	font-weight: var(--ow-fw-semibold, 600);
+	border: 1px solid #fde68a;
 }
 
 .sl-hub-user__badge-icon {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	color: #d97706
+	color: #d97706;
 }
 
 .sl-hub-user__progress {
@@ -173,30 +189,83 @@
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 5px;
+	gap: 6px;
 	width: 100%;
 }
 
 .sl-hub-user__progress-bar {
 	width: 100%;
-	height: 4px;
-	background: #e2e8f0;
-	border-radius: 999px;
+	height: 6px;
+	background: var(--ow-slate-200, #e2e8f0);
+	border-radius: var(--ow-radius-pill, 999px);
 	overflow: hidden;
 }
 
 .sl-hub-user__progress-fill {
 	display: block;
 	height: 100%;
-	background: var(--sl-accent, #2563eb);
+	background: var(--ow-brand-gradient, linear-gradient(135deg, #e30613 0%, #ff4d4f 100%));
 	border-radius: inherit;
-	transition: width 0.3s ease;
+	transition: width var(--ow-dur-slow, 380ms) var(--ow-ease-spring);
 }
 
 .sl-hub-user__progress-label {
-	font-size: 0.73rem;
-	color: #64748b;
+	font-size: var(--ow-fs-xs, 0.73rem);
+	color: var(--ow-text-secondary, #64748b);
 	font-weight: 500;
+}
+
+/* ==========================================================================
+   Tactile Illustrated Empty State Component
+   ========================================================================== */
+.ow-empty-state {
+	text-align: center;
+	padding: 56px 24px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+}
+
+.ow-empty-state__icon-wrap {
+	width: 68px;
+	height: 68px;
+	border-radius: var(--ow-radius-pill, 999px);
+	background: var(--ow-brand-light, #fef2f2);
+	color: var(--ow-brand, #e30613);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	margin-bottom: 16px;
+	box-shadow: 0 4px 12px rgba(227, 6, 19, 0.1);
+}
+
+.ow-empty-state__icon-wrap svg {
+	width: 32px;
+	height: 32px;
+	stroke: currentColor;
+}
+
+.ow-empty-state__title {
+	font-size: var(--ow-fs-lg, 16px);
+	font-weight: var(--ow-fw-bold, 700);
+	color: var(--ow-text-primary, #0f172a);
+	margin: 0 0 8px;
+}
+
+.ow-empty-state__desc {
+	font-size: var(--ow-fs-sm, 13px);
+	color: var(--ow-text-secondary, #64748b);
+	max-width: 380px;
+	margin: 0 0 20px;
+	line-height: var(--ow-lh-normal, 1.55);
+}
+
+.ow-empty-state__btn {
+	min-height: 42px;
+	padding: 0 24px;
+	border-radius: var(--ow-radius-md, 10px);
+	font-weight: 600;
 }
 
 /* -------------------------------------------------------------------

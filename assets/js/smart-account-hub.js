@@ -42,7 +42,7 @@
 			var clean = hash.replace( /^#+/, '' ).split( '?' )[0];
 
 			if ( clean === 'sl-section-contact' || clean === 'contact' ) {
-				return 'contact';
+				return 'security';
 			}
 			if ( clean === 'sl-section-profile' || clean === 'profile' ) {
 				return 'profile';
@@ -91,8 +91,12 @@
 				var key = panel.getAttribute( 'data-sl-hub-panel' );
 				if ( key === targetKey ) {
 					panel.style.display = 'block';
+					panel.classList.remove( 'ow-panel-in' );
+					void panel.offsetWidth;
+					panel.classList.add( 'ow-panel-in' );
 				} else {
 					panel.style.display = 'none';
+					panel.classList.remove( 'ow-panel-in' );
 				}
 			} );
 
@@ -132,6 +136,12 @@
 				var targetEl = document.getElementById( targetAnchor.replace( /^#+/, '' ) );
 				if ( targetEl ) {
 					targetEl.scrollIntoView( { behavior: 'smooth', block: 'start' } );
+					targetEl.classList.remove( 'sl-pulse-highlight' );
+					void targetEl.offsetWidth;
+					targetEl.classList.add( 'sl-pulse-highlight' );
+					setTimeout( function () {
+						targetEl.classList.remove( 'sl-pulse-highlight' );
+					}, 1500 );
 				}
 			}
 		}
@@ -174,9 +184,16 @@
 		// Initial tab activation on load / F5
 		var urlParams = new URLSearchParams( window.location.search );
 		var tabParam = urlParams.get( 'tab' );
-		var initialKey = tabParam ? resolveTabKey( tabParam ) : ( window.location.hash ? resolveTabKey( window.location.hash ) : null );
+		var initialOrderId = urlParams.get( 'order_id' ) || hub.getAttribute( 'data-sl-initial-order' );
+		var initialKey = tabParam ? resolveTabKey( tabParam ) : ( initialOrderId ? 'orders' : ( window.location.hash ? resolveTabKey( window.location.hash ) : null ) );
 		if ( initialKey ) {
 			activateTab( initialKey, window.location.hash || ( '#' + initialKey ) );
+		}
+
+		if ( initialOrderId ) {
+			setTimeout( function () {
+				openOrderModal( initialOrderId );
+			}, 250 );
 		}
 
 		// -----------------------------------------------------------------
@@ -461,7 +478,7 @@
 					}
 				}
 
-				// Product Items (Chia rõ 3 cột: Sản phẩm/Đơn giá | Số lượng | Thành tiền)
+				// Product Items
 				var itemsContainer = orderModal.querySelector( '[data-sl-modal-items]' );
 				if ( itemsContainer ) {
 					if ( ord.items && Array.isArray( ord.items ) && ord.items.length > 0 ) {
@@ -658,7 +675,6 @@
 							if ( ! pOpt.value ) { continue; }
 							if ( pOpt.value === pVal || pOpt.textContent.trim() === pVal || pOpt.textContent.trim().toLowerCase().indexOf( pVal.toLowerCase() ) !== -1 || pVal.toLowerCase().indexOf( pOpt.textContent.trim().toLowerCase() ) !== -1 ) {
 								matchedCode = pOpt.value;
-								break;
 							}
 						}
 						if ( matchedCode ) {
@@ -1113,7 +1129,7 @@
 		}
 
 		// Apply Voucher to Cart
-		function handleApplyVoucher( code, triggerBtn ) {
+		function handleApplyVoucher( code, triggerBtn, msgEl ) {
 			if ( ! code ) {
 				return;
 			}
@@ -1140,15 +1156,32 @@
 					try {
 						var res = JSON.parse( xhr.responseText );
 						if ( xhr.status === 200 && res.success ) {
-							alert( res.message || 'Áp dụng mã thành công!' );
+							if ( msgEl ) {
+								msgEl.className = 'sl-coupon-message is-success';
+								msgEl.textContent = res.message || 'Áp dụng mã thành công!';
+							} else {
+								alert( res.message || 'Áp dụng mã thành công!' );
+							}
 							if ( res.redirect_url ) {
-								window.location.href = res.redirect_url;
+								setTimeout( function () {
+									window.location.href = res.redirect_url;
+								}, 800 );
 							}
 						} else {
-							alert( res.message || 'Không thể áp dụng mã này vào giỏ hàng.' );
+							if ( msgEl ) {
+								msgEl.className = 'sl-coupon-message is-error';
+								msgEl.textContent = res.message || 'Không thể áp dụng mã này.';
+							} else {
+								alert( res.message || 'Không thể áp dụng mã này vào giỏ hàng.' );
+							}
 						}
 					} catch ( err ) {
-						alert( 'Có lỗi xảy ra khi áp dụng mã giảm giá.' );
+						if ( msgEl ) {
+							msgEl.className = 'sl-coupon-message is-error';
+							msgEl.textContent = 'Có lỗi xảy ra khi áp dụng mã giảm giá.';
+						} else {
+							alert( 'Có lỗi xảy ra khi áp dụng mã giảm giá.' );
+						}
 					}
 				}
 			};
@@ -1172,6 +1205,34 @@
 				handleApplyVoucher( code, modalApplyBtn );
 			} );
 		}
+
+		// Handle manual voucher input form submission in Account Hub
+		document.addEventListener( 'submit', function ( e ) {
+			var form = e.target.closest( '.sl-voucher-module-form' );
+			if ( ! form ) {
+				return;
+			}
+			e.preventDefault();
+			var input = form.querySelector( '.sl-voucher-module-code-input, .sl-coupon-input' );
+			var btn = form.querySelector( '.sl-coupon-btn' );
+			var wrap = form.closest( '.sl-voucher-module__input-wrap' ) || form.parentElement;
+			var msgEl = wrap ? wrap.querySelector( '.sl-voucher-module-msg, .sl-coupon-message' ) : null;
+
+			if ( ! input || ! input.value.trim() ) {
+				if ( msgEl ) {
+					msgEl.className = 'sl-coupon-message is-error';
+					msgEl.textContent = 'Vui lòng nhập mã voucher / ưu đãi.';
+				}
+				return;
+			}
+
+			if ( msgEl ) {
+				msgEl.className = 'sl-coupon-message';
+				msgEl.textContent = '';
+			}
+
+			handleApplyVoucher( input.value.trim(), btn, msgEl );
+		} );
 
 		// -----------------------------------------------------------------
 		// Logout Modal Confirmation
@@ -1222,6 +1283,29 @@
 					form.reset();
 				}
 			} );
+		} );
+
+		// -----------------------------------------------------------------
+		// Tactile Voucher Copy Feedback
+		// -----------------------------------------------------------------
+		document.addEventListener( 'click', function ( e ) {
+			var copyBtn = e.target.closest( '[data-sl-copy-voucher], .ow-voucher-copy-btn' );
+			if ( ! copyBtn ) {
+				return;
+			}
+			e.preventDefault();
+			var code = copyBtn.getAttribute( 'data-sl-copy-voucher' ) || copyBtn.getAttribute( 'data-code' );
+			if ( code && navigator.clipboard && navigator.clipboard.writeText ) {
+				navigator.clipboard.writeText( code ).then( function () {
+					var originalText = copyBtn.textContent;
+					copyBtn.classList.add( 'is-copied' );
+					copyBtn.textContent = 'Đã chép! ✓';
+					window.setTimeout( function () {
+						copyBtn.classList.remove( 'is-copied' );
+						copyBtn.textContent = originalText;
+					}, 2000 );
+				} );
+			}
 		} );
 	} );
 } )();

@@ -1,6 +1,6 @@
 /**
- * OmniWP Dialog Shell Component
- * Standardized 5px radius and modern minimal dialog shell.
+ * OmniWP Signature Dialog Component 2.0
+ * Modern Glassmorphic Shell, Physics-based Spring Entrance, Top Brand Gradient, and Floating Card Benefits.
  *
  * @package OmniWP
  */
@@ -16,19 +16,44 @@
 }
 
 .sl-dialog::backdrop {
-	background: rgba(15, 23, 42, 0.55);
+	background: var(--ow-surface-overlay, rgba(15, 23, 42, 0.28));
+	backdrop-filter: var(--ow-glass-backdrop, blur(4px));
+	-webkit-backdrop-filter: var(--ow-glass-backdrop, blur(4px));
+	animation: ow-backdrop-in 200ms ease-out;
+}
+
+@keyframes ow-backdrop-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
 }
 
 .sl-dialog__panel {
-	background: #fff;
-	border-radius: var(--sl-radius-card, 5px);
-	box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.18);
-	border: none;
+	background: var(--ow-surface-1, #ffffff);
+	border-radius: var(--ow-radius-xl, 20px);
+	box-shadow: var(--ow-shadow-modal, 0 20px 45px -10px rgba(15, 23, 42, 0.22), 0 0 1px 1px rgba(15, 23, 42, 0.05));
+	border: 1px solid rgba(255, 255, 255, 0.9);
 	max-height: 95vh;
 	overflow-y: auto;
 	overscroll-behavior: contain;
+	position: relative;
 	scrollbar-width: thin;
-	scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+	scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+}
+
+/* Signature Top Brand Gradient Bar */
+.sl-dialog__panel::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 3.5px;
+	background: var(--ow-brand-gradient, linear-gradient(135deg, #e30613 0%, #ff4d4f 100%));
+	z-index: 10;
 }
 
 .sl-dialog__panel::-webkit-scrollbar {
@@ -41,7 +66,7 @@
 }
 
 .sl-dialog__panel::-webkit-scrollbar-thumb {
-	background: rgba(148, 163, 184, 0.4);
+	background: rgba(148, 163, 184, 0.35);
 	border-radius: 999px;
 }
 
@@ -54,12 +79,14 @@
 	align-items: center;
 	justify-content: space-between;
 	gap: 12px;
-	padding: 16px 20px 0;
+	padding: 18px 22px 0;
+	position: relative;
+	z-index: 2;
 }
 
 .sl-dialog.is-onboard .sl-dialog__bar,
 .sl-dialog:has(.omniwp--onboard) .sl-dialog__bar {
-	padding: 8px 12px 0;
+	padding: 10px 14px 0;
 	margin-bottom: 0;
 }
 
@@ -76,33 +103,67 @@
 
 .sl-dialog__title {
 	margin: 0;
-	font-size: 1.05rem;
-	line-height: 1.4;
+	font-size: var(--ow-fs-xl, 1.125rem);
+	font-weight: var(--ow-fw-bold, 700);
+	color: var(--ow-text-primary, #0f172a);
+	line-height: var(--ow-lh-snug, 1.38);
+	letter-spacing: -0.01em;
 }
 
 .sl-dialog__close {
 	flex: 0 0 auto;
-	min-width: 32px;
-	min-height: 32px;
+	width: 36px;
+	height: 36px;
+	min-width: 36px;
+	min-height: 36px;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	border: 0;
-	border-radius: var(--sl-radius-sm, 5px);
-	background: transparent;
-	font-size: 1.5rem;
+	border-radius: var(--ow-radius-pill, 999px);
+	background: var(--ow-surface-2, #f8fafc);
+	font-size: 1.35rem;
 	line-height: 1;
 	cursor: pointer;
-	color: inherit;
+	color: var(--ow-text-secondary, #64748b);
+	transition: background-color var(--ow-dur-fast, 150ms) var(--ow-ease-smooth), color var(--ow-dur-fast, 150ms), transform var(--ow-dur-fast, 150ms);
 }
 
 .sl-dialog__close:hover,
 .sl-dialog__close:focus-visible {
-	background: rgba(15, 23, 42, 0.06);
+	background: var(--ow-slate-200, #e2e8f0);
+	color: var(--ow-text-primary, #0f172a);
+	transform: scale(1.05);
+	outline: none;
+}
+
+.sl-dialog__close:active {
+	transform: scale(0.95);
 }
 
 .sl-dialog__body {
-	padding: 4px 20px 20px;
+	padding: 6px 24px 24px;
+	transition: opacity var(--ow-dur-fast, 150ms) var(--ow-ease-smooth), transform var(--ow-dur-normal, 250ms) var(--ow-ease-spring);
+}
+
+.sl-dialog__body.is-swapping {
+	opacity: 0;
+	transform: translateY(6px);
+}
+
+.sl-dialog__body.is-swapped {
+	animation: ow-step-in var(--ow-dur-normal, 250ms) var(--ow-ease-spring);
+}
+
+@keyframes ow-step-in {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
 }
 
 .sl-dialog__body .omniwp {
@@ -115,55 +176,52 @@
 
 .sl-dialog__loading {
 	margin: 0;
-	padding: 24px 0;
+	padding: 32px 0;
 	text-align: center;
-	opacity: 0.7;
+	color: var(--ow-text-muted, #94a3b8);
+	font-size: var(--ow-fs-md, 14px);
 }
 
 .sl-dialog.is-busy .sl-dialog__body {
-	opacity: 0.6;
+	opacity: 0.65;
 	pointer-events: none;
 }
 
-@media (max-width: 480px) {
-	.sl-dialog {
-		--sl-dlg-pad: 20px;
-	}
-}
-
+/* Entrance Animation with Spring Physics */
 @media (prefers-reduced-motion: no-preference) {
 	.sl-dialog[open] .sl-dialog__panel {
-		animation: sl-dialog-in 160ms ease-out;
+		animation: ow-dialog-in 280ms var(--ow-ease-spring, cubic-bezier(0.16, 1, 0.3, 1));
 	}
 }
 
-@keyframes sl-dialog-in {
+@keyframes ow-dialog-in {
 	from {
 		opacity: 0;
-		transform: translateY(8px);
+		transform: scale(0.96) translateY(12px);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1) translateY(0);
 	}
 }
 
+/* Dialog Shell Scope Layout */
 .sl-dialog {
-	--sl-dlg-pad: 28px;
-	--sl-dlg-gap: 20px;
-	--sl-dlg-radius: 5px;
+	--sl-dlg-pad: 26px;
+	--sl-dlg-gap: 18px;
+	--sl-dlg-radius: var(--ow-radius-md, 10px);
 	--sl-dlg-control: 46px;
-	--sl-dlg-ink: #16233c;
-	--sl-dlg-muted: #667085;
-	--sl-dlg-line: #d7dbe3;
+	--sl-dlg-ink: var(--ow-text-primary, #0f172a);
+	--sl-dlg-muted: var(--ow-text-secondary, #64748b);
+	--sl-dlg-line: var(--ow-border-default, #e2e8f0);
 
 	max-width: min(30rem, calc(100vw - 2rem));
-}
-
-.sl-dialog .sl-dialog__panel {
-	border-radius: var(--sl-radius-card, 5px);
 }
 
 .sl-dialog .sl-dialog__bar {
 	flex-wrap: wrap;
 	justify-content: flex-end;
-	padding: 12px 12px 0;
+	padding: 14px 14px 0;
 	gap: 0;
 }
 
@@ -171,11 +229,11 @@
 	order: 2;
 	width: 100%;
 	text-align: center;
-	font-size: var(--sl-fs-2xl);
-	font-weight: var(--sl-fw-bold);
+	font-size: var(--ow-fs-2xl, 1.375rem);
+	font-weight: var(--ow-fw-bold, 700);
 	color: var(--sl-dlg-ink);
 	padding: 4px var(--sl-dlg-pad) 0;
-	margin-bottom: 8px;
+	margin-bottom: 6px;
 }
 
 .sl-dialog .sl-dialog__body {
@@ -190,16 +248,19 @@
 	margin: 0 auto;
 	max-width: 26rem;
 	text-align: center;
-	font-size: var(--sl-fs-md);
-	line-height: var(--sl-lh-normal);
+	font-size: var(--ow-fs-md, 14px);
+	line-height: var(--ow-lh-normal, 1.55);
 	color: var(--sl-dlg-muted);
 }
 
+/* ==========================================================================
+   Floating Card Benefit Badges
+   ========================================================================== */
 .sl-dialog .sl-benefits {
 	display: grid;
 	grid-template-columns: repeat(3, 1fr);
-	gap: 12px;
-	margin: 0;
+	gap: 10px;
+	margin: 4px 0 0;
 	padding: 0;
 	list-style: none;
 }
@@ -210,30 +271,55 @@
 	align-items: center;
 	gap: 8px;
 	text-align: center;
+	padding: 12px 6px;
+	background: var(--ow-surface-2, #f8fafc);
+	border: 1px solid var(--ow-slate-200, #e2e8f0);
+	border-radius: var(--ow-radius-md, 10px);
+	transition: transform var(--ow-dur-fast, 150ms) var(--ow-ease-smooth), box-shadow var(--ow-dur-fast, 150ms), border-color var(--ow-dur-fast, 150ms);
+	cursor: default;
+}
+
+.sl-dialog .sl-benefit:hover {
+	transform: translateY(-2px);
+	box-shadow: var(--ow-shadow-sm);
+	border-color: var(--ow-brand-border, #fecaca);
+	background: #ffffff;
 }
 
 .sl-dialog .sl-benefit__mark {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 44px;
-	height: 44px;
-	border-radius: 50%;
-	background: #eef2ff;
-	font-size: var(--sl-fs-xl);
+	width: 38px;
+	height: 38px;
+	min-width: 38px;
+	min-height: 38px;
+	border-radius: var(--ow-radius-pill, 999px);
+	background: var(--ow-brand-light, #fef2f2);
+	color: var(--ow-brand, #e30613);
+	font-size: var(--ow-fs-xl, 18px);
 	line-height: 1;
+	transition: transform var(--ow-dur-fast, 150ms) var(--ow-ease-smooth), background-color var(--ow-dur-fast, 150ms);
+}
+
+.sl-dialog .sl-benefit:hover .sl-benefit__mark {
+	transform: scale(1.08);
+	background: var(--ow-brand, #e30613);
+	color: #ffffff;
 }
 
 .sl-dialog .sl-benefit__mark svg,
 .sl-dialog .sl-benefit__mark img {
-	width: 22px;
-	height: 22px;
+	width: 20px;
+	height: 20px;
+	stroke: currentColor;
 }
 
 .sl-dialog .sl-benefit__label {
-	font-size: var(--sl-fs-sm);
-	line-height: var(--sl-lh-snug);
-	color: var(--sl-dlg-muted);
+	font-size: var(--ow-fs-xs, 11px);
+	font-weight: var(--ow-fw-medium, 500);
+	line-height: var(--ow-lh-snug, 1.35);
+	color: var(--ow-text-primary, #0f172a);
 }
 
 .sl-dialog .sl-label--sr {
@@ -249,36 +335,91 @@
 	border: 0;
 }
 
+/* Input Focus Glow */
 .sl-dialog .sl-input {
 	height: var(--sl-dlg-control);
-	border-radius: var(--sl-radius, 5px);
+	border-radius: var(--ow-radius-md, 10px);
 	border: 1px solid var(--sl-dlg-line);
-	font-size: var(--sl-fs-lg);
+	font-size: var(--ow-fs-lg, 16px);
 	padding: 0 16px;
+	background: #ffffff;
+	color: var(--ow-text-primary, #0f172a);
+	transition: border-color var(--ow-dur-fast, 150ms), box-shadow var(--ow-dur-fast, 150ms);
 }
 
+.sl-dialog .sl-input:focus {
+	border-color: var(--ow-brand, #e30613);
+	box-shadow: var(--ow-brand-glow, 0 0 0 3px rgba(227, 6, 19, 0.18));
+	outline: none;
+}
+
+/* Primary Button with Loading State */
 .sl-dialog .sl-btn--primary {
 	height: var(--sl-dlg-control);
-	border-radius: var(--sl-radius, 5px);
-	font-size: var(--sl-fs-lg);
-	font-weight: var(--sl-fw-semibold);
+	border-radius: var(--ow-radius-md, 10px);
+	font-size: var(--ow-fs-lg, 16px);
+	font-weight: var(--ow-fw-semibold, 600);
+	background: var(--ow-brand, #e30613);
+	color: #ffffff;
+	position: relative;
+	transition: background-color var(--ow-dur-fast, 150ms), transform var(--ow-dur-fast, 150ms), box-shadow var(--ow-dur-fast, 150ms);
+	box-shadow: 0 2px 8px rgba(227, 6, 19, 0.2);
+}
+
+.sl-dialog .sl-btn--primary:hover:not(:disabled) {
+	background: var(--ow-brand-hover, #c00410);
+	transform: translateY(-1px);
+	box-shadow: 0 4px 14px rgba(227, 6, 19, 0.3);
+}
+
+.sl-dialog .sl-btn--primary:active:not(:disabled) {
+	transform: translateY(0);
+}
+
+/* Button Loading Spinner */
+.sl-btn.is-loading,
+.sl-dialog .sl-btn--primary.is-loading {
+	color: transparent !important;
+	pointer-events: none !important;
+}
+
+.sl-btn.is-loading::after,
+.sl-dialog .sl-btn--primary.is-loading::after {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 20px;
+	height: 20px;
+	margin: -10px 0 0 -10px;
+	border: 2.5px solid rgba(255, 255, 255, 0.4);
+	border-top-color: #ffffff;
+	border-radius: 50%;
+	animation: ow-btn-spin 600ms linear infinite;
+}
+
+@keyframes ow-btn-spin {
+	to {
+		transform: rotate(360deg);
+	}
 }
 
 .sl-dialog .sl-divider {
 	color: var(--sl-dlg-muted);
-	font-size: var(--sl-fs-md);
+	font-size: var(--ow-fs-sm, 13px);
+	margin: 16px 0;
 }
 
 .sl-dialog .sl-provider-buttons {
 	display: flex;
 	flex-direction: column;
-	gap: 12px;
+	gap: 10px;
 }
 
 .sl-dialog .sl-provider-buttons:has(> :nth-child(3)) {
 	flex-direction: row;
 	justify-content: center;
-	gap: 16px;
+	gap: 14px;
 }
 
 .sl-dialog .sl-provider-buttons:has(> :nth-child(3)) .sl-btn--provider {
@@ -286,7 +427,7 @@
 	height: var(--sl-dlg-control);
 	min-width: var(--sl-dlg-control);
 	padding: 0;
-	border-radius: 50%;
+	border-radius: var(--ow-radius-pill, 999px);
 	justify-content: center;
 }
 
@@ -302,6 +443,16 @@
 
 .sl-dialog .sl-terms-note {
 	text-align: center;
-	font-size: var(--sl-fs-sm);
+	font-size: var(--ow-fs-sm, 13px);
 	color: var(--sl-dlg-muted);
+	line-height: var(--ow-lh-snug, 1.38);
+}
+
+@media (max-width: 480px) {
+	.sl-dialog {
+		--sl-dlg-pad: 20px;
+	}
+	.sl-dialog__panel {
+		border-radius: var(--ow-radius-lg, 16px);
+	}
 }

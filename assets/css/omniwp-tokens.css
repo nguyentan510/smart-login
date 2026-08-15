@@ -1,102 +1,287 @@
 /**
- * OmniWP Design Tokens
- * Global CSS custom properties for colors, spacing, typography, and 5px border radii.
+ * OmniWP Design Tokens 2.0
+ * Unified Design System: Colors, Fluid Radii, Layered Elevation, Motion, and Typography.
  *
  * @package OmniWP
  */
 
 :root {
-	--sl-accent: #e30613;
-	--sl-accent-dark: #c00410;
-	--sl-text: #1f2430;
-	--sl-muted: #6b7280;
-	--sl-border: #d9dde5;
+	/* ==========================================================================
+	   1. Brand & Accent Color System
+	   ========================================================================== */
+	--ow-brand: #e30613;
+	--ow-brand-hover: #c00410;
+	--ow-brand-dark: #99030c;
+	--ow-brand-subtle: rgba(227, 6, 19, 0.08);
+	--ow-brand-light: #fef2f2;
+	--ow-brand-border: #fecaca;
+	--ow-brand-glow: 0 0 0 3px rgba(227, 6, 19, 0.18);
+	--ow-brand-gradient: linear-gradient(135deg, #e30613 0%, #ff4d4f 100%);
+	--ow-brand-gradient-warm: linear-gradient(135deg, #e30613 0%, #f97316 100%);
 
-	/* Recessed surfaces */
-	--sl-surface-2: #f7f8fa;
-	--sl-surface-3: #fafafa;
+	/* Semantic Status Palette */
+	--ow-color-success: #16a34a;
+	--ow-color-success-hover: #15803d;
+	--ow-color-success-subtle: rgba(22, 163, 74, 0.1);
+	--ow-color-success-light: #f0fdf4;
+	--ow-color-success-border: #bbf7d0;
 
-	/* Standard E-Commerce Layout Container Width */
-	--sl-container-max-width: 1200px;
+	--ow-color-warning: #d97706;
+	--ow-color-warning-hover: #b45309;
+	--ow-color-warning-subtle: rgba(217, 119, 6, 0.1);
+	--ow-color-warning-light: #fffbeb;
+	--ow-color-warning-border: #fde68a;
 
-	/* Radii - Clean 5px standardized UI */
-	--sl-radius: 5px;
-	--sl-radius-card: 5px;
-	--sl-radius-sm: 5px;
+	--ow-color-danger: #dc2626;
+	--ow-color-danger-hover: #b91c1c;
+	--ow-color-danger-subtle: rgba(220, 38, 38, 0.1);
+	--ow-color-danger-light: #fef2f2;
+	--ow-color-danger-border: #fecaca;
 
-	/* Flat & Subtle Elevation */
-	--sl-shadow-none: none;
-	--sl-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
-	--sl-shadow-focus: 0 0 0 3px rgba(227, 6, 19, 0.15);
+	--ow-color-info: #2563eb;
+	--ow-color-info-hover: #1d4ed8;
+	--ow-color-info-subtle: rgba(37, 99, 235, 0.1);
+	--ow-color-info-light: #eff6ff;
+	--ow-color-info-border: #bfdbfe;
 
-	/* Spacing scale */
-	--sl-space-1: 4px;
-	--sl-space-2: 8px;
-	--sl-space-3: 12px;
-	--sl-space-4: 16px;
-	--sl-space-5: 20px;
-	--sl-space-6: 24px;
+	/* Neutral Slate Scales */
+	--ow-slate-900: #0f172a;
+	--ow-slate-800: #1e293b;
+	--ow-slate-700: #334155;
+	--ow-slate-600: #475569;
+	--ow-slate-500: #64748b;
+	--ow-slate-400: #94a3b8;
+	--ow-slate-300: #cbd5e1;
+	--ow-slate-200: #e2e8f0;
+	--ow-slate-100: #f1f5f9;
+	--ow-slate-50: #f8fafc;
+	--ow-white: #ffffff;
 
-	/* Semantic Text Colors */
-	--sl-color-text-primary: #0f172a;   /* Slate 900 */
-	--sl-color-text-secondary: #475569; /* Slate 600 */
-	--sl-color-text-muted: #94a3b8;     /* Slate 400 */
+	/* Semantic Text & Surface Assignments */
+	--ow-text-primary: var(--ow-slate-900);
+	--ow-text-secondary: var(--ow-slate-600);
+	--ow-text-muted: var(--ow-slate-400);
+	--ow-text-inverse: var(--ow-white);
 
-	/* Semantic Price Colors */
-	--sl-color-price-main: #0f172a;               /* Standard price */
-	--sl-color-price-sale: var(--sl-accent, #e30613); /* Sale / Highlight price */
-	--sl-color-price-old: #94a3b8;                /* Strike-through regular price */
-	--sl-color-price-saving: #16a34a;             /* Discount / Savings green */
+	--ow-surface-1: var(--ow-white);
+	--ow-surface-2: var(--ow-slate-50);
+	--ow-surface-3: var(--ow-slate-100);
+	--ow-surface-overlay: rgba(15, 23, 42, 0.55);
 
-	/* Standardized Font Size Scale (Pixel equivalent on 16px base) */
-	--sl-fs-xs: 0.6875rem; /* 11px - Badges, micro captions */
-	--sl-fs-sm: 0.8125rem; /* 13px - Subtext, helper text, old strike price */
-	--sl-fs-md: 0.875rem;  /* 14px - Body text, standard unit price, item title */
-	--sl-fs-lg: 1.000rem;  /* 16px - Subheadings, card titles, table total */
-	--sl-fs-xl: 1.125rem;  /* 18px - Section title, modal title */
-	--sl-fs-2xl: 1.375rem; /* 22px - Main page title, grand total display */
+	--ow-border-default: var(--ow-slate-200);
+	--ow-border-focus: var(--ow-brand);
 
-	/* Standardized Font Weights */
-	--sl-fw-light: 300;
-	--sl-fw-normal: 400;
-	--sl-fw-medium: 500;
-	--sl-fw-semibold: 600;
-	--sl-fw-bold: 700;
+	/* Semantic E-Commerce Price Tokens */
+	--ow-price-main: var(--ow-slate-900);
+	--ow-price-sale: var(--ow-brand);
+	--ow-price-old: var(--ow-slate-400);
+	--ow-price-saving: var(--ow-color-success);
 
-	/* Standardized Line Heights */
-	--sl-lh-tight: 1.2;
-	--sl-lh-snug: 1.35;
-	--sl-lh-normal: 1.5;
+	/* ==========================================================================
+	   2. Modern Fluid Border Radius Scale
+	   ========================================================================== */
+	--ow-radius-xs: 4px;   /* Micro tags, subtle indicators */
+	--ow-radius-sm: 6px;   /* Small controls, compact chips */
+	--ow-radius-md: 10px;  /* Standard buttons, inputs, dropdown menus */
+	--ow-radius-lg: 16px;  /* Cards, containers, drawer corners */
+	--ow-radius-xl: 20px;  /* Dialogs, central modals, bottom sheets */
+	--ow-radius-pill: 999px; /* Badges, pill buttons, circular avatars */
 
-	/* Button Design System Tokens */
-	--sl-btn-radius: var(--sl-radius, 5px);
-	--sl-btn-primary-bg: var(--sl-accent, #e30613);
-	--sl-btn-primary-text: #ffffff;
-	--sl-btn-primary-hover-bg: var(--sl-accent-dark, #c00410);
-	--sl-btn-primary-hover-text: #ffffff;
+	/* ==========================================================================
+	   3. Layered Elevation & Glassmorphism Tokens
+	   ========================================================================== */
+	--ow-shadow-none: none;
+	--ow-shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.05);
+	--ow-shadow-sm: 0 2px 6px -1px rgba(15, 23, 42, 0.06), 0 1px 4px -1px rgba(15, 23, 42, 0.04);
+	--ow-shadow-md: 0 6px 16px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
+	--ow-shadow-lg: 0 12px 28px -4px rgba(15, 23, 42, 0.12), 0 4px 10px -2px rgba(15, 23, 42, 0.05);
+	--ow-shadow-xl: 0 24px 48px -12px rgba(15, 23, 42, 0.22);
+	--ow-shadow-modal: 0 20px 45px -10px rgba(15, 23, 42, 0.22), 0 0 1px 1px rgba(15, 23, 42, 0.05);
+	--ow-shadow-focus: var(--ow-brand-glow);
 
-	--sl-btn-outline-bg: #ffffff;
-	--sl-btn-outline-border: var(--sl-border, #d9dde5);
-	--sl-btn-outline-text: var(--sl-text, #1f2430);
-	--sl-btn-outline-hover-bg: var(--sl-surface-2, #f7f8fa);
-	--sl-btn-outline-hover-border: var(--sl-accent, #e30613);
-	--sl-btn-outline-hover-text: var(--sl-accent, #e30613);
+	/* Glassmorphism Surface & Backdrop */
+	--ow-surface-overlay: rgba(15, 23, 42, 0.28);
+	--ow-glass-backdrop: blur(4px);
+	--ow-glass-surface: rgba(255, 255, 255, 0.85);
+	--ow-glass-border: rgba(255, 255, 255, 0.4);
 
-	--sl-btn-ghost-bg: transparent;
-	--sl-btn-ghost-text: var(--sl-color-text-secondary, #475569);
-	--sl-btn-ghost-hover-bg: var(--sl-surface-2, #f7f8fa);
-	--sl-btn-ghost-hover-text: var(--sl-color-text-primary, #0f172a);
+	/* ==========================================================================
+	   4. Physics-based Motion & Easing Curves
+	   ========================================================================== */
+	--ow-dur-fast: 150ms;
+	--ow-dur-normal: 250ms;
+	--ow-dur-slow: 380ms;
 
-	--sl-btn-danger-bg: #fef2f2;
-	--sl-btn-danger-border: #fecaca;
-	--sl-btn-danger-text: #dc2626;
-	--sl-btn-danger-hover-bg: #dc2626;
-	--sl-btn-danger-hover-border: #dc2626;
-	--sl-btn-danger-hover-text: #ffffff;
+	--ow-ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+	--ow-ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+	--ow-ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 
-	--sl-btn-success-bg: #16a34a;
-	--sl-btn-success-text: #ffffff;
-	--sl-btn-success-hover-bg: #15803d;
-	--sl-btn-success-hover-text: #ffffff;
+	--ow-transition-base: all var(--ow-dur-fast) var(--ow-ease-smooth);
+	--ow-transition-spring: transform var(--ow-dur-slow) var(--ow-ease-spring), opacity var(--ow-dur-normal) var(--ow-ease-smooth);
+
+	/* ==========================================================================
+	   5. Typography & Display Scale
+	   ========================================================================== */
+	--ow-font-family: inherit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+
+	/* Font Sizes (Base 16px) */
+	--ow-fs-xs: 0.6875rem; /* 11px - Micro captions, status badges */
+	--ow-fs-sm: 0.8125rem; /* 13px - Subtext, helper text, old strike price */
+	--ow-fs-md: 0.8750rem; /* 14px - Body text, standard inputs, item titles */
+	--ow-fs-lg: 1.0000rem; /* 16px - Subheadings, card titles, table totals */
+	--ow-fs-xl: 1.1250rem; /* 18px - Section titles, modal headers */
+	--ow-fs-2xl: 1.3750rem; /* 22px - Main page titles, grand total display */
+	--ow-fs-3xl: 1.7500rem; /* 28px - Hero titles, celebration headers */
+	--ow-fs-4xl: 2.2500rem; /* 36px - Grand promo numbers, highlight counters */
+
+	/* Font Weights */
+	--ow-fw-light: 300;
+	--ow-fw-normal: 400;
+	--ow-fw-medium: 500;
+	--ow-fw-semibold: 600;
+	--ow-fw-bold: 700;
+
+	/* Line Heights (Optimized for Vietnamese diacritics) */
+	--ow-lh-tight: 1.25;
+	--ow-lh-snug: 1.38;
+	--ow-lh-normal: 1.55;
+
+	/* ==========================================================================
+	   6. Spacing Scale & Container Dimensions
+	   ========================================================================== */
+	--ow-space-1: 4px;
+	--ow-space-2: 8px;
+	--ow-space-3: 12px;
+	--ow-space-4: 16px;
+	--ow-space-5: 20px;
+	--ow-space-6: 24px;
+	--ow-space-8: 32px;
+	--ow-space-10: 40px;
+	--ow-space-12: 48px;
+
+	--ow-container-max-width: 1200px;
+	--ow-dialog-max-width: 480px;
+	--ow-drawer-width: 440px;
+
+	/* ==========================================================================
+	   7. Standard Button Tokens
+	   ========================================================================== */
+	--ow-btn-radius: var(--ow-radius-md);
+	--ow-btn-min-height: 42px;
+
+	--ow-btn-primary-bg: var(--ow-brand);
+	--ow-btn-primary-text: var(--ow-white);
+	--ow-btn-primary-hover-bg: var(--ow-brand-hover);
+	--ow-btn-primary-hover-text: var(--ow-white);
+
+	--ow-btn-outline-bg: var(--ow-white);
+	--ow-btn-outline-border: var(--ow-border-default);
+	--ow-btn-outline-text: var(--ow-text-primary);
+	--ow-btn-outline-hover-bg: var(--ow-surface-2);
+	--ow-btn-outline-hover-border: var(--ow-brand);
+	--ow-btn-outline-hover-text: var(--ow-brand);
+
+	--ow-btn-ghost-bg: transparent;
+	--ow-btn-ghost-text: var(--ow-text-secondary);
+	--ow-btn-ghost-hover-bg: var(--ow-surface-2);
+	--ow-btn-ghost-hover-text: var(--ow-text-primary);
+
+	/* ==========================================================================
+	   8. Backward Compatibility Mapping (--sl-* -> --ow-*)
+	   Ensures 100% full compatibility with existing templates and theme overrides.
+	   ========================================================================== */
+	--sl-accent: var(--ow-brand);
+	--sl-accent-dark: var(--ow-brand-hover);
+	--sl-text: var(--ow-text-primary);
+	--sl-muted: var(--ow-text-secondary);
+	--sl-border: var(--ow-border-default);
+
+	--sl-surface-2: var(--ow-surface-2);
+	--sl-surface-3: var(--ow-surface-3);
+
+	--sl-container-max-width: var(--ow-container-max-width);
+
+	--sl-radius: var(--ow-radius-md);
+	--sl-radius-card: var(--ow-radius-lg);
+	--sl-radius-sm: var(--ow-radius-sm);
+
+	--sl-shadow-none: var(--ow-shadow-none);
+	--sl-shadow-sm: var(--ow-shadow-sm);
+	--sl-shadow-focus: var(--ow-shadow-focus);
+
+	--sl-space-1: var(--ow-space-1);
+	--sl-space-2: var(--ow-space-2);
+	--sl-space-3: var(--ow-space-3);
+	--sl-space-4: var(--ow-space-4);
+	--sl-space-5: var(--ow-space-5);
+	--sl-space-6: var(--ow-space-6);
+
+	--sl-color-text-primary: var(--ow-text-primary);
+	--sl-color-text-secondary: var(--ow-text-secondary);
+	--sl-color-text-muted: var(--ow-text-muted);
+
+	--sl-color-price-main: var(--ow-price-main);
+	--sl-color-price-sale: var(--ow-price-sale);
+	--sl-color-price-old: var(--ow-price-old);
+	--sl-color-price-saving: var(--ow-price-saving);
+
+	--sl-fs-xs: var(--ow-fs-xs);
+	--sl-fs-sm: var(--ow-fs-sm);
+	--sl-fs-md: var(--ow-fs-md);
+	--sl-fs-lg: var(--ow-fs-lg);
+	--sl-fs-xl: var(--ow-fs-xl);
+	--sl-fs-2xl: var(--ow-fs-2xl);
+
+	--sl-fw-light: var(--ow-fw-light);
+	--sl-fw-normal: var(--ow-fw-normal);
+	--sl-fw-medium: var(--ow-fw-medium);
+	--sl-fw-semibold: var(--ow-fw-semibold);
+	--sl-fw-bold: var(--ow-fw-bold);
+
+	--sl-lh-tight: var(--ow-lh-tight);
+	--sl-lh-snug: var(--ow-lh-snug);
+	--sl-lh-normal: var(--ow-lh-normal);
+
+	--sl-btn-radius: var(--ow-btn-radius);
+	--sl-btn-primary-bg: var(--ow-btn-primary-bg);
+	--sl-btn-primary-text: var(--ow-btn-primary-text);
+	--sl-btn-primary-hover-bg: var(--ow-btn-primary-hover-bg);
+	--sl-btn-primary-hover-text: var(--ow-btn-primary-hover-text);
+
+	--sl-btn-outline-bg: var(--ow-btn-outline-bg);
+	--sl-btn-outline-border: var(--ow-btn-outline-border);
+	--sl-btn-outline-text: var(--ow-btn-outline-text);
+	--sl-btn-outline-hover-bg: var(--ow-btn-outline-hover-bg);
+	--sl-btn-outline-hover-border: var(--ow-btn-outline-hover-border);
+	--sl-btn-outline-hover-text: var(--ow-btn-outline-hover-text);
+
+	--sl-btn-ghost-bg: var(--ow-btn-ghost-bg);
+	--sl-btn-ghost-text: var(--ow-btn-ghost-text);
+	--sl-btn-ghost-hover-bg: var(--ow-btn-ghost-hover-bg);
+	--sl-btn-ghost-hover-text: var(--ow-btn-ghost-hover-text);
+
+	--sl-btn-danger-bg: var(--ow-color-danger-light);
+	--sl-btn-danger-border: var(--ow-color-danger-border);
+	--sl-btn-danger-text: var(--ow-color-danger);
+	--sl-btn-danger-hover-bg: var(--ow-color-danger);
+	--sl-btn-danger-hover-border: var(--ow-color-danger);
+	--sl-btn-danger-hover-text: var(--ow-white);
+
+	--sl-btn-success-bg: var(--ow-color-success);
+	--sl-btn-success-text: var(--ow-white);
+	--sl-btn-success-hover-bg: var(--ow-color-success-hover);
+	--sl-btn-success-hover-text: var(--ow-white);
 }
 
+/* ==========================================================================
+   9. Accessibility: Reduced Motion Override
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+	:root {
+		--ow-dur-fast: 0ms;
+		--ow-dur-normal: 0ms;
+		--ow-dur-slow: 0ms;
+		--ow-transition-base: none;
+		--ow-transition-spring: none;
+	}
+}

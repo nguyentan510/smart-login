@@ -93,19 +93,26 @@ $pipeline_tabs = (array) apply_filters( 'omniwp_order_pipeline_statuses', $pipel
 				<?php endforeach; ?>
 			</div>
 		<?php else : ?>
-			<div style="text-align:center; padding: 48px 16px; color:#64748b;">
-				<div style="margin-bottom:12px;">
+			<div class="ow-empty-state">
+				<div class="ow-empty-state__icon-wrap">
 					<?php echo IconSet::get( 'box' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 				</div>
-				<p style="margin:0; font-weight:500;"><?php esc_html_e( 'Bạn chưa có đơn hàng nào.', 'omniwp' ); ?></p>
+				<h4 class="ow-empty-state__title"><?php esc_html_e( 'Bạn chưa có đơn hàng nào', 'omniwp' ); ?></h4>
+				<p class="ow-empty-state__desc"><?php esc_html_e( 'Các đơn hàng bạn đã mua sẽ xuất hiện tại đây để bạn tiện theo dõi trạng thái giao hàng.', 'omniwp' ); ?></p>
+				<?php if ( function_exists( 'wc_get_page_permalink' ) ) : ?>
+					<a href="<?php echo esc_url( wc_get_page_permalink( 'shop' ) ); ?>" class="sl-btn sl-btn--primary sl-btn--inline ow-empty-state__btn">
+						<?php esc_html_e( 'Khám phá sản phẩm ngay', 'omniwp' ); ?>
+					</a>
+				<?php endif; ?>
 			</div>
 		<?php endif; ?>
 	<?php else : ?>
-		<div style="text-align:center; padding: 48px 16px; color:#64748b;">
-			<div style="margin-bottom:12px;">
+		<div class="ow-empty-state">
+			<div class="ow-empty-state__icon-wrap">
 				<?php echo IconSet::get( 'box' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 			</div>
-			<p style="margin:0; font-weight:500;"><?php esc_html_e( 'Chưa tích hợp WooCommerce hoặc chưa có đơn hàng nào.', 'omniwp' ); ?></p>
+			<h4 class="ow-empty-state__title"><?php esc_html_e( 'Chưa có đơn hàng nào', 'omniwp' ); ?></h4>
+			<p class="ow-empty-state__desc"><?php esc_html_e( 'Hệ thống chưa ghi nhận đơn hàng nào cho tài khoản này.', 'omniwp' ); ?></p>
 		</div>
 	<?php endif; ?>
 </div>

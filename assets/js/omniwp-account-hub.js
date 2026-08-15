@@ -42,7 +42,7 @@
 			var clean = hash.replace( /^#+/, '' ).split( '?' )[0];
 
 			if ( clean === 'sl-section-contact' || clean === 'contact' ) {
-				return 'contact';
+				return 'security';
 			}
 			if ( clean === 'sl-section-profile' || clean === 'profile' ) {
 				return 'profile';
@@ -91,8 +91,12 @@
 				var key = panel.getAttribute( 'data-sl-hub-panel' );
 				if ( key === targetKey ) {
 					panel.style.display = 'block';
+					panel.classList.remove( 'ow-panel-in' );
+					void panel.offsetWidth;
+					panel.classList.add( 'ow-panel-in' );
 				} else {
 					panel.style.display = 'none';
+					panel.classList.remove( 'ow-panel-in' );
 				}
 			} );
 
@@ -132,6 +136,12 @@
 				var targetEl = document.getElementById( targetAnchor.replace( /^#+/, '' ) );
 				if ( targetEl ) {
 					targetEl.scrollIntoView( { behavior: 'smooth', block: 'start' } );
+					targetEl.classList.remove( 'sl-pulse-highlight' );
+					void targetEl.offsetWidth;
+					targetEl.classList.add( 'sl-pulse-highlight' );
+					setTimeout( function () {
+						targetEl.classList.remove( 'sl-pulse-highlight' );
+					}, 1500 );
 				}
 			}
 		}
@@ -1274,6 +1284,29 @@
 					form.reset();
 				}
 			} );
+		} );
+
+		// -----------------------------------------------------------------
+		// Tactile Voucher Copy Feedback
+		// -----------------------------------------------------------------
+		document.addEventListener( 'click', function ( e ) {
+			var copyBtn = e.target.closest( '[data-sl-copy-voucher], .ow-voucher-copy-btn' );
+			if ( ! copyBtn ) {
+				return;
+			}
+			e.preventDefault();
+			var code = copyBtn.getAttribute( 'data-sl-copy-voucher' ) || copyBtn.getAttribute( 'data-code' );
+			if ( code && navigator.clipboard && navigator.clipboard.writeText ) {
+				navigator.clipboard.writeText( code ).then( function () {
+					var originalText = copyBtn.textContent;
+					copyBtn.classList.add( 'is-copied' );
+					copyBtn.textContent = 'Đã chép! ✓';
+					window.setTimeout( function () {
+						copyBtn.classList.remove( 'is-copied' );
+						copyBtn.textContent = originalText;
+					}, 2000 );
+				} );
+			}
 		} );
 	} );
 } )();

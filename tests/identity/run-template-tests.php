@@ -360,7 +360,9 @@ $ow_uncovered_ok = array(
 	'account-hub/tab-security'   => 'account hub tab',
 	'account-hub/tab-vouchers'   => 'account hub tab',
 	'account-hub/voucher-modal'  => 'account hub modal',
-	'ecommerce/review-order'     => 'ecommerce product review table',
+	'ecommerce/review-order'              => 'ecommerce product review table',
+	'ecommerce/order-confirmation-modal'  => 'ecommerce order confirmation modal',
+	'woocommerce/my-account'              => 'WooCommerce my-account template wrapper',
 );
 
 $ow_on_disk = array();

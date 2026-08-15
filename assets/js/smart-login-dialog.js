@@ -43,28 +43,39 @@
 	}
 
 	/**
-	 * Put a fragment on screen and hand it to the shared enhancements.
+	 * Put a fragment on screen and hand it to the shared enhancements with smooth morphing.
 	 *
 	 * `omniwp.js` binds the OTP boxes, the countdown and the password
 	 * toggle on DOMContentLoaded, which has long since fired. It exposes
 	 * `OmniWPEnhance` for exactly this — markup that arrives later.
 	 */
 	function paint( payload ) {
-		body.innerHTML = payload.html || '';
+		body.classList.add( 'is-swapping' );
 
-		if ( titleEl ) {
-			titleEl.textContent = payload.title || '';
-			titleEl.style.display = payload.title ? '' : 'none';
-		}
-		dialog.classList.toggle( 'is-onboard', payload.step === 'onboard' );
+		window.setTimeout( function () {
+			body.innerHTML = payload.html || '';
 
-		if ( window.OmniWPEnhance ) {
-			window.OmniWPEnhance( body );
-		}
+			if ( titleEl ) {
+				titleEl.textContent = payload.title || '';
+				titleEl.style.display = payload.title ? '' : 'none';
+			}
+			dialog.classList.toggle( 'is-onboard', payload.step === 'onboard' );
 
-		enhanceAddress();
-		holdSubmit();
-		focusFirst();
+			if ( window.OmniWPEnhance ) {
+				window.OmniWPEnhance( body );
+			}
+
+			enhanceAddress();
+			holdSubmit();
+			focusFirst();
+
+			body.classList.remove( 'is-swapping' );
+			body.classList.add( 'is-swapped' );
+
+			window.setTimeout( function () {
+				body.classList.remove( 'is-swapped' );
+			}, 250 );
+		}, 70 );
 	}
 
 	/**
@@ -190,6 +201,10 @@
 			} )
 			.then( function () {
 				setBusy( false );
+				var loadingButtons = body.querySelectorAll( '.is-loading' );
+				loadingButtons.forEach( function ( btn ) {
+					btn.classList.remove( 'is-loading' );
+				} );
 			} );
 	}
 
@@ -292,6 +307,11 @@
 
 		if ( busy ) {
 			return;
+		}
+
+		var submitBtn = event.submitter || form.querySelector( 'button[type="submit"]' );
+		if ( submitBtn ) {
+			submitBtn.classList.add( 'is-loading' );
 		}
 
 		var payload = new FormData( form );
