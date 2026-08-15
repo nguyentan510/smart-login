@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/omniwp\n"
-"POT-Creation-Date: 2026-08-14 06:52+0000\n"
+"POT-Creation-Date: 2026-08-15 07:51+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -93,7 +93,7 @@ msgid "%s: secret đang trùng với ID ứng dụng, nên mọi lần đăng nh
 msgstr ""
 
 #. translators: %d: number of items in cart
-#: templates/ecommerce/checkout-page.php:125
+#: templates/ecommerce/checkout-page.php:126
 msgid "(%d sản phẩm)"
 msgstr ""
 
@@ -103,6 +103,10 @@ msgstr ""
 
 #: includes/Frontend/class-voucher-service.php:169
 msgid "(tối đa %s)"
+msgstr ""
+
+#: templates/ecommerce/address-cards.php:135
+msgid "+ Thêm Địa Chỉ Nhận Hàng"
 msgstr ""
 
 #: templates/account-hub/tab-address.php:35
@@ -255,19 +259,27 @@ msgstr ""
 msgid "Bạn chưa có địa chỉ giao hàng nào được lưu."
 msgstr ""
 
+#: templates/ecommerce/address-cards.php:122
+msgid "Bạn chưa có địa chỉ nhận hàng"
+msgstr ""
+
 #: templates/account-hub/logout-modal.php:26
 msgid "Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?"
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:194
+#: includes/Ecommerce/class-checkout-service.php:196
 msgid "Bạn có chắc muốn xóa địa chỉ này?"
+msgstr ""
+
+#: templates/ecommerce/voucher-module.php:72
+msgid "Bạn có mã giảm giá riêng?"
 msgstr ""
 
 #: includes/Admin/class-provider-cards.php:34
 msgid "Bạn có thể cấu hình trực tiếp tại đây. Client secret được <strong>mã hóa trước khi lưu</strong> và không bao giờ hiển thị lại. Nếu website đã khai báo credentials trong <code>wp-config.php</code> hoặc biến môi trường, cấu hình triển khai đó sẽ được ưu tiên."
 msgstr ""
 
-#: templates/onboarding.php:174
+#: templates/onboarding.php:189
 msgid "Bạn có thể thêm email trong trang hồ sơ bất cứ lúc nào — việc này cần một mã xác thực riêng nên không nằm ở đây."
 msgstr ""
 
@@ -275,7 +287,7 @@ msgstr ""
 msgid "Bạn cần đăng nhập để thay đổi thông tin liên hệ."
 msgstr ""
 
-#: includes/Frontend/class-form-controller.php:349
+#: includes/Frontend/class-form-controller.php:354
 msgid "Bạn cần đăng nhập để thực hiện việc này."
 msgstr ""
 
@@ -319,7 +331,7 @@ msgid "Bạn đã nhập sai quá số lần cho phép. Vui lòng yêu cầu mã
 msgstr ""
 
 #. translators: %s: site name.
-#: templates/onboarding.php:61
+#: templates/onboarding.php:64
 #: templates/registered-success.php:29
 msgid "Bạn đã trở thành hội viên của %s!"
 msgstr ""
@@ -350,7 +362,7 @@ msgid "Bảng nhật ký"
 msgstr ""
 
 #: includes/Frontend/class-account-form.php:126
-#: includes/Frontend/class-icon-set.php:234
+#: includes/Frontend/class-icon-set.php:238
 msgid "Bảo mật"
 msgstr ""
 
@@ -431,7 +443,7 @@ msgstr ""
 msgid "Bắt kiểu tấn công rải mật khẩu: thử một mật khẩu phổ biến trên hàng nghìn tài khoản. Khoá theo tài khoản không thấy được kiểu này vì mỗi tài khoản chỉ sai một lần. Để rộng rãi — văn phòng, trường học và mạng di động dồn nhiều người thật vào một IP. Đặt 0 để bỏ giới hạn."
 msgstr ""
 
-#: templates/onboarding.php:72
+#: templates/onboarding.php:79
 msgid "Bắt đầu khám phá"
 msgstr ""
 
@@ -453,6 +465,11 @@ msgstr ""
 
 #: includes/Admin/class-field-renderer.php:507
 msgid "Bỏ trống dòng không dùng. Giá trị chứa từ khoá bảo mật sẽ được che khi hiển thị kết quả gửi thử."
+msgstr ""
+
+#. translators: %s: site name.
+#: templates/onboarding.php:68
+msgid "Bổ sung thông tin tài khoản của bạn"
 msgstr ""
 
 #: includes/Admin/Screens/class-guide-screen.php:314
@@ -530,12 +547,13 @@ msgid "Cho website dựng bằng Elementor hoặc Gutenberg, không sửa đư�
 msgstr ""
 
 #. translators: %s: the member's first name.
-#: templates/onboarding.php:81
-msgid "Chào %s! Thêm chút thông tin nữa để nhận đầy đủ ưu đãi hội viên — hoặc để sau cũng được."
+#: templates/onboarding.php:95
+msgid "Chào %s! Bổ sung địa chỉ nhận hàng để nhận quà hội viên & đặt hàng siêu tốc."
 msgstr ""
 
-#: includes/Frontend/class-fragment-renderer.php:168
-msgid "Chào mừng bạn"
+#. translators: %s: the member's first name.
+#: templates/onboarding.php:89
+msgid "Chào %s! Thêm địa chỉ nhận hàng để nhận quà hội viên & đặt hàng siêu tốc."
 msgstr ""
 
 #: templates/partials/account/status.php:54
@@ -635,10 +653,6 @@ msgstr ""
 
 #: includes/Admin/Screens/class-guide-screen.php:308
 msgid "Chưa có trang nào chứa [smart_auth], và tích hợp trang My Account của WooCommerce đang tắt."
-msgstr ""
-
-#: templates/ecommerce/address-cards.php:108
-msgid "Chưa có địa chỉ nhận hàng nào được chọn."
 msgstr ""
 
 #: templates/ecommerce/address-modal.php:94
@@ -816,7 +830,7 @@ msgstr ""
 msgid "Chọn cách định danh."
 msgstr ""
 
-#: templates/ecommerce/checkout-page.php:168
+#: templates/ecommerce/checkout-page.php:169
 msgid "Chọn hoặc Nhập Mã"
 msgstr ""
 
@@ -840,12 +854,12 @@ msgstr ""
 msgid "Chờ giữa 2 lần gửi (giây)"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:786
+#: includes/Frontend/class-rest-controller.php:795
 #: templates/account-hub/tab-orders.php:18
 msgid "Chờ thanh toán"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:796
+#: includes/Frontend/class-rest-controller.php:805
 msgid "Chờ xác nhận"
 msgstr ""
 
@@ -866,6 +880,15 @@ msgstr ""
 #: includes/Admin/class-settings-page.php:67
 #: includes/Admin/class-settings-page.php:131
 msgid "Cài đặt"
+msgstr ""
+
+#: templates/account-hub/settings-sheet.php:21
+msgid "Cài đặt & Tài khoản"
+msgstr ""
+
+#: templates/account-hub/sidebar.php:88
+#: templates/account-hub/sidebar.php:88
+msgid "Cài đặt tài khoản"
 msgstr ""
 
 #: includes/Admin/Screens/class-settings-screen.php:203
@@ -900,7 +923,7 @@ msgstr ""
 msgid "Có thay đổi chưa lưu"
 msgstr ""
 
-#: templates/ecommerce/slide-cart-drawer.php:131
+#: templates/ecommerce/slide-cart-drawer.php:132
 msgid "Có thể bạn sẽ thích"
 msgstr ""
 
@@ -929,11 +952,11 @@ msgstr ""
 msgid "Cả hai"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:72
+#: templates/ecommerce/thankyou-page.php:68
 msgid "Cảm ơn bạn đã đặt hàng!"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:293
+#: templates/ecommerce/thankyou-page.php:347
 msgid "Cảm ơn quý khách đã mua sắm tại cửa hàng của chúng tôi!"
 msgstr ""
 
@@ -978,7 +1001,11 @@ msgstr ""
 msgid "Cần hỗ trợ?"
 msgstr ""
 
-#: templates/ecommerce/address-cards.php:103
+#: templates/ecommerce/address-cards.php:125
+msgid "Cần thiết cho đơn hàng"
+msgstr ""
+
+#: templates/ecommerce/address-cards.php:109
 msgid "Cập Nhật Ngay"
 msgstr ""
 
@@ -986,12 +1013,12 @@ msgstr ""
 msgid "Cập nhật"
 msgstr ""
 
-#: templates/partials/account/status.php:69
-msgid "Cập nhật email cá nhân để nhận Hóa đơn GTGT điện tử và các Chương trình khuyến mãi đặc quyền dành riêng cho bạn."
+#: templates/account-hub/tab-security.php:40
+msgid "Cập nhật bảo mật"
 msgstr ""
 
-#: templates/account-hub/tab-security.php:25
-msgid "Cập nhật mật khẩu đăng nhập và quản lý phiên bảo mật tài khoản."
+#: templates/partials/account/status.php:69
+msgid "Cập nhật email cá nhân để nhận Hóa đơn GTGT điện tử và các Chương trình khuyến mãi đặc quyền dành riêng cho bạn."
 msgstr ""
 
 #. translators: %s: link to the audit log screen.
@@ -1046,7 +1073,7 @@ msgstr ""
 msgid "Dùng chung bộ placeholder với phần Gửi qua SMS."
 msgstr ""
 
-#: templates/ecommerce/voucher-module.php:153
+#: templates/ecommerce/voucher-module.php:169
 msgid "Dùng mã"
 msgstr ""
 
@@ -1185,7 +1212,7 @@ msgstr ""
 msgid "Envelope ký HMAC (chuẩn OmniWP)"
 msgstr ""
 
-#: templates/ecommerce/voucher-module.php:96
+#: templates/ecommerce/voucher-module.php:112
 msgid "FREESHIP"
 msgstr ""
 
@@ -1211,7 +1238,7 @@ msgstr ""
 msgid "Freeship đơn hàng"
 msgstr ""
 
-#: templates/ecommerce/voucher-module.php:96
+#: templates/ecommerce/voucher-module.php:112
 msgid "GIẢM GIÁ"
 msgstr ""
 
@@ -1220,11 +1247,11 @@ msgstr ""
 msgid "Gateway trả về HTTP %d."
 msgstr ""
 
-#: templates/ecommerce/checkout-page.php:181
+#: templates/ecommerce/checkout-page.php:182
 msgid "Ghi Chú Đơn Hàng"
 msgstr ""
 
-#: templates/ecommerce/checkout-page.php:185
+#: templates/ecommerce/checkout-page.php:186
 msgid "Ghi chú về đơn hàng, ví dụ: thời gian hay chỉ dẫn giao hàng chi tiết."
 msgstr ""
 
@@ -1268,7 +1295,7 @@ msgstr ""
 msgid "Giao dịch an toàn & bảo mật"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:217
+#: templates/ecommerce/thankyou-page.php:271
 msgid "Giao hàng tiêu chuẩn"
 msgstr ""
 
@@ -1305,13 +1332,13 @@ msgstr ""
 msgid "Giảm %s"
 msgstr ""
 
-#: templates/ecommerce/slide-cart-drawer.php:219
+#: templates/ecommerce/slide-cart-drawer.php:224
 #: templates/ecommerce/voucher-module.php:59
 msgid "Giảm giá"
 msgstr ""
 
 #: templates/account-hub/order-modal.php:120
-#: templates/ecommerce/thankyou-page.php:276
+#: templates/ecommerce/thankyou-page.php:330
 msgid "Giảm giá / Voucher:"
 msgstr ""
 
@@ -1325,7 +1352,7 @@ msgid "Giảm giá sản phẩm"
 msgstr ""
 
 #: templates/ecommerce/cart-page.php:130
-#: templates/ecommerce/slide-cart-drawer.php:104
+#: templates/ecommerce/slide-cart-drawer.php:105
 msgid "Giảm số lượng"
 msgstr ""
 
@@ -1333,10 +1360,10 @@ msgstr ""
 msgid "Giảm tối đa"
 msgstr ""
 
-#: includes/Frontend/class-shortcodes.php:623
+#: includes/Frontend/class-shortcodes.php:638
 #: templates/ecommerce/cart-page.php:31
-#: templates/ecommerce/checkout-stepper.php:22
-#: templates/ecommerce/checkout-stepper.php:27
+#: templates/ecommerce/checkout-stepper.php:26
+#: templates/ecommerce/checkout-stepper.php:33
 #: templates/ecommerce/floating-cart.php:21
 #: templates/ecommerce/slide-cart-drawer.php:30
 msgid "Giỏ hàng"
@@ -1429,7 +1456,7 @@ msgstr ""
 msgid "Gợi ý hoàn thiện:"
 msgstr ""
 
-#: templates/ecommerce/voucher-module.php:155
+#: templates/ecommerce/voucher-module.php:171
 msgid "Gợi ý mua kèm"
 msgstr ""
 
@@ -1506,12 +1533,16 @@ msgstr ""
 msgid "Gửi tới email quản trị một lần mỗi lần site chạm trần và tạm dừng gửi mã."
 msgstr ""
 
+#: templates/onboarding.php:58
+msgid "HOÀN THIỆN HỒ SƠ"
+msgstr ""
+
 #: templates/account-hub/order-modal.php:23
 msgid "HOÁ ĐƠN ĐƠN HÀNG"
 msgstr ""
 
 #. translators: %s: expiry date string.
-#: templates/ecommerce/voucher-module.php:141
+#: templates/ecommerce/voucher-module.php:157
 #: templates/ecommerce/voucher-picker-modal.php:89
 #: templates/ecommerce/voucher-picker-modal.php:131
 msgid "HSD: %s"
@@ -1522,7 +1553,7 @@ msgstr ""
 msgid "HTTP 2xx nhưng điều kiện thành công không khớp (cần \"%1$s\" = \"%2$s\")."
 msgstr ""
 
-#: includes/Frontend/class-form-controller.php:314
+#: includes/Frontend/class-form-controller.php:319
 msgid "Hai mật khẩu mới không khớp."
 msgstr ""
 
@@ -1594,12 +1625,12 @@ msgstr ""
 msgid "Hiển thị liên kết mở thẳng Tab Sổ địa chỉ (<code>?tab=address</code>)"
 msgstr ""
 
-#: includes/class-field-registry.php:869
-msgid "Hiển thị liên kết mở thẳng Tab Đơn hàng (<code>?tab=orders</code>)"
+#: includes/class-field-registry.php:893
+msgid "Hiển thị liên kết mở thẳng Tab Đăng nhập & Bảo mật (<code>?tab=security</code>)"
 msgstr ""
 
-#: includes/class-field-registry.php:893
-msgid "Hiển thị liên kết mở thẳng Tab Đổi mật khẩu & Bảo mật (<code>?tab=security</code>)"
+#: includes/class-field-registry.php:869
+msgid "Hiển thị liên kết mở thẳng Tab Đơn hàng (<code>?tab=orders</code>)"
 msgstr ""
 
 #: includes/class-field-registry.php:901
@@ -1627,7 +1658,7 @@ msgstr ""
 msgid "Hiển thị ở màn hình chào mừng và trong hồ sơ; không hiển thị khi đăng ký."
 msgstr ""
 
-#: templates/ecommerce/voucher-module.php:78
+#: templates/ecommerce/voucher-module.php:94
 msgid "Hiện chưa có mã giảm giá công khai nào trong kho."
 msgstr ""
 
@@ -1652,15 +1683,15 @@ msgstr ""
 msgid "Hoa Kỳ / Canada (+1)"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:816
-#: includes/Frontend/class-rest-controller.php:1231
+#: includes/Frontend/class-rest-controller.php:825
+#: includes/Frontend/class-rest-controller.php:1240
 #: templates/account-hub/tab-orders.php:21
 msgid "Hoàn thành"
 msgstr ""
 
-#: templates/ecommerce/checkout-stepper.php:53
-#: templates/ecommerce/thankyou-page.php:117
-#: templates/onboarding.php:162
+#: templates/ecommerce/checkout-stepper.php:63
+#: templates/ecommerce/thankyou-page.php:115
+#: templates/onboarding.php:180
 msgid "Hoàn tất"
 msgstr ""
 
@@ -1673,13 +1704,14 @@ msgstr ""
 msgid "Hoặc"
 msgstr ""
 
-#: templates/account-hub.php:81
+#: templates/account-hub/tab-profile.php:38
+#: templates/account-hub/tab-security.php:39
 #: templates/account.php:52
 #: templates/woocommerce/form-edit-account.php:58
 msgid "Huỷ"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:162
+#: templates/ecommerce/thankyou-page.php:160
 msgid "HÓA ĐƠN XÁC NHẬN ĐƠN HÀNG"
 msgstr ""
 
@@ -1731,6 +1763,10 @@ msgstr ""
 msgid "Hệ thống đang tạm thời không gửi được mã. Vui lòng thử lại sau."
 msgstr ""
 
+#: templates/ecommerce/address-cards.php:88
+msgid "Họ & tên"
+msgstr ""
+
 #: includes/Admin/Screens/class-guide-screen.php:136
 msgid "Họ tên, số điện thoại, email, mật khẩu, địa chỉ và các tài khoản đã liên kết — tất cả trong một trang, không cần WooCommerce."
 msgstr ""
@@ -1747,8 +1783,8 @@ msgstr ""
 msgid "Họ và tên người dùng (nếu có)"
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:208
-#: includes/Ecommerce/class-checkout-service.php:256
+#: includes/Ecommerce/class-checkout-service.php:210
+#: includes/Ecommerce/class-checkout-service.php:258
 msgid "Họ và tên người nhận"
 msgstr ""
 
@@ -1771,7 +1807,7 @@ msgstr ""
 msgid "Hồ sơ của bạn đã đầy đủ. Bạn có thể tiếp tục sử dụng hệ thống."
 msgstr ""
 
-#: templates/onboarding.php:70
+#: templates/onboarding.php:77
 msgid "Hồ sơ của bạn đã đầy đủ. Không còn gì phải điền cả."
 msgstr ""
 
@@ -1856,16 +1892,16 @@ msgstr ""
 
 #. translators: %d: count of available coupons.
 #: templates/ecommerce/cart-page.php:307
-#: templates/ecommerce/slide-cart-drawer.php:178
+#: templates/ecommerce/slide-cart-drawer.php:182
 msgid "Kho voucher (%d mã có sẵn)"
 msgstr ""
 
 #: templates/ecommerce/cart-page.php:359
-#: templates/ecommerce/slide-cart-drawer.php:251
+#: templates/ecommerce/slide-cart-drawer.php:256
 msgid "Kho ưu đãi & Mã giảm giá"
 msgstr ""
 
-#: includes/Frontend/class-icon-set.php:232
+#: includes/Frontend/class-icon-set.php:236
 msgid "Khoá"
 msgstr ""
 
@@ -1883,7 +1919,7 @@ msgid "Khoảng thời gian của trần: giờ hoặc ngày"
 msgstr ""
 
 #: templates/account-hub/address-modal.php:45
-#: templates/onboarding.php:148
+#: templates/onboarding.php:163
 #: templates/partials/account/profile.php:67
 msgid "Khác"
 msgstr ""
@@ -1984,7 +2020,7 @@ msgid "Không thể chuyển sang biến thể này."
 msgstr ""
 
 #: includes/Auth/class-contact-verification-service.php:217
-#: includes/Identity/class-user-manager.php:247
+#: includes/Identity/class-user-manager.php:250
 msgid "Không thể cập nhật thông tin liên hệ."
 msgstr ""
 
@@ -2040,7 +2076,7 @@ msgstr ""
 msgid "Không thể áp dụng mã giảm giá này cho giỏ hàng hiện tại."
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:578
+#: includes/Ecommerce/class-checkout-service.php:581
 msgid "Không thể áp dụng mã đã chọn."
 msgstr ""
 
@@ -2049,7 +2085,7 @@ msgid "Không thể đăng ký với thông tin này."
 msgstr ""
 
 #. translators: %s: expiry date string.
-#: templates/ecommerce/voucher-module.php:141
+#: templates/ecommerce/voucher-module.php:157
 msgid "Không thời hạn"
 msgstr ""
 
@@ -2061,29 +2097,29 @@ msgstr ""
 msgid "Không tìm thấy sản phẩm trong giỏ hàng."
 msgstr ""
 
-#: includes/Frontend/class-shortcodes.php:600
+#: includes/Frontend/class-shortcodes.php:615
 msgid "Không tìm thấy thông tin đơn hàng."
 msgstr ""
 
 #: includes/Auth/class-account-provisioner.php:97
 #: includes/Auth/class-contact-verification-service.php:50
-#: includes/Auth/class-flow-engine.php:550
-#: includes/Auth/class-flow-engine.php:692
+#: includes/Auth/class-flow-engine.php:560
+#: includes/Auth/class-flow-engine.php:702
 #: includes/Auth/class-identity-link-service.php:177
 #: includes/Auth/class-password-reset-handler.php:104
 #: includes/Auth/class-password-reset-handler.php:142
 #: includes/Auth/class-session-issuer.php:28
-#: includes/Frontend/class-form-controller.php:306
-#: includes/Frontend/class-rest-controller.php:468
-#: includes/Frontend/class-rest-controller.php:551
+#: includes/Frontend/class-form-controller.php:311
+#: includes/Frontend/class-rest-controller.php:477
+#: includes/Frontend/class-rest-controller.php:560
 msgid "Không tìm thấy tài khoản."
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:1030
+#: includes/Frontend/class-rest-controller.php:1039
 msgid "Không tìm thấy đơn hàng hoặc bạn không có quyền truy cập."
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:1006
+#: includes/Frontend/class-rest-controller.php:1015
 msgid "Không tìm thấy đơn hàng nào phù hợp."
 msgstr ""
 
@@ -2175,7 +2211,7 @@ msgstr ""
 msgid "Kênh gửi: sms / email"
 msgstr ""
 
-#: includes/Identity/class-user-manager.php:240
+#: includes/Identity/class-user-manager.php:243
 msgid "Kênh không phải email."
 msgstr ""
 
@@ -2275,11 +2311,15 @@ msgid "Lưu lại các sự kiện đăng nhập / xác thực"
 msgstr ""
 
 #: includes/Admin/Screens/class-settings-screen.php:72
-#: templates/account-hub.php:82
+#: templates/account-hub/tab-profile.php:39
 #: templates/account.php:53
 #: templates/woocommerce/form-edit-account.php:59
 #: templates/woocommerce/form-edit-account.php:60
 msgid "Lưu thay đổi"
+msgstr ""
+
+#: templates/onboarding.php:180
+msgid "Lưu thông tin"
 msgstr ""
 
 #: templates/ecommerce/address-modal-dialog.php:214
@@ -2291,13 +2331,13 @@ msgstr ""
 msgid "Lưu địa chỉ"
 msgstr ""
 
-#: includes/Frontend/class-icon-set.php:238
+#: includes/Frontend/class-icon-set.php:242
 msgid "Lịch hẹn"
 msgstr ""
 
 #: includes/Admin/class-smart-menu-meta-box.php:68
 #: includes/Admin/class-smart-menu-metabox.php:68
-#: includes/Frontend/class-account-hub.php:69
+#: includes/Frontend/class-account-hub.php:73
 #: includes/Frontend/class-account-menu.php:94
 #: includes/class-field-registry.php:868
 #: templates/account-hub/tab-orders.php:37
@@ -2312,7 +2352,7 @@ msgstr ""
 msgid "Lỗi gỡ sản phẩm."
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:192
+#: includes/Ecommerce/class-checkout-service.php:194
 msgid "Lỗi lưu địa chỉ, vui lòng kiểm tra lại thông tin."
 msgstr ""
 
@@ -2330,7 +2370,7 @@ msgstr ""
 
 #: includes/Ecommerce/class-cart-service.php:231
 #: templates/ecommerce/cart-page.php:272
-#: templates/ecommerce/thankyou-page.php:282
+#: templates/ecommerce/thankyou-page.php:336
 msgid "Miễn phí"
 msgstr ""
 
@@ -2350,12 +2390,12 @@ msgstr ""
 msgid "Mua ngay"
 msgstr ""
 
-#: templates/ecommerce/voucher-module.php:155
+#: templates/ecommerce/voucher-module.php:171
 msgid "Mua thêm"
 msgstr ""
 
 #. translators: %s: shortage amount needed.
-#: templates/ecommerce/voucher-module.php:131
+#: templates/ecommerce/voucher-module.php:147
 msgid "Mua thêm %s để mở khóa"
 msgstr ""
 
@@ -2463,7 +2503,7 @@ msgstr ""
 msgid "Mã OTP đã được gửi tới %s."
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:135
+#: templates/ecommerce/thankyou-page.php:133
 msgid "Mã QR chuyển khoản đơn hàng"
 msgstr ""
 
@@ -2471,9 +2511,9 @@ msgstr ""
 msgid "Mã giao nhận ổn định giữa các lần retry"
 msgstr ""
 
-#: includes/Frontend/class-account-hub.php:75
+#: includes/Frontend/class-account-hub.php:79
 #: includes/Frontend/class-account-menu.php:104
-#: includes/Frontend/class-icon-set.php:236
+#: includes/Frontend/class-icon-set.php:240
 #: includes/Frontend/class-shortcodes.php:316
 #: includes/class-field-registry.php:876
 #: templates/account-hub/tab-vouchers.php:24
@@ -2481,7 +2521,7 @@ msgid "Mã giảm giá"
 msgstr ""
 
 #: templates/ecommerce/cart-page.php:284
-#: templates/ecommerce/slide-cart-drawer.php:163
+#: templates/ecommerce/slide-cart-drawer.php:164
 msgid "Mã giảm giá / Voucher"
 msgstr ""
 
@@ -2551,17 +2591,17 @@ msgstr ""
 msgid "Mã đăng nhập"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:166
+#: templates/ecommerce/thankyou-page.php:164
 msgid "Mã đơn hàng:"
 msgstr ""
 
 #. translators: %s: Order number
-#: templates/ecommerce/thankyou-page.php:77
+#: templates/ecommerce/thankyou-page.php:73
 msgid "Mã đơn hàng: #%s. Chúng tôi đã nhận được thông tin và đang xử lý đơn hàng cho bạn."
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:366
-#: includes/Ecommerce/class-checkout-service.php:391
+#: includes/Ecommerce/class-checkout-service.php:368
+#: includes/Ecommerce/class-checkout-service.php:393
 msgid "Mã địa chỉ không hợp lệ."
 msgstr ""
 
@@ -2582,16 +2622,11 @@ msgstr ""
 msgid "Mật khẩu"
 msgstr ""
 
-#: includes/Frontend/class-account-hub.php:93
-#: templates/account-hub/tab-security.php:23
-msgid "Mật khẩu & Bảo mật"
-msgstr ""
-
 #: templates/partials/account/password.php:79
 msgid "Mật khẩu hiện tại"
 msgstr ""
 
-#: includes/Frontend/class-form-controller.php:310
+#: includes/Frontend/class-form-controller.php:315
 msgid "Mật khẩu hiện tại không đúng."
 msgstr ""
 
@@ -2618,7 +2653,11 @@ msgstr ""
 msgid "Mật khẩu phải có ít nhất %d ký tự."
 msgstr ""
 
-#: templates/ecommerce/address-cards.php:94
+#: templates/account-hub/settings-sheet.php:35
+msgid "Mật khẩu, số điện thoại, email và liên kết tài khoản"
+msgstr ""
+
+#: templates/ecommerce/address-cards.php:91
 #: templates/ecommerce/address-modal-dialog.php:106
 msgid "Mặc Định"
 msgstr ""
@@ -2693,7 +2732,7 @@ msgstr ""
 msgid "Mở thẳng bước quên mật khẩu (OmniWP)"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:131
+#: templates/ecommerce/thankyou-page.php:129
 msgid "Mở ứng dụng Ngân hàng bất kỳ hoặc Ví điện tử để quét mã thanh toán tự động, đơn hàng sẽ được kích hoạt xử lý ngay lập tức."
 msgstr ""
 
@@ -2726,7 +2765,7 @@ msgstr ""
 msgid "Mức tiền đạt Miễn phí vận chuyển (VNĐ)"
 msgstr ""
 
-#: templates/onboarding.php:147
+#: templates/onboarding.php:162
 #: templates/partials/account/profile.php:66
 msgid "Nam"
 msgstr ""
@@ -2751,11 +2790,11 @@ msgstr ""
 msgid "Ngày sinh"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:171
+#: templates/ecommerce/thankyou-page.php:169
 msgid "Ngày đặt hàng:"
 msgstr ""
 
-#: includes/Frontend/class-icon-set.php:231
+#: includes/Frontend/class-icon-set.php:235
 msgid "Người dùng"
 msgstr ""
 
@@ -2791,7 +2830,7 @@ msgstr ""
 msgid "Nhà cung cấp đăng nhập không trả về định danh hợp lệ."
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:425
+#: includes/Ecommerce/class-checkout-service.php:427
 #: templates/account-hub/address-modal.php:37
 #: templates/ecommerce/address-modal-dialog.php:188
 #: templates/ecommerce/address-modal-dialog.php:191
@@ -2808,6 +2847,11 @@ msgstr ""
 #: includes/Admin/Screens/class-guide-screen.php:225
 #: includes/Admin/Screens/class-guide-screen.php:234
 msgid "Nhãn văn bản trên nút. Mặc định là “Giỏ hàng”."
+msgstr ""
+
+#. translators: %s: terms link
+#: includes/Ecommerce/class-checkout-service.php:616
+msgid "Nhấn \"Đặt hàng\" đồng nghĩa với việc bạn đồng ý tuân theo %s"
 msgstr ""
 
 #: includes/Admin/Screens/class-guide-screen.php:459
@@ -2844,16 +2888,20 @@ msgstr ""
 msgid "Nhập mã voucher giảm giá..."
 msgstr ""
 
+#: templates/ecommerce/voucher-module.php:73
+msgid "Nhập mã voucher được gửi riêng qua SMS, Email hoặc quà tặng sự kiện để kích hoạt ưu đãi."
+msgstr ""
+
 #: includes/Frontend/class-fragment-renderer.php:158
 msgid "Nhập mã xác thực"
 msgstr ""
 
-#: templates/ecommerce/voucher-module.php:67
+#: templates/ecommerce/voucher-module.php:80
 msgid "Nhập mã ưu đãi / voucher..."
 msgstr ""
 
 #: templates/ecommerce/cart-page.php:296
-#: templates/ecommerce/slide-cart-drawer.php:169
+#: templates/ecommerce/slide-cart-drawer.php:171
 msgid "Nhập mã..."
 msgstr ""
 
@@ -2951,7 +2999,7 @@ msgstr ""
 msgid "Nút đăng nhập bằng Google không xuất hiện"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:294
+#: templates/ecommerce/thankyou-page.php:348
 msgid "Nếu bạn có bất kỳ câu hỏi nào về hóa đơn này, xin vui lòng liên hệ bộ phận chăm sóc khách hàng."
 msgstr ""
 
@@ -2968,7 +3016,7 @@ msgstr ""
 msgid "Nội dung"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:143
+#: templates/ecommerce/thankyou-page.php:141
 msgid "Nội dung chuyển khoản (Memo):"
 msgstr ""
 
@@ -2976,7 +3024,7 @@ msgstr ""
 msgid "Nội dung email"
 msgstr ""
 
-#: templates/onboarding.php:146
+#: templates/onboarding.php:161
 #: templates/partials/account/profile.php:65
 msgid "Nữ"
 msgstr ""
@@ -3005,14 +3053,14 @@ msgid "OmniWP:"
 msgstr ""
 
 #. translators: %s: number of orders
-#: includes/Frontend/class-woo-integration.php:532
-#: includes/Frontend/class-woo-integration.php:550
+#: includes/Frontend/class-woo-integration.php:533
+#: includes/Frontend/class-woo-integration.php:551
 msgctxt "Order status"
 msgid "Đang giao"
 msgstr ""
 
-#: includes/Frontend/class-woo-integration.php:519
-#: includes/Frontend/class-woo-integration.php:549
+#: includes/Frontend/class-woo-integration.php:520
+#: includes/Frontend/class-woo-integration.php:550
 msgctxt "Order status"
 msgid "Đã đóng gói"
 msgstr ""
@@ -3034,16 +3082,16 @@ msgstr ""
 msgid "Phiên làm việc đã hết hạn. Vui lòng tải lại trang và thử lại."
 msgstr ""
 
-#: includes/Frontend/class-form-controller.php:354
+#: includes/Frontend/class-form-controller.php:359
 #: includes/Frontend/class-rest-controller.php:286
 msgid "Phiên làm việc đã hết hạn. Vui lòng tải lại trang."
 msgstr ""
 
-#: includes/Auth/class-flow-engine.php:501
+#: includes/Auth/class-flow-engine.php:511
 #: includes/Auth/class-password-reset-handler.php:136
 #: includes/Auth/class-register-handler.php:167
 #: includes/Auth/class-session-issuer.php:37
-#: includes/Frontend/class-rest-controller.php:493
+#: includes/Frontend/class-rest-controller.php:502
 #: includes/OTP/class-otp-service.php:226
 msgid "Phiên xác thực không hợp lệ."
 msgstr ""
@@ -3053,13 +3101,13 @@ msgid "Phiên xác thực không hợp lệ. Vui lòng bắt đầu lại."
 msgstr ""
 
 #: includes/Auth/class-contact-verification-service.php:176
-#: includes/Frontend/class-rest-controller.php:680
+#: includes/Frontend/class-rest-controller.php:689
 msgid "Phiên xác thực thông tin liên hệ không hợp lệ."
 msgstr ""
 
-#: includes/Auth/class-flow-engine.php:483
-#: includes/Auth/class-flow-engine.php:608
-#: includes/Frontend/class-rest-controller.php:716
+#: includes/Auth/class-flow-engine.php:493
+#: includes/Auth/class-flow-engine.php:618
+#: includes/Frontend/class-rest-controller.php:725
 msgid "Phiên xác thực đã hết hạn. Vui lòng thực hiện lại."
 msgstr ""
 
@@ -3097,11 +3145,11 @@ msgid "Phát triển"
 msgstr ""
 
 #: templates/account-hub/order-modal.php:116
-#: templates/ecommerce/thankyou-page.php:281
+#: templates/ecommerce/thankyou-page.php:335
 msgid "Phí vận chuyển:"
 msgstr ""
 
-#: templates/ecommerce/checkout-page.php:197
+#: templates/ecommerce/checkout-page.php:198
 msgid "Phương Thức Thanh Toán"
 msgstr ""
 
@@ -3109,7 +3157,7 @@ msgstr ""
 msgid "Phương thức"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:206
+#: templates/ecommerce/thankyou-page.php:260
 msgid "Phương thức thanh toán & Vận chuyển"
 msgstr ""
 
@@ -3131,7 +3179,7 @@ msgstr ""
 msgid "Phường/Xã"
 msgstr ""
 
-#: includes/Address/class-address-fields.php:151
+#: includes/Address/class-address-fields.php:163
 #: includes/Address/class-woo-address.php:348
 msgid "Phường/Xã không thuộc Tỉnh/Thành phố đã chọn. Vui lòng chọn lại."
 msgstr ""
@@ -3145,21 +3193,21 @@ msgstr ""
 msgid "Proxy và địa chỉ IP"
 msgstr ""
 
-#: templates/ecommerce/slide-cart-drawer.php:248
+#: templates/ecommerce/slide-cart-drawer.php:253
 #: templates/form-otp.php:56
 #: templates/form-otp.php:133
 msgid "Quay lại"
 msgstr ""
 
-#: templates/ecommerce/checkout-stepper.php:20
+#: templates/ecommerce/checkout-stepper.php:22
 msgid "Quay lại Giỏ hàng"
 msgstr ""
 
-#: templates/ecommerce/checkout-stepper.php:35
+#: templates/ecommerce/checkout-stepper.php:41
 msgid "Quay lại Thanh toán"
 msgstr ""
 
-#: templates/ecommerce/slide-cart-drawer.php:267
+#: templates/ecommerce/slide-cart-drawer.php:272
 msgid "Quay lại giỏ hàng"
 msgstr ""
 
@@ -3175,7 +3223,7 @@ msgstr ""
 msgid "Quyền hiển thị OmniWP"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:130
+#: templates/ecommerce/thankyou-page.php:128
 msgid "Quét mã chuyển khoản nhanh"
 msgstr ""
 
@@ -3184,14 +3232,14 @@ msgid "Quên mật khẩu"
 msgstr ""
 
 #: templates/account-hub/tab-address.php:30
-msgid "Quản lý danh sách địa chỉ giao hàng và đồng bộ tự động với WooCommerce."
+msgid "Quản lý danh sách địa chỉ nhận hàng của bạn."
 msgstr ""
 
-#: templates/account-hub/tab-contact.php:26
-msgid "Quản lý số điện thoại, email và các tài khoản liên kết mạng xã hội."
+#: templates/account-hub/tab-security.php:26
+msgid "Quản lý số điện thoại, email, tài khoản liên kết và mật khẩu bảo mật."
 msgstr ""
 
-#: templates/account-hub/tab-profile.php:25
+#: templates/account-hub/tab-profile.php:26
 msgid "Quản lý thông tin hồ sơ và ngày sinh của bạn."
 msgstr ""
 
@@ -3216,12 +3264,12 @@ msgid "Rút gọn còn 1 ô Họ và tên, tự động bỏ Zipcode, Quốc gia
 msgstr ""
 
 #. translators: %d: product quantity
-#: templates/ecommerce/thankyou-page.php:253
+#: templates/ecommerce/thankyou-page.php:307
 msgid "SL: %d"
 msgstr ""
 
 #: templates/account-hub/voucher-modal.php:43
-#: templates/ecommerce/voucher-module.php:150
+#: templates/ecommerce/voucher-module.php:166
 msgid "Sao chép"
 msgstr ""
 
@@ -3320,12 +3368,12 @@ msgstr ""
 msgid "SẢN PHẨM / ĐƠN GIÁ"
 msgstr ""
 
-#: templates/ecommerce/checkout-page.php:122
+#: templates/ecommerce/checkout-page.php:123
 msgid "Sản Phẩm Đặt Mua"
 msgstr ""
 
 #: includes/Ecommerce/class-cart-service.php:558
-#: includes/Frontend/class-rest-controller.php:906
+#: includes/Frontend/class-rest-controller.php:915
 #: templates/ecommerce/cart-page.php:72
 #: templates/ecommerce/review-order.php:23
 #: templates/ecommerce/review-order.php:59
@@ -3419,7 +3467,7 @@ msgstr ""
 msgid "Số nhà, tên đường"
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:231
+#: includes/Ecommerce/class-checkout-service.php:233
 msgid "Số nhà, tên đường / Thôn xóm"
 msgstr ""
 
@@ -3431,17 +3479,18 @@ msgstr ""
 msgid "Số phút tạm dừng gửi"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:139
+#: templates/ecommerce/thankyou-page.php:137
 msgid "Số tiền cần chuyển:"
 msgstr ""
 
 #: includes/Admin/class-readiness.php:162
 #: includes/Auth/class-register-handler.php:505
-#: includes/Ecommerce/class-checkout-service.php:215
-#: includes/Ecommerce/class-checkout-service.php:262
+#: includes/Ecommerce/class-checkout-service.php:217
+#: includes/Ecommerce/class-checkout-service.php:264
 #: includes/Identity/Channels/class-phone-channel.php:48
 #: includes/class-field-registry.php:922
 #: templates/account-hub/address-modal.php:58
+#: templates/ecommerce/address-cards.php:98
 #: templates/form-otp.php:39
 #: templates/form-signup.php:38
 #: templates/partials/account/contact.php:59
@@ -3472,7 +3521,7 @@ msgstr ""
 msgid "Số điện thoại không hợp lệ."
 msgstr ""
 
-#: includes/Frontend/class-woo-integration.php:433
+#: includes/Frontend/class-woo-integration.php:434
 msgid "Số điện thoại người nhận"
 msgstr ""
 
@@ -3519,8 +3568,8 @@ msgid "TRỞ LẠI"
 msgstr ""
 
 #: templates/ecommerce/checkout-page.php:69
-#: templates/ecommerce/checkout-stepper.php:37
-#: templates/ecommerce/checkout-stepper.php:42
+#: templates/ecommerce/checkout-stepper.php:45
+#: templates/ecommerce/checkout-stepper.php:52
 msgid "Thanh toán"
 msgstr ""
 
@@ -3532,22 +3581,22 @@ msgstr ""
 msgid "Thanh toán (Checkout) chuẩn Việt"
 msgstr ""
 
-#: templates/ecommerce/slide-cart-drawer.php:237
+#: templates/ecommerce/slide-cart-drawer.php:242
 msgid "Thanh toán bảo mật & an toàn"
 msgstr ""
 
 #: templates/ecommerce/cart-page.php:326
 #: templates/ecommerce/cart-page.php:348
-#: templates/ecommerce/slide-cart-drawer.php:233
+#: templates/ecommerce/slide-cart-drawer.php:238
 msgid "Thanh toán ngay"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:791
+#: includes/Frontend/class-rest-controller.php:800
 msgid "Thanh toán thất bại"
 msgstr ""
 
 #: templates/account-hub/order-modal.php:89
-#: templates/ecommerce/thankyou-page.php:211
+#: templates/ecommerce/thankyou-page.php:265
 msgid "Thanh toán:"
 msgstr ""
 
@@ -3572,8 +3621,8 @@ msgstr ""
 msgid "Thay thế trang /checkout/ của WooCommerce"
 msgstr ""
 
-#: templates/ecommerce/address-cards.php:103
-#: templates/ecommerce/checkout-page.php:168
+#: templates/ecommerce/address-cards.php:109
+#: templates/ecommerce/checkout-page.php:169
 msgid "Thay Đổi"
 msgstr ""
 
@@ -3585,7 +3634,7 @@ msgstr ""
 msgid "Theo đơn hàng"
 msgstr ""
 
-#: includes/Auth/class-flow-engine.php:722
+#: includes/Auth/class-flow-engine.php:732
 msgid "Thiết bị mới được phát hiện. Vui lòng nhập mã xác thực vừa gửi cho bạn."
 msgstr ""
 
@@ -3594,7 +3643,7 @@ msgid "Thiết lập"
 msgstr ""
 
 #: templates/account-hub/tab-address.php:116
-#: templates/ecommerce/address-cards.php:98
+#: templates/ecommerce/address-cards.php:94
 #: templates/ecommerce/address-modal-dialog.php:109
 msgid "Thiếu Phường/Xã"
 msgstr ""
@@ -3624,11 +3673,11 @@ msgstr ""
 msgid "Thoáng — ưu tiên thuận tiện"
 msgstr ""
 
-#: templates/ecommerce/checkout-page.php:129
+#: templates/ecommerce/checkout-page.php:130
 msgid "Thu gọn ▲"
 msgstr ""
 
-#: includes/Frontend/class-icon-set.php:239
+#: includes/Frontend/class-icon-set.php:243
 msgid "Thuốc"
 msgstr ""
 
@@ -3651,7 +3700,7 @@ msgid "Thái Lan (+66)"
 msgstr ""
 
 #: templates/ecommerce/cart-page.php:173
-#: templates/ecommerce/slide-cart-drawer.php:143
+#: templates/ecommerce/slide-cart-drawer.php:144
 #: templates/partials/account/contact.php:65
 #: templates/partials/account/contact.php:75
 msgid "Thêm"
@@ -3691,7 +3740,6 @@ msgstr ""
 msgid "Thêm sản phẩm vào giỏ để tiết kiệm hơn"
 msgstr ""
 
-#: templates/ecommerce/address-cards.php:110
 #: templates/ecommerce/address-modal-dialog.php:128
 msgid "Thêm Địa Chỉ Mới"
 msgstr ""
@@ -3718,10 +3766,10 @@ msgstr ""
 #: includes/Admin/class-smart-menu-meta-box.php:62
 #: includes/Admin/class-smart-menu-metabox.php:62
 #: includes/Frontend/class-account-form.php:114
-#: includes/Frontend/class-account-hub.php:63
+#: includes/Frontend/class-account-hub.php:67
 #: includes/Frontend/class-account-menu.php:84
 #: includes/class-field-registry.php:860
-#: templates/account-hub/tab-profile.php:23
+#: templates/account-hub/tab-profile.php:24
 msgid "Thông tin cá nhân"
 msgstr ""
 
@@ -3729,7 +3777,7 @@ msgstr ""
 msgid "Thông tin giao hàng"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:187
+#: templates/ecommerce/thankyou-page.php:239
 msgid "Thông tin khách hàng & Giao hàng"
 msgstr ""
 
@@ -3827,6 +3875,7 @@ msgid "Tiếp tục"
 msgstr ""
 
 #: templates/ecommerce/cart-page.php:186
+#: templates/ecommerce/thankyou-page.php:357
 msgid "Tiếp tục mua sắm"
 msgstr ""
 
@@ -3939,11 +3988,11 @@ msgid "Trường hồ sơ"
 msgstr ""
 
 #. translators: %s: Order number
-#: templates/ecommerce/thankyou-page.php:86
+#: templates/ecommerce/thankyou-page.php:82
 msgid "Trạng thái xử lý đơn hàng"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:176
+#: templates/ecommerce/thankyou-page.php:174
 msgid "Trạng thái:"
 msgstr ""
 
@@ -4018,7 +4067,7 @@ msgstr ""
 msgid "Tài khoản được tạo bằng OTP số điện thoại, nên email của nó là một địa chỉ nội bộ và không nhận được thư nào."
 msgstr ""
 
-#: includes/Frontend/class-icon-set.php:237
+#: includes/Frontend/class-icon-set.php:241
 msgid "Tài liệu"
 msgstr ""
 
@@ -4080,7 +4129,7 @@ msgid "Tôi đồng ý với các điều khoản áp dụng."
 msgstr ""
 
 #: templates/ecommerce/cart-page.php:132
-#: templates/ecommerce/slide-cart-drawer.php:106
+#: templates/ecommerce/slide-cart-drawer.php:107
 msgid "Tăng số lượng"
 msgstr ""
 
@@ -4140,7 +4189,7 @@ msgstr ""
 #: templates/ecommerce/cart-page.php:137
 #: templates/ecommerce/cart-page.php:230
 #: templates/ecommerce/review-order.php:100
-#: templates/ecommerce/slide-cart-drawer.php:213
+#: templates/ecommerce/slide-cart-drawer.php:218
 msgid "Tạm tính"
 msgstr ""
 
@@ -4148,7 +4197,7 @@ msgstr ""
 msgid "Tạm tính tiền hàng:"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:271
+#: templates/ecommerce/thankyou-page.php:325
 msgid "Tạm tính:"
 msgstr ""
 
@@ -4208,7 +4257,7 @@ msgstr ""
 msgid "Tỉnh/Thành phố"
 msgstr ""
 
-#: includes/Address/class-address-fields.php:139
+#: includes/Address/class-address-fields.php:151
 msgid "Tỉnh/Thành phố không hợp lệ."
 msgstr ""
 
@@ -4216,7 +4265,7 @@ msgstr ""
 msgid "TỔNG CỘNG THANH TOÁN:"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:919
+#: includes/Frontend/class-rest-controller.php:928
 msgid "Tổng %d sản phẩm"
 msgstr ""
 
@@ -4226,19 +4275,19 @@ msgstr ""
 msgid "Tổng quan"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:285
+#: templates/ecommerce/thankyou-page.php:339
 msgid "Tổng số tiền thanh toán:"
 msgstr ""
 
 #: templates/ecommerce/cart-page.php:319
 #: templates/ecommerce/cart-page.php:344
 #: templates/ecommerce/review-order.php:149
-#: templates/ecommerce/slide-cart-drawer.php:225
+#: templates/ecommerce/slide-cart-drawer.php:230
 msgid "Tổng thanh toán"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:926
-#: templates/ecommerce/checkout-page.php:212
+#: includes/Frontend/class-rest-controller.php:935
+#: templates/ecommerce/checkout-page.php:215
 msgid "Tổng thanh toán:"
 msgstr ""
 
@@ -4295,7 +4344,7 @@ msgstr ""
 msgid "Voucher áp dụng"
 msgstr ""
 
-#: templates/ecommerce/checkout-page.php:151
+#: templates/ecommerce/checkout-page.php:152
 msgid "Voucher Ưu Đãi"
 msgstr ""
 
@@ -4303,19 +4352,19 @@ msgstr ""
 msgid "Vui lòng bổ sung Email để nhận Hóa đơn & Ưu đãi"
 msgstr ""
 
-#: includes/Address/class-address-fields.php:143
+#: includes/Address/class-address-fields.php:155
 msgid "Vui lòng chọn Phường/Xã."
 msgstr ""
 
-#: includes/Address/class-address-fields.php:133
+#: includes/Address/class-address-fields.php:145
 msgid "Vui lòng chọn Tỉnh/Thành phố."
 msgstr ""
 
-#: includes/Address/class-address-fields.php:120
+#: includes/Address/class-address-fields.php:132
 msgid "Vui lòng chọn địa chỉ."
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:148
+#: templates/ecommerce/thankyou-page.php:146
 msgid "Vui lòng giữ nguyên nội dung chuyển khoản để hệ thống tự động xác nhận đơn hàng."
 msgstr ""
 
@@ -4368,8 +4417,8 @@ msgstr ""
 msgid "Vui lòng nhập vào mã OTP đã được gửi đến số điện thoại %s"
 msgstr ""
 
-#: includes/Auth/class-flow-engine.php:661
-#: includes/Frontend/class-rest-controller.php:519
+#: includes/Auth/class-flow-engine.php:671
+#: includes/Frontend/class-rest-controller.php:528
 msgid "Vui lòng nhập đầy đủ thông tin đăng nhập."
 msgstr ""
 
@@ -4377,11 +4426,15 @@ msgstr ""
 msgid "Vui lòng nhập địa chỉ email."
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:193
+#: templates/ecommerce/address-cards.php:129
+msgid "Vui lòng thêm địa chỉ nhận hàng để hệ thống tính phí vận chuyển và giao hàng nhanh chóng, chính xác đến bạn."
+msgstr ""
+
+#: includes/Ecommerce/class-checkout-service.php:195
 msgid "Vui lòng điền đầy đủ Tên, Số điện thoại và Địa chỉ."
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:429
+#: includes/Ecommerce/class-checkout-service.php:431
 msgid "Vui lòng điền đầy đủ các thông tin bắt buộc."
 msgstr ""
 
@@ -4389,18 +4442,18 @@ msgstr ""
 msgid "Vui lòng đăng nhập để hưởng những đặc quyền dành cho thành viên."
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:412
-#: includes/Ecommerce/class-checkout-service.php:477
+#: includes/Ecommerce/class-checkout-service.php:414
+#: includes/Ecommerce/class-checkout-service.php:479
 msgid "Vui lòng đăng nhập để lưu sổ địa chỉ."
 msgstr ""
 
-#: templates/ecommerce/checkout-page.php:80
+#: templates/ecommerce/checkout-page.php:84
 msgid "Vui lòng đăng nhập để tiến hành Thanh toán"
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:359
-#: includes/Ecommerce/class-checkout-service.php:384
-#: includes/Frontend/class-rest-controller.php:1332
+#: includes/Ecommerce/class-checkout-service.php:361
+#: includes/Ecommerce/class-checkout-service.php:386
+#: includes/Frontend/class-rest-controller.php:1341
 msgid "Vui lòng đăng nhập."
 msgstr ""
 
@@ -4434,7 +4487,7 @@ msgstr ""
 msgid "Ví dụ địa chỉ cửa hàng hoặc câu nhắc không trả lời email này. Để trống để bỏ hẳn phần chân."
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:216
+#: includes/Ecommerce/class-checkout-service.php:218
 msgid "Ví dụ: 0901234567"
 msgstr ""
 
@@ -4443,7 +4496,7 @@ msgstr ""
 msgid "Ví dụ: 12 Trần Duy Hưng"
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:232
+#: includes/Ecommerce/class-checkout-service.php:234
 msgid "Ví dụ: 123 Đường Lê Lợi"
 msgstr ""
 
@@ -4451,12 +4504,12 @@ msgstr ""
 msgid "Ví dụ: 123 Đường Nguyễn Trãi"
 msgstr ""
 
-#: templates/ecommerce/checkout-page.php:186
+#: templates/ecommerce/checkout-page.php:187
 msgid "Ví dụ: Giao hàng vào giờ hành chính, gọi trước khi giao..."
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:209
-#: includes/Ecommerce/class-checkout-service.php:257
+#: includes/Ecommerce/class-checkout-service.php:211
+#: includes/Ecommerce/class-checkout-service.php:259
 msgid "Ví dụ: Nguyễn Văn An"
 msgstr ""
 
@@ -4489,7 +4542,7 @@ msgstr ""
 msgid "Vận chuyển"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:216
+#: templates/ecommerce/thankyou-page.php:270
 msgid "Vận chuyển:"
 msgstr ""
 
@@ -4518,7 +4571,7 @@ msgstr ""
 msgid "WooCommerce"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:1355
+#: includes/Frontend/class-rest-controller.php:1364
 msgid "WooCommerce chưa được kích hoạt."
 msgstr ""
 
@@ -4526,7 +4579,7 @@ msgstr ""
 msgid "Xem"
 msgstr ""
 
-#: templates/ecommerce/voucher-module.php:108
+#: templates/ecommerce/voucher-module.php:124
 msgid "Xem chi tiết điều kiện"
 msgstr ""
 
@@ -4544,7 +4597,7 @@ msgid "Xem hướng dẫn"
 msgstr ""
 
 #: templates/ecommerce/cart-page.php:307
-#: templates/ecommerce/slide-cart-drawer.php:178
+#: templates/ecommerce/slide-cart-drawer.php:182
 msgid "Xem kho voucher"
 msgstr ""
 
@@ -4555,6 +4608,10 @@ msgstr ""
 #: includes/Admin/class-readiness.php:296
 #: includes/Admin/class-readiness.php:350
 msgid "Xem trần"
+msgstr ""
+
+#: templates/ecommerce/thankyou-page.php:365
+msgid "Xem đơn hàng của tôi"
 msgstr ""
 
 #: templates/ecommerce/cart-page.php:375
@@ -4625,7 +4682,7 @@ msgstr ""
 msgid "Xóa dòng này"
 msgstr ""
 
-#: templates/ecommerce/checkout-page.php:159
+#: templates/ecommerce/checkout-page.php:160
 msgid "Xóa mã"
 msgstr ""
 
@@ -4634,7 +4691,7 @@ msgid "Xóa secret đã lưu khi bấm Lưu thay đổi"
 msgstr ""
 
 #: templates/ecommerce/cart-page.php:146
-#: templates/ecommerce/slide-cart-drawer.php:62
+#: templates/ecommerce/slide-cart-drawer.php:74
 msgid "Xóa sản phẩm"
 msgstr ""
 
@@ -4654,15 +4711,15 @@ msgstr ""
 msgid "Yêu cầu nhập OTP khi đăng nhập từ thiết bị chưa từng thấy. <strong>Lưu ý chi phí SMS.</strong>"
 msgstr ""
 
-#: includes/Frontend/class-icon-set.php:240
+#: includes/Frontend/class-icon-set.php:244
 msgid "Yêu thích"
 msgstr ""
 
-#: includes/Frontend/class-shortcodes.php:559
+#: includes/Frontend/class-shortcodes.php:574
 msgid "[Giỏ hàng OmniWP Cart]"
 msgstr ""
 
-#: includes/Frontend/class-shortcodes.php:570
+#: includes/Frontend/class-shortcodes.php:585
 msgid "[Trang thanh toán OmniWP Checkout]"
 msgstr ""
 
@@ -4685,7 +4742,7 @@ msgstr ""
 msgid "có hiệu lực ngay"
 msgstr ""
 
-#: templates/onboarding.php:133
+#: templates/onboarding.php:148
 #: templates/partials/account/profile.php:53
 msgid "dd/mm/yyyy"
 msgstr ""
@@ -4700,7 +4757,7 @@ msgstr ""
 msgid "email"
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:224
+#: includes/Ecommerce/class-checkout-service.php:226
 msgid "email@example.com"
 msgstr ""
 
@@ -4754,8 +4811,8 @@ msgid "ÁP DỤNG"
 msgstr ""
 
 #: templates/ecommerce/cart-page.php:297
-#: templates/ecommerce/slide-cart-drawer.php:170
-#: templates/ecommerce/voucher-module.php:68
+#: templates/ecommerce/slide-cart-drawer.php:172
+#: templates/ecommerce/voucher-module.php:81
 msgid "Áp dụng"
 msgstr ""
 
@@ -4780,15 +4837,15 @@ msgstr ""
 msgid "Đang bật tin proxy nhưng chưa khai dải IP nào, nên plugin không tin header của ai cả. Khai dải IP của proxy để giới hạn theo IP hoạt động đúng."
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:1399
+#: includes/Frontend/class-rest-controller.php:1408
 msgid "Đang chuyển đến giỏ hàng..."
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:1217
+#: includes/Frontend/class-rest-controller.php:1226
 msgid "Đang chuẩn bị"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:801
+#: includes/Frontend/class-rest-controller.php:810
 #: templates/account-hub/tab-orders.php:19
 msgid "Đang chuẩn bị hàng"
 msgstr ""
@@ -4811,10 +4868,10 @@ msgstr ""
 msgid "Đang dùng mẫu chung"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:811
-#: includes/Frontend/class-rest-controller.php:1224
+#: includes/Frontend/class-rest-controller.php:820
+#: includes/Frontend/class-rest-controller.php:1233
 #: templates/account-hub/tab-orders.php:20
-#: templates/ecommerce/thankyou-page.php:110
+#: templates/ecommerce/thankyou-page.php:106
 msgid "Đang giao hàng"
 msgstr ""
 
@@ -4882,11 +4939,15 @@ msgstr ""
 msgid "Điền sẵn <code>billing_phone</code> từ số điện thoại đã xác thực khi ô đó còn trống"
 msgstr ""
 
+#: includes/Ecommerce/class-checkout-service.php:611
+msgid "Điều khoản %s"
+msgstr ""
+
 #: templates/account-hub/voucher-modal.php:58
 msgid "Điều kiện áp dụng"
 msgstr ""
 
-#: templates/ecommerce/voucher-module.php:111
+#: templates/ecommerce/voucher-module.php:127
 msgid "Điều kiện áp dụng:"
 msgstr ""
 
@@ -4902,11 +4963,11 @@ msgstr ""
 msgid "Đã bật · thiếu credentials"
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:547
+#: includes/Ecommerce/class-checkout-service.php:550
 msgid "Đã bỏ chọn tất cả mã giảm giá."
 msgstr ""
 
-#: includes/Frontend/class-form-controller.php:369
+#: includes/Frontend/class-form-controller.php:374
 msgid "Đã bỏ liên kết."
 msgstr ""
 
@@ -4938,7 +4999,7 @@ msgstr ""
 msgid "Đã cài dữ liệu hành chính: %1$d tỉnh/thành, %2$d phường/xã."
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:312
+#: includes/Ecommerce/class-checkout-service.php:314
 msgid "Đã có tài khoản OmniWP?"
 msgstr ""
 
@@ -4958,7 +5019,7 @@ msgstr ""
 msgid "Đã gỡ mã giảm giá."
 msgstr ""
 
-#: includes/Auth/class-flow-engine.php:627
+#: includes/Auth/class-flow-engine.php:637
 msgid "Đã gửi lại mã xác thực."
 msgstr ""
 
@@ -4967,11 +5028,11 @@ msgstr ""
 msgid "Đã hoàn thiện %1$d/%2$d thông tin"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:826
+#: includes/Frontend/class-rest-controller.php:835
 msgid "Đã hoàn tiền"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:821
+#: includes/Frontend/class-rest-controller.php:830
 #: templates/account-hub/tab-orders.php:22
 msgid "Đã hủy"
 msgstr ""
@@ -4994,15 +5055,15 @@ msgstr ""
 msgid "Đã lưu mã \"%s\" vào giỏ hàng! Đang chuyển đến cửa hàng để chọn sản phẩm..."
 msgstr ""
 
-#: includes/Frontend/class-form-controller.php:279
+#: includes/Frontend/class-form-controller.php:283
 msgid "Đã lưu thông tin của bạn."
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:191
+#: includes/Ecommerce/class-checkout-service.php:193
 msgid "Đã lưu và chọn địa chỉ mới!"
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:457
+#: includes/Ecommerce/class-checkout-service.php:459
 msgid "Đã lưu địa chỉ thành công!"
 msgstr ""
 
@@ -5027,7 +5088,7 @@ msgstr ""
 msgid "Đã sử dụng"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:1442
+#: includes/Frontend/class-rest-controller.php:1451
 msgid "Đã thêm %d sản phẩm vào giỏ hàng."
 msgstr ""
 
@@ -5035,7 +5096,7 @@ msgstr ""
 msgid "Đã thêm sản phẩm vào giỏ hàng."
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:92
+#: templates/ecommerce/thankyou-page.php:88
 msgid "Đã tiếp nhận"
 msgstr ""
 
@@ -5051,26 +5112,26 @@ msgstr ""
 msgid "Đã xóa sản phẩm khỏi giỏ."
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:399
+#: includes/Ecommerce/class-checkout-service.php:401
 msgid "Đã xóa địa chỉ!"
 msgstr ""
 
 #. translators: %d: applied count
-#: includes/Ecommerce/class-checkout-service.php:569
+#: includes/Ecommerce/class-checkout-service.php:572
 msgid "Đã áp dụng thành công %d mã giảm giá!"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:806
-#: templates/ecommerce/thankyou-page.php:101
+#: includes/Frontend/class-rest-controller.php:815
+#: templates/ecommerce/thankyou-page.php:97
 msgid "Đã đóng gói"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:1192
-#: includes/Frontend/class-rest-controller.php:1210
+#: includes/Frontend/class-rest-controller.php:1201
+#: includes/Frontend/class-rest-controller.php:1219
 msgid "Đã đặt hàng"
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:374
+#: includes/Ecommerce/class-checkout-service.php:376
 msgid "Đã đặt làm địa chỉ mặc định!"
 msgstr ""
 
@@ -5080,13 +5141,14 @@ msgstr ""
 
 #: templates/account-hub/order-modal.php:32
 #: templates/account-hub/order-modal.php:135
+#: templates/account-hub/settings-sheet.php:22
 #: templates/account-hub/voucher-modal.php:27
 #: templates/account-hub/voucher-modal.php:69
 #: templates/ecommerce/address-modal-dialog.php:29
 #: templates/ecommerce/address-modal-dialog.php:140
 #: templates/ecommerce/address-modal.php:107
 #: templates/ecommerce/cart-page.php:360
-#: templates/ecommerce/slide-cart-drawer.php:252
+#: templates/ecommerce/slide-cart-drawer.php:257
 #: templates/ecommerce/voucher-picker-modal.php:27
 #: templates/login-dialog.php:41
 msgid "Đóng"
@@ -5096,7 +5158,7 @@ msgstr ""
 msgid "Đóng giỏ hàng"
 msgstr ""
 
-#: templates/onboarding.php:56
+#: templates/onboarding.php:58
 msgid "ĐĂNG KÝ THÀNH CÔNG"
 msgstr ""
 
@@ -5112,14 +5174,15 @@ msgstr ""
 
 #: includes/Admin/class-smart-menu-meta-box.php:80
 #: includes/Admin/class-smart-menu-metabox.php:80
+#: includes/Frontend/class-account-hub.php:91
 #: includes/Frontend/class-account-menu.php:124
 #: includes/class-field-registry.php:892
+#: templates/account-hub/settings-sheet.php:34
+#: templates/account-hub/tab-security.php:24
 msgid "Đăng nhập & Bảo mật"
 msgstr ""
 
 #: includes/Frontend/class-account-form.php:118
-#: includes/Frontend/class-account-hub.php:87
-#: templates/account-hub/tab-contact.php:24
 msgid "Đăng nhập & liên hệ"
 msgstr ""
 
@@ -5141,11 +5204,11 @@ msgstr ""
 msgid "Đăng nhập / Đăng ký (Mở Popup)"
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:317
+#: includes/Ecommerce/class-checkout-service.php:319
 msgid "Đăng nhập OTP"
 msgstr ""
 
-#: templates/ecommerce/checkout-page.php:87
+#: templates/ecommerce/checkout-page.php:91
 msgid "Đăng nhập OTP / Social ngay"
 msgstr ""
 
@@ -5157,8 +5220,8 @@ msgstr ""
 msgid "Đăng nhập hoặc đăng ký"
 msgstr ""
 
-#: includes/Auth/class-flow-engine.php:678
-#: includes/Frontend/class-rest-controller.php:577
+#: includes/Auth/class-flow-engine.php:688
+#: includes/Frontend/class-rest-controller.php:586
 msgid "Đăng nhập không thành công."
 msgstr ""
 
@@ -5173,11 +5236,11 @@ msgstr ""
 msgid "Đăng nhập nhanh"
 msgstr ""
 
-#: templates/ecommerce/checkout-page.php:82
+#: templates/ecommerce/checkout-page.php:86
 msgid "Đăng nhập nhanh bằng Số điện thoại hoặc Email để tự động điền địa chỉ giao hàng, theo dõi đơn hàng và sử dụng kho mã giảm giá dành riêng cho bạn."
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:313
+#: includes/Ecommerce/class-checkout-service.php:315
 msgid "Đăng nhập nhanh để chọn địa chỉ đã lưu & dùng điểm ưu đãi."
 msgstr ""
 
@@ -5187,9 +5250,9 @@ msgstr ""
 
 #: includes/Admin/class-smart-menu-meta-box.php:48
 #: includes/Admin/class-smart-menu-metabox.php:48
-#: includes/Frontend/class-account-hub.php:99
+#: includes/Frontend/class-account-hub.php:97
 #: includes/Frontend/class-account-menu.php:140
-#: includes/Frontend/class-icon-set.php:241
+#: includes/Frontend/class-icon-set.php:245
 #: includes/class-field-registry.php:900
 #: templates/logged-in.php:36
 msgid "Đăng xuất"
@@ -5197,6 +5260,10 @@ msgstr ""
 
 #: templates/account-hub/logout-modal.php:34
 msgid "Đăng xuất ngay"
+msgstr ""
+
+#: templates/account-hub/settings-sheet.php:45
+msgid "Đăng xuất tài khoản"
 msgstr ""
 
 #. translators: %s: minimum spend text
@@ -5209,20 +5276,20 @@ msgstr ""
 msgid "Đơn giá"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:248
+#: templates/ecommerce/thankyou-page.php:302
 msgid "Đơn giá:"
 msgstr ""
 
-#: includes/Frontend/class-icon-set.php:235
+#: includes/Frontend/class-icon-set.php:239
 msgid "Đơn hàng"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:884
+#: includes/Frontend/class-rest-controller.php:893
 msgid "Đơn hàng #%s"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:1025
-#: includes/Frontend/class-rest-controller.php:1345
+#: includes/Frontend/class-rest-controller.php:1034
+#: includes/Frontend/class-rest-controller.php:1354
 msgid "Đơn hàng không hợp lệ."
 msgstr ""
 
@@ -5256,11 +5323,11 @@ msgstr ""
 msgid "Đầy đủ."
 msgstr ""
 
-#: templates/ecommerce/checkout-page.php:216
+#: templates/ecommerce/checkout-page.php:219
 msgid "ĐẶT HÀNG"
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:96
+#: includes/Ecommerce/class-checkout-service.php:98
 msgid "ĐẶT HÀNG NGAY"
 msgstr ""
 
@@ -5290,7 +5357,7 @@ msgstr ""
 msgid "Đặt lại mật khẩu"
 msgstr ""
 
-#: includes/Auth/class-flow-engine.php:788
+#: includes/Auth/class-flow-engine.php:798
 msgid "Đặt lại mật khẩu thành công. Vui lòng đăng nhập bằng mật khẩu mới."
 msgstr ""
 
@@ -5310,23 +5377,23 @@ msgstr ""
 msgid "Đặt ở đâu"
 msgstr ""
 
-#: includes/Auth/class-profile-completion-service.php:44
-msgid "Để chúng tôi biết xưng hô với bạn thế nào"
+#: includes/Auth/class-profile-completion-service.php:46
+msgid "Để giao hàng chính xác & không cần nhập lại"
 msgstr ""
 
 #: includes/Auth/class-profile-completion-service.php:48
-msgid "Để gợi ý sản phẩm hợp với bạn hơn"
+msgid "Để gợi ý ưu đãi phù hợp nhất"
 msgstr ""
 
 #: includes/Auth/class-profile-completion-service.php:45
-msgid "Để nhận hóa đơn điện tử và chương trình khuyến mãi đặc quyền"
+msgid "Để nhận hóa đơn & ưu đãi độc quyền"
 msgstr ""
 
 #: includes/Auth/class-profile-completion-service.php:47
-msgid "Để nhận ưu đãi vào dịp sinh nhật"
+msgid "Để nhận quà tặng dịp sinh nhật"
 msgstr ""
 
-#: templates/onboarding.php:165
+#: templates/onboarding.php:177
 msgid "Để sau"
 msgstr ""
 
@@ -5365,19 +5432,20 @@ msgstr ""
 msgid "Để trống để dùng tên website."
 msgstr ""
 
-#: includes/Auth/class-profile-completion-service.php:46
-msgid "Để đơn hàng được giao đúng nơi, không phải nhập lại mỗi lần"
+#: includes/Auth/class-profile-completion-service.php:44
+msgid "Để xưng hô chuẩn xác hơn"
 msgstr ""
 
 #: templates/ecommerce/address-modal-dialog.php:28
 msgid "Địa Chỉ Của Tôi"
 msgstr ""
 
-#: templates/ecommerce/checkout-page.php:102
+#: templates/ecommerce/checkout-page.php:103
 msgid "Địa Chỉ Nhận Hàng"
 msgstr ""
 
-#: includes/Frontend/class-icon-set.php:233
+#: includes/Frontend/class-icon-set.php:237
+#: templates/ecommerce/address-cards.php:102
 msgid "Địa chỉ"
 msgstr ""
 
@@ -5394,7 +5462,7 @@ msgstr ""
 msgid "Địa chỉ cụ thể (Số nhà, tên đường) *"
 msgstr ""
 
-#: includes/Ecommerce/class-checkout-service.php:223
+#: includes/Ecommerce/class-checkout-service.php:225
 msgid "Địa chỉ email (tùy chọn nhận hóa đơn)"
 msgstr ""
 
@@ -5411,7 +5479,7 @@ msgstr ""
 #: includes/Admin/class-smart-menu-metabox.php:74
 #: includes/Auth/class-profile-completion-service.php:151
 #: includes/Frontend/class-account-form.php:122
-#: includes/Frontend/class-account-hub.php:81
+#: includes/Frontend/class-account-hub.php:85
 #: includes/Frontend/class-account-menu.php:114
 #: includes/class-field-registry.php:884
 msgid "Địa chỉ nhận hàng"
@@ -5475,6 +5543,10 @@ msgstr ""
 msgid "Đổi mật khẩu"
 msgstr ""
 
+#: includes/Frontend/class-form-controller.php:281
+msgid "Đổi mật khẩu thành công."
+msgstr ""
+
 #: templates/account-hub/sidebar.php:36
 #: templates/account-hub/sidebar.php:36
 msgid "Đổi ảnh đại diện"
@@ -5525,7 +5597,7 @@ msgstr ""
 msgid "— chưa có —"
 msgstr ""
 
-#: templates/ecommerce/voucher-module.php:146
+#: templates/ecommerce/voucher-module.php:162
 msgid "✓ Đã dùng"
 msgstr ""
 
@@ -5533,6 +5605,6 @@ msgstr ""
 msgid "🎉 Bạn đã đủ điều kiện Miễn phí vận chuyển!"
 msgstr ""
 
-#: includes/Frontend/class-woo-integration.php:576
+#: includes/Frontend/class-woo-integration.php:577
 msgid "📍 Chọn nhanh từ Sổ địa chỉ OmniWP:"
 msgstr ""

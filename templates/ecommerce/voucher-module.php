@@ -77,7 +77,7 @@ $ow_mode = isset( $ow_mode ) ? $ow_mode : ( isset( $mode ) ? $mode : 'cart' );
 			<div class="sl-voucher-box__action">
 				<form class="sl-coupon-form sl-voucher-module-form" data-sl-voucher-form>
 					<div class="sl-coupon-input-group">
-						<input type="text" class="sl-coupon-input sl-voucher-module-code-input" placeholder="<?php esc_attr_e( 'Nhập mã ưu đãi / voucher...', 'omniwp' ); ?>" autocomplete="off" required />
+						<input type="text" class="sl-input sl-coupon-input sl-voucher-module-code-input" placeholder="<?php esc_attr_e( 'Nhập mã ưu đãi / voucher...', 'omniwp' ); ?>" autocomplete="off" required />
 						<button type="submit" class="sl-btn sl-coupon-btn"><?php esc_html_e( 'Áp dụng', 'omniwp' ); ?></button>
 					</div>
 				</form>

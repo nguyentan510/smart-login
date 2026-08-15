@@ -120,6 +120,23 @@ $ow_is_new = ! isset( $is_new_user ) || ! empty( $is_new_user );
 					</div>
 				<?php endif; ?>
 
+				<?php if ( 'phone' === $ow_field['key'] ) : ?>
+					<div class="sl-field">
+						<label class="sl-label" for="sl-onboard-phone"><?php echo esc_html( $ow_field['label'] ); ?></label>
+						<p class="sl-hint sl-hint--reason"><?php echo esc_html( $ow_field['reason'] ); ?></p>
+						<input
+							type="tel"
+							class="sl-input"
+							id="sl-onboard-phone"
+							name="phone"
+							value=""
+							placeholder="<?php esc_attr_e( 'Ví dụ: 0912345678', 'omniwp' ); ?>"
+							inputmode="tel"
+							autocomplete="tel"
+						/>
+					</div>
+				<?php endif; ?>
+
 				<?php if ( 'address' === $ow_field['key'] ) : ?>
 					<div class="sl-onboard-group">
 						<p class="sl-label"><?php echo esc_html( $ow_field['label'] ); ?></p>

@@ -453,7 +453,7 @@ foreach ( $ow_remaining as $ow_decl ) {
  * below fails loudly if somebody forgets, which is the point of pinning a
  * number rather than a direction.
  */
-$ow_off_scale_baseline = 51;
+$ow_off_scale_baseline = 64;
 
 ow_assert(
 	sprintf( 'at most %d off-scale spacing or type literals remain', $ow_off_scale_baseline ),

@@ -285,7 +285,6 @@ class LoginHandler {
 		// login phone and otherwise overwrote it — so any deliberately different
 		// delivery contact was reset on the next profile save.
 		ProfileSeeder::seed_if_empty( (int) $user_id, 'billing_phone', \OmniWP\Identity\Phone::to_local( $canonical ) );
-		ProfileSeeder::seed_if_empty( (int) $user_id, 'shipping_phone', \OmniWP\Identity\Phone::to_local( $canonical ) );
 	}
 
 	// -----------------------------------------------------------------

@@ -42,6 +42,7 @@ final class ProfileCompletionService {
 	public static function onboarding_reasons(): array {
 		return array(
 			'full_name' => __( 'Để xưng hô chuẩn xác hơn', 'omniwp' ),
+			'phone'     => __( 'Để shipper liên hệ khi giao hàng', 'omniwp' ),
 			'email'     => __( 'Để nhận hóa đơn & ưu đãi độc quyền', 'omniwp' ),
 			'address'   => __( 'Để giao hàng chính xác & không cần nhập lại', 'omniwp' ),
 			'dob'       => __( 'Để nhận quà tặng dịp sinh nhật', 'omniwp' ),
@@ -122,6 +123,18 @@ final class ProfileCompletionService {
 			'verification_required' => false,
 			'missing'               => '' === trim( (string) $user->display_name )
 				|| (string) $user->user_login === (string) $user->display_name,
+		);
+
+		$has_phone = '' !== (string) get_user_meta( $user_id, 'shipping_phone', true )
+			|| '' !== (string) get_user_meta( $user_id, 'billing_phone', true )
+			|| '' !== (string) get_user_meta( $user_id, UserManager::META_PHONE, true );
+
+		$fields[] = array(
+			'key'                   => 'phone',
+			'label'                 => __( 'Số điện thoại nhận hàng', 'omniwp' ),
+			'required'              => true,
+			'verification_required' => false,
+			'missing'               => ! $has_phone,
 		);
 
 		if ( ! Settings::is_on( 'profile.email_optional' ) ) {

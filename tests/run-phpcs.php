@@ -35,8 +35,8 @@
  * not a ratchet; the *excluded* documentation sniffs in `phpcs.xml` are still a
  * written deferral and that has not changed.
  */
-const ow_PHPCS_BASELINE_ERRORS   = 89;
-const ow_PHPCS_BASELINE_WARNINGS = 18;
+const ow_PHPCS_BASELINE_ERRORS   = 84;
+const ow_PHPCS_BASELINE_WARNINGS = 21;
 
 $root   = dirname( __DIR__ );
 $phpcs  = $root . '/vendor/bin/phpcs';

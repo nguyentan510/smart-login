@@ -182,7 +182,6 @@ class UserManager {
 
 			if ( Settings::is_on( 'woo.sync_billing_phone' ) ) {
 				ProfileSeeder::seed_if_empty( (int) $user_id, 'billing_phone', Phone::to_local( $subject ) );
-				ProfileSeeder::seed_if_empty( (int) $user_id, 'shipping_phone', Phone::to_local( $subject ) );
 			}
 		}
 

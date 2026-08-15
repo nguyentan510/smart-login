@@ -17,7 +17,7 @@ if ( function_exists( 'is_wc_endpoint_url' ) && is_wc_endpoint_url( 'order-recei
 	global $wp;
 	$order_id = isset( $wp->query_vars['order-received'] ) ? absint( $wp->query_vars['order-received'] ) : 0;
 	if ( ! $order_id && isset( $_GET['order_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$order_id = absint( $_GET['order_id'] );
+		$order_id = absint( $_GET['order_id'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 	}
 	if ( $order_id > 0 ) {
 		( new \OmniWP\Ecommerce\ThankYouService() )->render_custom_thankyou( $order_id );

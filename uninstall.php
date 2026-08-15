@@ -7,7 +7,7 @@
 
 defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 
-$OMNIWP_settings = get_option( 'OMNIWP_settings', array() );
+$omniwp_settings = get_option( 'OMNIWP_settings', array() );
 
 /*
  * `advanced.delete_data_on_uninstall`, not the flat key this read for years.
@@ -29,7 +29,7 @@ $OMNIWP_settings = get_option( 'OMNIWP_settings', array() );
  * against nothing: Installer::maybe_upgrade() runs on every load and migrates
  * the shape before an uninstall could ever be reached.
  */
-if ( empty( $OMNIWP_settings['advanced']['delete_data_on_uninstall'] ) ) {
+if ( empty( $omniwp_settings['advanced']['delete_data_on_uninstall'] ) ) {
 	return;
 }
 
@@ -56,7 +56,7 @@ delete_option( 'OMNIWP_db_version' );
 delete_option( 'OMNIWP_account_page' );
 
 // User meta created by the plugin.
-$OMNIWP_meta_keys = array(
+$omniwp_meta_keys = array(
 	'OmniWP_phone',
 	'OmniWP_phone_verified_at',
 	'OmniWP_email_verified_at',
@@ -74,8 +74,8 @@ $OMNIWP_meta_keys = array(
 	'_OmniWP_pending_contact',
 );
 
-foreach ( $OMNIWP_meta_keys as $OMNIWP_meta_key ) {
-	$wpdb->delete( $wpdb->usermeta, array( 'meta_key' => $OMNIWP_meta_key ) ); // phpcs:ignore WordPress.DB
+foreach ( $omniwp_meta_keys as $omniwp_meta_key ) {
+	$wpdb->delete( $wpdb->usermeta, array( 'meta_key' => $omniwp_meta_key ) ); // phpcs:ignore WordPress.DB
 }
 
 // Scheduled events.

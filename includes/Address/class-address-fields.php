@@ -42,20 +42,9 @@ class AddressFields {
 	 * @return array{province_code:string,province_name:string,ward_code:string,ward_name:string,street:string}
 	 */
 	public static function get_for_user( int $user_id ): array {
-		$province_code = (string) get_user_meta( $user_id, 'shipping_state', true );
-		if ( '' === $province_code ) {
-			$province_code = (string) get_user_meta( $user_id, 'billing_state', true );
-		}
-
-		$ward_code = (string) get_user_meta( $user_id, self::META_SHIPPING_WARD_CODE, true );
-		if ( '' === $ward_code ) {
-			$ward_code = (string) get_user_meta( $user_id, self::META_WARD_CODE, true );
-		}
-
-		$street = (string) get_user_meta( $user_id, 'shipping_address_1', true );
-		if ( '' === $street ) {
-			$street = (string) get_user_meta( $user_id, 'billing_address_1', true );
-		}
+		$province_code = (string) get_user_meta( $user_id, 'billing_state', true );
+		$ward_code     = (string) get_user_meta( $user_id, self::META_WARD_CODE, true );
+		$street        = (string) get_user_meta( $user_id, 'billing_address_1', true );
 
 		// Names always come from the dataset, never from stored display text —
 		// so a renamed unit corrects itself on the next page load.

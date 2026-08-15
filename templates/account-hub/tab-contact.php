@@ -23,4 +23,3 @@ TemplateLoader::output(
 		'tab'     => $tab ?? array(),
 	)
 );
-

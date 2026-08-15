@@ -131,6 +131,8 @@ class AddressBook {
 				'city'       => sanitize_text_field( (string) ( $addr['city'] ?? '' ) ),
 				'district'   => sanitize_text_field( (string) ( $addr['district'] ?? '' ) ),
 				'ward'       => sanitize_text_field( (string) ( $addr['ward'] ?? '' ) ),
+				'state_name' => self::clean_unicode( sanitize_text_field( (string) ( $addr['state_name'] ?? '' ) ) ),
+				'ward_name'  => self::clean_unicode( sanitize_text_field( (string) ( $addr['ward_name'] ?? '' ) ) ),
 				'country'    => sanitize_text_field( (string) ( $addr['country'] ?? 'VN' ) ),
 			);
 		}
@@ -193,6 +195,8 @@ class AddressBook {
 			'city'       => sanitize_text_field( (string) ( $data['city'] ?? '' ) ),
 			'district'   => sanitize_text_field( (string) ( $data['district'] ?? '' ) ),
 			'ward'       => sanitize_text_field( (string) ( $data['ward'] ?? '' ) ),
+			'state_name' => self::clean_unicode( sanitize_text_field( (string) ( $data['state_name'] ?? '' ) ) ),
+			'ward_name'  => self::clean_unicode( sanitize_text_field( (string) ( $data['ward_name'] ?? '' ) ) ),
 			'country'    => sanitize_text_field( (string) ( $data['country'] ?? 'VN' ) ),
 		);
 
@@ -275,8 +279,8 @@ class AddressBook {
 		$city_code = $item['city'] ?? '';
 		$ward_code = $item['ward'] ?? '';
 
-		$prov_name = AddressRepository::province_name( $city_code ) ?: $city_code;
-		$ward_name = AddressRepository::ward_name( $ward_code, $city_code ) ?: $ward_code;
+		$prov_name = ! empty( $item['state_name'] ) ? $item['state_name'] : ( AddressRepository::province_name( $city_code ) ?: $city_code );
+		$ward_name = ! empty( $item['ward_name'] ) ? $item['ward_name'] : ( AddressRepository::ward_name( $ward_code, $city_code ) ?: $ward_code );
 
 		$fields = array(
 			'first_name' => $item['first_name'] ?? '',

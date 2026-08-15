@@ -168,7 +168,7 @@ $savings_amount = (float) ( $cart['discount_total'] ?? 0 );
 					<div class="sl-coupon-accordion__content" id="sl-coupon-collapse" style="display: none;">
 						<form id="sl-cart-coupon-form" class="sl-coupon-form">
 							<div class="sl-coupon-input-group">
-								<input type="text" id="sl-cart-coupon-code" class="sl-coupon-input" placeholder="<?php esc_attr_e( 'Nhập mã...', 'omniwp' ); ?>" autocomplete="off" required />
+								<input type="text" id="sl-cart-coupon-code" class="sl-input sl-coupon-input" placeholder="<?php esc_attr_e( 'Nhập mã...', 'omniwp' ); ?>" autocomplete="off" required />
 								<button type="submit" class="sl-btn sl-coupon-btn"><?php esc_html_e( 'Áp dụng', 'omniwp' ); ?></button>
 							</div>
 						</form>

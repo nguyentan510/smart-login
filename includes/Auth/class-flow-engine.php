@@ -28,6 +28,7 @@ namespace OmniWP\Auth;
 use OmniWP\Address\AddressFields;
 use OmniWP\Frontend\Flow;
 use OmniWP\Identity\IdentityDirectory;
+use OmniWP\Identity\Phone;
 use OmniWP\Identity\UserManager;
 use OmniWP\OTP\OtpService;
 use OmniWP\Security\Captcha;
@@ -407,6 +408,17 @@ class FlowEngine {
 
 		if ( '' !== $dob ) {
 			update_user_meta( $user_id, UserManager::META_DOB, $dob );
+		}
+
+		$raw_phone = sanitize_text_field( (string) ( $input['phone'] ?? ( $input['shipping_phone'] ?? ( $input['billing_phone'] ?? '' ) ) ) );
+		if ( '' !== trim( $raw_phone ) ) {
+			$canonical_phone = Phone::normalize( $raw_phone );
+			if ( Phone::is_valid( $canonical_phone ) ) {
+				$local_phone = Phone::to_local( $canonical_phone );
+				update_user_meta( $user_id, 'shipping_phone', $local_phone );
+				\OmniWP\Identity\ProfileSeeder::seed_if_empty( $user_id, 'billing_phone', $local_phone );
+				update_user_meta( $user_id, UserManager::META_PHONE, $canonical_phone );
+			}
 		}
 
 		$gender = sanitize_key( (string) ( $input['gender'] ?? '' ) );

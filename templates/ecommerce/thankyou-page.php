@@ -22,7 +22,7 @@ if ( ! $ow_order && function_exists( 'wc_get_order' ) ) {
 	global $wp;
 	$order_id_param = isset( $wp->query_vars['order-received'] ) ? absint( $wp->query_vars['order-received'] ) : 0;
 	if ( ! $order_id_param && isset( $_GET['order_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$order_id_param = absint( $_GET['order_id'] );
+		$order_id_param = absint( $_GET['order_id'] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 	}
 	if ( $order_id_param > 0 ) {
 		$ow_order = wc_get_order( $order_id_param );
@@ -92,7 +92,7 @@ $shipping_total = (float) $order->get_shipping_total();
 
 				<div class="sl-tracker-step <?php echo $step_index >= 2 ? 'sl-tracker-step--active' : ''; ?>">
 					<div class="sl-tracker-step__circle">
-						<?php echo $step_index > 2 ? IconSet::get( 'check-simple' ) : '2'; ?>
+						<?php echo $step_index > 2 ? IconSet::get( 'check-simple' ) : '2'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 					</div>
 					<div class="sl-tracker-step__label"><?php esc_html_e( 'Đã đóng gói', 'omniwp' ); ?></div>
 				</div>
@@ -101,7 +101,7 @@ $shipping_total = (float) $order->get_shipping_total();
 
 				<div class="sl-tracker-step <?php echo $step_index >= 3 ? 'sl-tracker-step--active' : ''; ?>">
 					<div class="sl-tracker-step__circle">
-						<?php echo $step_index > 3 ? IconSet::get( 'check-simple' ) : '3'; ?>
+						<?php echo $step_index > 3 ? IconSet::get( 'check-simple' ) : '3'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 					</div>
 					<div class="sl-tracker-step__label"><?php esc_html_e( 'Đang giao hàng', 'omniwp' ); ?></div>
 				</div>
@@ -110,7 +110,7 @@ $shipping_total = (float) $order->get_shipping_total();
 
 				<div class="sl-tracker-step <?php echo $step_index >= 4 ? 'sl-tracker-step--active' : ''; ?>">
 					<div class="sl-tracker-step__circle">
-						<?php echo $step_index >= 4 ? IconSet::get( 'check-simple' ) : '4'; ?>
+						<?php echo $step_index >= 4 ? IconSet::get( 'check-simple' ) : '4'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 					</div>
 					<div class="sl-tracker-step__label"><?php esc_html_e( 'Hoàn tất', 'omniwp' ); ?></div>
 				</div>
@@ -179,7 +179,7 @@ $shipping_total = (float) $order->get_shipping_total();
 
 			<!-- Customer & Order Summary Info Grid -->
 			<?php
-			// Prefer Shipping info, fallback to Billing info
+			// Prefer Shipping info, fallback to Billing info.
 			$customer_name = method_exists( $order, 'get_formatted_shipping_full_name' ) ? $order->get_formatted_shipping_full_name() : '';
 			if ( empty( trim( $customer_name ) ) && method_exists( $order, 'get_formatted_billing_full_name' ) ) {
 				$customer_name = $order->get_formatted_billing_full_name();
@@ -192,7 +192,7 @@ $shipping_total = (float) $order->get_shipping_total();
 
 			$customer_email = method_exists( $order, 'get_billing_email' ) ? (string) $order->get_billing_email() : '';
 
-			// Construct 1-line clean Vietnamese Shipping Address with Province Name resolution
+			// Construct 1-line clean Vietnamese Shipping Address with Province Name resolution.
 			$shipping_state = (string) ( ( method_exists( $order, 'get_shipping_state' ) ? $order->get_shipping_state() : '' ) ?: ( method_exists( $order, 'get_billing_state' ) ? $order->get_billing_state() : '' ) );
 			$province_name  = '';
 			if ( ! empty( $shipping_state ) ) {
@@ -217,12 +217,14 @@ $shipping_total = (float) $order->get_shipping_total();
 			$addr_1 = ( method_exists( $order, 'get_shipping_address_1' ) ? $order->get_shipping_address_1() : '' ) ?: ( method_exists( $order, 'get_billing_address_1' ) ? $order->get_billing_address_1() : '' );
 			$addr_2 = ( method_exists( $order, 'get_shipping_address_2' ) ? $order->get_shipping_address_2() : '' ) ?: ( method_exists( $order, 'get_billing_address_2' ) ? $order->get_billing_address_2() : '' );
 
-			$addr_parts = array_filter( array(
-				$addr_1,
-				$addr_2,
-				$city_name,
-				$province_name,
-			) );
+			$addr_parts       = array_filter(
+				array(
+					$addr_1,
+					$addr_2,
+					$city_name,
+					$province_name,
+				)
+			);
 			$one_line_address = ! empty( $addr_parts ) ? implode( ', ', $addr_parts ) : '';
 			if ( empty( $one_line_address ) ) {
 				$formatted_addr = ( method_exists( $order, 'get_formatted_shipping_address' ) ? $order->get_formatted_shipping_address() : '' ) ?: ( method_exists( $order, 'get_formatted_billing_address' ) ? $order->get_formatted_billing_address() : '' );

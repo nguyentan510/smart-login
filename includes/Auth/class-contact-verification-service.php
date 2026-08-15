@@ -224,7 +224,6 @@ final class ContactVerificationService {
 				// Seed, not overwrite: changing the login phone must not silently
 				// change where the customer's orders get delivered.
 				ProfileSeeder::seed_if_empty( $user_id, 'billing_phone', Phone::to_local( $destination ) );
-				ProfileSeeder::seed_if_empty( $user_id, 'shipping_phone', Phone::to_local( $destination ) );
 			}
 		}
 
