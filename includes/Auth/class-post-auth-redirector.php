@@ -109,14 +109,7 @@ final class PostAuthRedirector {
 			if ( '' !== $configured ) {
 				$url = $configured;
 			} else {
-				$hub_url = \OmniWP\Frontend\AccountForm::shortcode_page_url();
-				if ( '' !== $hub_url ) {
-					$url = $hub_url;
-				} elseif ( function_exists( 'wc_get_page_permalink' ) ) {
-					$url = wc_get_page_permalink( 'myaccount' );
-				} else {
-					$url = home_url( '/' );
-				}
+				$url = \OmniWP\Frontend\AccountForm::edit_url();
 			}
 		}
 
@@ -131,15 +124,6 @@ final class PostAuthRedirector {
 	}
 
 	public static function profile_url(): string {
-		$hub_url = \OmniWP\Frontend\AccountForm::shortcode_page_url();
-		if ( '' !== $hub_url ) {
-			return $hub_url;
-		}
-
-		if ( function_exists( 'wc_get_account_endpoint_url' ) ) {
-			return wc_get_account_endpoint_url( 'edit-account' );
-		}
-
-		return admin_url( 'profile.php' );
+		return \OmniWP\Frontend\AccountForm::edit_url( 'profile' );
 	}
 }

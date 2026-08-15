@@ -25,7 +25,7 @@ if ( ! $ow_form->user() ) {
 }
 ?>
 
-<div class="omniwp omniwp--account sl-hub" data-sl-hub data-rest-url="<?php echo esc_url( rest_url( 'omniwp/v1/' ) ); ?>" data-rest-nonce="<?php echo esc_attr( wp_create_nonce( 'wp_rest' ) ); ?>">
+<div class="omniwp omniwp--account sl-hub" data-sl-hub data-rest-url="<?php echo esc_url( rest_url( 'omniwp/v1/' ) ); ?>" data-rest-nonce="<?php echo esc_attr( wp_create_nonce( 'wp_rest' ) ); ?>"<?php echo ! empty( $order_id ) ? ' data-sl-initial-order="' . esc_attr( (string) $order_id ) . '"' : ''; ?>>
 
 	<!-- Sidebar (Left Column) -->
 	<aside class="sl-hub-sidebar">

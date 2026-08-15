@@ -32,9 +32,9 @@
 			type = type || 'error'; // 'success' | 'error' | 'warning' | 'info'
 			var iconMap = {
 				success: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
-				error:   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+				error: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
 				warning: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
-				info:    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+				info: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
 			};
 
 			var $container = $('#sl-toast-container');
@@ -105,10 +105,13 @@
 			});
 		},
 
+		isOrderConfirmed: false,
+
 		/* =============================================================
 		   Loading Overlay (shown during AJAX / update_checkout)
 		   ============================================================= */
 		initLoadingOverlay: function () {
+			var self = this;
 			var $overlay = $('<div id="sl-checkout-loading" class="sl-checkout-loading">' +
 				'<div class="sl-checkout-loading__spinner"></div>' +
 				'</div>');
@@ -120,22 +123,25 @@
 
 			$('body').on('updated_checkout checkout_error', function () {
 				$overlay.removeClass('sl-checkout-loading--active');
+				self.isOrderConfirmed = false;
+				$('#sl-btn-confirm-proceed').prop('disabled', false).removeClass('is-loading');
 			});
 		},
 
 		cacheDOM: function () {
-			this.$cardsGrid        = $('#sl-address-cards-container');
-			this.$pickerModal      = $('#sl-address-picker-modal');
-			this.$modal            = $('#sl-address-modal');
-			this.$modalForm        = $('#sl-address-modal-form');
-			this.$openModalBtn     = $('#sl-btn-open-address-modal, #sl-card-add-first');
-			this.$closeModalBtn    = $('#sl-address-modal-close, #sl-modal-cancel, #sl-address-modal-overlay');
-			this.$openPickerBtn    = $('#sl-btn-open-address-picker');
-			this.$closePickerBtn   = $('#sl-picker-modal-close, #sl-picker-modal-overlay');
-			this.$pickerAddNewBtn  = $('#sl-picker-btn-add-new');
-			this.$provinceSelect   = $('#sl-modal-state');
-			this.$wardSelect       = $('#sl-modal-city');
-			this.$wardCodeHidden   = $('#sl-modal-ward-code');
+			this.$cardsGrid = $('#sl-address-cards-container');
+			this.$pickerModal = $('#sl-address-picker-modal');
+			this.$modal = $('#sl-address-modal');
+			this.$modalForm = $('#sl-address-modal-form');
+			this.$openModalBtn = $('#sl-btn-open-address-modal, #sl-card-add-first');
+			this.$closeModalBtn = $('#sl-address-modal-close, #sl-modal-cancel, #sl-address-modal-overlay');
+			this.$openPickerBtn = $('#sl-btn-open-address-picker');
+			this.$closePickerBtn = $('#sl-picker-modal-close, #sl-picker-modal-overlay');
+			this.$pickerAddNewBtn = $('#sl-picker-btn-add-new');
+			this.$orderConfirmModal = $('#sl-order-confirm-modal');
+			this.$provinceSelect = $('#sl-modal-state');
+			this.$wardSelect = $('#sl-modal-city');
+			this.$wardCodeHidden = $('#sl-modal-ward-code');
 		},
 
 		bindEvents: function () {
@@ -294,6 +300,7 @@
 					}
 				}
 				if (data) {
+					self.isOrderConfirmed = false;
 					self.applyAddressToForm(data);
 					self.updateSummaryLine(data);
 					self.closePickerModal();
@@ -316,11 +323,14 @@
 			// Close on ESC key
 			$(document).on('keydown', function (e) {
 				if (e.key === 'Escape') {
-					if (self.$pickerModal.is(':visible')) {
+					if (self.$pickerModal && self.$pickerModal.is(':visible')) {
 						self.closePickerModal();
 					}
-					if (self.$modal.is(':visible')) {
+					if (self.$modal && self.$modal.is(':visible')) {
 						self.closeModal();
+					}
+					if (self.$orderConfirmModal && self.$orderConfirmModal.is(':visible')) {
+						self.closeOrderConfirmModal();
 					}
 				}
 			});
@@ -356,9 +366,58 @@
 				self.submitNewAddress();
 			});
 
-			// Intercept Place Order click if address is missing or incomplete!
+			// Order Confirmation Modal: Edit button click
+			$(document).on('click', '#sl-btn-confirm-edit', function (e) {
+				e.preventDefault();
+				self.closeOrderConfirmModal();
+
+				var $summary = $('#sl-co-selected-address-summary');
+				if ($summary.length) {
+					self.openPickerModal();
+				} else {
+					var $addrSection = $('.sl-co-section--address');
+					if ($addrSection.length) {
+						$('html, body').animate({
+							scrollTop: $addrSection.offset().top - 30
+						}, 300);
+					}
+					var $fields = $('.woocommerce-billing-fields__field-wrapper, .woocommerce-billing-fields .form-row');
+					if (!$fields.hasClass('sl-user-expanded')) {
+						$fields.addClass('sl-user-expanded').slideDown(200);
+						$('#sl-btn-toggle-billing-fields .sl-toggle-text').text('▲ Ẩn bớt form chi tiết');
+					}
+				}
+			});
+
+			// Order Confirmation Modal: Proceed button click
+			$(document).on('click', '#sl-btn-confirm-proceed', function (e) {
+				e.preventDefault();
+				self.isOrderConfirmed = true;
+				var $btn = $(this);
+				$btn.prop('disabled', true).addClass('is-loading');
+				var procText = (config.i18n && config.i18n.confirmModal && config.i18n.confirmModal.processing) ? config.i18n.confirmModal.processing : 'Đang xử lý đơn hàng...';
+				$btn.find('span:last').text(procText);
+
+				setTimeout(function () {
+					self.closeOrderConfirmModal();
+					var $placeOrder = $('#place_order');
+					if ($placeOrder.length && $placeOrder[0]) {
+						$placeOrder[0].click();
+					} else {
+						$('form.checkout').trigger('submit');
+					}
+				}, 150);
+			});
+
+			// Close Confirm Modal
+			$(document).on('click', '#sl-order-confirm-close, #sl-order-confirm-overlay', function (e) {
+				e.preventDefault();
+				self.closeOrderConfirmModal();
+			});
+
+			// Intercept Place Order click if address is missing, incomplete, or needs confirmation!
 			$(document).on('click', '#sl-co-sticky-submit, #place_order', function (e) {
-				var $summary   = $('#sl-co-selected-address-summary');
+				var $summary = $('#sl-co-selected-address-summary');
 				var $emptyCard = $('#sl-co-address-empty-card');
 
 				if ($emptyCard.length || !$summary.length) {
@@ -384,11 +443,97 @@
 						return false;
 					}
 				}
+
+				// Check Smart Order Confirmation Modal
+				if (config.confirmModalEnabled && !self.isOrderConfirmed) {
+					var shouldPromptConfirm = false;
+					var threshold = typeof config.confirmDaysThreshold !== 'undefined' ? parseInt(config.confirmDaysThreshold, 10) : 0;
+					var daysSince = config.daysSinceLastOrder;
+
+					if (threshold === 0) {
+						shouldPromptConfirm = true;
+					} else if (daysSince === null || daysSince === undefined || daysSince >= threshold) {
+						shouldPromptConfirm = true;
+					}
+
+					if (shouldPromptConfirm) {
+						e.preventDefault();
+						e.stopImmediatePropagation();
+
+						// Extract display values
+						var recipientName = '';
+						var recipientPhone = '';
+						var recipientAddress = '';
+
+						if ($summary.length) {
+							recipientName = $('#sl-summary-name').text().trim();
+							recipientPhone = $('#sl-summary-phone').text().trim();
+							recipientAddress = $('#sl-summary-full-loc').text().trim();
+						}
+
+						if (!recipientName) {
+							recipientName = (($('#billing_first_name').val() || '') + ' ' + ($('#billing_last_name').val() || '')).trim();
+						}
+						if (!recipientPhone) {
+							recipientPhone = ($('#billing_phone').val() || '').trim();
+						}
+						if (!recipientAddress) {
+							recipientAddress = ($('#billing_address_1').val() || '').trim();
+						}
+
+						// Payment method title
+						var $checkedPayment = $('input[name="payment_method"]:checked');
+						var paymentTitle = '';
+						if ($checkedPayment.length) {
+							var $lbl = $checkedPayment.closest('li').find('label');
+							paymentTitle = $lbl.clone().children().remove().end().text().trim();
+							if (!paymentTitle) {
+								paymentTitle = $lbl.text().trim();
+							}
+						}
+						if (!paymentTitle) {
+							paymentTitle = 'Thanh toán khi nhận hàng (COD)';
+						}
+
+						// Order Total
+						var orderTotal = $('#sl-co-sticky-total').text().trim() || $('.order-total td .woocommerce-Price-amount').first().text().trim() || $('.order-total td').text().trim() || '---';
+
+						// Populate modal elements
+						$('#sl-confirm-recipient-name').text(recipientName || 'Chưa có tên người nhận');
+						$('#sl-confirm-recipient-phone').text(recipientPhone ? '(' + recipientPhone + ')' : '');
+						$('#sl-confirm-recipient-address').text(recipientAddress || 'Chưa có địa chỉ');
+						$('#sl-confirm-payment-method').text(paymentTitle);
+						$('#sl-confirm-order-total').text(orderTotal);
+
+						// Restore proceed button state
+						$('#sl-btn-confirm-proceed').prop('disabled', false).removeClass('is-loading').find('span:last').text('Xác nhận & Đặt hàng');
+
+						self.openOrderConfirmModal();
+						return false;
+					}
+				}
 			});
 
-			// Autosave Draft (debounced 500ms)
+			// Autosave Draft (debounced 500ms) and reset confirmation flag on form edit
 			var debouncedSaveDraft = debounce(function () { self.saveDraft(); }, 500);
-			$('form.checkout').on('input change', 'input, select, textarea', debouncedSaveDraft);
+			$('form.checkout').on('input change', 'input, select, textarea', function () {
+				self.isOrderConfirmed = false;
+				debouncedSaveDraft();
+			});
+		},
+
+		openOrderConfirmModal: function () {
+			if (this.$orderConfirmModal && this.$orderConfirmModal.length) {
+				this.$orderConfirmModal.addClass('is-open is-active').css('display', 'block').attr('aria-hidden', 'false');
+				$('body').css('overflow', 'hidden');
+			}
+		},
+
+		closeOrderConfirmModal: function () {
+			if (this.$orderConfirmModal && this.$orderConfirmModal.length) {
+				this.$orderConfirmModal.removeClass('is-open is-active').hide().attr('aria-hidden', 'true');
+				$('body').css('overflow', '');
+			}
 		},
 
 		openPickerModal: function () {
@@ -496,11 +641,11 @@
 			}
 
 			var firstName = (data.first_name || '').trim();
-			var lastName  = (data.last_name || '').trim();
-			var fullName  = (firstName + ' ' + lastName).trim() || firstName;
-			var phone     = data.phone || '';
-			var address1  = data.address_1 || '';
-			var wardName  = data.ward_name || (data.ward && !/^\d+$/.test(data.ward) ? data.ward : '');
+			var lastName = (data.last_name || '').trim();
+			var fullName = (firstName + ' ' + lastName).trim() || firstName;
+			var phone = data.phone || '';
+			var address1 = data.address_1 || '';
+			var wardName = data.ward_name || (data.ward && !/^\d+$/.test(data.ward) ? data.ward : '');
 			var stateName = data.state_name || (data.state && !/^\d+$/.test(data.state) ? data.state : '');
 
 			if (/^\d+$/.test(wardName)) {
@@ -545,8 +690,8 @@
 
 			var isIncomplete = !wardName || !stateName || !address1.trim();
 			data.is_incomplete = isIncomplete;
-			data.ward_name     = wardName;
-			data.state_name    = stateName;
+			data.ward_name = wardName;
+			data.state_name = stateName;
 
 			$('#sl-summary-name').text(fullName);
 			if (phone) {
@@ -580,11 +725,11 @@
 			if (!addr) return;
 
 			var firstName = addr.first_name || '';
-			var lastName  = addr.last_name || '';
-			var phone     = addr.phone || '';
-			var address1  = addr.address_1 || '';
+			var lastName = addr.last_name || '';
+			var phone = addr.phone || '';
+			var address1 = addr.address_1 || '';
 			var stateCode = addr.state || addr.city || '';
-			var wardCode  = addr.ward_code || addr.ward || '';
+			var wardCode = addr.ward_code || addr.ward || '';
 
 			// Synchronize BOTH Billing AND Shipping input fields in WooCommerce form!
 			if (firstName) {
@@ -663,7 +808,7 @@
 				},
 				success: function (res) {
 					var wards = (res && res.data) ? res.data : res;
-					var opts  = '<option value="">-- Chọn Phường / Xã --</option>';
+					var opts = '<option value="">-- Chọn Phường / Xã --</option>';
 					if (Array.isArray(wards)) {
 						$.each(wards, function (i, w) {
 							opts += '<option value="' + (w.name || w) + '" data-code="' + (w.code || '') + '">' + (w.name || w) + '</option>';
@@ -680,10 +825,10 @@
 		},
 
 		submitNewAddress: function () {
-			var self     = this;
-			var $btn     = $('#sl-modal-submit');
+			var self = this;
+			var $btn = $('#sl-modal-submit');
 			var formData = this.$modalForm.serializeArray();
-			var payload  = {
+			var payload = {
 				action: 'omniwp_save_checkout_address',
 				nonce: config.nonce || ''
 			};
@@ -693,7 +838,7 @@
 			});
 
 			var selectedWardCode = self.$wardSelect.find(':selected').data('code') || self.$wardCodeHidden.val() || '';
-			payload.ward_code    = selectedWardCode;
+			payload.ward_code = selectedWardCode;
 
 			var selectedWardText = self.$wardSelect.find(':selected').text() || '';
 			if (selectedWardText && !selectedWardText.includes('--') && !selectedWardText.includes('Đang tải')) {
@@ -724,8 +869,8 @@
 						}
 
 						var stateDisplay = saved.state_name || saved.state || '';
-						var wardDisplay  = saved.ward_name || saved.city || '';
-						var fullAddress  = [saved.address_1, wardDisplay, stateDisplay].filter(Boolean).join(', ');
+						var wardDisplay = saved.ward_name || saved.city || '';
+						var fullAddress = [saved.address_1, wardDisplay, stateDisplay].filter(Boolean).join(', ');
 
 						saved.is_incomplete = !wardDisplay || !stateDisplay || !saved.address_1;
 
@@ -772,7 +917,7 @@
 			};
 			try {
 				localStorage.setItem('omniwp_checkout_draft', JSON.stringify(draft));
-			} catch (e) {}
+			} catch (e) { }
 		},
 
 		initDraft: function () {
@@ -786,7 +931,7 @@
 					if (!$('#billing_address_1').val() && draft.address_1) $('#billing_address_1').val(draft.address_1);
 					if (!$('#order_comments').val() && draft.comments) $('#order_comments').val(draft.comments);
 				}
-			} catch (e) {}
+			} catch (e) { }
 		},
 
 		initStickyBar: function () {
@@ -801,8 +946,10 @@
 
 				e.preventDefault();
 				var $placeOrder = $('#place_order');
-				if ($placeOrder.length) {
-					$placeOrder.trigger('click');
+				if ($placeOrder.length && $placeOrder[0]) {
+					$placeOrder[0].click();
+				} else {
+					$('form.checkout').trigger('submit');
 				}
 			});
 

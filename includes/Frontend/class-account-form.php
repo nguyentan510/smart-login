@@ -370,13 +370,31 @@ final class AccountForm {
 			return ! empty( $tab ) ? add_query_arg( 'tab', $tab, $filtered ) : $filtered;
 		}
 
-		// 1. Prioritize Smart Account Hub page ([smart_account])
+		$mode = (string) Settings::get( 'account.portal_mode', 'woo_override' );
+
+		// 1. Custom dedicated page mode
+		if ( 'custom_page' === $mode ) {
+			$custom_url = trim( (string) Settings::get( 'account.custom_page_url', '' ) ) ?: self::shortcode_page_url();
+			if ( '' !== $custom_url ) {
+				return ! empty( $tab ) ? add_query_arg( 'tab', $tab, $custom_url ) : $custom_url;
+			}
+		}
+
+		// 2. Direct WooCommerce My Account override mode (Default)
+		if ( 'woo_override' === $mode && function_exists( 'wc_get_page_permalink' ) ) {
+			$myaccount_url = (string) wc_get_page_permalink( 'myaccount' );
+			if ( '' !== $myaccount_url ) {
+				return ! empty( $tab ) ? add_query_arg( 'tab', $tab, $myaccount_url ) : $myaccount_url;
+			}
+		}
+
+		// 3. Fallback to Smart Account Hub shortcode page
 		$shortcode_url = self::shortcode_page_url();
 		if ( '' !== $shortcode_url ) {
 			return ! empty( $tab ) ? add_query_arg( 'tab', $tab, $shortcode_url ) : $shortcode_url;
 		}
 
-		// 2. Fallback to WooCommerce account endpoint if shortcode page is not found
+		// 4. Fallback to WooCommerce account endpoint if disabled
 		if ( function_exists( 'wc_get_account_endpoint_url' ) ) {
 			if ( 'vouchers' === $tab ) {
 				return add_query_arg( 'tab', 'vouchers', (string) wc_get_account_endpoint_url( 'edit-account' ) );
@@ -390,14 +408,14 @@ final class AccountForm {
 
 
 	/**
-	 * The first published page containing [smart_account].
+	 * The first published page containing [smart_account] or [omniwp_account].
 	 *
 	 * Cached in an option because it changes about as often as the site's page
 	 * structure does, and the alternative is a LIKE query on post_content for
 	 * every notice that wants to link somewhere.
 	 */
 	public static function shortcode_page_url(): string {
-		return SitePage::url( array( 'smart_account' ), 'OMNIWP_account_page' );
+		return SitePage::url( array( 'smart_account', 'omniwp_account' ), 'OMNIWP_account_page' );
 	}
 
 	private function redirect_url(): string {

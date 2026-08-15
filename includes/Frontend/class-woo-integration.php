@@ -67,6 +67,9 @@ class WooIntegration {
 		( new \OmniWP\Ecommerce\SlideCart() )->register();
 		( new \OmniWP\Ecommerce\CheckoutService() )->register();
 		( new \OmniWP\Ecommerce\ThankYouService() )->register();
+
+		// Initialize OmniWP Account Hub Router
+		( new \OmniWP\Frontend\AccountRouter() )->register();
 	}
 
 	// -----------------------------------------------------------------
@@ -87,6 +90,10 @@ class WooIntegration {
 			'myaccount/form-login.php'        => 'woocommerce/form-login.php',
 			'myaccount/form-edit-account.php' => 'woocommerce/form-edit-account.php',
 		);
+
+		if ( 'woo_override' === Settings::get( 'account.portal_mode', 'woo_override' ) ) {
+			$ours['myaccount/my-account.php'] = 'woocommerce/my-account.php';
+		}
 
 		if ( Settings::is_on( 'ecommerce.override_cart_template', false ) ) {
 			$ours['cart/cart.php'] = 'ecommerce/cart-page.php';
@@ -120,6 +127,10 @@ class WooIntegration {
 	public function enqueue_on_account_page(): void {
 		if ( function_exists( 'is_account_page' ) && is_account_page() ) {
 			Assets::enqueue();
+
+			if ( is_user_logged_in() && 'woo_override' === Settings::get( 'account.portal_mode', 'woo_override' ) ) {
+				AccountHub::enqueue_assets();
+			}
 		}
 	}
 

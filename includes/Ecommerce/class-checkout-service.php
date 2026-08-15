@@ -57,6 +57,7 @@ class CheckoutService {
 		add_action( 'woocommerce_before_checkout_billing_form', array( $this, 'render_address_cards_picker' ), 5 );
 		add_action( 'wp_footer', array( $this, 'render_address_modal_footer' ), 50 );
 		add_action( 'wp_footer', array( $this, 'render_voucher_picker_modal_footer' ), 55 );
+		add_action( 'wp_footer', array( $this, 'render_order_confirmation_modal_footer' ), 60 );
 	}
 
 	/**
@@ -180,20 +181,47 @@ class CheckoutService {
 		$user_id   = get_current_user_id();
 		$addresses = $user_id ? AddressBook::get_addresses( $user_id ) : array();
 
+		$days_since_last_order = null;
+		if ( $user_id && function_exists( 'wc_get_orders' ) ) {
+			$last_orders = wc_get_orders(
+				array(
+					'customer_id' => $user_id,
+					'limit'       => 1,
+					'status'      => array( 'completed', 'processing', 'on-hold' ),
+					'orderby'     => 'date',
+					'order'       => 'DESC',
+				)
+			);
+			if ( ! empty( $last_orders ) ) {
+				$last_order   = reset( $last_orders );
+				$date_created = $last_order ? $last_order->get_date_created() : null;
+				if ( $date_created ) {
+					$days_since_last_order = (int) floor( ( time() - $date_created->getTimestamp() ) / DAY_IN_SECONDS );
+				}
+			}
+		}
+
 		wp_localize_script(
 			'omniwp-checkout',
 			'omniwpCheckoutConfig',
 			array(
-				'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
-				'nonce'         => wp_create_nonce( 'omniwp_checkout_nonce' ),
-				'isLoggedIn'    => is_user_logged_in(),
-				'userAddresses' => $addresses,
-				'provinces'     => AddressRepository::provinces(),
-				'i18n'          => array(
-					'saveSuccess'   => __( 'Đã lưu và chọn địa chỉ mới!', 'omniwp' ),
-					'saveError'     => __( 'Lỗi lưu địa chỉ, vui lòng kiểm tra lại thông tin.', 'omniwp' ),
-					'fillRequired'  => __( 'Vui lòng điền đầy đủ Tên, Số điện thoại và Địa chỉ.', 'omniwp' ),
-					'confirmDelete' => __( 'Bạn có chắc muốn xóa địa chỉ này?', 'omniwp' ),
+				'ajaxUrl'              => admin_url( 'admin-ajax.php' ),
+				'nonce'                => wp_create_nonce( 'omniwp_checkout_nonce' ),
+				'isLoggedIn'           => is_user_logged_in(),
+				'userAddresses'        => $addresses,
+				'provinces'            => AddressRepository::provinces(),
+				'confirmModalEnabled'  => Settings::is_on( 'ecommerce.order_confirmation_modal_enabled', true ),
+				'confirmDaysThreshold' => (int) Settings::get( 'ecommerce.order_confirmation_days_threshold', 0 ),
+				'daysSinceLastOrder'   => $days_since_last_order,
+				'i18n'                 => array(
+					'saveSuccess'     => __( 'Đã lưu và chọn địa chỉ mới!', 'omniwp' ),
+					'saveError'       => __( 'Lỗi lưu địa chỉ, vui lòng kiểm tra lại thông tin.', 'omniwp' ),
+					'fillRequired'    => __( 'Vui lòng điền đầy đủ Tên, Số điện thoại và Địa chỉ.', 'omniwp' ),
+					'confirmDelete'   => __( 'Bạn có chắc muốn xóa địa chỉ này?', 'omniwp' ),
+					'confirmModal'    => array(
+						'title'       => __( 'Xác nhận thông tin giao hàng', 'omniwp' ),
+						'processing'  => __( 'Đang xử lý đơn hàng...', 'omniwp' ),
+					),
 				),
 			)
 		);
@@ -640,5 +668,16 @@ class CheckoutService {
 	 */
 	public function filter_checkout_privacy_policy_text( string $text ): string {
 		return $this->get_custom_terms_notice_html();
+	}
+
+	/**
+	 * Render Order Confirmation Modal in wp_footer (outside forms).
+	 */
+	public function render_order_confirmation_modal_footer(): void {
+		if ( ! $this->should_load_address_modal() || ! Settings::is_on( 'ecommerce.order_confirmation_modal_enabled', true ) ) {
+			return;
+		}
+
+		TemplateLoader::output( 'ecommerce/order-confirmation-modal' );
 	}
 }

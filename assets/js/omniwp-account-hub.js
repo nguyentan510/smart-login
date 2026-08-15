@@ -174,9 +174,16 @@
 		// Initial tab activation on load / F5
 		var urlParams = new URLSearchParams( window.location.search );
 		var tabParam = urlParams.get( 'tab' );
-		var initialKey = tabParam ? resolveTabKey( tabParam ) : ( window.location.hash ? resolveTabKey( window.location.hash ) : null );
+		var initialOrderId = urlParams.get( 'order_id' ) || hub.getAttribute( 'data-sl-initial-order' );
+		var initialKey = tabParam ? resolveTabKey( tabParam ) : ( initialOrderId ? 'orders' : ( window.location.hash ? resolveTabKey( window.location.hash ) : null ) );
 		if ( initialKey ) {
 			activateTab( initialKey, window.location.hash || ( '#' + initialKey ) );
+		}
+
+		if ( initialOrderId ) {
+			setTimeout( function () {
+				openOrderModal( initialOrderId );
+			}, 250 );
 		}
 
 		// -----------------------------------------------------------------

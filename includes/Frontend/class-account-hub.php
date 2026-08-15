@@ -32,15 +32,30 @@ final class AccountHub {
 
 		$current_user = wp_get_current_user();
 		$ow_form      = new AccountForm( $current_user->ID, AccountForm::CONTEXT_STANDALONE );
-		$tabs         = self::get_tabs();
-		$active_tab   = isset( $_GET['tab'] ) ? sanitize_key( $_GET['tab'] ) : 'profile'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$tabs       = self::get_tabs();
+		$active_tab = isset( $_GET['tab'] ) ? sanitize_key( wp_unslash( $_GET['tab'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+
+		if ( '' === $active_tab && function_exists( 'is_wc_endpoint_url' ) ) {
+			if ( is_wc_endpoint_url( 'orders' ) || is_wc_endpoint_url( 'view-order' ) ) {
+				$active_tab = 'orders';
+			} elseif ( is_wc_endpoint_url( 'edit-address' ) ) {
+				$active_tab = 'address';
+			} elseif ( is_wc_endpoint_url( 'edit-account' ) ) {
+				$active_tab = 'profile';
+			}
+		}
 
 		if ( 'contact' === $active_tab ) {
 			$active_tab = 'security';
 		}
 
-		if ( ! isset( $tabs[ $active_tab ] ) ) {
+		if ( '' === $active_tab || ! isset( $tabs[ $active_tab ] ) ) {
 			$active_tab = 'profile';
+		}
+
+		$order_id = isset( $_GET['order_id'] ) ? (int) $_GET['order_id'] : 0; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( 0 === $order_id && function_exists( 'get_query_var' ) ) {
+			$order_id = (int) get_query_var( 'view-order' );
 		}
 
 		TemplateLoader::output(
@@ -51,6 +66,7 @@ final class AccountHub {
 				'notices'    => Notices::all(),
 				'tabs'       => $tabs,
 				'active_tab' => $active_tab,
+				'order_id'   => $order_id,
 			)
 		);
 	}

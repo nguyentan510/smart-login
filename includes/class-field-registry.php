@@ -122,6 +122,7 @@ final class FieldRegistry {
 			'templates'            => __( 'Mã xác thực', 'omniwp' ),
 			'mail_admin'           => __( 'Cảnh báo quản trị', 'omniwp' ),
 			'mail_design'          => __( 'Giao diện email HTML', 'omniwp' ),
+			'account_portal'       => __( 'Trang tài khoản khách hàng (Account Portal)', 'omniwp' ),
 			'fields'               => __( 'Trường hồ sơ', 'omniwp' ),
 			'address'              => __( 'Địa chỉ 2 cấp', 'omniwp' ),
 			'account_menu_presets' => __( 'Mục mặc định hệ thống (Bật / Tắt)', 'omniwp' ),
@@ -767,6 +768,44 @@ final class FieldRegistry {
 
 	private static function profile_fields(): array {
 		return array(
+			'account.portal_mode'          => array(
+				'type'    => 'select',
+				'default' => 'woo_override',
+				'tab'     => 'profile',
+				'section' => 'account_portal',
+				'label'   => __( 'Chế độ Trang tài khoản', 'omniwp' ),
+				'choices' => array(
+					'woo_override' => __( 'Ghi đè trực tiếp My Account của WooCommerce (Khuyến nghị)', 'omniwp' ),
+					'custom_page'  => __( 'Sử dụng trang tùy chỉnh riêng', 'omniwp' ),
+					'disabled'     => __( 'Tắt Account Hub (Giữ My Account mặc định của Woo)', 'omniwp' ),
+				),
+				'help'    => __( 'Ghi đè trực tiếp giúp biến <code>/my-account/</code> thành OmniWP Customer Portal 2 cột hiện đại mà không đổi URL hay gãy link theme.', 'omniwp' ),
+			),
+			'account.custom_page_url'      => array(
+				'type'    => 'page',
+				'default' => '',
+				'tab'     => 'profile',
+				'section' => 'account_portal',
+				'label'   => __( 'Trang tài khoản tùy chỉnh', 'omniwp' ),
+				'help'    => __( 'Chọn trang WordPress chứa shortcode <code>[smart_account]</code> khi dùng chế độ Trang tùy chỉnh riêng.', 'omniwp' ),
+			),
+			'account.redirect_woo'         => array(
+				'type'    => 'checkbox',
+				'default' => 1,
+				'tab'     => 'profile',
+				'section' => 'account_portal',
+				'label'   => __( 'Tự động chuyển hướng từ My Account', 'omniwp' ),
+				'help'    => __( 'Khi dùng trang riêng, tự động chuyển hướng 301 từ <code>/my-account/</code> sang trang được chọn ở trên.', 'omniwp' ),
+			),
+			'account.map_deep_links'       => array(
+				'type'    => 'checkbox',
+				'default' => 1,
+				'tab'     => 'profile',
+				'section' => 'account_portal',
+				'label'   => __( 'Dịch chuyển link sâu (Deep Linking)', 'omniwp' ),
+				'help'    => __( 'Tự động nhận diện các link từ email đơn hàng (<code>/orders/</code>, <code>/view-order/123/</code>, <code>/edit-address/</code>) để mở thẳng tab và popup chi tiết tương ứng.', 'omniwp' ),
+			),
+
 			'profile.email_optional'       => array(
 				'type'    => 'checkbox',
 				'default' => 1,
@@ -1197,7 +1236,7 @@ final class FieldRegistry {
 				'label'   => __( 'Sổ địa chỉ & Thêm địa chỉ nhanh tại Checkout', 'omniwp' ),
 				'help'    => __( 'Cho phép chọn thẻ địa chỉ có sẵn và bật popup thêm địa chỉ mới không cần tải lại trang.', 'omniwp' ),
 			),
-			'ecommerce.override_checkout_template' => array(
+			'ecommerce.override_checkout_template'        => array(
 				'type'    => 'checkbox',
 				'default' => 0,
 				'tab'     => 'ecommerce-checkout',
@@ -1205,7 +1244,25 @@ final class FieldRegistry {
 				'label'   => __( 'Thay thế trang /checkout/ của WooCommerce', 'omniwp' ),
 				'help'    => __( 'Ghi đè trang thanh toán mặc định bằng template OmniWP Clean Checkout 2 cột.', 'omniwp' ),
 			),
-			'ecommerce.thankyou_custom_enabled'    => array(
+			'ecommerce.order_confirmation_modal_enabled' => array(
+				'type'    => 'checkbox',
+				'default' => 1,
+				'tab'     => 'ecommerce-checkout',
+				'section' => 'ecommerce_checkout',
+				'label'   => __( 'Popup xác nhận thông tin nhận hàng trước khi Đặt hàng', 'omniwp' ),
+				'help'    => __( 'Hiển thị bảng tóm tắt người nhận, địa chỉ và thanh toán để khách hàng kiểm tra trước khi tạo đơn, hạn chế tối đa giao sai địa chỉ cũ.', 'omniwp' ),
+			),
+			'ecommerce.order_confirmation_days_threshold' => array(
+				'type'    => 'number',
+				'default' => 0,
+				'min'     => 0,
+				'max'     => 365,
+				'tab'     => 'ecommerce-checkout',
+				'section' => 'ecommerce_checkout',
+				'label'   => __( 'Ngưỡng số ngày kích hoạt xác nhận lại (ngày)', 'omniwp' ),
+				'help'    => __( '0 = luôn xác nhận đối với địa chỉ đã lưu; đặt số ngày (ví dụ: 30) để chỉ hỏi lại các khách hàng đã lâu chưa mua đơn mới.', 'omniwp' ),
+			),
+			'ecommerce.thankyou_custom_enabled'           => array(
 				'type'    => 'checkbox',
 				'default' => 1,
 				'tab'     => 'ecommerce-checkout',

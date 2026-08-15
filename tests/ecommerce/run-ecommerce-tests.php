@@ -29,6 +29,12 @@ ow_check( 'Clean checkout setting default is 1', 1, $checkout_enabled['default']
 $freeship = FieldRegistry::get( 'ecommerce.freeship_threshold' );
 ow_check( 'Freeship threshold default is 500,000', 500000, $freeship['default'] ?? null );
 
+$confirm_modal = FieldRegistry::get( 'ecommerce.order_confirmation_modal_enabled' );
+ow_check( 'Order confirmation modal enabled default is 1', 1, $confirm_modal['default'] ?? null );
+
+$confirm_threshold = FieldRegistry::get( 'ecommerce.order_confirmation_days_threshold' );
+ow_check( 'Order confirmation days threshold default is 0', 0, $confirm_threshold['default'] ?? null );
+
 ow_section( 'Rule 2 — Shortcodes catalog completeness' );
 $catalog = Shortcodes::CATALOG;
 ow_assert( 'omniwp_cart is registered in CATALOG', isset( $catalog['omniwp_cart'] ) );

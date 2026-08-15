@@ -426,7 +426,7 @@
 /* Nav Menu List (Desktop Clean Flat List) */
 .sl-hub-nav,
 ul.sl-hub-nav {
-	padding: 12px 10px !important;
+	padding: 14px 14px !important;
 	display: flex !important;
 	flex-direction: column !important;
 	gap: 4px !important;
@@ -446,8 +446,8 @@ ul.sl-hub-nav li {
 li.sl-hub-nav__item {
 	display: flex;
 	align-items: center;
-	gap: 12px;
-	padding: 11px 16px;
+	gap: 11px;
+	padding: 10px 14px !important;
 	border-radius: var(--sl-radius, 8px);
 	color: #475569;
 	font-size: 0.92rem;
@@ -498,10 +498,10 @@ li.sl-hub-nav__item::before {
 
 .sl-hub-nav__item--logout {
 	color: #dc2626;
-	margin-top: 8px;
+	margin-top: 6px;
 	border-top: 1px dashed #e2e8f0;
-	padding-top: 14px;
-	border-radius: 0 0 5px 5px;
+	padding-top: 12px;
+	border-radius: var(--sl-radius, 8px);
 }
 
 .sl-hub-nav__item--logout:hover {
