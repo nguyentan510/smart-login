@@ -54,20 +54,22 @@ $ow_is_new = ! isset( $is_new_user ) || ! empty( $is_new_user );
 		<span class="sl-congrats__mark" aria-hidden="true">
 			<?php echo IconSet::get( $ow_is_new ? 'check' : 'user' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 		</span>
-		<p class="sl-congrats-label"><?php echo esc_html( $ow_is_new ? __( 'ĐĂNG KÝ THÀNH CÔNG', 'omniwp' ) : __( 'HOÀN THIỆN HỒ SƠ', 'omniwp' ) ); ?></p>
-		<h2 class="sl-congrats-title">
-			<?php
-			if ( $ow_is_new ) {
-				printf(
-					/* translators: %s: site name. */
-					esc_html__( 'Bạn đã trở thành hội viên của %s!', 'omniwp' ),
-					esc_html( $ow_site )
-				);
-			} else {
-				esc_html_e( 'Bổ sung thông tin tài khoản của bạn', 'omniwp' );
-			}
-			?>
-		</h2>
+		<div class="sl-congrats__text">
+			<p class="sl-congrats-label"><?php echo esc_html( $ow_is_new ? __( 'ĐĂNG KÝ THÀNH CÔNG', 'omniwp' ) : __( 'HOÀN THIỆN HỒ SƠ', 'omniwp' ) ); ?></p>
+			<h2 class="sl-congrats-title">
+				<?php
+				if ( $ow_is_new ) {
+					printf(
+						/* translators: %s: site name. */
+						esc_html__( 'Bạn đã trở thành hội viên của %s!', 'omniwp' ),
+						esc_html( $ow_site )
+					);
+				} else {
+					esc_html_e( 'Bổ sung thông tin tài khoản của bạn', 'omniwp' );
+				}
+				?>
+			</h2>
+		</div>
 	</div>
 
 	<?php if ( empty( $ow_fields ) ) : ?>
@@ -171,11 +173,11 @@ $ow_is_new = ! isset( $is_new_user ) || ! empty( $is_new_user );
 			<?php endforeach; ?>
 
 			<div class="sl-onboard-actions">
-				<button type="submit" class="sl-btn sl-btn--primary sl-btn--block">
-					<?php echo esc_html( $ow_is_new ? __( 'Hoàn tất', 'omniwp' ) : __( 'Lưu thông tin', 'omniwp' ) ); ?>
-				</button>
-				<button type="submit" name="ow_skip" value="1" class="sl-btn sl-btn--ghost sl-btn--block">
+				<button type="submit" name="ow_skip" value="1" class="sl-btn sl-btn--ghost sl-onboard-btn-skip">
 					<?php esc_html_e( 'Để sau', 'omniwp' ); ?>
+				</button>
+				<button type="submit" class="sl-btn sl-btn--primary sl-onboard-btn-submit">
+					<?php echo esc_html( $ow_is_new ? __( 'Hoàn tất', 'omniwp' ) : __( 'Lưu thông tin', 'omniwp' ) ); ?>
 				</button>
 			</div>
 		</form>

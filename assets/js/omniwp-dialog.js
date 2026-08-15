@@ -52,9 +52,11 @@
 	function paint( payload ) {
 		body.innerHTML = payload.html || '';
 
-		if ( titleEl && payload.title ) {
-			titleEl.textContent = payload.title;
+		if ( titleEl ) {
+			titleEl.textContent = payload.title || '';
+			titleEl.style.display = payload.title ? '' : 'none';
 		}
+		dialog.classList.toggle( 'is-onboard', payload.step === 'onboard' );
 
 		if ( window.OmniWPEnhance ) {
 			window.OmniWPEnhance( body );

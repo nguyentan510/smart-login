@@ -1112,47 +1112,148 @@
 	max-width: 520px;
 }
 
-/* The celebration is a band at the top of the working screen rather than a
-   page of its own. It used to be a full screen that redirected itself after
-   six seconds; this keeps the moment and gives back the six seconds. */
+/* Compact horizontal celebration badge */
 .sl-congrats {
-	margin-bottom: var(--sl-space-6);
-	padding: var(--sl-space-5) var(--sl-space-4) var(--sl-space-1);
-	border-radius: var(--sl-radius, 5px);
-	background: #eefaf3;
-	text-align: center;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 10px;
+	padding: 10px 14px;
+	border-radius: var(--sl-radius, 6px);
+	background: #f0fdf4;
+	border: 1px solid #bbf7d0;
+	text-align: left;
 }
 
 .sl-congrats__mark {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 48px;
-	height: 48px;
+	width: 34px;
+	height: 34px;
+	min-width: 34px;
 	border-radius: 50%;
-	background: #128a4c;
+	background: #16a34a;
 	color: #fff;
+	flex-shrink: 0;
+}
+
+.sl-congrats__mark svg {
+	width: 18px;
+	height: 18px;
+}
+
+.sl-congrats__text {
+	flex: 1;
+	min-width: 0;
 }
 
 .sl-congrats .sl-congrats-label {
-	margin: 10px 0 6px;
+	margin: 0;
+	font-size: 0.72rem;
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	color: #15803d;
+	line-height: 1.2;
 }
 
 .sl-congrats .sl-congrats-title {
-	margin-bottom: 18px;
-	font-size: 18px;
+	margin: 2px 0 0;
+	font-size: 0.92rem;
+	font-weight: 600;
+	color: #166534;
+	line-height: 1.3;
 }
 
-.sl-onboard-group {
-	margin-bottom: var(--sl-space-4);
+.omniwp--onboard .sl-lead {
+	font-size: 0.84rem;
+	line-height: 1.35;
+	color: #64748b;
+	margin: 0 0 10px;
+	text-align: left;
+}
+
+.omniwp--onboard .sl-field,
+.omniwp--onboard .sl-onboard-group {
+	margin-bottom: 10px;
+}
+
+.omniwp--onboard .sl-label {
+	font-size: 0.82rem;
+	font-weight: 600;
+	color: #1e293b;
+	margin-bottom: 2px;
+	display: block;
+}
+
+.omniwp--onboard .sl-hint--reason {
+	font-size: 0.74rem;
+	color: #64748b;
+	margin: 0 0 4px;
+	line-height: 1.25;
+}
+
+.omniwp--onboard .sl-input,
+.omniwp--onboard .sl-select {
+	height: 38px;
+	font-size: 0.88rem;
+	padding: 0 12px;
+	border-radius: var(--sl-radius, 5px);
+}
+
+.omniwp--onboard .sl-address-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 8px;
+}
+
+.omniwp--onboard .sl-address-grid .sl-address-street-wrap {
+	grid-column: span 2;
 }
 
 .sl-onboard-actions {
-	margin-top: var(--sl-space-6);
+	position: sticky;
+	bottom: 0;
+	background: #fff;
+	border-top: 1px solid #e2e8f0;
+	padding: 10px 16px;
+	margin: 12px -20px -20px;
+	box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
+	z-index: 10;
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 10px;
+	border-radius: 0 0 var(--sl-radius, 5px) var(--sl-radius, 5px);
+}
+
+.sl-onboard-btn-skip {
+	height: 36px !important;
+	padding: 0 16px !important;
+	font-size: 0.86rem !important;
+	color: #64748b !important;
+	font-weight: 500 !important;
+	background: transparent !important;
+	border: 1px solid transparent !important;
+}
+
+.sl-onboard-btn-skip:hover {
+	background: #f1f5f9 !important;
+	color: #334155 !important;
+}
+
+.sl-onboard-btn-submit {
+	height: 36px !important;
+	padding: 0 20px !important;
+	font-size: 0.86rem !important;
+	font-weight: 600 !important;
+	min-width: 100px;
 }
 
 .sl-onboard-email {
-	margin-top: var(--sl-space-1);
+	margin-top: 8px;
+	font-size: 0.78rem;
+	color: #94a3b8;
 	text-align: center;
 }
 

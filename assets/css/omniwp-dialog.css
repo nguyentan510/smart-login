@@ -27,6 +27,26 @@
 	max-height: calc(100vh - 2rem);
 	overflow-y: auto;
 	overscroll-behavior: contain;
+	scrollbar-width: thin;
+	scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}
+
+.sl-dialog__panel::-webkit-scrollbar {
+	width: 5px;
+	height: 5px;
+}
+
+.sl-dialog__panel::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.sl-dialog__panel::-webkit-scrollbar-thumb {
+	background: rgba(148, 163, 184, 0.4);
+	border-radius: 999px;
+}
+
+.sl-dialog__panel::-webkit-scrollbar-thumb:hover {
+	background: rgba(100, 116, 139, 0.6);
 }
 
 .sl-dialog__bar {
@@ -35,6 +55,23 @@
 	justify-content: space-between;
 	gap: 12px;
 	padding: 16px 20px 0;
+}
+
+.sl-dialog.is-onboard .sl-dialog__bar,
+.sl-dialog:has(.omniwp--onboard) .sl-dialog__bar {
+	padding: 8px 12px 0;
+	margin-bottom: 0;
+}
+
+.sl-dialog.is-onboard .sl-dialog__title,
+.sl-dialog:has(.omniwp--onboard) .sl-dialog__title {
+	display: none !important;
+}
+
+.sl-dialog.is-onboard .sl-dialog__body,
+.sl-dialog:has(.omniwp--onboard) .sl-dialog__body {
+	padding-top: 2px;
+	padding-bottom: 0;
 }
 
 .sl-dialog__title {

@@ -165,7 +165,7 @@ class FragmentRenderer {
 				return __( 'Tạo tài khoản', 'omniwp' );
 
 			case Flow::STEP_ONBOARD:
-				return __( 'Chào mừng bạn', 'omniwp' );
+				return '';
 
 			case Flow::STEP_PASSWORD:
 				return __( 'Nhập mật khẩu', 'omniwp' );
