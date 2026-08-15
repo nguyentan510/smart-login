@@ -268,7 +268,8 @@ class FormController {
 			Notices::flash( $notice['message'], $notice['type'] );
 		}
 
-		$password = $this->save_password( $user_id, $post );
+		$new_password = (string) ( $post['password_1'] ?? '' );
+		$password     = $this->save_password( $user_id, $post );
 
 		if ( is_wp_error( $password ) ) {
 			Notices::flash( $password->get_error_message(), 'error' );
@@ -276,7 +277,11 @@ class FormController {
 			return;
 		}
 
-		Notices::flash( __( 'Đã lưu thông tin của bạn.', 'omniwp' ), 'success' );
+		if ( '' !== $new_password ) {
+			Notices::flash( __( 'Đổi mật khẩu thành công.', 'omniwp' ), 'success' );
+		} else {
+			Notices::flash( __( 'Đã lưu thông tin của bạn.', 'omniwp' ), 'success' );
+		}
 		$this->redirect( $redirect );
 	}
 
