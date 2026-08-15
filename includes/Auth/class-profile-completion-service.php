@@ -26,7 +26,7 @@ final class ProfileCompletionService {
 	 * A first screen that lists everything missing is a form, not a welcome. Three
 	 * is the point where it still reads as a short ask.
 	 */
-	const ONBOARDING_LIMIT = 3;
+	const ONBOARDING_LIMIT = 6;
 
 	/**
 	 * Order the onboarding screen asks in, and why each field is worth giving.

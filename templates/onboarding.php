@@ -170,22 +170,24 @@ $ow_is_new = ! isset( $is_new_user ) || ! empty( $is_new_user );
 				<?php endif; ?>
 
 				<?php if ( 'gender' === $ow_field['key'] ) : ?>
-					<fieldset class="sl-field sl-field--radio">
-						<legend class="sl-label"><?php echo esc_html( $ow_field['label'] ); ?></legend>
+					<div class="sl-field sl-field--gender">
+						<label class="sl-label"><?php echo esc_html( $ow_field['label'] ); ?></label>
 						<p class="sl-hint sl-hint--reason" hidden><?php echo esc_html( $ow_field['reason'] ); ?></p>
-						<?php
-						foreach ( array(
-							'female' => __( 'Nữ', 'omniwp' ),
-							'male'   => __( 'Nam', 'omniwp' ),
-							'other'  => __( 'Khác', 'omniwp' ),
-						) as $ow_value => $ow_label ) :
-							?>
-							<label class="sl-radio">
-								<input type="radio" name="gender" value="<?php echo esc_attr( $ow_value ); ?>" />
-								<span><?php echo esc_html( $ow_label ); ?></span>
-							</label>
-						<?php endforeach; ?>
-					</fieldset>
+						<div class="sl-gender-options">
+							<?php
+							foreach ( array(
+								'female' => __( 'Nữ', 'omniwp' ),
+								'male'   => __( 'Nam', 'omniwp' ),
+								'other'  => __( 'Khác', 'omniwp' ),
+							) as $ow_value => $ow_label ) :
+								?>
+								<label class="sl-radio">
+									<input type="radio" name="gender" value="<?php echo esc_attr( $ow_value ); ?>" />
+									<span><?php echo esc_html( $ow_label ); ?></span>
+								</label>
+							<?php endforeach; ?>
+						</div>
+					</div>
 				<?php endif; ?>
 			<?php endforeach; ?>
 

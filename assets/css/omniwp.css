@@ -1165,25 +1165,60 @@
 	line-height: 1.3;
 }
 
+.omniwp--onboard {
+	min-height: min(600px, 86vh);
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.omniwp--onboard .sl-form--onboard {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	justify-content: space-between;
+}
+
 .omniwp--onboard .sl-lead {
 	font-size: 0.84rem;
 	line-height: 1.35;
 	color: #64748b;
-	margin: 0 0 10px;
+	margin: 0 0 12px;
 	text-align: left;
 }
 
 .omniwp--onboard .sl-field,
 .omniwp--onboard .sl-onboard-group {
-	margin-bottom: 10px;
+	margin-bottom: 12px;
 }
 
 .omniwp--onboard .sl-label {
 	font-size: 0.82rem;
 	font-weight: 600;
 	color: #1e293b;
-	margin-bottom: 2px;
+	margin-bottom: 4px;
 	display: block;
+}
+
+.omniwp--onboard .sl-gender-options {
+	display: flex;
+	align-items: center;
+	gap: 24px;
+	padding: 4px 0 2px;
+}
+
+.omniwp--onboard .sl-gender-options .sl-radio {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 0.88rem;
+	color: #334155;
+	cursor: pointer;
+}
+
+.omniwp--onboard .sl-gender-options .sl-radio input[type="radio"] {
+	margin: 0;
+	cursor: pointer;
 }
 
 .omniwp--onboard .sl-hint--reason {
@@ -1230,8 +1265,8 @@
 	bottom: 0;
 	background: #fff;
 	border-top: 1px solid #e2e8f0;
-	padding: 10px 16px;
-	margin: 12px -20px -20px;
+	padding: 12px 16px;
+	margin: 16px -20px -20px;
 	box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
 	z-index: 10;
 	display: flex;
