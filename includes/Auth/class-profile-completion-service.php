@@ -41,11 +41,11 @@ final class ProfileCompletionService {
 	 */
 	public static function onboarding_reasons(): array {
 		return array(
-			'full_name' => __( 'Để chúng tôi biết xưng hô với bạn thế nào', 'omniwp' ),
-			'email'     => __( 'Để nhận hóa đơn điện tử và chương trình khuyến mãi đặc quyền', 'omniwp' ),
-			'address'   => __( 'Để đơn hàng được giao đúng nơi, không phải nhập lại mỗi lần', 'omniwp' ),
-			'dob'       => __( 'Để nhận ưu đãi vào dịp sinh nhật', 'omniwp' ),
-			'gender'    => __( 'Để gợi ý sản phẩm hợp với bạn hơn', 'omniwp' ),
+			'full_name' => __( 'Để xưng hô chuẩn xác hơn', 'omniwp' ),
+			'email'     => __( 'Để nhận hóa đơn & ưu đãi độc quyền', 'omniwp' ),
+			'address'   => __( 'Để giao hàng chính xác & không cần nhập lại', 'omniwp' ),
+			'dob'       => __( 'Để nhận quà tặng dịp sinh nhật', 'omniwp' ),
+			'gender'    => __( 'Để gợi ý ưu đãi phù hợp nhất', 'omniwp' ),
 		);
 	}
 

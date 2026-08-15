@@ -86,13 +86,13 @@ $ow_is_new = ! isset( $is_new_user ) || ! empty( $is_new_user );
 			if ( $ow_is_new ) {
 				printf(
 					/* translators: %s: the member's first name. */
-					esc_html__( 'Chào %s! Thêm chút thông tin nữa để nhận đầy đủ ưu đãi hội viên — hoặc để sau cũng được.', 'omniwp' ),
+					esc_html__( 'Chào %s! Thêm địa chỉ nhận hàng để nhận quà hội viên & đặt hàng siêu tốc ⚡', 'omniwp' ),
 					esc_html( $ow_name )
 				);
 			} else {
 				printf(
 					/* translators: %s: the member's first name. */
-					esc_html__( 'Chào %s! Hồ sơ của bạn còn thiếu thông tin nhận hàng và ưu đãi. Vui lòng bổ sung để nhận quà sinh nhật và mua sắm thuận tiện nhất — hoặc để sau.', 'omniwp' ),
+					esc_html__( 'Chào %s! Bổ sung địa chỉ nhận hàng để nhận quà hội viên & đặt hàng siêu tốc ⚡', 'omniwp' ),
 					esc_html( $ow_name )
 				);
 			}
