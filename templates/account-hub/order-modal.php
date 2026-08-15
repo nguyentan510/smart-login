@@ -14,7 +14,7 @@ defined( 'ABSPATH' ) || exit;
 
 <!-- Order Detail Invoice Modal Backdrop -->
 <div class="sl-logout-modal-backdrop sl-order-modal-backdrop" data-sl-order-modal aria-hidden="true">
-	<div class="sl-logout-modal sl-order-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="sl-order-modal-title">
+	<div class="sl-order-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="sl-order-modal-title">
 		
 		<!-- Modal Invoice Header -->
 		<div class="sl-invoice-header">

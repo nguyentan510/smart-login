@@ -2125,6 +2125,13 @@ li.sl-hub-nav__item::before {
 	color: var(--sl-accent, #2563eb);
 }
 
+.sl-invoice-info-card__content {
+	text-align: left !important;
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: flex-start !important;
+}
+
 .sl-invoice-line {
 	font-size: 0.82rem;
 	color: #0f172a;
@@ -2132,6 +2139,7 @@ li.sl-hub-nav__item::before {
 	align-items: center;
 	gap: 6px;
 	flex-wrap: wrap;
+	text-align: left !important;
 }
 
 .sl-invoice-line strong {
@@ -2148,6 +2156,10 @@ li.sl-hub-nav__item::before {
 	font-size: 0.78rem;
 	line-height: 1.35;
 	margin-top: 1px;
+	text-align: left !important;
+	padding-left: 0 !important;
+	margin-left: 0 !important;
+	width: 100% !important;
 }
 
 .sl-invoice-note {
