@@ -4001,6 +4001,118 @@ strong.sl-co-address-value {
 	padding: 6px 0;
 }
 
+/* ---- Shopee Empty Address Hero CTA Card (Scenario 3) ---- */
+.sl-co-address-empty-card {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 20px;
+	padding: 18px 22px;
+	background: #fff9f6;
+	border: 2px dashed #f97316;
+	border-radius: var(--sl-radius, 8px);
+	margin: 8px 0;
+	transition: all 0.2s ease;
+}
+
+.sl-co-address-empty-card:hover {
+	background: #fff4ed;
+	border-color: #ea580c;
+	box-shadow: 0 4px 12px rgba(234, 88, 12, 0.08);
+}
+
+.sl-co-address-empty-card__icon-wrap {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 48px;
+	height: 48px;
+	background: #ffedd5;
+	border-radius: 50%;
+	color: #ea580c;
+	flex-shrink: 0;
+}
+
+.sl-co-address-empty-card__icon-wrap svg {
+	width: 26px;
+	height: 26px;
+	stroke-width: 2.2;
+}
+
+.sl-co-address-empty-card__content {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.sl-co-address-empty-card__head {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.sl-co-address-empty-card__title {
+	font-size: 1rem;
+	font-weight: 700;
+	color: #9a3412;
+}
+
+.sl-co-address-empty-card__badge {
+	font-size: 0.72rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	color: #c2410c;
+	background: #fed7aa;
+	padding: 2px 8px;
+	border-radius: 4px;
+}
+
+.sl-co-address-empty-card__desc {
+	margin: 0;
+	font-size: 0.85rem;
+	color: #7c2d12;
+	line-height: 1.45;
+}
+
+.sl-co-address-empty-card__action {
+	flex-shrink: 0;
+}
+
+.sl-btn-add-first-address {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	padding: 10px 20px !important;
+	font-size: 0.95rem !important;
+	font-weight: 700 !important;
+	box-shadow: 0 2px 8px rgba(227, 6, 19, 0.25);
+	transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.sl-btn-add-first-address:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 4px 12px rgba(227, 6, 19, 0.35);
+}
+
+@media (max-width: 768px) {
+	.sl-co-address-empty-card {
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 14px;
+		padding: 16px;
+	}
+	.sl-co-address-empty-card__action {
+		width: 100%;
+	}
+	.sl-btn-add-first-address {
+		width: 100%;
+		justify-content: center;
+	}
+}
+
 /* ---- Shopee Address Picker Modal ---- */
 .sl-picker-dialog {
 	width: 540px !important;

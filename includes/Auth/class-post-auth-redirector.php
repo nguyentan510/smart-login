@@ -47,13 +47,52 @@ final class PostAuthRedirector {
 
 		if ( $result->is_new_user && ! $profiles->has_seen( $result->user_id ) ) {
 			$profiles->mark_seen( $result->user_id, $result->auth_method );
-			$url                  = add_query_arg( 'OmniWP_welcome', '1', self::profile_url() );
+			$url = add_query_arg(
+				array(
+					'OmniWP_welcome' => '1',
+					'new'            => '1',
+				),
+				self::profile_url()
+			);
+			if ( '' !== $requested ) {
+				$url = add_query_arg( 'redirect_to', rawurlencode( $requested ), $url );
+			}
 			$filtered             = (string) apply_filters( 'OMNIWP_post_register_redirect', $url, $result->user_id );
 			$result->redirect_url = $this->safe( $filtered, $url );
 			return $result->redirect_url;
 		}
 
 		$requested = wp_validate_redirect( $requested, '' );
+		$is_checkout_request = false;
+		if ( '' !== $requested ) {
+			$is_checkout_request = ( false !== strpos( $requested, 'checkout' ) )
+				|| ( function_exists( 'wc_get_checkout_url' ) && 0 === strpos( $requested, wc_get_checkout_url() ) );
+		}
+
+		// Scenario 2: Returning user login with incomplete basic profile.
+		// If profile is incomplete AND the user is NOT in the middle of checkout,
+		// prompt them politely to complete profile with a skip option.
+		if ( ! $result->is_new_user && ! $is_checkout_request && ! $result->in_place ) {
+			$status = $profiles->status( $result->user_id );
+			if ( ! empty( $status['required_missing'] ) || ! empty( $status['recommended_missing'] ) ) {
+				$last_prompt = (int) get_user_meta( $result->user_id, '_omniwp_incomplete_prompted_at', true );
+				if ( ( time() - $last_prompt ) > DAY_IN_SECONDS ) {
+					update_user_meta( $result->user_id, '_omniwp_incomplete_prompted_at', time() );
+					$dest = '' !== $requested ? $requested : ( function_exists( 'wc_get_page_permalink' ) ? wc_get_page_permalink( 'myaccount' ) : home_url( '/' ) );
+					$url  = add_query_arg(
+						array(
+							'OmniWP_welcome' => '1',
+							'incomplete'     => '1',
+							'redirect_to'    => rawurlencode( $dest ),
+						),
+						self::profile_url()
+					);
+					$result->redirect_url = $this->safe( $url, $dest );
+					return $result->redirect_url;
+				}
+			}
+		}
+
 		if ( '' !== $requested ) {
 			$url = $requested;
 		} else {

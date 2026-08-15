@@ -356,15 +356,27 @@
 				self.submitNewAddress();
 			});
 
-			// Intercept Place Order click if address is incomplete!
+			// Intercept Place Order click if address is missing or incomplete!
 			$(document).on('click', '#sl-co-sticky-submit, #place_order', function (e) {
-				var $summary = $('#sl-co-selected-address-summary');
+				var $summary   = $('#sl-co-selected-address-summary');
+				var $emptyCard = $('#sl-co-address-empty-card');
+
+				if ($emptyCard.length || !$summary.length) {
+					e.preventDefault();
+					e.stopPropagation();
+					self.showToast('Vui lòng thêm địa chỉ nhận hàng trước khi thanh toán.', 'warning');
+					self.resetModalForm();
+					$('#sl-modal-title').text('Thêm địa chỉ nhận hàng mới');
+					self.openModal();
+					return false;
+				}
+
 				if ($summary.length) {
 					var data = $summary.data('address');
 					if (typeof data === 'string') {
 						try { data = JSON.parse(data); } catch (err) { data = null; }
 					}
-					if (data && data.is_incomplete) {
+					if (!data || data.is_incomplete) {
 						e.preventDefault();
 						e.stopPropagation();
 						self.showToast('Địa chỉ nhận hàng chưa đầy đủ (thiếu Phường/Xã hoặc Tỉnh/Thành). Vui lòng bổ sung thông tin địa chỉ.', 'warning');
@@ -459,6 +471,29 @@
 
 		updateSummaryLine: function (data) {
 			if (!data) return;
+
+			if (!$('#sl-co-selected-address-summary').length && $('#sl-co-address-empty-card').length) {
+				var summaryHtml = '<div class="sl-co-address-single-line" id="sl-co-selected-address-summary">' +
+					'<div class="sl-co-address-single-line__content">' +
+					'<div class="sl-co-address-details">' +
+					'<div class="sl-co-address-detail-item">' +
+					'<span class="sl-co-address-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>' +
+					'<strong class="sl-co-address-value" id="sl-summary-name"></strong>' +
+					'<span class="sl-address-default-badge" id="sl-summary-default-badge" style="display:none;">Mặc Định</span>' +
+					'<span class="sl-address-warning-badge" id="sl-summary-warning-badge" style="display:none;">⚠️ Thiếu Phường/Xã</span>' +
+					'</div>' +
+					'<div class="sl-co-address-detail-item" id="sl-summary-phone-wrap">' +
+					'<span class="sl-co-address-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></span>' +
+					'<span class="sl-co-address-value" id="sl-summary-phone"></span>' +
+					'</div>' +
+					'<div class="sl-co-address-detail-item">' +
+					'<span class="sl-co-address-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span>' +
+					'<span class="sl-co-address-value" id="sl-summary-full-loc"></span>' +
+					'</div></div></div>' +
+					'<button type="button" class="sl-btn-link sl-btn-change-address" id="sl-btn-open-address-picker">Thay Đổi &gt;</button>' +
+					'</div>';
+				$('#sl-co-address-empty-card').replaceWith(summaryHtml);
+			}
 
 			var firstName = (data.first_name || '').trim();
 			var lastName  = (data.last_name || '').trim();

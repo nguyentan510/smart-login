@@ -35,7 +35,8 @@ defined( 'ABSPATH' ) || exit;
 $ow_site   = wp_specialchars_decode( get_bloginfo( 'name' ), ENT_QUOTES );
 $ow_fields = (array) ( $fields ?? array() );
 $ow_first  = trim( (string) ( $user->first_name ?? '' ) );
-$ow_name   = '' !== $ow_first ? $ow_first : (string) $user->display_name;
+$ow_name   = '' !== $ow_first ? $ow_first : (string) ( $user->display_name ?? '' );
+$ow_is_new = ! isset( $is_new_user ) || ! empty( $is_new_user );
 ?>
 <?php
 /*
@@ -51,16 +52,20 @@ $ow_name   = '' !== $ow_first ? $ow_first : (string) $user->display_name;
 
 	<div class="sl-congrats">
 		<span class="sl-congrats__mark" aria-hidden="true">
-			<?php echo IconSet::get( 'check' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- IconSet returns fixed markup from a closed set; nothing here comes from input. ?>
+			<?php echo IconSet::get( $ow_is_new ? 'check' : 'user' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 		</span>
-		<p class="sl-congrats-label"><?php esc_html_e( 'ĐĂNG KÝ THÀNH CÔNG', 'omniwp' ); ?></p>
+		<p class="sl-congrats-label"><?php echo esc_html( $ow_is_new ? __( 'ĐĂNG KÝ THÀNH CÔNG', 'omniwp' ) : __( 'HOÀN THIỆN HỒ SƠ', 'omniwp' ) ); ?></p>
 		<h2 class="sl-congrats-title">
 			<?php
-			printf(
-				/* translators: %s: site name. */
-				esc_html__( 'Bạn đã trở thành hội viên của %s!', 'omniwp' ),
-				esc_html( $ow_site )
-			);
+			if ( $ow_is_new ) {
+				printf(
+					/* translators: %s: site name. */
+					esc_html__( 'Bạn đã trở thành hội viên của %s!', 'omniwp' ),
+					esc_html( $ow_site )
+				);
+			} else {
+				esc_html_e( 'Bổ sung thông tin tài khoản của bạn', 'omniwp' );
+			}
 			?>
 		</h2>
 	</div>
@@ -76,11 +81,19 @@ $ow_name   = '' !== $ow_first ? $ow_first : (string) $user->display_name;
 
 		<p class="sl-lead">
 			<?php
-			printf(
-				/* translators: %s: the member's first name. */
-				esc_html__( 'Chào %s! Thêm chút thông tin nữa để nhận đầy đủ ưu đãi hội viên — hoặc để sau cũng được.', 'omniwp' ),
-				esc_html( $ow_name )
-			);
+			if ( $ow_is_new ) {
+				printf(
+					/* translators: %s: the member's first name. */
+					esc_html__( 'Chào %s! Thêm chút thông tin nữa để nhận đầy đủ ưu đãi hội viên — hoặc để sau cũng được.', 'omniwp' ),
+					esc_html( $ow_name )
+				);
+			} else {
+				printf(
+					/* translators: %s: the member's first name. */
+					esc_html__( 'Chào %s! Hồ sơ của bạn còn thiếu thông tin nhận hàng và ưu đãi. Vui lòng bổ sung để nhận quà sinh nhật và mua sắm thuận tiện nhất — hoặc để sau.', 'omniwp' ),
+					esc_html( $ow_name )
+				);
+			}
 			?>
 		</p>
 
@@ -159,7 +172,7 @@ $ow_name   = '' !== $ow_first ? $ow_first : (string) $user->display_name;
 
 			<div class="sl-onboard-actions">
 				<button type="submit" class="sl-btn sl-btn--primary sl-btn--block">
-					<?php esc_html_e( 'Hoàn tất', 'omniwp' ); ?>
+					<?php echo esc_html( $ow_is_new ? __( 'Hoàn tất', 'omniwp' ) : __( 'Lưu thông tin', 'omniwp' ) ); ?>
 				</button>
 				<button type="submit" name="ow_skip" value="1" class="sl-btn sl-btn--ghost sl-btn--block">
 					<?php esc_html_e( 'Để sau', 'omniwp' ); ?>

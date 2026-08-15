@@ -110,10 +110,30 @@ if ( $selected_addr ) :
 		</button>
 	</div>
 <?php else : ?>
-	<div class="sl-co-address-empty-bar">
-		<span class="sl-address-subtitle"><?php esc_html_e( 'Chưa có địa chỉ nhận hàng nào được chọn.', 'omniwp' ); ?></span>
-		<button type="button" class="sl-btn sl-btn--primary sl-btn--sm" id="sl-btn-open-address-modal">
-			+ <?php esc_html_e( 'Thêm Địa Chỉ Mới', 'omniwp' ); ?>
-		</button>
+	<div class="sl-co-address-empty-card" id="sl-co-address-empty-card">
+		<div class="sl-co-address-empty-card__icon-wrap">
+			<span class="sl-co-address-empty-card__icon">
+				<?php echo IconSet::get( 'map-pin' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+			</span>
+		</div>
+		<div class="sl-co-address-empty-card__content">
+			<div class="sl-co-address-empty-card__head">
+				<strong class="sl-co-address-empty-card__title">
+					<?php esc_html_e( 'Bạn chưa có địa chỉ nhận hàng', 'omniwp' ); ?>
+				</strong>
+				<span class="sl-co-address-empty-card__badge">
+					<?php esc_html_e( 'Cần thiết cho đơn hàng', 'omniwp' ); ?>
+				</span>
+			</div>
+			<p class="sl-co-address-empty-card__desc">
+				<?php esc_html_e( 'Vui lòng thêm địa chỉ nhận hàng để hệ thống tính phí vận chuyển và giao hàng nhanh chóng, chính xác đến bạn.', 'omniwp' ); ?>
+			</p>
+		</div>
+		<div class="sl-co-address-empty-card__action">
+			<button type="button" class="sl-btn sl-btn--primary sl-btn-add-first-address" id="sl-btn-open-address-modal">
+				<?php echo IconSet::get( 'edit' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+				<span><?php esc_html_e( '+ Thêm Địa Chỉ Nhận Hàng', 'omniwp' ); ?></span>
+			</button>
+		</div>
 	</div>
 <?php endif; ?>

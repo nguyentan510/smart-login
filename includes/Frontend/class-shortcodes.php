@@ -447,35 +447,47 @@ class Shortcodes {
 	}
 
 	/**
-	 * Arguments for the welcome screen, whether it was reached in place after a
-	 * registration or by landing on the account page with ?OmniWP_welcome=1.
-	 */
-	/**
-	 * Whether this request is a member returning from registration.
+	 * Whether this request is a member returning from registration or needing profile completion.
 	 */
 	public static function is_welcome_request(): bool {
 		// phpcs:ignore WordPress.Security.NonceVerification -- read-only presentation switch.
 		return is_user_logged_in() && ! empty( $_GET['OmniWP_welcome'] );
 	}
 
+	/**
+	 * Arguments for the welcome screen, whether it was reached in place after a
+	 * registration or by landing on the account page with ?OmniWP_welcome=1.
+	 */
 	public static function onboarding_args(): array {
 		$user_id  = (int) Flow::data( 'user_id', get_current_user_id() );
 		$profiles = new \OmniWP\Auth\ProfileCompletionService();
 		$fields   = Flow::data( 'fields', null );
 
-		// Marked here rather than before the redirect that brought us: the welcome
-		// counts as delivered once it is actually on screen.
+		$is_new_user = true;
+		if ( isset( $_GET['incomplete'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$is_new_user = false;
+		} elseif ( ! isset( $_GET['new'] ) && $profiles->has_seen( $user_id ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$is_new_user = false;
+		}
+
 		if ( $user_id > 0 && ! $profiles->has_seen( $user_id ) ) {
 			$profiles->mark_seen( $user_id, 'otp' );
 		}
 
+		$redirect = '';
+		if ( isset( $_GET['redirect_to'] ) && '' !== $_GET['redirect_to'] ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+			$redirect = wp_validate_redirect( rawurldecode( sanitize_text_field( wp_unslash( $_GET['redirect_to'] ) ) ), '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		}
+		if ( '' === $redirect ) {
+			$redirect = (string) Flow::data( 'redirect', \OmniWP\Auth\RegisterHandler::post_register_redirect( $user_id ) );
+		}
+
 		return array(
 			'user'          => $user_id > 0 ? get_userdata( $user_id ) : wp_get_current_user(),
+			'is_new_user'   => $is_new_user,
 			'fields'        => is_array( $fields ) ? $fields : $profiles->onboarding_fields( $user_id ),
-			// Where "Hoàn tất" and "Để sau" both lead. post_register_redirect()
-			// honours signup.redirect_register for a new account and is side-effect
-			// free once the welcome has been marked seen just above.
-			'redirect'      => (string) Flow::data( 'redirect', \OmniWP\Auth\RegisterHandler::post_register_redirect( $user_id ) ),
+			// Where "Hoàn tất" and "Để sau" both lead.
+			'redirect'      => $redirect,
 			'address'       => Settings::is_on( 'address.enabled' )
 				? AddressFields::get_for_user( $user_id )
 				: array(),
