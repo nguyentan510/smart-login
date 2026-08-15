@@ -180,27 +180,27 @@ $shipping_total = (float) $order->get_shipping_total();
 			<!-- Customer & Order Summary Info Grid -->
 			<?php
 			// Prefer Shipping info, fallback to Billing info
-			$customer_name = $order->get_formatted_shipping_full_name();
-			if ( empty( trim( $customer_name ) ) ) {
+			$customer_name = method_exists( $order, 'get_formatted_shipping_full_name' ) ? $order->get_formatted_shipping_full_name() : '';
+			if ( empty( trim( $customer_name ) ) && method_exists( $order, 'get_formatted_billing_full_name' ) ) {
 				$customer_name = $order->get_formatted_billing_full_name();
 			}
 
 			$customer_phone = method_exists( $order, 'get_shipping_phone' ) ? (string) $order->get_shipping_phone() : '';
-			if ( empty( $customer_phone ) ) {
+			if ( empty( $customer_phone ) && method_exists( $order, 'get_billing_phone' ) ) {
 				$customer_phone = (string) $order->get_billing_phone();
 			}
 
-			$customer_email = (string) $order->get_billing_email();
+			$customer_email = method_exists( $order, 'get_billing_email' ) ? (string) $order->get_billing_email() : '';
 
 			// Construct 1-line clean Vietnamese Shipping Address with Province Name resolution
-			$shipping_state = (string) ( $order->get_shipping_state() ?: $order->get_billing_state() );
+			$shipping_state = (string) ( ( method_exists( $order, 'get_shipping_state' ) ? $order->get_shipping_state() : '' ) ?: ( method_exists( $order, 'get_billing_state' ) ? $order->get_billing_state() : '' ) );
 			$province_name  = '';
 			if ( ! empty( $shipping_state ) ) {
 				if ( class_exists( '\OmniWP\Address\AddressRepository' ) ) {
 					$province_name = AddressRepository::province_name( $shipping_state );
 				}
 				if ( empty( $province_name ) && function_exists( 'WC' ) && WC()->countries ) {
-					$wc_country = $order->get_shipping_country() ?: ( $order->get_billing_country() ?: 'VN' );
+					$wc_country = ( method_exists( $order, 'get_shipping_country' ) ? $order->get_shipping_country() : '' ) ?: ( ( method_exists( $order, 'get_billing_country' ) ? $order->get_billing_country() : '' ) ?: 'VN' );
 					$wc_states  = WC()->countries->get_states( $wc_country );
 					if ( is_array( $wc_states ) && isset( $wc_states[ $shipping_state ] ) ) {
 						$province_name = $wc_states[ $shipping_state ];
@@ -211,11 +211,11 @@ $shipping_total = (float) $order->get_shipping_total();
 				}
 			}
 
-			$shipping_city = (string) ( $order->get_shipping_city() ?: $order->get_billing_city() );
+			$shipping_city = (string) ( ( method_exists( $order, 'get_shipping_city' ) ? $order->get_shipping_city() : '' ) ?: ( method_exists( $order, 'get_billing_city' ) ? $order->get_billing_city() : '' ) );
 			$city_name     = ( ! empty( $shipping_city ) && ! ctype_digit( $shipping_city ) ) ? $shipping_city : '';
 
-			$addr_1 = $order->get_shipping_address_1() ?: $order->get_billing_address_1();
-			$addr_2 = $order->get_shipping_address_2() ?: $order->get_billing_address_2();
+			$addr_1 = ( method_exists( $order, 'get_shipping_address_1' ) ? $order->get_shipping_address_1() : '' ) ?: ( method_exists( $order, 'get_billing_address_1' ) ? $order->get_billing_address_1() : '' );
+			$addr_2 = ( method_exists( $order, 'get_shipping_address_2' ) ? $order->get_shipping_address_2() : '' ) ?: ( method_exists( $order, 'get_billing_address_2' ) ? $order->get_billing_address_2() : '' );
 
 			$addr_parts = array_filter( array(
 				$addr_1,
@@ -225,7 +225,7 @@ $shipping_total = (float) $order->get_shipping_total();
 			) );
 			$one_line_address = ! empty( $addr_parts ) ? implode( ', ', $addr_parts ) : '';
 			if ( empty( $one_line_address ) ) {
-				$formatted_addr = $order->get_formatted_shipping_address() ?: $order->get_formatted_billing_address();
+				$formatted_addr = ( method_exists( $order, 'get_formatted_shipping_address' ) ? $order->get_formatted_shipping_address() : '' ) ?: ( method_exists( $order, 'get_formatted_billing_address' ) ? $order->get_formatted_billing_address() : '' );
 				if ( ! empty( $formatted_addr ) ) {
 					$raw_addr         = wp_strip_all_tags( str_replace( array( '<br>', '<br/>', '<br />' ), ', ', $formatted_addr ) );
 					$one_line_address = preg_replace( '/^' . preg_quote( $customer_name, '/' ) . ',\s*/i', '', $raw_addr );

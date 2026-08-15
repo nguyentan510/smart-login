@@ -479,6 +479,9 @@ class Shortcodes {
 			$redirect = wp_validate_redirect( rawurldecode( sanitize_text_field( wp_unslash( $_GET['redirect_to'] ) ) ), '' ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		}
 		if ( '' === $redirect ) {
+			$redirect = Flow::redirect_to();
+		}
+		if ( '' === $redirect ) {
 			$redirect = (string) Flow::data( 'redirect', \OmniWP\Auth\RegisterHandler::post_register_redirect( $user_id ) );
 		}
 

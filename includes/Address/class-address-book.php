@@ -283,7 +283,7 @@ class AddressBook {
 			'last_name'  => $item['last_name'] ?? '',
 			'address_1'  => $item['address_1'] ?? '',
 			'city'       => $ward_name,
-			'state'      => $prov_name,
+			'state'      => $city_code,
 			'postcode'   => $ward_code,
 			'country'    => $item['country'] ?? 'VN',
 			'phone'      => $item['phone'] ?? '',
@@ -306,7 +306,7 @@ class AddressBook {
 	 * @return array
 	 */
 	private static function get_default_from_woo( int $user_id ): array {
-		$user = get_userdata( $user_id );
+		$user = function_exists( 'get_userdata' ) ? get_userdata( $user_id ) : null;
 
 		$raw_city = (string) get_user_meta( $user_id, 'shipping_state', true );
 		$raw_ward = (string) get_user_meta( $user_id, 'shipping_city', true );

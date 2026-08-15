@@ -326,6 +326,15 @@ class RestController {
 	 * page.
 	 */
 	public function handle_step( WP_REST_Request $request ) {
+		// In WordPress REST API, if no wp_rest nonce is passed, core sets current user to 0.
+		// For the /step endpoint (used by the dialog frontend), restore authenticated user from auth cookie if present.
+		if ( ! is_user_logged_in() ) {
+			$cookie_user_id = wp_validate_auth_cookie( '', 'logged_in' );
+			if ( $cookie_user_id ) {
+				wp_set_current_user( $cookie_user_id );
+			}
+		}
+
 		$page        = $this->validated_url( (string) $request->get_param( 'page' ) );
 		$redirect_to = $this->validated_url( (string) $request->get_param( 'redirect_to' ) );
 		$renderer    = new FragmentRenderer( $this->otp() );

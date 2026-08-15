@@ -380,10 +380,16 @@ return array(
 			public function get_formatted_billing_full_name(): string {
 				return 'Nguyễn Văn An';
 			}
+			public function get_formatted_shipping_full_name(): string {
+				return 'Nguyễn Văn An';
+			}
 			public function get_billing_phone(): string {
 				return '0901234567';
 			}
 			public function get_formatted_billing_address(): string {
+				return '123 Lê Lợi, Hà Nội';
+			}
+			public function get_formatted_shipping_address(): string {
 				return '123 Lê Lợi, Hà Nội';
 			}
 			public function get_payment_method_title(): string {

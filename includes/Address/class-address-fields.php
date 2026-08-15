@@ -234,10 +234,10 @@ class AddressFields {
 
 		// Also update or seed the default entry in AddressBook (_OMNIWP_address_book)
 		// so Checkout and Account Hub Sổ địa chỉ are instantly in sync!
-		$user = get_userdata( $user_id );
+		$user = function_exists( 'get_userdata' ) ? get_userdata( $user_id ) : null;
 		$first_name = (string) get_user_meta( $user_id, 'shipping_first_name', true ) ?: (string) get_user_meta( $user_id, 'billing_first_name', true );
 		if ( empty( $first_name ) && $user ) {
-			$first_name = $user->display_name ?: trim( $user->first_name . ' ' . $user->last_name );
+			$first_name = $user->display_name ?: trim( ( $user->first_name ?? '' ) . ' ' . ( $user->last_name ?? '' ) );
 		}
 		$phone = (string) get_user_meta( $user_id, 'shipping_phone', true ) ?: (string) get_user_meta( $user_id, 'billing_phone', true );
 

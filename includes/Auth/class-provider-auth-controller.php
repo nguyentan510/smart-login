@@ -330,7 +330,11 @@ final class ProviderAuthController {
 		 * is the mistake rule 9 exists to prevent.
 		 */
 		if ( '' === $destination ) {
-			$destination = add_query_arg( 'OmniWP_welcome', '1', $context->intended_url );
+			$args = array( 'OmniWP_welcome' => '1' );
+			if ( ! empty( $context->is_new_user ) ) {
+				$args['new'] = '1';
+			}
+			$destination = add_query_arg( $args, $context->intended_url );
 		}
 
 		wp_safe_redirect( $destination );
