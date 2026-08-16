@@ -5,29 +5,29 @@
  * @package OmniWP
  */
 
-	/* E-Commerce Specific Button Adjustments (Base button rules are in omniwp-base.css) */
-	.ow-checkout-btn,
-	.sl-slide-cart__checkout-btn {
-		background: var(--sl-btn-primary-bg, #e30613) !important;
-		color: var(--sl-btn-primary-text, #ffffff) !important;
-		font-size: 1.05rem;
-		font-weight: 700;
-		height: 48px;
-		border-radius: var(--sl-btn-radius, 5px);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		text-decoration: none;
-		transition: background-color 0.15s ease;
-		box-shadow: none;
-		border: none;
-	}
+/* E-Commerce Specific Button Adjustments (Base button rules are in omniwp-base.css) */
+.ow-checkout-btn,
+.sl-slide-cart__checkout-btn {
+	background: var(--sl-btn-primary-bg, #e30613) !important;
+	color: var(--sl-btn-primary-text, #ffffff) !important;
+	font-size: 1.05rem;
+	font-weight: 700;
+	height: 48px;
+	border-radius: var(--sl-btn-radius, 5px);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-decoration: none;
+	transition: background-color 0.15s ease;
+	box-shadow: none;
+	border: none;
+}
 
-	.ow-checkout-btn:hover,
-	.sl-slide-cart__checkout-btn:hover {
-		background: var(--sl-btn-primary-hover-bg, #c00410) !important;
-		color: var(--sl-btn-primary-hover-text, #ffffff) !important;
-	}
+.ow-checkout-btn:hover,
+.sl-slide-cart__checkout-btn:hover {
+	background: var(--sl-btn-primary-hover-bg, #c00410) !important;
+	color: var(--sl-btn-primary-hover-text, #ffffff) !important;
+}
 
 
 /* Inputs & Form Controls */
@@ -71,7 +71,7 @@
 	margin-bottom: 16px;
 }
 
-.sl-form-row--split > * {
+.sl-form-row--split>* {
 	flex: 1;
 	min-width: 0;
 }
@@ -127,7 +127,7 @@
 	transition: all 0.2s;
 }
 
-.sl-tag-pill input:checked + span {
+.sl-tag-pill input:checked+span {
 	background: #fee2e2;
 	border-color: var(--sl-accent, #e30613);
 	color: var(--sl-accent, #e30613);
@@ -1171,7 +1171,7 @@
 }
 
 .sl-voucher-trigger-left svg,
-.sl-voucher-drawer-trigger > svg {
+.sl-voucher-drawer-trigger>svg {
 	color: var(--sl-accent, #801c13);
 	flex-shrink: 0;
 }
@@ -1258,6 +1258,7 @@
 	.sl-voucher-modal {
 		align-items: flex-end;
 	}
+
 	.sl-voucher-modal__dialog {
 		width: 100%;
 		max-width: 100%;
@@ -1266,6 +1267,7 @@
 		border-radius: 16px 16px 0 0;
 		transform: translateY(100%);
 	}
+
 	.sl-voucher-modal.is-open .sl-voucher-modal__dialog {
 		transform: translateY(0);
 	}
@@ -1400,12 +1402,10 @@
 	left: -150%;
 	width: 100%;
 	height: 200%;
-	background: linear-gradient(
-		90deg,
-		rgba(255, 255, 255, 0) 0%,
-		rgba(255, 255, 255, 0.35) 50%,
-		rgba(255, 255, 255, 0) 100%
-	);
+	background: linear-gradient(90deg,
+			rgba(255, 255, 255, 0) 0%,
+			rgba(255, 255, 255, 0.35) 50%,
+			rgba(255, 255, 255, 0) 100%);
 	transform: rotate(25deg);
 	transition: left 0.65s ease-in-out;
 	pointer-events: none;
@@ -2052,23 +2052,38 @@
 	/* Explicit Column Widths for Desktop */
 	.sl-cart-items-card--table .sl-cart-col--product,
 	.sl-cart-items-card--table .sl-cart-th--product,
-	.sl-cart-items-card--table .sl-cart-td--product  { width: 44%; text-align: left; }
+	.sl-cart-items-card--table .sl-cart-td--product {
+		width: 44%;
+		text-align: left;
+	}
 
 	.sl-cart-items-card--table .sl-cart-col--price,
 	.sl-cart-items-card--table .sl-cart-th--price,
-	.sl-cart-items-card--table .sl-cart-td--price    { width: 15%; text-align: right; }
+	.sl-cart-items-card--table .sl-cart-td--price {
+		width: 15%;
+		text-align: right;
+	}
 
 	.sl-cart-items-card--table .sl-cart-col--qty,
 	.sl-cart-items-card--table .sl-cart-th--qty,
-	.sl-cart-items-card--table .sl-cart-td--qty      { width: 18%; text-align: center; }
+	.sl-cart-items-card--table .sl-cart-td--qty {
+		width: 18%;
+		text-align: center;
+	}
 
 	.sl-cart-items-card--table .sl-cart-col--subtotal,
 	.sl-cart-items-card--table .sl-cart-th--subtotal,
-	.sl-cart-items-card--table .sl-cart-td--subtotal { width: 17%; text-align: right; }
+	.sl-cart-items-card--table .sl-cart-td--subtotal {
+		width: 17%;
+		text-align: right;
+	}
 
 	.sl-cart-items-card--table .sl-cart-col--remove,
 	.sl-cart-items-card--table .sl-cart-th--remove,
-	.sl-cart-items-card--table .sl-cart-td--remove   { width: 6%; text-align: center; }
+	.sl-cart-items-card--table .sl-cart-td--remove {
+		width: 6%;
+		text-align: center;
+	}
 
 	/* Table Headers (th) */
 	.sl-cart-items-card--table .sl-cart-th {
@@ -3060,8 +3075,8 @@
 .woocommerce-checkout #sl-floating-cart,
 body.cart #sl-floating-cart,
 body.checkout #sl-floating-cart,
-.sl-cart-page-wrap ~ #sl-floating-cart,
-.sl-checkout-page-wrap ~ #sl-floating-cart,
+.sl-cart-page-wrap~#sl-floating-cart,
+.sl-checkout-page-wrap~#sl-floating-cart,
 body:has(.sl-cart-page-wrap) #sl-floating-cart,
 body:has(.sl-checkout-page-wrap) #sl-floating-cart {
 	display: none !important;
@@ -3126,6 +3141,7 @@ body:has(.sl-checkout-page-wrap) #sl-floating-cart {
 }
 
 @media (min-width: 901px) {
+
 	/* Sticky bottom bar is only active on Mobile/Tablet screens */
 	.sl-sticky-checkout-bar {
 		display: none !important;
@@ -3644,12 +3660,12 @@ body:has(.sl-checkout-page-wrap) #sl-floating-cart {
 	min-height: 100vh;
 }
 
-:where(.is-layout-constrained) > .sl-checkout-page-wrap,
-:where(.is-layout-constrained) > .sl-cart-page-wrap,
-:where(.entry-content) > .sl-checkout-page-wrap,
-:where(.entry-content) > .sl-cart-page-wrap,
-.wp-block-post-content > .sl-checkout-page-wrap,
-.wp-block-post-content > .sl-cart-page-wrap {
+:where(.is-layout-constrained)>.sl-checkout-page-wrap,
+:where(.is-layout-constrained)>.sl-cart-page-wrap,
+:where(.entry-content)>.sl-checkout-page-wrap,
+:where(.entry-content)>.sl-cart-page-wrap,
+.wp-block-post-content>.sl-checkout-page-wrap,
+.wp-block-post-content>.sl-cart-page-wrap {
 	max-width: 100% !important;
 	width: 100% !important;
 }
@@ -4128,9 +4144,11 @@ strong.sl-co-address-value {
 		gap: 14px;
 		padding: 16px;
 	}
+
 	.sl-co-address-empty-card__action {
 		width: 100%;
 	}
+
 	.sl-btn-add-first-address {
 		width: 100%;
 		justify-content: center;
@@ -4362,9 +4380,9 @@ strong.sl-co-address-value {
 }
 
 /* ---- Billing Form Fields (Shopee-compact style) ---- */
-.sl-co-form .woocommerce-billing-fields > h3,
-.sl-co-form .woocommerce-shipping-fields > h3,
-.sl-co-form .woocommerce-additional-fields > h3,
+.sl-co-form .woocommerce-billing-fields>h3,
+.sl-co-form .woocommerce-shipping-fields>h3,
+.sl-co-form .woocommerce-additional-fields>h3,
 .sl-co-form #order_review_heading {
 	display: none !important;
 }
@@ -4692,7 +4710,7 @@ strong.sl-co-address-value {
 	border-color: #ccc;
 }
 
-.sl-co-review-order #payment ul.payment_methods li input[type="radio"]:checked ~ label {
+.sl-co-review-order #payment ul.payment_methods li input[type="radio"]:checked~label {
 	font-weight: 700;
 	color: #222;
 }
@@ -4959,7 +4977,7 @@ div.woocommerce-checkout-payment div.form-row.place-order,
 	background: #f8fafc;
 }
 
-.sl-co-section--payment .sl-co-payment-wrapper #payment ul.payment_methods li input[type="radio"]:checked ~ label {
+.sl-co-section--payment .sl-co-payment-wrapper #payment ul.payment_methods li input[type="radio"]:checked~label {
 	font-weight: 700;
 	color: #1e293b;
 }
@@ -5058,6 +5076,7 @@ div.woocommerce-checkout-payment div.form-row.place-order,
 }
 
 @media (max-width: 480px) {
+
 	/* Voucher Picker Card Compactness on Mobile */
 	.sl-picker-vcard__badge {
 		width: 82px !important;
@@ -5262,7 +5281,7 @@ div.woocommerce-checkout-payment div.form-row.place-order,
 	transition: all 0.2s ease;
 }
 
-.sl-tag-pill input[type="radio"]:checked + span {
+.sl-tag-pill input[type="radio"]:checked+span {
 	border-color: #ee4d2d !important;
 	background: #fff5f2 !important;
 	color: #ee4d2d !important;
@@ -5289,9 +5308,9 @@ div.woocommerce-checkout-payment div.form-row.place-order,
 /* ==========================================================================
    6. Thank You & Order Tracker + VietQR
    ========================================================================== */
-:where(.is-layout-constrained) > .sl-thankyou-page-wrap,
-:where(.entry-content) > .sl-thankyou-page-wrap,
-.wp-block-post-content > .sl-thankyou-page-wrap {
+:where(.is-layout-constrained)>.sl-thankyou-page-wrap,
+:where(.entry-content)>.sl-thankyou-page-wrap,
+.wp-block-post-content>.sl-thankyou-page-wrap {
 	max-width: 100% !important;
 	width: 100% !important;
 	margin-left: auto !important;
@@ -6010,19 +6029,27 @@ div.woocommerce-checkout-payment div.form-row.place-order,
 	body * {
 		visibility: hidden;
 	}
-	header, footer, nav, sidebar, .sl-no-print {
+
+	header,
+	footer,
+	nav,
+	sidebar,
+	.sl-no-print {
 		display: none !important;
 	}
+
 	.sl-thankyou-wrapper,
 	.sl-printable-invoice,
 	.sl-printable-invoice * {
 		visibility: visible;
 	}
+
 	.sl-thankyou-wrapper {
 		max-width: 100% !important;
 		padding: 0 !important;
 		margin: 0 !important;
 	}
+
 	.sl-invoice-paper {
 		border: none !important;
 		box-shadow: none !important;
@@ -6036,6 +6063,7 @@ div.woocommerce-checkout-payment div.form-row.place-order,
    7. Mobile Responsiveness
    ========================================================================== */
 @media (max-width: 900px) {
+
 	.sl-cart-grid,
 	.sl-checkout-grid {
 		grid-template-columns: 1fr;
@@ -6565,7 +6593,7 @@ div.woocommerce-checkout-payment div.form-row.place-order,
 	opacity: 0;
 	transform: translateX(100%) scale(0.95);
 	transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-	            transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+		transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 	font-family: inherit;
 }
 
@@ -6600,10 +6628,21 @@ div.woocommerce-checkout-payment div.form-row.place-order,
 	align-items: center;
 }
 
-.sl-toast--success .sl-toast__icon { color: #16a34a; }
-.sl-toast--error .sl-toast__icon   { color: #dc2626; }
-.sl-toast--warning .sl-toast__icon { color: #f59e0b; }
-.sl-toast--info .sl-toast__icon    { color: #2563eb; }
+.sl-toast--success .sl-toast__icon {
+	color: #16a34a;
+}
+
+.sl-toast--error .sl-toast__icon {
+	color: #dc2626;
+}
+
+.sl-toast--warning .sl-toast__icon {
+	color: #f59e0b;
+}
+
+.sl-toast--info .sl-toast__icon {
+	color: #2563eb;
+}
 
 .sl-toast__msg {
 	flex: 1;
@@ -6745,7 +6784,9 @@ div.woocommerce-checkout-payment div.form-row.place-order,
 }
 
 @keyframes sl-spin {
-	to { transform: rotate(360deg); }
+	to {
+		transform: rotate(360deg);
+	}
 }
 
 /* Scoped parent needs position:relative */
@@ -6814,6 +6855,7 @@ div.woocommerce-checkout-payment div.form-row.place-order,
 }
 
 @media (max-width: 640px) {
+
 	/* Hide table header AND redundant Đơn giá / Số lượng columns on mobile */
 	.sl-co-product-table thead,
 	.sl-co-product-table tbody tr.sl-co-item-row td.product-price-col,
@@ -7268,9 +7310,11 @@ a.sl-stepper-item.is-completed:hover .sl-stepper-icon {
 		padding: 12px 14px;
 		margin-bottom: 16px;
 	}
+
 	.sl-stepper-title {
 		font-size: var(--sl-fs-xs, 0.6875rem);
 	}
+
 	.sl-stepper-line {
 		margin: 0 6px;
 	}
@@ -7366,6 +7410,7 @@ a.sl-stepper-link:hover .sl-stepper-title {
 		flex-direction: column;
 		align-items: flex-start;
 	}
+
 	.sl-co-auth-gate-banner button {
 		width: 100%;
 	}
@@ -7518,6 +7563,7 @@ div.woocommerce-checkout-payment .woocommerce-privacy-policy-text p {
 		opacity: 0;
 		transform: scale(0.96) translateY(10px);
 	}
+
 	to {
 		opacity: 1;
 		transform: scale(1) translateY(0);
@@ -7750,6 +7796,7 @@ div.woocommerce-checkout-payment .woocommerce-privacy-policy-text p {
 			opacity: 0;
 			transform: translateY(100%);
 		}
+
 		to {
 			opacity: 1;
 			transform: translateY(0);
@@ -7980,6 +8027,3 @@ div.woocommerce-checkout-payment .woocommerce-privacy-policy-text p {
 	color: #b45309;
 	font-weight: 700;
 }
-
-
-
