@@ -58,6 +58,14 @@ $shipping_total = (float) $order->get_shipping_total();
 ?>
 <div class="sl-thankyou-page-wrap">
 	<div class="sl-thankyou-container">
+
+		<?php
+		if ( \OmniWP\Settings::get( 'ecommerce.stepper_enabled', true ) ) {
+			$active_step = 3;
+			require __DIR__ . '/checkout-stepper.php';
+		}
+		?>
+
 		<div class="sl-thankyou-master-card">
 
 		<!-- Success Banner (Hidden on Print) -->

@@ -445,7 +445,7 @@ class CartService {
 		$remaining_html = function_exists( 'wc_price' ) ? wc_price( $remaining ) : number_format( $remaining ) . '₫';
 
 		if ( $is_reached ) {
-			$message = __( '🎉 Bạn đã đủ điều kiện Miễn phí vận chuyển!', 'omniwp' );
+			$message = __( 'Bạn đã đủ điều kiện Miễn phí vận chuyển!', 'omniwp' );
 		} else {
 			$remaining_formatted = '<strong class="sl-freeship-remaining">' . $remaining_html . '</strong>';
 			$message             = sprintf(

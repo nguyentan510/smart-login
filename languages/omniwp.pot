@@ -5716,7 +5716,7 @@ msgid "✓ Đã dùng"
 msgstr ""
 
 #: includes/Ecommerce/class-cart-service.php:448
-msgid "🎉 Bạn đã đủ điều kiện Miễn phí vận chuyển!"
+msgid "Bạn đã đủ điều kiện Miễn phí vận chuyển!"
 msgstr ""
 
 #: includes/Frontend/class-woo-integration.php:587
