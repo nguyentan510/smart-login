@@ -101,7 +101,7 @@ class Settings {
 		 * @param mixed  $value
 		 * @param string $path
 		 */
-		return apply_filters( 'OMNIWP_setting', $value, $path );
+		return apply_filters( 'omniwp_setting', $value, $path );
 	}
 
 	public static function get_int( string $path, int $fallback = 0 ): int {

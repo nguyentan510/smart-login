@@ -183,7 +183,7 @@ entirely, on the owner's decision that neither earns its place:
   dataset.
 
 Three fitness rules keep both removed. Integrators who want a referral field can
-add one through `OMNIWP_registration_payload`; the README shows how.
+add one through `omniwp_registration_payload`; the README shows how.
 
 ## Address boundary
 

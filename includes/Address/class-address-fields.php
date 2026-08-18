@@ -253,7 +253,7 @@ class AddressFields {
 		 * @param int   $user_id
 		 * @param array $clean
 		 */
-		do_action( 'OMNIWP_address_saved', $user_id, $clean );
+		do_action( 'omniwp_address_saved', $user_id, $clean );
 	}
 
 	/**

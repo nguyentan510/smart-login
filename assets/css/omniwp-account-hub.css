@@ -17,8 +17,10 @@
 	margin: 0 auto;
 	padding: 24px 16px 80px;
 	box-sizing: border-box;
-	font-family: inherit;
+	font-family: var(--ow-font-family, inherit);
 	color: var(--ow-text-primary, #0f172a);
+	letter-spacing: normal;
+	text-transform: none;
 }
 
 .sl-hub-content {
@@ -72,7 +74,7 @@
 .sl-hub-profile-actions .sl-btn {
 	min-height: 42px;
 	padding: 0 20px;
-	font-size: 0.92rem;
+	font-size: 14px;
 	font-weight: 600;
 	border-radius: var(--ow-radius-md, 10px);
 	box-sizing: border-box;
@@ -155,7 +157,7 @@
 }
 
 .sl-hub-user__name {
-	font-size: var(--ow-fs-lg, 1.1rem);
+	font-size: var(--ow-fs-lg, 1.16px);
 	font-weight: var(--ow-fw-bold, 700);
 	color: var(--ow-text-primary, #0f172a);
 	margin: 0 0 6px;
@@ -170,7 +172,7 @@
 	color: #92400e;
 	padding: 4px 12px;
 	border-radius: var(--ow-radius-pill, 999px);
-	font-size: var(--ow-fs-xs, 0.78rem);
+	font-size: var(--ow-fs-xs, 13px);
 	font-weight: var(--ow-fw-semibold, 600);
 	border: 1px solid #fde68a;
 }
@@ -210,7 +212,7 @@
 }
 
 .sl-hub-user__progress-label {
-	font-size: var(--ow-fs-xs, 0.73rem);
+	font-size: var(--ow-fs-xs, 12px);
 	color: var(--ow-text-secondary, #64748b);
 	font-weight: 500;
 }
@@ -281,7 +283,7 @@
 	border: 1px solid #e2e8f0;
 	border-radius: 12px;
 	margin-bottom: 20px;
-	font-size: 0.84rem;
+	font-size: 13px;
 	transition: all 0.2s ease;
 }
 
@@ -305,12 +307,12 @@
 }
 
 .sl-suggest-strip__icon {
-	font-size: 0.95rem;
+	font-size: 15px;
 	line-height: 1;
 }
 
 .sl-suggest-strip__label {
-	font-size: 0.82rem;
+	font-size: 13px;
 	color: #334155;
 }
 
@@ -332,7 +334,7 @@
 	border-radius: 20px;
 	color: #1e293b;
 	text-decoration: none;
-	font-size: 0.8rem;
+	font-size: 13px;
 	font-weight: 500;
 	line-height: 1.4;
 	transition: all 0.15s ease;
@@ -372,7 +374,7 @@
 	border-radius: 50%;
 	background: #f1f5f9;
 	color: #64748b;
-	font-size: 0.72rem;
+	font-size: 12px;
 	font-weight: 700;
 	margin-left: 2px;
 	transition: all 0.15s ease;
@@ -391,7 +393,7 @@
 }
 
 .sl-suggest-strip__ratio {
-	font-size: 0.75rem;
+	font-size: 12px;
 	font-weight: 700;
 	color: #64748b;
 	background: #e2e8f0;
@@ -412,7 +414,7 @@
 .sl-notice--compact {
 	padding: 8px 14px;
 	margin-bottom: 16px;
-	font-size: 0.84rem;
+	font-size: 13px;
 	border-radius: 10px;
 }
 
@@ -458,7 +460,7 @@
 }
 
 .sl-hub-user-compact__name {
-	font-size: 0.95rem;
+	font-size: 15px;
 	font-weight: 700;
 	color: #0f172a;
 	margin: 0;
@@ -467,7 +469,7 @@
 
 .sl-hub-user-compact__badge {
 	padding: 2px 8px;
-	font-size: 0.7rem;
+	font-size: 12px;
 	width: fit-content;
 }
 
@@ -520,7 +522,7 @@ li.sl-hub-nav__item {
 	padding: 10px 14px !important;
 	border-radius: var(--sl-radius, 8px);
 	color: #475569;
-	font-size: 0.92rem;
+	font-size: 14px;
 	font-weight: 500;
 	text-decoration: none;
 	transition: all 0.18s ease;
@@ -644,7 +646,7 @@ li.sl-hub-nav__item::before {
 }
 
 .sl-hub-sheet__title {
-	font-size: 1.05rem;
+	font-size: 17px;
 	font-weight: 700;
 	color: #0f172a;
 	margin: 0;
@@ -726,13 +728,13 @@ li.sl-hub-nav__item::before {
 }
 
 .sl-hub-sheet__item-title {
-	font-size: 0.92rem;
+	font-size: 15px;
 	font-weight: 600;
 	color: #0f172a;
 }
 
 .sl-hub-sheet__item-desc {
-	font-size: 0.78rem;
+	font-size: 13px;
 	color: #64748b;
 	line-height: 1.3;
 }
@@ -761,7 +763,7 @@ li.sl-hub-nav__item::before {
 	background: #fef2f2;
 	border: 1px solid #fee2e2;
 	color: #dc2626;
-	font-size: 0.92rem;
+	font-size: 15px;
 	font-weight: 600;
 	text-decoration: none;
 	cursor: pointer;
@@ -804,7 +806,7 @@ li.sl-hub-nav__item::before {
 	display: inline-flex;
 	align-items: center;
 	gap: 10px;
-	font-size: var(--ow-fs-2xl, 1.5rem);
+	font-size: var(--ow-fs-2xl, 24px);
 	font-weight: var(--ow-fw-bold, 700);
 	color: var(--ow-text-primary, #0f172a);
 	margin: 0;
@@ -830,7 +832,7 @@ li.sl-hub-nav__item::before {
 }
 
 .sl-hub-subtitle {
-	font-size: var(--ow-fs-sm, 0.875rem);
+	font-size: var(--ow-fs-sm, 14px);
 	color: var(--ow-slate-500, #64748b);
 	margin: 4px 0 0;
 }
@@ -892,7 +894,7 @@ li.sl-hub-nav__item::before {
 	padding: 10px 14px 10px 36px !important;
 	border: 1.5px solid var(--ow-border-default, #e2e8f0) !important;
 	border-radius: var(--ow-radius-md, 10px) !important;
-	font-size: var(--ow-fs-md, 0.875rem) !important;
+	font-size: var(--ow-fs-md, 14px) !important;
 	color: var(--ow-text-primary, #0f172a) !important;
 	background: var(--ow-surface-1, #ffffff) !important;
 	transition: border-color var(--ow-dur-fast, 150ms) var(--ow-ease-smooth), box-shadow var(--ow-dur-fast, 150ms) var(--ow-ease-smooth) !important;
@@ -929,8 +931,8 @@ button.sl-orders-pipeline__item {
 	border: none !important;
 	border-bottom: 2px solid transparent !important;
 	padding: 10px 16px !important;
-	font-size: 0.9rem !important;
-	font-weight: 500 !important;
+	font-size: 14px !important;
+	font-weight: 600 !important;
 	color: var(--ow-slate-600, #64748b) !important;
 	cursor: pointer !important;
 	white-space: nowrap !important;
@@ -971,7 +973,7 @@ button.sl-orders-pipeline__item.is-active {
 .sl-order-badge {
 	background: #ef4444;
 	color: #ffffff;
-	font-size: 0.72rem;
+	font-size: 12px;
 	font-weight: 700;
 	padding: 2px 7px;
 	border-radius: 12px;
@@ -996,7 +998,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-hub-label {
-	font-size: 0.85rem;
+	font-size: 14px;
 	font-weight: 600;
 	color: #334155;
 }
@@ -1007,7 +1009,7 @@ button.sl-orders-pipeline__item.is-active {
 	padding: 10px 14px;
 	border: 1.5px solid var(--ow-border-default, #e2e8f0);
 	border-radius: var(--ow-radius-md, 10px);
-	font-size: var(--ow-fs-md, 0.875rem);
+	font-size: var(--ow-fs-md, 14px);
 	color: var(--ow-text-primary, #0f172a);
 	background: var(--ow-surface-1, #ffffff);
 	transition: border-color var(--ow-dur-fast, 150ms) var(--ow-ease-smooth), box-shadow var(--ow-dur-fast, 150ms) var(--ow-ease-smooth);
@@ -1041,7 +1043,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-hub-btn-change-pass {
-	font-size: var(--ow-fs-sm, 0.82rem);
+	font-size: var(--ow-fs-sm, 13px);
 	font-weight: var(--ow-fw-semibold, 600);
 	color: var(--ow-brand, #e30613);
 	background: var(--ow-surface-1, #ffffff);
@@ -1120,14 +1122,14 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-logout-modal__title {
-	font-size: 1.25rem;
+	font-size: 20px;
 	font-weight: 700;
 	color: #0f172a;
 	margin: 0 0 8px;
 }
 
 .sl-logout-modal__message {
-	font-size: 0.9rem;
+	font-size: 14px;
 	color: #64748b;
 	margin: 0 0 24px;
 	line-height: 1.5;
@@ -1143,7 +1145,7 @@ button.sl-orders-pipeline__item.is-active {
 	flex: 1;
 	padding: 12px 16px;
 	border-radius: 8px;
-	font-size: 0.9rem;
+	font-size: 14px;
 	font-weight: 600;
 	cursor: pointer;
 	transition: all 0.2s ease;
@@ -1201,7 +1203,7 @@ button.sl-orders-pipeline__item.is-active {
 	flex-shrink: 0 !important;
 	border-radius: 8px !important;
 	font-weight: 600 !important;
-	font-size: 0.9rem !important;
+	font-size: 14px !important;
 	box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2) !important;
 }
 
@@ -1291,7 +1293,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-address-card__add-text {
-	font-size: 0.92rem;
+	font-size: 15px;
 	font-weight: 600;
 	color: var(--sl-accent, #e30613);
 }
@@ -1314,7 +1316,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-address-card__name {
-	font-size: 0.95rem;
+	font-size: 15px;
 	font-weight: 600;
 	color: var(--sl-text, #1f2430);
 	margin: 0;
@@ -1333,7 +1335,7 @@ button.sl-orders-pipeline__item.is-active {
 	display: flex;
 	align-items: flex-start;
 	gap: 6px;
-	font-size: 0.88rem;
+	font-size: 14px;
 	line-height: 1.5;
 }
 
@@ -1349,7 +1351,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-address-badge {
-	font-size: 0.78rem;
+	font-size: 13px;
 	font-weight: 500;
 	padding: 2px 8px;
 	border-radius: var(--sl-radius, 5px);
@@ -1383,7 +1385,7 @@ button.sl-orders-pipeline__item.is-active {
 .sl-address-card__actions .sl-btn {
 	white-space: nowrap !important;
 	padding: 6px 12px !important;
-	font-size: 0.82rem !important;
+	font-size: 13px !important;
 	border-radius: var(--sl-radius, 5px) !important;
 	background: #f8fafc !important;
 	color: var(--sl-text, #1f2430) !important;
@@ -1409,7 +1411,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-address-card__name {
-	font-size: 1.08rem;
+	font-size: 17px;
 	font-weight: 700;
 	color: #0f172a;
 	margin: 0;
@@ -1419,12 +1421,12 @@ button.sl-orders-pipeline__item.is-active {
 .sl-address-card__phone {
 	font-weight: 600;
 	color: #64748b;
-	font-size: 0.9rem;
+	font-size: 14px;
 	margin-left: 6px;
 }
 
 .sl-address-card__detail {
-	font-size: 0.92rem;
+	font-size: 15px;
 	color: #334155;
 	margin: 0;
 	line-height: 1.55;
@@ -1454,7 +1456,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-address-modal__title {
-	font-size: 1.25rem !important;
+	font-size: 20px !important;
 	font-weight: 700 !important;
 	color: #0f172a !important;
 	margin: 0 !important;
@@ -1486,7 +1488,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-address-form__label {
-	font-size: 0.88rem !important;
+	font-size: 14px !important;
 	font-weight: 600 !important;
 	color: #334155 !important;
 	margin: 0 !important;
@@ -1517,7 +1519,7 @@ button.sl-orders-pipeline__item.is-active {
 	border-radius: var(--sl-radius-card, 5px) !important;
 	border: 1.5px solid #e2e8f0 !important;
 	background: #f8fafc !important;
-	font-size: 0.85rem !important;
+	font-size: 14px !important;
 	font-weight: 500 !important;
 	color: #475569 !important;
 	transition: all 0.15s ease !important;
@@ -1538,7 +1540,7 @@ button.sl-orders-pipeline__item.is-active {
 	height: 44px !important;
 	padding: 0 14px !important;
 	border-radius: 8px !important;
-	font-size: 0.92rem !important;
+	font-size: 15px !important;
 	border: 1.5px solid #e2e8f0 !important;
 	background: #ffffff !important;
 	color: #0f172a !important;
@@ -1561,7 +1563,7 @@ button.sl-orders-pipeline__item.is-active {
 	align-items: center !important;
 	gap: 8px !important;
 	cursor: pointer !important;
-	font-size: 0.88rem !important;
+	font-size: 14px !important;
 	color: #475569 !important;
 	margin: 2px 0 0 0 !important;
 	user-select: none !important;
@@ -1588,7 +1590,7 @@ button.sl-orders-pipeline__item.is-active {
 	min-height: 44px !important;
 	height: 44px !important;
 	border-radius: 8px !important;
-	font-size: 0.92rem !important;
+	font-size: 15px !important;
 	font-weight: 600 !important;
 	background: #f1f5f9 !important;
 	color: #475569 !important;
@@ -1610,7 +1612,7 @@ button.sl-orders-pipeline__item.is-active {
 	min-height: 44px !important;
 	height: 44px !important;
 	border-radius: 8px !important;
-	font-size: 0.92rem !important;
+	font-size: 15px !important;
 	font-weight: 600 !important;
 	background: var(--sl-accent, #2563eb) !important;
 	color: #ffffff !important;
@@ -1682,7 +1684,7 @@ button.sl-orders-pipeline__item.is-active {
 	display: inline-flex;
 	align-items: center;
 	gap: 5px;
-	font-size: 0.92rem;
+	font-size: 15px;
 	font-weight: 700;
 	color: #0f172a;
 }
@@ -1700,11 +1702,11 @@ button.sl-orders-pipeline__item.is-active {
 
 .sl-hub-order-dot {
 	color: #cbd5e1;
-	font-size: 0.8rem;
+	font-size: 13px;
 }
 
 .sl-hub-order-date {
-	font-size: 0.78rem;
+	font-size: 13px;
 	color: #64748b;
 	font-weight: 400;
 }
@@ -1715,7 +1717,7 @@ button.sl-orders-pipeline__item.is-active {
 	align-items: center;
 	padding: 3px 10px;
 	border-radius: 20px;
-	font-size: 0.75rem;
+	font-size: 12px;
 	font-weight: 600;
 	border: 1px solid transparent;
 	line-height: 1.2;
@@ -1830,7 +1832,7 @@ button.sl-orders-pipeline__item.is-active {
 .sl-order-thumb--extra {
 	background: #1e293b;
 	color: #ffffff;
-	font-size: 0.7rem;
+	font-size: 12px;
 	font-weight: 700;
 	display: flex;
 	align-items: center;
@@ -1839,7 +1841,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-order-items-total-badge {
-	font-size: 0.8rem;
+	font-size: 13px;
 	font-weight: 600;
 	color: #334155;
 	background: #f1f5f9;
@@ -1866,7 +1868,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-hub-order-payment {
-	font-size: 0.72rem;
+	font-size: 12px;
 	color: #64748b;
 	font-weight: 500;
 }
@@ -1895,7 +1897,7 @@ button.sl-orders-pipeline__item.is-active {
 	color: var(--sl-accent, #e30613) !important;
 	border-radius: var(--sl-btn-radius, 5px);
 	padding: 6px 14px;
-	font-size: 0.82rem;
+	font-size: 13px;
 	font-weight: 600;
 	display: inline-flex;
 	align-items: center;
@@ -2008,7 +2010,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-invoice-badge {
-	font-size: 0.68rem;
+	font-size: 12px;
 	font-weight: 700;
 	color: #475569;
 	background: #e2e8f0;
@@ -2019,7 +2021,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-invoice-title {
-	font-size: var(--ow-fs-xl, 1.125rem);
+	font-size: var(--ow-fs-xl, 18px);
 	font-weight: var(--ow-fw-bold, 700);
 	color: var(--ow-text-primary, #0f172a);
 	margin: 0;
@@ -2031,7 +2033,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-invoice-date {
-	font-size: 0.74rem;
+	font-size: 12px;
 	color: #64748b;
 	margin: 1px 0 0;
 }
@@ -2137,7 +2139,7 @@ button.sl-orders-pipeline__item.is-active {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	font-size: 0.55rem;
+	font-size: 10px;
 	font-weight: 700;
 	color: #64748b;
 	margin-bottom: 3px;
@@ -2169,7 +2171,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-invoice-timeline-label {
-	font-size: 0.68rem;
+	font-size: 12px;
 	font-weight: 500;
 	color: #64748b;
 	line-height: 1.2;
@@ -2182,7 +2184,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-invoice-timeline-date {
-	font-size: 0.62rem;
+	font-size: 11px;
 	color: #94a3b8;
 	margin-top: 1px;
 }
@@ -2199,7 +2201,7 @@ button.sl-orders-pipeline__item.is-active {
 	border: 1px solid #f1f5f9;
 	border-radius: 8px;
 	padding: 10px 14px;
-	font-size: 0.8rem;
+	font-size: 13px;
 	display: flex;
 	flex-direction: column;
 	gap: 4px;
@@ -2209,7 +2211,7 @@ button.sl-orders-pipeline__item.is-active {
 	display: flex;
 	align-items: center;
 	gap: 6px;
-	font-size: 0.72rem;
+	font-size: 12px;
 	font-weight: 700;
 	color: #475569;
 	text-transform: uppercase;
@@ -2231,7 +2233,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-invoice-line {
-	font-size: 0.82rem;
+	font-size: 13px;
 	color: #0f172a;
 	display: flex;
 	align-items: center;
@@ -2251,7 +2253,7 @@ button.sl-orders-pipeline__item.is-active {
 
 .sl-invoice-address {
 	color: #475569;
-	font-size: 0.78rem;
+	font-size: 13px;
 	line-height: 1.35;
 	margin-top: 1px;
 	text-align: left !important;
@@ -2261,7 +2263,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-invoice-note {
-	font-size: 0.74rem;
+	font-size: 12px;
 	color: #92400e;
 	margin-top: 3px;
 	padding-top: 3px;
@@ -2274,7 +2276,7 @@ button.sl-orders-pipeline__item.is-active {
 	justify-content: space-between;
 	gap: 8px;
 	padding: 2px 0;
-	font-size: 0.78rem;
+	font-size: 13px;
 }
 
 .sl-invoice-key {
@@ -2305,7 +2307,7 @@ button.sl-orders-pipeline__item.is-active {
 	align-items: center;
 	padding: 8px 14px;
 	background: #f8fafc;
-	font-size: 0.7rem;
+	font-size: 12px;
 	font-weight: 700;
 	color: #475569;
 	letter-spacing: 0.04em;
@@ -2405,7 +2407,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-invoice-item-name {
-	font-size: 0.82rem;
+	font-size: 13px;
 	font-weight: 600;
 	color: #1e293b;
 	line-height: 1.25;
@@ -2413,12 +2415,12 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-invoice-item-meta {
-	font-size: 0.7rem;
+	font-size: 12px;
 	color: #64748b;
 }
 
 .sl-invoice-item-unit {
-	font-size: 0.72rem;
+	font-size: 12px;
 	color: #64748b;
 }
 
@@ -2429,7 +2431,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-invoice-qty-badge {
-	font-size: 0.76rem;
+	font-size: 12px;
 	font-weight: 700;
 	color: #334155;
 	background: #f1f5f9;
@@ -2447,7 +2449,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-invoice-item-total {
-	font-size: 0.88rem;
+	font-size: 14px;
 	font-weight: 700;
 	color: #0f172a;
 	text-align: right;
@@ -2470,7 +2472,7 @@ button.sl-orders-pipeline__item.is-active {
 	display: flex;
 	flex-direction: column;
 	gap: 4px;
-	font-size: 0.78rem;
+	font-size: 13px;
 }
 
 .sl-invoice-summary-row {
@@ -2489,13 +2491,13 @@ button.sl-orders-pipeline__item.is-active {
 	padding-top: 6px;
 	margin-top: 3px;
 	border-top: 1px dashed #cbd5e1;
-	font-size: 0.86rem;
+	font-size: 14px;
 	color: #0f172a;
 	font-weight: 700;
 }
 
 .sl-invoice-total-amount {
-	font-size: 1.08rem;
+	font-size: 17px;
 	color: #e11d48;
 	font-weight: 800;
 }
@@ -2517,7 +2519,7 @@ button.sl-orders-pipeline__item.is-active {
 	min-height: 32px !important;
 	height: 32px !important;
 	padding: 4px 14px !important;
-	font-size: 0.78rem !important;
+	font-size: 13px !important;
 	border-radius: 5px !important;
 }
 
@@ -2689,7 +2691,7 @@ button.sl-orders-pipeline__item.is-active {
 	li.sl-hub-nav__item {
 		border-radius: 20px !important;
 		padding: 8px 15px !important;
-		font-size: 0.86rem !important;
+		font-size: 14px !important;
 		background: #ffffff !important;
 		border: 1px solid var(--sl-border, #d9dde5) !important;
 		color: #475569 !important;
@@ -2863,7 +2865,7 @@ button.sl-orders-pipeline__item.is-active {
 		min-height: 44px !important;
 		height: 44px !important;
 		padding: 0 14px !important;
-		font-size: 0.92rem !important;
+		font-size: 15px !important;
 		display: inline-flex !important;
 		align-items: center !important;
 		justify-content: center !important;
@@ -2907,7 +2909,7 @@ button.sl-orders-pipeline__item.is-active {
 
 	.sl-orders-pipeline__item {
 		padding: 8px 12px !important;
-		font-size: 0.84rem !important;
+		font-size: 13px !important;
 		white-space: nowrap !important;
 		flex-shrink: 0 !important;
 	}
@@ -2933,7 +2935,7 @@ button.sl-orders-pipeline__item.is-active {
 	}
 
 	.sl-address-modal__title {
-		font-size: 1.15rem !important;
+		font-size: 1.240px !important;
 	}
 
 	.sl-address-form {
@@ -3005,11 +3007,11 @@ button.sl-orders-pipeline__item.is-active {
 	.sl-invoice-timeline-dot {
 		width: 18px !important;
 		height: 18px !important;
-		font-size: 0.6rem !important;
+		font-size: 11px !important;
 	}
 
 	.sl-invoice-timeline-label {
-		font-size: 0.65rem !important;
+		font-size: 11px !important;
 	}
 
 	.sl-invoice-items-header,
@@ -3020,11 +3022,11 @@ button.sl-orders-pipeline__item.is-active {
 	}
 
 	.sl-invoice-item-name {
-		font-size: 0.78rem !important;
+		font-size: 13px !important;
 	}
 
 	.sl-invoice-item-total {
-		font-size: 0.82rem !important;
+		font-size: 13px !important;
 	}
 }
 
@@ -3047,7 +3049,7 @@ button.sl-orders-pipeline__item.is-active {
 	color: var(--sl-accent, #e30613);
 	border: 1px solid #fecaca;
 	border-radius: 20px;
-	font-size: 0.82rem;
+	font-size: 13px;
 	font-weight: 600;
 	letter-spacing: 0.2px;
 }
@@ -3111,7 +3113,7 @@ button.sl-orders-pipeline__item.is-active {
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
-	font-size: 0.82rem;
+	font-size: 13px;
 	line-height: 1.4;
 	color: #64748b;
 }
@@ -3119,7 +3121,7 @@ button.sl-orders-pipeline__item.is-active {
 .sl-voucher-box__title {
 	color: var(--sl-text, #1f2430);
 	font-weight: 600;
-	font-size: 0.94rem;
+	font-size: 15px;
 }
 
 .sl-voucher-box__desc {
@@ -3171,7 +3173,7 @@ button.sl-orders-pipeline__item.is-active {
 	border: none !important;
 	background: transparent !important;
 	padding: 0 8px 0 0 !important;
-	font-size: 0.9rem !important;
+	font-size: 14px !important;
 	color: var(--sl-text, #1f2430) !important;
 	outline: none !important;
 	box-shadow: none !important;
@@ -3181,7 +3183,7 @@ button.sl-orders-pipeline__item.is-active {
 
 .sl-coupon-input-group .sl-coupon-input::placeholder {
 	color: var(--sl-muted, #94a3b8) !important;
-	font-size: 0.88rem !important;
+	font-size: 14px !important;
 }
 
 .sl-coupon-input-group .sl-coupon-btn {
@@ -3194,7 +3196,7 @@ button.sl-orders-pipeline__item.is-active {
 	min-height: 36px !important;
 	padding: 0 20px !important;
 	margin: 0 !important;
-	font-size: 0.88rem !important;
+	font-size: 14px !important;
 	font-weight: 600 !important;
 	background: var(--sl-btn-primary-bg, #e30613) !important;
 	color: #ffffff !important;
@@ -3217,7 +3219,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-coupon-message {
-	font-size: 0.82rem;
+	font-size: 13px;
 	margin-top: 4px;
 	display: none;
 }
@@ -3312,7 +3314,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-voucher-brand-label {
-	font-size: 0.8rem;
+	font-size: 13px;
 	font-weight: 700;
 	text-transform: uppercase;
 	letter-spacing: 0.5px;
@@ -3364,7 +3366,7 @@ button.sl-orders-pipeline__item.is-active {
 .sl-voucher-badge {
 	display: inline-flex;
 	align-items: center;
-	font-size: 0.72rem;
+	font-size: 12px;
 	font-weight: 600;
 	padding: 2px 8px;
 	border-radius: 4px;
@@ -3390,7 +3392,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-voucher-card__title {
-	font-size: 0.96rem;
+	font-size: 15px;
 	font-weight: 600;
 	color: #1e293b;
 	line-height: 1.45;
@@ -3399,7 +3401,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-voucher-card__value {
-	font-size: 0.86rem;
+	font-size: 14px;
 	font-weight: 700;
 	color: var(--sl-accent, #e30613);
 	margin: 0;
@@ -3410,7 +3412,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-voucher-expiry-text {
-	font-size: 0.78rem;
+	font-size: 13px;
 	color: #64748b;
 }
 
@@ -3437,7 +3439,7 @@ button.sl-orders-pipeline__item.is-active {
 	gap: 6px;
 	padding: 7px 14px;
 	border-radius: 8px;
-	font-size: 0.84rem;
+	font-size: 13px;
 	font-weight: 600;
 	cursor: pointer;
 	transition: all 0.15s ease;
@@ -3546,14 +3548,14 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-voucher-empty__title {
-	font-size: 1.05rem;
+	font-size: 17px;
 	font-weight: 600;
 	color: #1e293b;
 	margin: 0 0 6px 0;
 }
 
 .sl-voucher-empty__desc {
-	font-size: 0.88rem;
+	font-size: 14px;
 	color: #64748b;
 	margin: 0;
 	max-width: 420px;
@@ -3597,7 +3599,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-voucher-modal__title {
-	font-size: 1.02rem;
+	font-size: 16px;
 	font-weight: 700;
 	color: #1e293b;
 	margin: 0;
@@ -3629,14 +3631,14 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-voucher-modal__code-label {
-	font-size: 0.7rem;
+	font-size: 12px;
 	font-weight: 700;
 	letter-spacing: 0.5px;
 	color: #64748b;
 }
 
 .sl-voucher-modal__code {
-	font-size: 1.15rem;
+	font-size: 1.240px;
 	font-weight: 800;
 	letter-spacing: 1px;
 	color: var(--sl-accent, #e30613);
@@ -3650,7 +3652,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-voucher-modal__headline {
-	font-size: 1rem;
+	font-size: 16px;
 	font-weight: 600;
 	color: #1e293b;
 	margin: 0;
@@ -3664,7 +3666,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-voucher-modal__expiry-badge {
-	font-size: 0.8rem;
+	font-size: 13px;
 	color: #64748b;
 	font-weight: 500;
 }
@@ -3677,7 +3679,7 @@ button.sl-orders-pipeline__item.is-active {
 }
 
 .sl-voucher-modal__section-title {
-	font-size: 0.85rem;
+	font-size: 14px;
 	font-weight: 700;
 	color: #475569;
 	text-transform: uppercase;
@@ -3698,7 +3700,7 @@ button.sl-orders-pipeline__item.is-active {
 	justify-content: space-between;
 	align-items: flex-start;
 	padding: 10px 14px;
-	font-size: 0.84rem;
+	font-size: 13px;
 	border-bottom: 1px solid #f1f5f9;
 	gap: 12px;
 }
@@ -3768,7 +3770,7 @@ button.sl-orders-pipeline__item.is-active {
 	}
 
 	.sl-voucher-grid .sl-voucher-brand-label {
-		font-size: 0.72rem !important;
+		font-size: 12px !important;
 		max-width: 80px !important;
 	}
 
@@ -3777,7 +3779,7 @@ button.sl-orders-pipeline__item.is-active {
 	}
 
 	.sl-voucher-grid .sl-voucher-card__title {
-		font-size: 0.88rem !important;
+		font-size: 14px !important;
 	}
 
 	.sl-voucher-grid .sl-voucher-card__actions {
@@ -3791,6 +3793,6 @@ button.sl-orders-pipeline__item.is-active {
 
 	.sl-voucher-btn {
 		padding: 6px 10px !important;
-		font-size: 0.78rem !important;
+		font-size: 13px !important;
 	}
 }

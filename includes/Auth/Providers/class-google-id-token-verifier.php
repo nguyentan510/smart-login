@@ -62,7 +62,7 @@ final class GoogleIdTokenVerifier {
 			return $cached;
 		}
 
-		$url      = (string) apply_filters( 'OMNIWP_google_certificates_url', 'https://www.googleapis.com/oauth2/v1/certs' );
+		$url      = (string) apply_filters( 'omniwp_google_certificates_url', 'https://www.googleapis.com/oauth2/v1/certs' );
 		$response = wp_remote_get( $url, array( 'timeout' => 15 ) );
 		if ( is_wp_error( $response ) ) {
 			return new WP_Error( 'OMNIWP_google_keys', __( 'Không thể tải khóa xác thực của Google.', 'omniwp' ) );

@@ -166,7 +166,7 @@ ow_require_companion(
 	'password policy is applied wherever a password is set',
 	'/(?:=>|=|\breturn\b)\s*wp_hash_password\(|^\s*wp_set_password\(/m',
 	'/PasswordPolicy::validate\(/',
-	'Both registration and reset must run OMNIWP_validate_password.'
+	'Both registration and reset must run omniwp_validate_password.'
 );
 
 ow_forbid_pattern(
@@ -637,6 +637,212 @@ ow_assert(
 	'the Zalo provider class is gone from disk',
 	'' === ow_source( 'includes/Auth/Providers/class-zalo-provider.php' ),
 	'The file is still there, so the autoloader can still reach it and a stray reference would still resolve.'
+);
+
+// ---------------------------------------------------------------------
+ow_section( 'Hook names are one namespace, and every listener has a speaker' );
+
+/*
+ * Two rules over one scan, both written after a one-character defect that took
+ * four integration gates offline without turning anything red.
+ *
+ * tests/integration/run-provider-gates.php listened on `omniwp_setting` while
+ * Settings::get() fires `omniwp_setting`. WordPress hook names are
+ * case-sensitive, so the filter never matched; the gate silently inherited the
+ * host site's own configuration, and the self-check it carries for exactly this
+ * reason exited 2 — taking the provider, abuse, delivery and install gates with
+ * it. The self-check worked. Nothing told anyone the fix was never applied.
+ *
+ * The scan reaches tests/ on purpose. ow_plugin_sources() excludes it, and
+ * tests/ is where the defect lived, so a rule reading only includes/ would have
+ * stayed green straight through it.
+ *
+ * Literal tags only. Three hooks are named by class constant (CLEANUP_HOOK and
+ * friends) and a constant cannot drift from itself, which is the argument for
+ * using one — not an exemption this rule has to carry.
+ */
+$ow_hook_fired    = array( 'apply_filters', 'apply_filters_ref_array', 'do_action', 'do_action_ref_array' );
+$ow_hook_listened = array( 'add_filter', 'add_action' );
+$ow_hook_calls    = array_merge( $ow_hook_fired, $ow_hook_listened );
+
+$ow_hook_files = array();
+foreach ( array( 'includes', 'templates', 'tests' ) as $ow_dir ) {
+	$ow_walk = new RecursiveIteratorIterator(
+		new RecursiveDirectoryIterator( dirname( __DIR__, 2 ) . '/' . $ow_dir, FilesystemIterator::SKIP_DOTS )
+	);
+
+	foreach ( $ow_walk as $ow_file ) {
+		if ( $ow_file->isFile() && 'php' === strtolower( $ow_file->getExtension() ) ) {
+			$ow_hook_files[] = $ow_file->getPathname();
+		}
+	}
+}
+$ow_hook_files[] = dirname( __DIR__, 2 ) . '/omniwp.php';
+$ow_hook_files[] = dirname( __DIR__, 2 ) . '/uninstall.php';
+
+$ow_root       = str_replace( '\\', '/', dirname( __DIR__, 2 ) ) . '/';
+$ow_miscased   = array();
+$ow_spoken     = array();
+$ow_heard      = array();
+$ow_hook_regex = '/\b(' . implode( '|', $ow_hook_calls ) . ')\s*\(\s*[\'"]([^\'"]+)[\'"]/';
+
+foreach ( $ow_hook_files as $ow_path ) {
+	$ow_code = is_readable( $ow_path ) ? (string) file_get_contents( $ow_path ) : '';
+	if ( '' === $ow_code ) {
+		continue;
+	}
+
+	$ow_relative = str_replace( array( '\\', $ow_root ), array( '/', '' ), $ow_path );
+
+	if ( ! preg_match_all( $ow_hook_regex, $ow_code, $ow_matches, PREG_SET_ORDER ) ) {
+		continue;
+	}
+
+	foreach ( $ow_matches as $ow_match ) {
+		list( , $ow_call, $ow_tag ) = $ow_match;
+
+		// Somebody else's hook is somebody else's naming problem.
+		if ( false === stripos( $ow_tag, 'omniwp' ) ) {
+			continue;
+		}
+
+		/*
+		 * `wp_ajax_{$action}` and `admin_post_{$action}` are core's, and core is
+		 * what fires them. The half that belongs to this plugin is the action
+		 * name spliced into the middle, so the casing rule applies to that and
+		 * the speaker rule does not apply at all — holding the plugin
+		 * responsible for firing a hook WordPress owns would make the rule
+		 * unsatisfiable, and an unsatisfiable rule gets an allowlist entry
+		 * instead of a fix.
+		 */
+		$ow_core_owned = false;
+		$ow_name       = $ow_tag;
+
+		foreach ( array( 'wp_ajax_nopriv_', 'wp_ajax_', 'admin_post_nopriv_', 'admin_post_' ) as $ow_core_prefix ) {
+			if ( 0 === strpos( $ow_tag, $ow_core_prefix ) ) {
+				$ow_core_owned = true;
+				$ow_name       = substr( $ow_tag, strlen( $ow_core_prefix ) );
+				break;
+			}
+		}
+
+		if ( 0 !== strpos( $ow_name, 'omniwp_' ) ) {
+			$ow_miscased[ $ow_name ][] = $ow_relative;
+		}
+
+		if ( $ow_core_owned ) {
+			continue;
+		}
+
+		if ( in_array( $ow_call, $ow_hook_fired, true ) ) {
+			$ow_spoken[ strtolower( $ow_tag ) ] = true;
+		} else {
+			$ow_heard[ $ow_tag ][] = $ow_relative;
+		}
+	}
+}
+
+ow_assert(
+	'every OmniWP hook tag is lowercase omniwp_*',
+	array() === $ow_miscased,
+	'WordPress compares hook names byte for byte, so two casings are two hooks. Offenders: '
+		. implode( '; ', array_map(
+			static fn( string $ow_t ): string => $ow_t . ' (' . count( array_unique( $ow_miscased[ $ow_t ] ) ) . ' file)',
+			array_keys( $ow_miscased )
+		) )
+);
+
+$ow_orphan_listeners = array();
+foreach ( $ow_heard as $ow_tag => $ow_where ) {
+	if ( ! isset( $ow_spoken[ strtolower( $ow_tag ) ] ) ) {
+		$ow_orphan_listeners[ $ow_tag ] = array_unique( $ow_where );
+	}
+}
+
+ow_assert(
+	'every OmniWP hook listened to is a hook something fires',
+	array() === $ow_orphan_listeners,
+	'A listener on a tag nobody fires is a no-op that reads like configuration. Offenders: '
+		. implode( '; ', array_map(
+			static fn( string $ow_t ): string => $ow_t . ' ← ' . implode( ', ', $ow_orphan_listeners[ $ow_t ] ),
+			array_keys( $ow_orphan_listeners )
+		) )
+);
+
+// ---------------------------------------------------------------------
+ow_section( 'An extension the plugin cannot run without is an extension it names' );
+
+/*
+ * `Requires PHP: 8.0` is the only runtime requirement this plugin has ever
+ * stated, and it was not the only one it had. Ten `mb_*` calls sit in shipped
+ * code with no `function_exists()` between them and a fatal — password reset,
+ * address normalisation, voucher validation and the account-hub sidebar among
+ * them.
+ *
+ * WordPress does not close this. core's compat.php supplies `_mb_substr()` and
+ * `_mb_strlen()` for its own internals; there is no fallback anywhere for
+ * `mb_strtolower()`, `mb_strtoupper()` or `mb_convert_encoding()`. On a host
+ * without ext-mbstring the plugin does not degrade, it dies.
+ *
+ * The rule is a declaration check rather than a ban. Vietnamese text genuinely
+ * needs multibyte handling and a hand-rolled substitute would be worse than the
+ * dependency. What was wrong was leaving it unsaid, so the fix is that every
+ * `mb_*` the code reaches for is listed in one place, and that place is what the
+ * readiness screen reports on.
+ */
+$ow_mb_used = array();
+foreach ( ow_plugin_sources() as $ow_relative => $ow_code ) {
+	if ( preg_match_all( '/\b(mb_[a-z_]+)\s*\(/', $ow_code, $ow_mb_hits ) ) {
+		foreach ( $ow_mb_hits[1] as $ow_fn ) {
+			$ow_mb_used[ $ow_fn ][ $ow_relative ] = true;
+		}
+	}
+}
+
+/*
+ * Read out of the source, not off the class. This suite loads harness.php and
+ * nothing else — no autoloader, no stubs — so `class_exists()` here answers
+ * "false" for every class in the plugin and a rule built on it would pass by
+ * never finding anything to check. That is the vacuous-rule failure 10.0 and
+ * 11.0 both had to correct, so it gets caught once rather than again.
+ */
+$ow_mb_declared = array();
+if ( preg_match(
+	'/const\s+MBSTRING_FUNCTIONS\s*=\s*array\((.*?)\);/s',
+	ow_source( 'includes/Admin/class-readiness.php' ),
+	$ow_mb_const
+) ) {
+	preg_match_all( "/'([a-z_]+)'/", $ow_mb_const[1], $ow_mb_names );
+	$ow_mb_declared = $ow_mb_names[1];
+}
+
+ow_assert(
+	'Readiness::MBSTRING_FUNCTIONS parses and is not empty',
+	array() !== $ow_mb_declared,
+	'The rules below compare against this list, so an unreadable constant would make both of them vacuous.'
+);
+
+$ow_mb_undeclared = array_diff( array_keys( $ow_mb_used ), $ow_mb_declared );
+
+ow_assert(
+	'every mb_* function the plugin calls is declared in Readiness::MBSTRING_FUNCTIONS',
+	array() === $ow_mb_undeclared,
+	'An undeclared extension call is a fatal the readiness screen cannot warn about. Undeclared: '
+		. implode( ', ', $ow_mb_undeclared )
+);
+
+// The other direction: a list that outlives its call sites starts describing a
+// dependency the plugin no longer has, and readiness would keep demanding it.
+ow_assert(
+	'Readiness::MBSTRING_FUNCTIONS names nothing the plugin has stopped calling',
+	array() === array_diff( $ow_mb_declared, array_keys( $ow_mb_used ) ),
+	'Stale entries: ' . implode( ', ', array_diff( $ow_mb_declared, array_keys( $ow_mb_used ) ) )
+);
+
+ow_assert(
+	'readiness reports on the mbstring extension',
+	false !== strpos( ow_source( 'includes/Admin/class-readiness.php' ), "'mbstring'" ),
+	'The dependency is declared but nothing tells an administrator whether their host has it.'
 );
 
 // ---------------------------------------------------------------------

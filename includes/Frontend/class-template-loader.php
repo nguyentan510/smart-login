@@ -31,7 +31,7 @@ class TemplateLoader {
 		 * @param string $found
 		 * @param string $name
 		 */
-		return (string) apply_filters( 'OMNIWP_locate_template', $found, $name );
+		return (string) apply_filters( 'omniwp_locate_template', $found, $name );
 	}
 
 	/**
@@ -53,7 +53,7 @@ class TemplateLoader {
 		 * @param array  $args
 		 * @param string $template_name
 		 */
-		$args = (array) apply_filters( 'OMNIWP_template_args', $args, $template_name );
+		$args = (array) apply_filters( 'omniwp_template_args', $args, $template_name );
 
 		// phpcs:ignore WordPress.PHP.DontExtract -- templates expect named variables.
 		extract( $args, EXTR_SKIP );

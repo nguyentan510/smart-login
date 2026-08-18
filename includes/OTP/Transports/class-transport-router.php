@@ -32,7 +32,7 @@ class TransportRouter {
 		 *
 		 * @param array<string,TransportInterface> $transports
 		 */
-		$this->transports = (array) apply_filters( 'OMNIWP_otp_transports', $this->transports );
+		$this->transports = (array) apply_filters( 'omniwp_otp_transports', $this->transports );
 	}
 
 	/**
@@ -75,7 +75,7 @@ class TransportRouter {
 	 * reachable through the provider list, and as a routing table it was mostly a
 	 * way to get it wrong.
 	 *
-	 * `OMNIWP_otp_transports` still works and still matters: a filter that
+	 * `omniwp_otp_transports` still works and still matters: a filter that
 	 * replaces `sms` or `email` is serving that channel, which is a substitution
 	 * rather than a route. What it can no longer do is register a transport that
 	 * nothing reaches.
@@ -141,7 +141,7 @@ class TransportRouter {
 		 * @param string             $code
 		 * @param array              $ctx
 		 */
-		$handled = apply_filters( 'OMNIWP_dispatch_otp', null, $destination, $code, $ctx );
+		$handled = apply_filters( 'omniwp_dispatch_otp', null, $destination, $code, $ctx );
 
 		if ( null !== $handled ) {
 			return $handled;

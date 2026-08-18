@@ -78,7 +78,7 @@ final class ProviderCredentials {
 			return $external;
 		}
 
-		return admin_url( 'admin-post.php?action=OMNIWP_provider_callback&provider=' . $provider );
+		return admin_url( 'admin-post.php?action=omniwp_provider_callback&provider=' . $provider );
 	}
 
 	public static function is_configured( string $provider ): bool {

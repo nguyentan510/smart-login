@@ -154,7 +154,7 @@ final class IdentityLinkService {
 		 * @param int  $user_id
 		 * @param int  $remaining
 		 */
-		if ( apply_filters( 'OMNIWP_allow_orphan_unlink', false, $user_id, $remaining ) ) {
+		if ( apply_filters( 'omniwp_allow_orphan_unlink', false, $user_id, $remaining ) ) {
 			return $remaining >= 1;
 		}
 
@@ -225,7 +225,7 @@ final class IdentityLinkService {
 		 * @param int   $user_id
 		 * @param Claim $claim
 		 */
-		do_action( 'OMNIWP_identity_unlinked', $user_id, $claim );
+		do_action( 'omniwp_identity_unlinked', $user_id, $claim );
 
 		return true;
 	}

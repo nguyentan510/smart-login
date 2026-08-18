@@ -182,7 +182,7 @@ class OtpService {
 		 * @param string $destination
 		 * @param array  $send_ctx
 		 */
-		do_action( 'OMNIWP_otp_sent', $destination, $send_ctx );
+		do_action( 'omniwp_otp_sent', $destination, $send_ctx );
 
 		$result = array(
 			'token'        => $token,
@@ -382,7 +382,7 @@ class OtpService {
 		 * @param string $code
 		 * @param int    $length
 		 */
-		return (string) apply_filters( 'OMNIWP_otp_code', $code, $length );
+		return (string) apply_filters( 'omniwp_otp_code', $code, $length );
 	}
 
 	private function hash_code( string $code ): string {

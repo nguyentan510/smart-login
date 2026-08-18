@@ -108,7 +108,7 @@ final class ChannelRegistry {
 		 * @param bool   $enabled
 		 * @param string $id
 		 */
-		return (bool) apply_filters( 'OMNIWP_channel_enabled', $enabled, $id );
+		return (bool) apply_filters( 'omniwp_channel_enabled', $enabled, $id );
 	}
 
 	/**

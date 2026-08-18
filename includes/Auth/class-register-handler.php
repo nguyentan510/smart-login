@@ -78,7 +78,7 @@ class RegisterHandler {
 		 * @param array $payload
 		 * @param array $input
 		 */
-		$payload = (array) apply_filters( 'OMNIWP_registration_payload', $payload, $input );
+		$payload = (array) apply_filters( 'omniwp_registration_payload', $payload, $input );
 
 		AuditLog::record(
 			AuditLog::REGISTER_STARTED,
@@ -248,7 +248,7 @@ class RegisterHandler {
 		);
 
 		/** This filter documented on start(); the deferred flow honours it too. */
-		$payload = (array) apply_filters( 'OMNIWP_registration_payload', $payload, $input );
+		$payload = (array) apply_filters( 'omniwp_registration_payload', $payload, $input );
 
 		return $this->provision( $claim, $payload );
 	}
@@ -336,7 +336,7 @@ class RegisterHandler {
 		 * @param int   $user_id
 		 * @param array $payload
 		 */
-		do_action( 'OMNIWP_user_registered', $user_id, $payload );
+		do_action( 'omniwp_user_registered', $user_id, $payload );
 
 		$this->sign_in( $user_id, AuthProof::from_otp( $verified, $user_id ) );
 

@@ -117,7 +117,7 @@ class EventBus {
 		 * @param string $event
 		 * @param array  $meta
 		 */
-		$envelope = (array) apply_filters( 'OMNIWP_bus_envelope', $envelope, $event, $meta );
+		$envelope = (array) apply_filters( 'omniwp_bus_envelope', $envelope, $event, $meta );
 
 		$envelope['event'] = $event;
 		unset( $envelope['code'] );

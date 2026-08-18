@@ -38,6 +38,7 @@ Phases are units of **review and test gating**, not of migration safety.
 - [x] **Phase 21 — The account menu**
 - [x] **Phase 22 — The guide inside the plugin**
 - [x] **Phase 23 — Smart Menu**
+- [x] **Phase 24 — The e-commerce surface, retrofitted** *(see below)*
 
 
 Phases 0–3 are the core and should run without interruption. Phases 4–7 are
@@ -282,8 +283,8 @@ OMNIWP_ZALO_STAGING_SMOKE_OK
   `identity_channel`; index `dest_purpose` → `dest_intent`. DB_VERSION 3 → 4
 - `OTP\Channels` → `OTP\Transports`: `TransportInterface`, `TransportRouter`,
   `WebhookTransport`, `MailTransport`. "Channel" now means exactly one thing
-  project-wide. Filter `OMNIWP_otp_channels` → `OMNIWP_otp_transports`
-- `PasswordPolicy` extracted; `OMNIWP_validate_password` now runs on reset
+  project-wide. Filter `OMNIWP_otp_channels` → `omniwp_otp_transports`
+- `PasswordPolicy` extracted; `omniwp_validate_password` now runs on reset
   as well as registration
 - `OMNIWP_phone_is_valid` reaches Vietnamese numbers
 - Placeholders `{{purpose}}`/`{{channel}}` → `{{intent}}`/`{{transport}}`
@@ -396,7 +397,7 @@ they remain genuinely outstanding.
 - `Auth\IdentityLinkService` — `linked()`, `can_unlink()`, `unlink()`,
   `unlinked_providers()`, `history()`
 - **Orphan guard**: an account must keep at least one identity, with an
-  explicit `OMNIWP_allow_orphan_unlink` filter as the only way past it
+  explicit `omniwp_allow_orphan_unlink` filter as the only way past it
 - Re-authentication by account password, checked *after* the guard
 - REST: `POST identities` and `POST identities/unlink`
 - Non-JS path: `unlink_identity` form action in `FormController`
@@ -717,9 +718,9 @@ Short version: one line decides how every code travels —
 `( false !== strpos( $destination, '@' ) ) ? 'email' : 'sms'`
 (`class-transport-router.php:41`). The shape of the destination is the whole
 routing policy, so a site cannot point either channel at an automation platform,
-and the `OMNIWP_otp_transports` filter registers transports that nothing
+and the `omniwp_otp_transports` filter registers transports that nothing
 will ever route to. Separately, nineteen audit event constants exist and none of
-them leaves the site; `OMNIWP_otp_sent` fires without the code, so external
+them leaves the site; `omniwp_otp_sent` fires without the code, so external
 automation can neither send an OTP nor react to one.
 
 ### Sub-phases
@@ -1518,7 +1519,7 @@ row has no stored fact behind it at all.
 - [x] **17.1** [The provider's own mark](account-card/17.1-provider-marks.md) —
       one helper, two call sites, against an asset that had been on the interface
       since Phase 12. Found on the way: `form-auth.php` was the **only** place
-      applying `OMNIWP_provider_icon_svg`, so a site filtering in an
+      applying `omniwp_provider_icon_svg`, so a site filtering in an
       official brand asset would have got it on the sign-in screen and the
       plugin's own drawing in the account card
 - [x] **17.2** [The scale](account-card/17.2-the-scale.md) — six spacing steps
@@ -2347,7 +2348,7 @@ was not the SMS gateway was refused in the mail transport's name.
 
 - [x] **T1** — **a transport is described by itself, not by a list.** A third
       branch would fix the instance; the bug class is a fixed list of ids
-      describing an open registry, since `OMNIWP_otp_transports` exists so a
+      describing an open registry, since `omniwp_otp_transports` exists so a
       site can add ZNS or in-app push and those were being called email too. The
       transport answers instead, through an **optional** `ReportsUnavailability`.
       Optional and not a fourth method on `TransportInterface`, because that
@@ -2773,3 +2774,49 @@ Requested 2026-08-10: "Smart Menu - Hệ thống triển khai nhanh trên Menu. 
 - [x] **23.4** Visibility & Auth Switcher — [brief](smart-menu/23.4-visibility-and-auth-switcher.md).
 - [x] **23.5** Verification, Documentation & Promotion — [brief](smart-menu/23.5-verification-and-promotion.md).
 
+
+---
+
+## Phase 24 — The e-commerce surface, retrofitted
+
+Spec: [`ecommerce.md`](ecommerce.md). No briefs — this phase had no plan to
+write them from, which is the point of it.
+
+Short version: `includes/Ecommerce/` and `Frontend\VoucherService` — 2,445 lines
+handling cart, checkout, vouchers and VietQR — shipped across roughly thirty
+commits after Phase 23 with no spec, no brief and no row here. Its suite held
+eighteen assertions, twelve of which read registry defaults back and two of which
+exercised behaviour. The tracker opens by saying status lives in one place; for
+the highest-risk code in the plugin it lived in nowhere.
+
+This phase does not make the module verified. It gives it the structural floor
+every other module started with, and writes the remaining gap down.
+
+- [x] **24.0** Guard rails — rules 5, 6 and 7 in
+      `tests/ecommerce/run-ecommerce-tests.php`, 18 → 30 assertions. Landed
+      green rather than red, because the defects they describe are not present
+      today; both structural rules were then **proven to fail** against a
+      deliberately broken tree rather than assumed to work — removing one
+      `check_ajax_referer()` named `ajax_get_cart`, renaming one callback named
+      `ajax_get_wards`. Rule 5 is the sharper of the two: a registration names
+      its callback by string, and a string naming nothing makes admin-ajax
+      answer `0` while the cart silently stops working
+- [x] **24.1** The nonce policy becomes a rule, not a habit. Four of seven
+      checkout callbacks verified a nonce and three did not; all three read as
+      defensible — a 401 stub, a public dataset, a session-scoped read — and all
+      three are now allowlisted **with their reason at the call site**. The
+      allowlist is checked in both directions, so an exemption cannot outlive the
+      callback it excused
+- [x] **24.2** Spec written. Records the ShopKit boundary and why it is load
+      bearing, the freeship rounding asymmetry — `percentage` may reach 100 while
+      `is_reached` is false, and never the reverse — and, in full, what is still
+      not covered
+
+**What is still open, and deliberately not ticked.** `CheckoutService`'s field
+filters and template swap, `VoucherService::evaluate_cart_vouchers()`,
+`SlideCart`'s eight mutations and VietQR beyond its COD case have no behavioural
+coverage. All need a real WooCommerce cart, so they need
+`tests/integration/run-ecommerce-gate.php`, which does not exist. That gate is
+the next piece of work on this module, and until it lands the module is
+structurally sound and behaviourally unproven — which is a different sentence
+from the one a green suite implies.

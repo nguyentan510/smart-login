@@ -122,17 +122,18 @@
 	/* ==========================================================================
 	   5. Typography & Display Scale
 	   ========================================================================== */
-	--ow-font-family: inherit, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+	--ow-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+	--ow-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
-	/* Font Sizes (Base 16px) */
-	--ow-fs-xs: 0.6875rem; /* 11px - Micro captions, status badges */
-	--ow-fs-sm: 0.8125rem; /* 13px - Subtext, helper text, old strike price */
-	--ow-fs-md: 0.8750rem; /* 14px - Body text, standard inputs, item titles */
-	--ow-fs-lg: 1.0000rem; /* 16px - Subheadings, card titles, table totals */
-	--ow-fs-xl: 1.1250rem; /* 18px - Section titles, modal headers */
-	--ow-fs-2xl: 1.3750rem; /* 22px - Main page titles, grand total display */
-	--ow-fs-3xl: 1.7500rem; /* 28px - Hero titles, celebration headers */
-	--ow-fs-4xl: 2.2500rem; /* 36px - Grand promo numbers, highlight counters */
+	/* Font Sizes (Enhanced Scale for Crisp Visuals Across Displays) */
+	--ow-fs-xs: 12px; /* Micro captions, status badges */
+	--ow-fs-sm: 14px; /* Subtext, helper text, old strike price */
+	--ow-fs-md: 15px; /* Body text, standard inputs, item titles */
+	--ow-fs-lg: 17px; /* Subheadings, card titles, table totals */
+	--ow-fs-xl: 20px; /* Section titles, modal headers */
+	--ow-fs-2xl: 24px; /* Main page titles, grand total display */
+	--ow-fs-3xl: 30px; /* Hero titles, celebration headers */
+	--ow-fs-4xl: 38px; /* Grand promo numbers, highlight counters */
 
 	/* Font Weights */
 	--ow-fw-light: 300;
@@ -161,13 +162,13 @@
 
 	--ow-container-max-width: 1200px;
 	--ow-dialog-max-width: 480px;
-	--ow-drawer-width: 440px;
+	--ow-drawer-width: 460px;
 
 	/* ==========================================================================
 	   7. Standard Button Tokens
 	   ========================================================================== */
 	--ow-btn-radius: var(--ow-radius-md);
-	--ow-btn-min-height: 42px;
+	--ow-btn-min-height: 44px;
 
 	--ow-btn-primary-bg: var(--ow-brand);
 	--ow-btn-primary-text: var(--ow-white);
@@ -215,6 +216,9 @@
 	--sl-space-4: var(--ow-space-4);
 	--sl-space-5: var(--ow-space-5);
 	--sl-space-6: var(--ow-space-6);
+	--sl-space-8: var(--ow-space-8);
+	--sl-space-10: var(--ow-space-10);
+	--sl-space-12: var(--ow-space-12);
 
 	--sl-color-text-primary: var(--ow-text-primary);
 	--sl-color-text-secondary: var(--ow-text-secondary);
@@ -225,12 +229,16 @@
 	--sl-color-price-old: var(--ow-price-old);
 	--sl-color-price-saving: var(--ow-price-saving);
 
+	--sl-font-family: var(--ow-font-family);
+
 	--sl-fs-xs: var(--ow-fs-xs);
 	--sl-fs-sm: var(--ow-fs-sm);
 	--sl-fs-md: var(--ow-fs-md);
 	--sl-fs-lg: var(--ow-fs-lg);
 	--sl-fs-xl: var(--ow-fs-xl);
 	--sl-fs-2xl: var(--ow-fs-2xl);
+	--sl-fs-3xl: var(--ow-fs-3xl);
+	--sl-fs-4xl: var(--ow-fs-4xl);
 
 	--sl-fw-light: var(--ow-fw-light);
 	--sl-fw-normal: var(--ow-fw-normal);

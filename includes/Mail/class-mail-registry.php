@@ -205,7 +205,7 @@ Cấu hình: {{site_url}}wp-admin/admin.php?page=omniwp&tab=delivery',
 		 *
 		 * @param array<string,array> $messages
 		 */
-		return (array) apply_filters( 'OMNIWP_mail_messages', $messages );
+		return (array) apply_filters( 'omniwp_mail_messages', $messages );
 	}
 
 	public static function get( string $id ): ?array {

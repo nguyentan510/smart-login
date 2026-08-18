@@ -122,7 +122,7 @@ class ow_Fake_Transport implements TransportInterface {
 
 /**
  * A transport that is registered but not configured — the shape a site adds
- * through `OMNIWP_otp_transports` and then forgets to fill in.
+ * through `omniwp_otp_transports` and then forgets to fill in.
  *
  * Deliberately implements nothing beyond TransportInterface: whatever lets the
  * router describe this refusal must be optional, or every transport written
@@ -698,7 +698,7 @@ ow_assert(
 
 /*
  * The general case, which is the one a ternary can never satisfy. The transport
- * map is open — `OMNIWP_otp_transports` exists so a site can add ZNS or an
+ * map is open — `omniwp_otp_transports` exists so a site can add ZNS or an
  * in-app push — and a message chosen by a fixed list of ids describes the
  * transports somebody thought of at the time. This one is not on any list.
  */

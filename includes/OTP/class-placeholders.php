@@ -51,7 +51,7 @@ class Placeholders {
 		 * @param string $destination
 		 * @param array  $ctx
 		 */
-		return (array) apply_filters( 'OMNIWP_otp_placeholders', $map, $destination, $ctx );
+		return (array) apply_filters( 'omniwp_otp_placeholders', $map, $destination, $ctx );
 	}
 
 	/**

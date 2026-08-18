@@ -166,7 +166,7 @@ class WebhookTransport implements TransportInterface, ReportsUnavailability {
 		 * @param string $url
 		 * @param array  $ctx
 		 */
-		$args = (array) apply_filters( 'OMNIWP_webhook_args', $args, $url, $ctx );
+		$args = (array) apply_filters( 'omniwp_webhook_args', $args, $url, $ctx );
 
 		$has_idempotency = '' !== $idempotency_header
 			&& ! empty( $args['headers'][ $idempotency_header ] );

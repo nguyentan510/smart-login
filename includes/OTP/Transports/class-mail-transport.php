@@ -48,7 +48,7 @@ class MailTransport implements TransportInterface, ReportsUnavailability {
 		// generating a bounce and a user waiting for a code that will never come.
 		if ( UserManager::is_synthetic_email( $destination ) ) {
 			return new WP_Error(
-				'OMNIWP_synthetic_email',
+				'omniwp_synthetic_email',
 				__( 'Tài khoản này chưa có email thật. Vui lòng dùng số điện thoại.', 'omniwp' )
 			);
 		}

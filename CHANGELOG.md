@@ -173,7 +173,7 @@ một botnet đổi cả hai trục không gặp trần nào.
 - **Địa chỉ email ảo không còn suy diễn được từ số điện thoại**, vì lý do tương
   tự và vì nó không bao giờ được cập nhật khi người dùng đổi số.
 - **Chính sách mật khẩu áp dụng cho cả đặt lại mật khẩu.** Filter
-  `OMNIWP_validate_password` trước đây chỉ chạy khi đăng ký, nên một site
+  `omniwp_validate_password` trước đây chỉ chạy khi đăng ký, nên một site
   bắt buộc mật khẩu phải có chữ số có thể bị bỏ qua hoàn toàn bằng cách đi qua
   luồng Quên mật khẩu.
 - **Phát hành phiên đăng nhập bắt buộc có `AuthProof`.** Constructor là private
@@ -286,7 +286,7 @@ một botnet đổi cả hai trục không gặp trần nào.
   nhau, nên tập hằng số phình theo mỗi tính năng.
 - Namespace `OTP\Channels` đổi thành `OTP\Transports`. Từ "channel" nay chỉ có
   một nghĩa duy nhất trong toàn dự án: một không gian định danh.
-- Filter `OMNIWP_otp_channels` → `OMNIWP_otp_transports`.
+- Filter `OMNIWP_otp_channels` → `omniwp_otp_transports`.
 - Placeholder `{{purpose}}` / `{{channel}}` → `{{intent}}` / `{{transport}}`.
 - `LoginHandler::attempt()` bỏ tham số `$remember` — nó chưa bao giờ được dùng.
 - Bảng `OMNIWP_external_identities` bị xoá; nhà cung cấp liên kết không còn

@@ -84,7 +84,7 @@ define( 'WP_PLUGIN_DIR', dirname( $plugin_root ) );
 define( 'WP_PLUGIN_URL', 'https://example.test/wp-content/plugins' );
 define( 'OMNIWP_GOOGLE_CLIENT_ID', (string) ( getenv( 'OMNIWP_GOOGLE_CLIENT_ID' ) ?: 'omniwp-staging-client' ) );
 define( 'OMNIWP_GOOGLE_CLIENT_SECRET', (string) ( getenv( 'OMNIWP_GOOGLE_CLIENT_SECRET' ) ?: 'staging-fixture-secret' ) );
-define( 'OMNIWP_GOOGLE_REDIRECT_URI', 'https://example.test/wp-admin/admin-post.php?action=OMNIWP_provider_callback&provider=google' );
+define( 'OMNIWP_GOOGLE_REDIRECT_URI', 'https://example.test/wp-admin/admin-post.php?action=omniwp_provider_callback&provider=google' );
 $table_prefix = $prefix;
 
 try {

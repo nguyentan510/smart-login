@@ -85,7 +85,7 @@ class PasswordResetHandler {
 			 *
 			 * @param bool $reveal
 			 */
-			if ( AuthAction::NO_ACCOUNT === $decision && apply_filters( 'OMNIWP_reset_reveal_unknown', true ) ) {
+			if ( AuthAction::NO_ACCOUNT === $decision && apply_filters( 'omniwp_reset_reveal_unknown', true ) ) {
 				return new WP_Error(
 					'OMNIWP_unknown_identity',
 					__( 'Thông tin này chưa được đăng ký. Vui lòng kiểm tra lại hoặc tạo tài khoản mới.', 'omniwp' )
@@ -164,7 +164,7 @@ class PasswordResetHandler {
 		$confirm  = (string) wp_unslash( $input['password_confirm'] ?? '' );
 
 		// The same policy as registration, including the
-		// OMNIWP_validate_password filter, which used to apply only there.
+		// omniwp_validate_password filter, which used to apply only there.
 		$verdict = PasswordPolicy::validate( $password, $confirm );
 
 		if ( is_wp_error( $verdict ) ) {
@@ -198,7 +198,7 @@ class PasswordResetHandler {
 		/**
 		 * @param int $user_id
 		 */
-		do_action( 'OMNIWP_password_reset', $user_id );
+		do_action( 'omniwp_password_reset', $user_id );
 
 		return $user_id;
 	}

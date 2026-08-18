@@ -57,7 +57,7 @@ final class PostAuthRedirector {
 			if ( '' !== $requested ) {
 				$url = add_query_arg( 'redirect_to', rawurlencode( $requested ), $url );
 			}
-			$filtered             = (string) apply_filters( 'OMNIWP_post_register_redirect', $url, $result->user_id );
+			$filtered             = (string) apply_filters( 'omniwp_post_register_redirect', $url, $result->user_id );
 			$result->redirect_url = $this->safe( $filtered, $url );
 			return $result->redirect_url;
 		}
@@ -113,7 +113,7 @@ final class PostAuthRedirector {
 			}
 		}
 
-		$filtered             = (string) apply_filters( 'OMNIWP_post_login_redirect', $url );
+		$filtered             = (string) apply_filters( 'omniwp_post_login_redirect', $url );
 		$result->redirect_url = $this->safe( $filtered, home_url( '/' ) );
 		return $result->redirect_url;
 	}

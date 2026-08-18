@@ -243,40 +243,40 @@ Mỗi OTP được bind với đúng mục đích (`register`, `reset` hoặc `l
 
 ```php
 // Tự viết cách gửi OTP; trả về non-null để plugin bỏ qua kênh mặc định.
-add_filter( 'OMNIWP_dispatch_otp', function ( $handled, $destination, $code, $ctx ) {
+add_filter( 'omniwp_dispatch_otp', function ( $handled, $destination, $code, $ctx ) {
     my_gateway_send( $destination, $code );
     return true; // hoặc new WP_Error(...) nếu thất bại
 }, 10, 4 );
 
 // Thêm một trường của riêng bạn vào hồ sơ đăng ký, rồi xử lý sau khi tài khoản
 // được tạo. Plugin không tự thu thập trường nào ngoài những gì nó hiển thị.
-add_filter( 'OMNIWP_registration_payload', function ( $payload, $input ) {
+add_filter( 'omniwp_registration_payload', function ( $payload, $input ) {
     $payload['my_campaign'] = sanitize_text_field( $input['my_campaign'] ?? '' );
     return $payload;
 }, 10, 2 );
 
-add_action( 'OMNIWP_user_registered', function ( $user_id, $payload ) {
+add_action( 'omniwp_user_registered', function ( $user_id, $payload ) {
     if ( ! empty( $payload['my_campaign'] ) ) {
         my_loyalty_apply_campaign( $user_id, $payload['my_campaign'] );
     }
 }, 10, 2 );
 
 // Đổi nơi chuyển hướng sau khi đăng ký.
-add_filter( 'OMNIWP_post_register_redirect', fn( $url, $uid ) => home_url( '/uu-dai/' ), 10, 2 );
+add_filter( 'omniwp_post_register_redirect', fn( $url, $uid ) => home_url( '/uu-dai/' ), 10, 2 );
 
 // Bổ sung trường tuỳ ý vào form đăng ký.
-add_filter( 'OMNIWP_registration_payload', function ( $payload, $input ) {
+add_filter( 'omniwp_registration_payload', function ( $payload, $input ) {
     $payload['company'] = sanitize_text_field( $input['company'] ?? '' );
     return $payload;
 }, 10, 2 );
 
 // Thêm ràng buộc mật khẩu.
-add_filter( 'OMNIWP_validate_password', function ( $ok, $password ) {
+add_filter( 'omniwp_validate_password', function ( $ok, $password ) {
     return preg_match( '/\d/', $password ) ? $ok : new WP_Error( 'weak', 'Mật khẩu phải chứa ít nhất một chữ số.' );
 }, 10, 2 );
 ```
 
-Hook khác: `OMNIWP_otp_code`, `OMNIWP_otp_sent`, `OMNIWP_otp_placeholders`, `OMNIWP_webhook_args`, `OMNIWP_otp_email`, `OMNIWP_synthetic_email`, `OMNIWP_phone_is_valid`, `OMNIWP_default_role`, `OMNIWP_post_login_redirect`, `OMNIWP_check_otp_send`, `OMNIWP_reset_reveal_unknown`, `OMNIWP_trust_proxy_headers`, `OMNIWP_missing_profile_fields`, `OMNIWP_step_url`, `OMNIWP_locate_template`.
+Hook khác: `omniwp_otp_code`, `omniwp_otp_sent`, `omniwp_otp_placeholders`, `omniwp_webhook_args`, `OMNIWP_otp_email`, `omniwp_synthetic_email`, `OMNIWP_phone_is_valid`, `omniwp_default_role`, `omniwp_post_login_redirect`, `omniwp_check_otp_send`, `omniwp_reset_reveal_unknown`, `OMNIWP_trust_proxy_headers`, `omniwp_missing_profile_fields`, `omniwp_step_url`, `omniwp_locate_template`.
 
 ---
 
@@ -343,7 +343,7 @@ Gõ tên phường/xã bất kỳ (có dấu hoặc không — `cau giay` cũng 
 
 ```php
 // Sau khi địa chỉ được lưu cho một user.
-add_action( 'OMNIWP_address_saved', function ( $user_id, $address ) {
+add_action( 'omniwp_address_saved', function ( $user_id, $address ) {
     error_log( OmniWP\Address\AddressFields::format( $address ) );
 }, 10, 2 );
 ```
@@ -414,7 +414,7 @@ Với deployment được quản lý tập trung, có thể dùng các constant 
 ```php
 define( 'OMNIWP_GOOGLE_CLIENT_ID', '...' );
 define( 'OMNIWP_GOOGLE_CLIENT_SECRET', '...' );
-define( 'OMNIWP_GOOGLE_REDIRECT_URI', 'https://example.com/wp-admin/admin-post.php?action=OMNIWP_provider_callback&provider=google' );
+define( 'OMNIWP_GOOGLE_REDIRECT_URI', 'https://example.com/wp-admin/admin-post.php?action=omniwp_provider_callback&provider=google' );
 ```
 
 Google ID token được kiểm tra chữ ký bằng public certificate, sau đó kiểm tra issuer, audience, expiry và nonce. Provider nào không cung cấp email verified thì plugin tạo tài khoản provider-only và đưa user tới hồ sơ để bổ sung contact.

@@ -46,6 +46,33 @@ final class Readiness {
 	/** Deliberately not in use; not a problem. */
 	const OFF = 'off';
 
+	/**
+	 * Every ext-mbstring function the plugin calls, declared in one place.
+	 *
+	 * The list exists so the dependency is stated rather than discovered. A
+	 * fitness rule holds it to the call sites in both directions: a new `mb_*`
+	 * that is not named here fails the build, and a name here that nothing calls
+	 * any more fails it too.
+	 *
+	 * Not guarded with `function_exists()` at each site, deliberately. There is
+	 * no honest fallback — `strtolower()` on Vietnamese corrupts the very input
+	 * the address and voucher code exists to normalise, so a guard would trade a
+	 * loud fatal for a silent wrong answer. The dependency is real; what was
+	 * missing was saying so.
+	 *
+	 * `mb_strpos` is reached only from `bin/build-address-data.php`, which
+	 * `.distignore` keeps in the archive on purpose as a user-facing tool. It
+	 * ships, so it counts.
+	 */
+	const MBSTRING_FUNCTIONS = array(
+		'mb_convert_encoding',
+		'mb_strlen',
+		'mb_strpos',
+		'mb_strtolower',
+		'mb_strtoupper',
+		'mb_substr',
+	);
+
 	/** @var \OmniWP\OTP\OtpRepository */
 	private $repo;
 
@@ -64,6 +91,7 @@ final class Readiness {
 	 */
 	public function checks(): array {
 		$checks = array(
+			$this->mbstring(),
 			$this->identity(),
 			$this->delivery(),
 			$this->budget(),
@@ -80,7 +108,7 @@ final class Readiness {
 		 *
 		 * @param array $checks
 		 */
-		return (array) apply_filters( 'OMNIWP_readiness_checks', $checks );
+		return (array) apply_filters( 'omniwp_readiness_checks', $checks );
 	}
 
 	/**
@@ -631,6 +659,35 @@ final class Readiness {
 				implode( ', ', $missing )
 			),
 			'advanced'
+		);
+	}
+
+	/**
+	 * Whether this host can run the multibyte code at all.
+	 *
+	 * FAIL rather than WARN: without the extension the failure is a fatal on the
+	 * password-reset, address and voucher paths, not a degraded one. It leads the
+	 * list for the same reason `identity()` does — an administrator reading this
+	 * screen wants the blocking answer first.
+	 */
+	private function mbstring(): array {
+		if ( extension_loaded( 'mbstring' ) ) {
+			return $this->check(
+				'mbstring',
+				__( 'Phần mở rộng mbstring', 'omniwp' ),
+				self::OK,
+				__( 'Đã bật.', 'omniwp' ),
+				'advanced'
+			);
+		}
+
+		return $this->check(
+			'mbstring',
+			__( 'Phần mở rộng mbstring', 'omniwp' ),
+			self::FAIL,
+			__( 'Máy chủ chưa bật mbstring. Đặt lại mật khẩu, chuẩn hoá địa chỉ và kiểm tra mã giảm giá sẽ lỗi nặng. Liên hệ nhà cung cấp hosting để bật php-mbstring.', 'omniwp' ),
+			'advanced',
+			__( 'Xem hướng dẫn', 'omniwp' )
 		);
 	}
 

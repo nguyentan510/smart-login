@@ -60,7 +60,7 @@ final class ProviderMark {
 		 * @param string $svg
 		 * @param string $provider_id
 		 */
-		return (string) apply_filters( 'OMNIWP_provider_icon_svg', $provider->icon_svg(), $provider->id() );
+		return (string) apply_filters( 'omniwp_provider_icon_svg', $provider->icon_svg(), $provider->id() );
 	}
 
 	/**

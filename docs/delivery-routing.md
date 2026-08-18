@@ -20,17 +20,17 @@ the administrator, not a setting, not a filter. Consequences:
 
 - A site that wants an external automation platform (n8n, Make, a bespoke
   service) to deliver its codes cannot have one. It can add a transport through
-  `OMNIWP_otp_transports`, but nothing will ever route to it, because
+  `omniwp_otp_transports`, but nothing will ever route to it, because
   routing does not read the transport list.
 - An email destination can never reach a webhook and a phone destination can
   never reach `wp_mail()`. Both are legitimate configurations.
-- The one escape hatch, `OMNIWP_dispatch_otp`
+- The one escape hatch, `omniwp_dispatch_otp`
   (`class-transport-router.php:73`), takes over delivery *entirely* — it is
   all-or-nothing, and it is code, not configuration.
 
 Separately, the plugin emits no outbound event stream at all. `AuditLog` holds
 nineteen event constants (`includes/Security/class-audit-log.php:19-39`) and
-`do_action( 'OMNIWP_otp_sent', … )` fires
+`do_action( 'omniwp_otp_sent', … )` fires
 (`includes/OTP/class-otp-service.php:172`) but carries no code, so an external
 system can neither send an OTP nor react to one.
 
@@ -189,7 +189,7 @@ where nothing was broken. D7 had already got this right on the admin side by
 printing the transport it asked about; the user-facing path had not.
 
 A third branch would fix the instance. The bug class is that a fixed list of ids
-describes an open registry — `OMNIWP_otp_transports` exists precisely so a
+describes an open registry — `omniwp_otp_transports` exists precisely so a
 site can add ZNS or in-app push, and those were being described as email too. So
 the transport answers instead, through an **optional** interface:
 

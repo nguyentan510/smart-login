@@ -36,6 +36,11 @@ Qua webhook tới bất kỳ nhà cung cấp SMS nào (cấu hình bằng placeh
 
 == Installation ==
 
+**Yêu cầu máy chủ:** ngoài PHP 8.0, plugin cần phần mở rộng **mbstring**. Đây là
+yêu cầu bắt buộc, không phải tuỳ chọn: xử lý tiếng Việt có dấu ở phần đặt lại mật
+khẩu, chuẩn hoá địa chỉ và kiểm tra mã giảm giá đều dựa vào nó, và WordPress không
+có hàm thay thế. Màn hình **OmniWP → Tổng quan** báo đỏ nếu máy chủ chưa bật.
+
 1. Tải thư mục plugin `omniwp` vào `/wp-content/plugins/`.
 2. Kích hoạt trong màn hình **Plugins**.
 3. Vào **OmniWP → Cài đặt** để chọn kênh định danh và cấu hình webhook gửi SMS.

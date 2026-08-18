@@ -210,7 +210,7 @@ $ow_in_dialog = '' !== Flow::base();
 					 * The provider owns its mark; ProviderMark only places it. The box,
 					 * the filter and the escaping decision moved there in 17.1, when the
 					 * account card became the second caller — this was the only place
-					 * that applied `OMNIWP_provider_icon_svg`, so a site filtering
+					 * that applied `omniwp_provider_icon_svg`, so a site filtering
 					 * it would have got a mark on one screen and not the other.
 					 */
 					ProviderMark::output_for_provider( $ow_provider );

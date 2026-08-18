@@ -115,7 +115,7 @@ class RateLimiter {
 		 * @param string        $destination
 		 * @param string        $intent
 		 */
-		return apply_filters( 'OMNIWP_check_otp_send', true, $destination, $intent );
+		return apply_filters( 'omniwp_check_otp_send', true, $destination, $intent );
 	}
 
 	/**

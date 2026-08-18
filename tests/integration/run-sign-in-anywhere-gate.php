@@ -21,6 +21,11 @@ declare( strict_types=1 );
 
 $wp_root     = rtrim( (string) getenv( 'OMNIWP_WP_ROOT' ), "\\/" );
 $plugin_root = rtrim( (string) getenv( 'OMNIWP_PLUGIN_ROOT' ), "\\/" );
+$db_host     = (string) getenv( 'OMNIWP_DB_HOST' );
+$db_name     = (string) getenv( 'OMNIWP_DB_NAME' );
+$db_user     = (string) getenv( 'OMNIWP_DB_USER' );
+$db_pass     = (string) getenv( 'OMNIWP_DB_PASSWORD' );
+$prefix      = (string) getenv( 'OMNIWP_DB_PREFIX' );
 
 $blocked = static function ( string $message ): never {
 	echo "OMNIWP_DIALOG_INTEGRATION_BLOCKED\n";
@@ -42,9 +47,50 @@ if ( '' === $plugin_root || ! is_file( $plugin_root . DIRECTORY_SEPARATOR . 'omn
 	$blocked( 'OMNIWP_PLUGIN_ROOT must point to the current plugin source' );
 }
 
-define( 'WP_USE_THEMES', false );
+if ( '' === $db_host || '' === $db_name || '' === $db_user ) {
+	$blocked( 'database connection variables are incomplete' );
+}
 
-require $wp_root . DIRECTORY_SEPARATOR . 'wp-load.php';
+if ( '' === $prefix ) {
+	$prefix = 'wp_';
+}
+
+if ( ! preg_match( '/^[A-Za-z0-9_]+$/', $prefix ) ) {
+	$blocked( 'OMNIWP_DB_PREFIX contains unsupported characters' );
+}
+
+/*
+ * Bootstrap through wp-settings.php with the connection taken from the
+ * environment, which is what the other four gates in this directory do.
+ *
+ * This gate used to require wp-load.php and let the site's own wp-config.php
+ * supply the credentials. That works only when the runner and the site agree
+ * about where MySQL is, and here they do not: the site is served by Local on
+ * port 10005 while the gate runs under the XAMPP build that has mbstring and
+ * openssl. WordPress answered with `Error establishing a database connection`,
+ * printed its die page — and exited 0, so the wrapper script read the gate as
+ * having passed. Two failures compounding: an unreachable database, and a
+ * failure mode that looked like success.
+ */
+define( 'WP_USE_THEMES', false );
+define( 'ABSPATH', $wp_root . DIRECTORY_SEPARATOR );
+define( 'DB_NAME', $db_name );
+define( 'DB_USER', $db_user );
+define( 'DB_PASSWORD', $db_pass );
+define( 'DB_HOST', $db_host );
+define( 'DB_CHARSET', 'utf8mb4' );
+define( 'DB_COLLATE', '' );
+define( 'WP_DEBUG', false );
+define( 'WP_PLUGIN_DIR', dirname( $plugin_root ) );
+define( 'WP_PLUGIN_URL', 'https://example.test/wp-content/plugins' );
+$table_prefix = $prefix; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+
+require $wp_root . DIRECTORY_SEPARATOR . 'wp-settings.php';
+
+global $wpdb;
+if ( ! isset( $wpdb ) || ! $wpdb instanceof wpdb || '' !== (string) $wpdb->last_error ) {
+	$blocked( 'WordPress database bootstrap is not healthy' );
+}
 
 if ( ! class_exists( \OmniWP\Frontend\LoginDialog::class ) ) {
 	$blocked( 'the plugin is not active on this install' );

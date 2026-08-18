@@ -338,6 +338,6 @@ class LoginHandler {
 		 * @param string $url
 		 */
 		$url = wp_validate_redirect( $url, home_url( '/' ) );
-		return wp_validate_redirect( (string) apply_filters( 'OMNIWP_post_login_redirect', $url ), $url );
+		return wp_validate_redirect( (string) apply_filters( 'omniwp_post_login_redirect', $url ), $url );
 	}
 }

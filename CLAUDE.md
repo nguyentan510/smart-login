@@ -116,14 +116,32 @@ it. `-Strict` forwards `--strict`; `-Suite <file>` runs one suite.
 
 `--strict` refuses to tolerate a `spec` suite.
 
-Coding standards are **at zero** for every enabled sniff, and the gate keeps
-them there. The baseline lives in `tests/run-phpcs.php` — not in this file, and
-not in the tracker — and it fails in both directions: when a change adds a
-violation, and when the real count drops below the number without the number
-being lowered. That second direction is what took it to zero, and it is why
-"compare against the documented baseline" is no longer something a person has
-to remember.
+Coding standards run against a **ratchet, not a zero**. The baseline lives in
+`tests/run-phpcs.php` — not in this file, and not in the tracker — and it fails
+in both directions: when a change adds a violation, and when the real count
+drops below the number without the number being lowered. That second direction
+is what makes it a ratchet, and it is why "compare against the documented
+baseline" is no longer something a person has to remember.
+
+**This file claimed "at zero" for every enabled sniff, and that was not true.**
+The baseline was 86 errors / 41 warnings while the sentence above it said zero,
+so the number a reader trusted and the number the gate enforced had drifted
+apart — the same failure the tracker records for the README three times over.
+Two things fell out of measuring it instead of restating it: 41 of those errors
+were `WordPress.NamingConventions.ValidHookName` firing on the uppercase hook
+tags, which the lowercase rename below cleared in one pass, and one was
+`Generic.Classes.DuplicateClassName` on a Smart Menu metabox the autoloader
+could never reach.
+
+The ratchet now stands at **42 errors / 40 warnings**, and the remainder is not
+cosmetic: `WordPress.DB.PreparedSQL.InterpolatedNotPrepared` (2),
+`WordPress.Security.ValidatedSanitizedInput.InputNotSanitized` (2) and
+`WordPress.Security.NonceVerification.Recommended` (1) are still open. Phase 7
+recorded "every security, correctness, database and compatibility sniff is at
+zero"; that is the claim to re-earn, and until it is earned it is written here
+as outstanding rather than asserted as done.
 
 Still deferred, and written down in `phpcs.xml`: the **documentation** sniffs
 (`Missing`, `MissingParamTag`, …) are excluded. That is a different statement
-from "the standard is red" — everything switched on passes.
+from "the standard is red" — but it is not the same as "everything switched on
+passes" either, which is what this file used to say.

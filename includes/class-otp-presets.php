@@ -72,7 +72,7 @@ final class OtpPresets {
 		 *
 		 * @param array $presets
 		 */
-		return (array) apply_filters( 'OMNIWP_otp_presets', $presets );
+		return (array) apply_filters( 'omniwp_otp_presets', $presets );
 	}
 
 	/**

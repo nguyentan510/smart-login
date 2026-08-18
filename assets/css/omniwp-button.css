@@ -8,6 +8,9 @@
 .sl-account,
 .sl-account-btn {
 	--sl-account-gap: var(--sl-space-2, 8px);
+	font-family: var(--ow-font-family, inherit);
+	letter-spacing: normal;
+	text-transform: none;
 }
 
 /* ---------- the button, in both states ---------- */
@@ -84,7 +87,7 @@ details[open] .sl-account__menu {
 	z-index: 999999 !important;
 	top: calc(100% + var(--sl-space-1, 4px)) !important;
 	right: 0 !important;
-	min-width: 15rem !important;
+	min-width: 240px !important;
 	padding: var(--sl-space-2, 8px) 0 !important;
 	border: 1px solid var(--sl-border, #d9dde5) !important;
 	border-radius: var(--sl-radius-card, 5px) !important;
@@ -175,7 +178,7 @@ a.sl-account__link {
 	gap: 12px !important;
 	padding: 12px 18px !important;
 	color: var(--sl-text, #1f2430) !important;
-	font-size: 0.95rem !important;
+	font-size: 15px !important;
 	font-weight: 500 !important;
 	text-decoration: none !important;
 	line-height: 1.4 !important;

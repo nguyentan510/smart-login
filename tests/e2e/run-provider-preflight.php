@@ -96,7 +96,7 @@ foreach ( $selected as $provider_id ) {
 		'https' !== strtolower( (string) wp_parse_url( $callback, PHP_URL_SCHEME ) )
 		|| strtolower( (string) wp_parse_url( $callback, PHP_URL_HOST ) ) !== strtolower( (string) wp_parse_url( $site_url, PHP_URL_HOST ) )
 		|| '/wp-admin/admin-post.php' !== (string) wp_parse_url( $callback, PHP_URL_PATH )
-		|| 'OMNIWP_provider_callback' !== (string) ( $query['action'] ?? '' )
+		|| 'omniwp_provider_callback' !== (string) ( $query['action'] ?? '' )
 		|| $provider_id !== (string) ( $query['provider'] ?? '' )
 	) {
 		$blocked( $provider_id . ' callback URI does not match the HTTPS site callback contract' );

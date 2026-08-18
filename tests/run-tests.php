@@ -180,7 +180,7 @@ check( 'malformed Google ID token fails closed', 'OMNIWP_google_claims', $bad_go
 // ---------------------------------------------------------------------
 section( 'OAuth authorization URL safety' );
 
-$callback_url = 'http://localhost:10004/wp-admin/admin-post.php?action=OMNIWP_provider_callback&provider=google';
+$callback_url = 'http://localhost:10004/wp-admin/admin-post.php?action=omniwp_provider_callback&provider=google';
 $authorize_url = OAuthAuthorizationUrl::build(
 	'https://accounts.google.com/o/oauth2/v2/auth',
 	array(

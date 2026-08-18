@@ -122,7 +122,7 @@ final class AccountHub {
 		 *
 		 * @param array $tabs Array of tabs.
 		 */
-		return (array) apply_filters( 'OMNIWP_account_hub_tabs', $tabs );
+		return (array) apply_filters( 'omniwp_account_hub_tabs', $tabs );
 	}
 
 	/**

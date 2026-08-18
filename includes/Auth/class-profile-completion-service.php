@@ -93,7 +93,7 @@ final class ProfileCompletionService {
 			'done'                => $done,
 		);
 
-		return (array) apply_filters( 'OMNIWP_profile_status', $status, $user_id );
+		return (array) apply_filters( 'omniwp_profile_status', $status, $user_id );
 	}
 
 	/**
@@ -228,7 +228,7 @@ final class ProfileCompletionService {
 		 * @param array $fields
 		 * @param int   $user_id
 		 */
-		$fields = (array) apply_filters( 'OMNIWP_onboarding_fields', array_values( $fields ), $user_id );
+		$fields = (array) apply_filters( 'omniwp_onboarding_fields', array_values( $fields ), $user_id );
 
 		return array_slice( $fields, 0, self::ONBOARDING_LIMIT );
 	}

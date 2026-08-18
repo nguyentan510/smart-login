@@ -293,8 +293,10 @@ $freeship = $cart['freeship'] ?? array();
 
 							<div class="sl-coupon-accordion__content" id="sl-inpage-coupon-content" style="display: none;">
 								<form id="sl-inpage-coupon-form" class="sl-coupon-form">
-									<input type="text" id="sl-inpage-coupon-code" class="sl-input sl-coupon-input" placeholder="<?php esc_attr_e( 'Nhập mã...', 'omniwp' ); ?>" />
-									<button type="submit" class="sl-btn sl-coupon-btn"><?php esc_html_e( 'Áp dụng', 'omniwp' ); ?></button>
+									<div class="sl-coupon-input-group">
+										<input type="text" id="sl-inpage-coupon-code" class="sl-input sl-coupon-input" placeholder="<?php esc_attr_e( 'Nhập mã...', 'omniwp' ); ?>" />
+										<button type="submit" class="sl-btn sl-coupon-btn"><?php esc_html_e( 'Áp dụng', 'omniwp' ); ?></button>
+									</div>
 								</form>
 								<div id="sl-inpage-coupon-msg" class="sl-coupon-message"></div>
 

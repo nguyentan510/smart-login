@@ -177,7 +177,7 @@ final class AccountForm {
 		 * @param string[]    $sections
 		 * @param AccountForm $form
 		 */
-		return (array) apply_filters( 'OMNIWP_account_sections', $sections, $this );
+		return (array) apply_filters( 'omniwp_account_sections', $sections, $this );
 	}
 
 	private function applies( string $section ): bool {
@@ -364,7 +364,7 @@ final class AccountForm {
 		 * @param string $url
 		 * @param string $tab
 		 */
-		$filtered = (string) apply_filters( 'OMNIWP_account_url', '', $tab );
+		$filtered = (string) apply_filters( 'omniwp_account_url', '', $tab );
 
 		if ( '' !== $filtered ) {
 			return ! empty( $tab ) ? add_query_arg( 'tab', $tab, $filtered ) : $filtered;

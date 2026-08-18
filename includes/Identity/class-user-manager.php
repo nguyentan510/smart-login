@@ -63,7 +63,7 @@ class UserManager {
 		 * @param string $opaque_token
 		 * @param string $phone
 		 */
-		return (string) apply_filters( 'OMNIWP_synthetic_email', $email, $opaque_token, $phone );
+		return (string) apply_filters( 'omniwp_synthetic_email', $email, $opaque_token, $phone );
 	}
 
 	/**
@@ -78,7 +78,7 @@ class UserManager {
 		 * @param bool   $is
 		 * @param string $email
 		 */
-		return (bool) apply_filters( 'OMNIWP_is_synthetic_email', $is, $email );
+		return (bool) apply_filters( 'omniwp_is_synthetic_email', $is, $email );
 	}
 
 	public static function user_has_synthetic_email( int $user_id ): bool {
@@ -308,7 +308,7 @@ class UserManager {
 		/**
 		 * @param string $role
 		 */
-		return (string) apply_filters( 'OMNIWP_default_role', $role );
+		return (string) apply_filters( 'omniwp_default_role', $role );
 	}
 
 	/**
@@ -362,6 +362,6 @@ class UserManager {
 		 * @param string[] $missing
 		 * @param int      $user_id
 		 */
-		return (array) apply_filters( 'OMNIWP_missing_profile_fields', $missing, $user_id );
+		return (array) apply_filters( 'omniwp_missing_profile_fields', $missing, $user_id );
 	}
 }

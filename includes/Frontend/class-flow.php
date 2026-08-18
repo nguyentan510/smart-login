@@ -205,7 +205,7 @@ class Flow {
 		 * @param string $url
 		 * @param string $step
 		 */
-		return (string) apply_filters( 'OMNIWP_step_url', $url, $step );
+		return (string) apply_filters( 'omniwp_step_url', $url, $step );
 	}
 
 	/**
@@ -233,7 +233,7 @@ class Flow {
 		 *
 		 * @param string $url
 		 */
-		$filtered = (string) apply_filters( 'OMNIWP_login_url', '' );
+		$filtered = (string) apply_filters( 'omniwp_login_url', '' );
 
 		if ( '' !== $filtered ) {
 			return $filtered;

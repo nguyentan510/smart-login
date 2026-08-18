@@ -3,7 +3,7 @@
  * A transport that can say, in its own words, why it is not usable.
  *
  * Separate from TransportInterface, and optional, for a compatibility reason
- * rather than a stylistic one: `OMNIWP_otp_transports` is published API and
+ * rather than a stylistic one: `omniwp_otp_transports` is published API and
  * the router's own docblock promises that adding a transport means implementing
  * TransportInterface "and nothing else". Adding a fourth required method would
  * fatal every transport a site wrote against that promise — including this

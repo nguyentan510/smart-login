@@ -16,14 +16,54 @@ $xamppPhp = @('C:\xampp\php\php.exe', 'D:\XAMPP\php\php.exe') |
     Where-Object { Test-Path -LiteralPath $_ } |
     Select-Object -First 1
 
-$integrationPhp = if ($env:OMNIWP_PHP) {
-    $env:OMNIWP_PHP
-} elseif (Test-Path 'C:\Users\PC\AppData\Roaming\Local\lightning-services\php-8.2.29+0\bin\win64\php.exe') {
-    'C:\Users\PC\AppData\Roaming\Local\lightning-services\php-8.2.29+0\bin\win64\php.exe'
-} elseif ($xamppPhp) {
-    $xamppPhp
-} else {
+# The integration gates need mbstring as well as openssl, and this script used to
+# pick an interpreter for them without asking about either.
+#
+# What that cost, measured rather than imagined: Local's build loads no php.ini,
+# so it reports mbstring=0 openssl=0, and it was preferred over XAMPP by the
+# ordering below. The provider gate then died on
+# `Call to undefined function OmniWP\Address\mb_strtolower()` — which reads
+# exactly like a fatal in the address code, and is not one. The openssl argument
+# below was already written down for the pure suites; it simply was never applied
+# to this half.
+function Test-PhpUsable {
+    param([string]$Candidate)
+
+    if (-not $Candidate) { return $false }
+
+    # `php -m` rather than `php -r`, and that is not a style preference.
+    # Windows PowerShell 5.1 does not escape embedded double quotes when it
+    # builds the command line for a native executable, so a probe written as
+    # `-r 'echo extension_loaded("mbstring");'` reaches PHP with its quotes
+    # mangled and dies with `syntax error, unexpected end of file` — which this
+    # function would then read as "extension missing" and report as a blocked
+    # environment. A probe that cannot fail honestly is worse than none.
+    # `-m` takes no arguments at all, so there is nothing left to quote.
+    try {
+        $modules = & $Candidate -m
+    } catch {
+        return $false
+    }
+
+    return (($modules -contains 'mbstring') -and ($modules -contains 'openssl'))
+}
+
+# An explicit OMNIWP_PHP still wins, but it is probed like anything else — an
+# override that quietly lacks an extension produces the same misleading red as
+# the default did.
+$phpCandidates = @(
+    $env:OMNIWP_PHP,
+    $xamppPhp,
+    'C:\Users\PC\AppData\Roaming\Local\lightning-services\php-8.2.29+0\bin\win64\php.exe',
     'php'
+) | Where-Object { $_ }
+
+$integrationPhp = $phpCandidates | Where-Object { Test-PhpUsable $_ } | Select-Object -First 1
+
+if (-not $integrationPhp) {
+    Write-Output 'OMNIWP_AUTH_INTEGRATION_BLOCKED'
+    Write-Output "reason=no PHP on this machine loads both mbstring and openssl, so the gates would fail on the environment rather than on the code. Probed: $($phpCandidates -join ', '). Set OMNIWP_PHP to a build with both."
+    exit 2
 }
 
 # The pure suites need openssl, because SecretBox does. A XAMPP build has it
@@ -130,6 +170,40 @@ if ($LASTEXITCODE -ne 0) {
 if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
+
+# Exit status alone is not proof a gate ran. WordPress answers an unreachable
+# database by printing its die page and stopping with status 0, so the first
+# wiring of the two gates below "passed" while emitting a Database Error page and
+# not one assertion. Requiring the success marker as well as the status closes
+# that: a gate that fell over before reaching its own last line cannot report it.
+function Invoke-Gate {
+    param(
+        [string]$Script,
+        [string]$OkMarker
+    )
+
+    $output = & $integrationPhp @phpArgs $Script
+    $output | ForEach-Object { Write-Output $_ }
+
+    if ($LASTEXITCODE -ne 0) {
+        exit $LASTEXITCODE
+    }
+
+    if (-not ($output -match [regex]::Escape($OkMarker))) {
+        Write-Output 'OMNIWP_AUTH_INTEGRATION_FAILED'
+        Write-Output "reason=$Script exited 0 but never printed $OkMarker, so it stopped before finishing. Exit status is not proof a gate ran."
+        exit 1
+    }
+}
+
+# Phase 19 and Phase 21. Both gates were written, committed and then referenced by
+# nothing — not this script, not run-all.php, not CI — so 537 lines of gate sat on
+# disk unable to run. A gate nobody invokes is indistinguishable from a gate that
+# passes, which is the same confusion the SKIP-versus-PASS note in CLAUDE.md is
+# about. They go here, above the destructive one, because neither writes anything
+# the later gates depend on.
+Invoke-Gate 'tests/integration/run-sign-in-anywhere-gate.php' 'OMNIWP_DIALOG_INTEGRATION_OK'
+Invoke-Gate 'tests/integration/run-account-menu-gate.php' 'OMNIWP_ACCOUNT_MENU_INTEGRATION_OK'
 
 # Phase 15. activate() -> tables -> defaults -> first use -> uninstall.php had never
 # run end to end; every other gate here starts from a site somebody installed by hand.

@@ -31,10 +31,10 @@ final class ProviderAuthController {
 	}
 
 	public function register(): void {
-		add_action( 'admin_post_nopriv_OMNIWP_provider_start', array( $this, 'start' ) );
-		add_action( 'admin_post_OMNIWP_provider_start', array( $this, 'start' ) );
-		add_action( 'admin_post_nopriv_OMNIWP_provider_callback', array( $this, 'callback' ) );
-		add_action( 'admin_post_OMNIWP_provider_callback', array( $this, 'callback' ) );
+		add_action( 'admin_post_nopriv_omniwp_provider_start', array( $this, 'start' ) );
+		add_action( 'admin_post_omniwp_provider_start', array( $this, 'start' ) );
+		add_action( 'admin_post_nopriv_omniwp_provider_callback', array( $this, 'callback' ) );
+		add_action( 'admin_post_omniwp_provider_callback', array( $this, 'callback' ) );
 	}
 
 	/**
@@ -65,14 +65,23 @@ final class ProviderAuthController {
 
 		$url = add_query_arg(
 			array(
-				'action'      => 'OMNIWP_provider_start',
+				'action'      => 'omniwp_provider_start',
 				'provider'    => $provider,
 				'redirect_to' => wp_validate_redirect( $return_url, '' ),
 				'linking'     => $linking ? '1' : '0',
 			),
 			admin_url( 'admin-post.php' )
 		);
-		return wp_nonce_url( $url, 'OMNIWP_provider_start_' . $provider );
+
+		/*
+		 * Account linking is an authenticated mutation of an existing member's
+		 * profile, so it carries a nonce scoped to their session. Public sign-in
+		 * and registration do not: an unauthenticated entry point must not carry a
+		 * session-bound nonce that page caches or logout state transitions would
+		 * invalidate. Public OAuth CSRF is protected by the signed transaction
+		 * state token verified in callback().
+		 */
+		return $linking ? wp_nonce_url( $url, 'omniwp_provider_start_' . $provider ) : $url;
 	}
 
 	/**
@@ -84,7 +93,9 @@ final class ProviderAuthController {
 	 * credentials and is not a thing a visitor may cause.
 	 */
 	public static function test_url( string $provider ): string {
-		return add_query_arg( 'ow_test', '1', self::start_url( $provider ) );
+		$provider = sanitize_key( $provider );
+		$url      = add_query_arg( 'ow_test', '1', self::start_url( $provider ) );
+		return wp_nonce_url( $url, 'omniwp_provider_start_' . $provider );
 	}
 
 	public function available(): array {
@@ -93,16 +104,30 @@ final class ProviderAuthController {
 
 	public function start(): void {
 		$provider_id = sanitize_key( wp_unslash( $_GET['provider'] ?? '' ) ); // phpcs:ignore WordPress.Security.NonceVerification
-		// wp_verify_nonce() does its own validation; sanitising first would only
-		// risk altering the token before comparison.
-		if ( ! wp_verify_nonce( (string) wp_unslash( $_GET['_wpnonce'] ?? '' ), 'OMNIWP_provider_start_' . $provider_id ) ) { // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-			$this->fail( new \WP_Error( 'OMNIWP_bad_nonce', __( 'Phiên đăng nhập đã hết hạn. Vui lòng thử lại.', 'omniwp' ) ) );
+		$is_linking  = ! empty( $_GET['linking'] ); // phpcs:ignore WordPress.Security.NonceVerification
+		$is_test_req = ! empty( $_GET['ow_test'] ); // phpcs:ignore WordPress.Security.NonceVerification
+
+		/*
+		 * Account linking and admin connection diagnostics require a valid nonce.
+		 * Public login/registration does not require a WordPress nonce because:
+		 * 1. It is a public entry point accessible to unauthenticated visitors.
+		 * 2. Caching or logout state transitions invalidate session nonces.
+		 * 3. OAuth 2.0 transaction safety and CSRF defense are strictly enforced
+		 *    by OAuthTransactionStore state validation in callback().
+		 */
+		if ( $is_linking || $is_test_req ) {
+			// wp_verify_nonce() does its own validation; sanitising first would only
+			// risk altering the token before comparison.
+			if ( ! wp_verify_nonce( (string) wp_unslash( $_GET['_wpnonce'] ?? '' ), 'omniwp_provider_start_' . $provider_id ) ) { // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+				$this->fail( new \WP_Error( 'OMNIWP_bad_nonce', __( 'Phiên đăng nhập đã hết hạn. Vui lòng thử lại.', 'omniwp' ) ) );
+			}
 		}
+
 		// A connection test, not a login. Administrators only — this exchanges the
 		// site's own credentials with the provider, which is not a thing a
 		// visitor may cause, and the nonce above is scoped to the provider rather
 		// than to the capability.
-		$is_test = ! empty( $_GET['ow_test'] ) && current_user_can( 'manage_options' ); // phpcs:ignore WordPress.Security.NonceVerification
+		$is_test = $is_test_req && current_user_can( 'manage_options' ); // phpcs:ignore WordPress.Security.NonceVerification
 
 		$provider = $is_test
 			? $this->test_provider( $provider_id )
@@ -459,7 +484,7 @@ final class ProviderAuthController {
 		}
 
 		$fallback = add_query_arg( 'OMNIWP_step', Flow::STEP_LOGIN, $base );
-		$filtered = (string) apply_filters( 'OMNIWP_provider_failure_redirect', $fallback );
+		$filtered = (string) apply_filters( 'omniwp_provider_failure_redirect', $fallback );
 		$fallback = wp_validate_redirect( $filtered, $fallback );
 
 		return '' !== $return_url ? wp_validate_redirect( $return_url, $fallback ) : $fallback;

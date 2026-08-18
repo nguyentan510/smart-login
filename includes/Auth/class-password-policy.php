@@ -3,7 +3,7 @@
  * One place that decides whether a password is acceptable.
  *
  * It existed only inside RegisterHandler before, so the documented
- * `OMNIWP_validate_password` filter ran on registration but not on reset —
+ * `omniwp_validate_password` filter ran on registration but not on reset —
  * a site enforcing "must contain a digit" could have that requirement bypassed
  * simply by going through Forgot password. A policy applied on one of two paths
  * is not a policy.
@@ -63,7 +63,7 @@ final class PasswordPolicy {
 		 * @param true|WP_Error $result
 		 * @param string        $password
 		 */
-		$extra = apply_filters( 'OMNIWP_validate_password', true, $password );
+		$extra = apply_filters( 'omniwp_validate_password', true, $password );
 
 		return is_wp_error( $extra ) ? $extra : true;
 	}

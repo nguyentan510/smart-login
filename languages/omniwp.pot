@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/omniwp\n"
-"POT-Creation-Date: 2026-08-15 14:43+0000\n"
+"POT-Creation-Date: 2026-08-17 11:39+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -18,17 +18,17 @@ msgid "%1$d/%2$d"
 msgstr ""
 
 #. translators: 1: identity channel, 2: transport id.
-#: includes/Admin/class-readiness.php:179
+#: includes/Admin/class-readiness.php:207
 msgid "%1$s (kênh gửi \"%2$s\")"
 msgstr ""
 
 #. translators: 1: identity mode, 2: comma-separated country codes.
-#: includes/Admin/class-readiness.php:138
+#: includes/Admin/class-readiness.php:166
 msgid "%1$s. Mã quốc gia: %2$s."
 msgstr ""
 
 #. translators: 1: identity mode, 2: number of country codes.
-#: includes/Admin/class-readiness.php:122
+#: includes/Admin/class-readiness.php:150
 msgid "%1$s. Đang chấp nhận %2$d mã quốc gia — mỗi mã mở thêm là một đường để đốt tin nhắn."
 msgstr ""
 
@@ -88,7 +88,7 @@ msgid "%s — tiêu đề"
 msgstr ""
 
 #. translators: %s: comma-separated provider names.
-#: includes/Admin/class-readiness.php:587
+#: includes/Admin/class-readiness.php:615
 msgid "%s: secret đang trùng với ID ứng dụng, nên mọi lần đăng nhập đều bị từ chối. Hãy dán đúng App Secret Key."
 msgstr ""
 
@@ -187,7 +187,6 @@ msgstr ""
 
 #: includes/Admin/class-smart-menu-meta-box.php:142
 #: includes/Admin/class-smart-menu-meta-box.php:144
-#: includes/Admin/class-smart-menu-metabox.php:141
 msgid "Add to Menu"
 msgstr ""
 
@@ -340,6 +339,10 @@ msgstr ""
 msgid "Bạn đã yêu cầu quá nhiều mã xác thực. Vui lòng thử lại sau 1 giờ."
 msgstr ""
 
+#: includes/Ecommerce/class-cart-service.php:448
+msgid "Bạn đã đủ điều kiện Miễn phí vận chuyển!"
+msgstr ""
+
 #: includes/Admin/Screens/class-guide-screen.php:373
 msgid "Bản tóm tắt hướng dẫn sử dụng nhanh. Bản đầy đủ — hook, REST API, cách đổi màu — nằm trong tệp README.md của plugin."
 msgstr ""
@@ -348,8 +351,8 @@ msgstr ""
 msgid "Bảng OTP"
 msgstr ""
 
-#: includes/Admin/class-readiness.php:621
-#: includes/Admin/class-readiness.php:626
+#: includes/Admin/class-readiness.php:649
+#: includes/Admin/class-readiness.php:654
 msgid "Bảng dữ liệu"
 msgstr ""
 
@@ -422,7 +425,7 @@ msgstr ""
 msgid "Bật kênh và gửi thử. Nếu máy chủ không gửi được thư, hãy cài một plugin SMTP."
 msgstr ""
 
-#: includes/Admin/class-readiness.php:478
+#: includes/Admin/class-readiness.php:506
 msgid "Bật tích hợp WooCommerce"
 msgstr ""
 
@@ -480,11 +483,11 @@ msgstr ""
 msgid "Bộ chọn địa chỉ sẽ không hiển thị gì cho tới khi bạn sinh dữ liệu bằng lệnh sau:"
 msgstr ""
 
-#: includes/Admin/class-readiness.php:528
+#: includes/Admin/class-readiness.php:556
 msgid "Bộ chọn địa chỉ đang bật nhưng chưa có dữ liệu, nên sẽ không hiển thị gì."
 msgstr ""
 
-#: includes/Admin/class-readiness.php:518
+#: includes/Admin/class-readiness.php:546
 msgid "Bộ chọn địa chỉ đang tắt."
 msgstr ""
 
@@ -593,7 +596,7 @@ msgstr ""
 msgid "Chúng tôi đã xác thực được bạn. Chỉ còn hai thông tin nữa là tài khoản sẵn sàng."
 msgstr ""
 
-#: includes/Admin/class-readiness.php:555
+#: includes/Admin/class-readiness.php:583
 msgid "Chưa bật đăng nhập qua Google. Không bắt buộc."
 msgstr ""
 
@@ -647,7 +650,7 @@ msgstr ""
 msgid "Chưa có số điện thoại"
 msgstr ""
 
-#: includes/Admin/class-readiness.php:476
+#: includes/Admin/class-readiness.php:504
 msgid "Chưa có trang nào chứa [smart_auth], và tích hợp My Account đang tắt."
 msgstr ""
 
@@ -673,7 +676,7 @@ msgid "Chưa cấu hình kênh gửi mã xác thực."
 msgstr ""
 
 #. translators: %s: comma-separated transport names.
-#: includes/Admin/class-readiness.php:215
+#: includes/Admin/class-readiness.php:243
 msgid "Chưa cấu hình: %s. Người dùng sẽ không nhận được mã xác thực."
 msgstr ""
 
@@ -713,8 +716,8 @@ msgstr ""
 msgid "Chặt — ưu tiên an toàn"
 msgstr ""
 
-#: includes/Admin/class-readiness.php:639
-#: includes/Admin/class-readiness.php:644
+#: includes/Admin/class-readiness.php:696
+#: includes/Admin/class-readiness.php:701
 #: includes/class-field-registry.php:1310
 msgid "Chế độ DEV"
 msgstr ""
@@ -763,7 +766,7 @@ msgstr ""
 msgid "Chỉ dùng để ước tính chi phí trên màn hình Tổng quan, và tính cho mọi mã gửi tới số điện thoại. Đặt 0 để ẩn."
 msgstr ""
 
-#: includes/Admin/class-readiness.php:107
+#: includes/Admin/class-readiness.php:135
 #: includes/class-field-registry.php:262
 msgid "Chỉ email"
 msgstr ""
@@ -784,7 +787,7 @@ msgstr ""
 msgid "Chỉ làm việc này khi bạn đã xem nhật ký và tin rằng lưu lượng vừa rồi là thật."
 msgstr ""
 
-#: includes/Admin/class-readiness.php:106
+#: includes/Admin/class-readiness.php:134
 #: includes/class-field-registry.php:261
 msgid "Chỉ số điện thoại"
 msgstr ""
@@ -964,11 +967,11 @@ msgstr ""
 msgid "Cả hai"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:68
+#: templates/ecommerce/thankyou-page.php:76
 msgid "Cảm ơn bạn đã đặt hàng!"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:349
+#: templates/ecommerce/thankyou-page.php:357
 msgid "Cảm ơn quý khách đã mua sắm tại cửa hàng của chúng tôi!"
 msgstr ""
 
@@ -993,7 +996,7 @@ msgid "Cấu hình OAuth consent screen; nếu ứng dụng đang ở Testing, t
 msgstr ""
 
 #. translators: %s: comma-separated transport names.
-#: includes/Admin/class-readiness.php:219
+#: includes/Admin/class-readiness.php:247
 msgid "Cấu hình ngay"
 msgstr ""
 
@@ -1001,7 +1004,7 @@ msgstr ""
 msgid "Cấu hình nút tài khoản (Header)"
 msgstr ""
 
-#: includes/Admin/class-readiness.php:424
+#: includes/Admin/class-readiness.php:452
 msgid "Cấu hình proxy"
 msgstr ""
 
@@ -1101,7 +1104,7 @@ msgstr ""
 msgid "Dùng để ký từng gói tin bằng SHA-256. Chưa có khoá thì nhà cung cấp này không được dùng, vì endpoint sẽ nhận mã thật mà không xác thực được nguồn."
 msgstr ""
 
-#: includes/Admin/class-readiness.php:446
+#: includes/Admin/class-readiness.php:474
 msgid "Dùng địa chỉ kết nối trực tiếp. Đúng khi site không đứng sau proxy nào."
 msgstr ""
 
@@ -1118,7 +1121,7 @@ msgid "Dạng chuẩn."
 msgstr ""
 
 #. translators: %s: the offending CIDR.
-#: includes/Admin/class-readiness.php:398
+#: includes/Admin/class-readiness.php:426
 msgid "Dải %s nhận mọi địa chỉ, nên bất kỳ ai cũng tự khai được IP của mình. Hãy khai đúng dải của proxy."
 msgstr ""
 
@@ -1138,14 +1141,14 @@ msgstr ""
 msgid "Dọn dẹp tiếp theo"
 msgstr ""
 
-#: includes/Admin/class-readiness.php:516
-#: includes/Admin/class-readiness.php:526
-#: includes/Admin/class-readiness.php:536
+#: includes/Admin/class-readiness.php:544
+#: includes/Admin/class-readiness.php:554
+#: includes/Admin/class-readiness.php:564
 msgid "Dữ liệu hành chính"
 msgstr ""
 
 #: includes/Admin/class-mail-messages.php:45
-#: includes/Admin/class-readiness.php:166
+#: includes/Admin/class-readiness.php:194
 #: includes/Auth/class-profile-completion-service.php:143
 #: includes/Auth/class-register-handler.php:505
 #: includes/Identity/Channels/class-mail-channel.php:63
@@ -1240,9 +1243,9 @@ msgstr ""
 msgid "Form thanh toán tối ưu chuẩn Việt Nam, tích hợp Sổ địa chỉ và Cổng thanh toán tiện lợi."
 msgstr ""
 
-#: includes/Admin/class-readiness.php:455
-#: includes/Admin/class-readiness.php:465
-#: includes/Admin/class-readiness.php:474
+#: includes/Admin/class-readiness.php:483
+#: includes/Admin/class-readiness.php:493
+#: includes/Admin/class-readiness.php:502
 msgid "Form đăng nhập"
 msgstr ""
 
@@ -1319,7 +1322,7 @@ msgstr ""
 msgid "Giao dịch an toàn & bảo mật"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:273
+#: templates/ecommerce/thankyou-page.php:281
 msgid "Giao hàng tiêu chuẩn"
 msgstr ""
 
@@ -1362,7 +1365,7 @@ msgid "Giảm giá"
 msgstr ""
 
 #: templates/account-hub/order-modal.php:115
-#: templates/ecommerce/thankyou-page.php:332
+#: templates/ecommerce/thankyou-page.php:340
 msgid "Giảm giá / Voucher:"
 msgstr ""
 
@@ -1411,7 +1414,7 @@ msgid "Giới tính"
 msgstr ""
 
 #. translators: 1: codes sent this hour, 2: hourly ceiling, 3: daily ceiling.
-#: includes/Admin/class-readiness.php:327
+#: includes/Admin/class-readiness.php:355
 msgid "Giờ này đã gửi %1$d. Trần %2$s mã/giờ, %3$s mã/ngày."
 msgstr ""
 
@@ -1548,7 +1551,7 @@ msgstr ""
 
 #: includes/Admin/Screens/class-settings-screen.php:395
 #: includes/Admin/Screens/class-settings-screen.php:419
-#: includes/Admin/class-readiness.php:196
+#: includes/Admin/class-readiness.php:224
 #: includes/Admin/class-settings-page.php:120
 msgid "Gửi thử"
 msgstr ""
@@ -1722,7 +1725,7 @@ msgid "Hoàn tác"
 msgstr ""
 
 #: templates/ecommerce/checkout-stepper.php:63
-#: templates/ecommerce/thankyou-page.php:115
+#: templates/ecommerce/thankyou-page.php:123
 #: templates/onboarding.php:199
 msgid "Hoàn tất"
 msgstr ""
@@ -1743,7 +1746,7 @@ msgstr ""
 msgid "Huỷ"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:160
+#: templates/ecommerce/thankyou-page.php:168
 msgid "HÓA ĐƠN XÁC NHẬN ĐƠN HÀNG"
 msgstr ""
 
@@ -1756,7 +1759,7 @@ msgid "Hình thức:"
 msgstr ""
 
 #. translators: 1: SMS sent today, 2: estimated cost.
-#: includes/Admin/class-readiness.php:336
+#: includes/Admin/class-readiness.php:364
 msgid "Hôm nay %1$d tin SMS, ước tính %2$s đ."
 msgstr ""
 
@@ -1885,7 +1888,7 @@ msgstr ""
 msgid "Indonesia (+62)"
 msgstr ""
 
-#: includes/Admin/class-readiness.php:383
+#: includes/Admin/class-readiness.php:411
 msgid "Khai dải IP"
 msgstr ""
 
@@ -2006,7 +2009,7 @@ msgstr ""
 msgid "Không có màn hình đăng ký riêng: người dùng hiếm khi biết mình thuộc nhánh nào, nên bước đầu tự quyết định. Shortcode này chỉ đổi tiêu đề."
 msgstr ""
 
-#: includes/Admin/class-readiness.php:308
+#: includes/Admin/class-readiness.php:336
 msgid "Không có trần nào. Mọi giới hạn còn lại đều tính theo một số điện thoại hoặc một IP, nên không có gì chặn được kẻ tấn công đổi cả hai."
 msgstr ""
 
@@ -2229,7 +2232,7 @@ msgstr ""
 msgid "Kênh email chưa được cấu hình. Liên hệ quản trị viên."
 msgstr ""
 
-#: includes/Admin/class-readiness.php:265
+#: includes/Admin/class-readiness.php:293
 msgid "Kênh email đang bật nhưng chưa từng gửi được mã nào, máy chủ không khai báo đường gửi thư và không thấy plugin SMTP nào. Bật một plugin SMTP hoặc dùng nút Gửi thử để xác nhận trước khi mở đăng ký."
 msgstr ""
 
@@ -2242,9 +2245,9 @@ msgstr ""
 msgid "Kênh email đang tắt. Hãy bật và lưu cấu hình trước."
 msgstr ""
 
-#: includes/Admin/class-readiness.php:192
-#: includes/Admin/class-readiness.php:202
-#: includes/Admin/class-readiness.php:211
+#: includes/Admin/class-readiness.php:220
+#: includes/Admin/class-readiness.php:230
+#: includes/Admin/class-readiness.php:239
 msgid "Kênh gửi mã"
 msgstr ""
 
@@ -2377,7 +2380,6 @@ msgid "Lịch hẹn"
 msgstr ""
 
 #: includes/Admin/class-smart-menu-meta-box.php:68
-#: includes/Admin/class-smart-menu-metabox.php:68
 #: includes/Frontend/class-account-hub.php:89
 #: includes/Frontend/class-account-menu.php:94
 #: includes/class-field-registry.php:907
@@ -2411,7 +2413,7 @@ msgstr ""
 
 #: includes/Ecommerce/class-cart-service.php:231
 #: templates/ecommerce/cart-page.php:272
-#: templates/ecommerce/thankyou-page.php:338
+#: templates/ecommerce/thankyou-page.php:346
 msgid "Miễn phí"
 msgstr ""
 
@@ -2507,6 +2509,10 @@ msgstr ""
 msgid "Màu sắc và bo góc là biến CSS trên :root trong %1$s — ghi đè một dòng là xong. Danh sách hook đầy đủ, REST API và cách thêm preset gateway nằm trong %2$s."
 msgstr ""
 
+#: includes/Admin/class-readiness.php:688
+msgid "Máy chủ chưa bật mbstring. Đặt lại mật khẩu, chuẩn hoá địa chỉ và kiểm tra mã giảm giá sẽ lỗi nặng. Liên hệ nhà cung cấp hosting để bật php-mbstring."
+msgstr ""
+
 #: includes/Admin/Screens/class-guide-screen.php:583
 msgid "Máy chủ đọc được, nên gửi trong email/SMS hay dùng làm đích chuyển hướng đều được, và trang vẫn hiện form khi JavaScript không chạy."
 msgstr ""
@@ -2535,7 +2541,7 @@ msgstr ""
 msgid "Mã OTP hiện thẳng trên màn hình"
 msgstr ""
 
-#: includes/Admin/class-readiness.php:646
+#: includes/Admin/class-readiness.php:703
 msgid "Mã OTP đang hiển thị thẳng trên màn hình. Tắt trước khi chạy thật."
 msgstr ""
 
@@ -2544,7 +2550,7 @@ msgstr ""
 msgid "Mã OTP đã được gửi tới %s."
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:133
+#: templates/ecommerce/thankyou-page.php:141
 msgid "Mã QR chuyển khoản đơn hàng"
 msgstr ""
 
@@ -2632,12 +2638,12 @@ msgstr ""
 msgid "Mã đăng nhập"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:164
+#: templates/ecommerce/thankyou-page.php:172
 msgid "Mã đơn hàng:"
 msgstr ""
 
 #. translators: %s: Order number
-#: templates/ecommerce/thankyou-page.php:73
+#: templates/ecommerce/thankyou-page.php:81
 msgid "Mã đơn hàng: #%s. Chúng tôi đã nhận được thông tin và đang xử lý đơn hàng cho bạn."
 msgstr ""
 
@@ -2732,7 +2738,7 @@ msgstr ""
 msgid "Mở Nhật ký để xem nhà cung cấp trả về đúng chữ gì, rồi bấm Gửi thử — nút đó hiển thị nguyên request và response."
 msgstr ""
 
-#: includes/Admin/class-readiness.php:659
+#: includes/Admin/class-readiness.php:716
 msgid "Mở cài đặt"
 msgstr ""
 
@@ -2773,7 +2779,7 @@ msgstr ""
 msgid "Mở thẳng bước quên mật khẩu (OmniWP)"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:129
+#: templates/ecommerce/thankyou-page.php:137
 msgid "Mở ứng dụng Ngân hàng bất kỳ hoặc Ví điện tử để quét mã thanh toán tự động, đơn hàng sẽ được kích hoạt xử lý ngay lập tức."
 msgstr ""
 
@@ -2831,7 +2837,7 @@ msgstr ""
 msgid "Ngày sinh"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:169
+#: templates/ecommerce/thankyou-page.php:177
 msgid "Ngày đặt hàng:"
 msgstr ""
 
@@ -3015,7 +3021,6 @@ msgid "Nâng cao"
 msgstr ""
 
 #: includes/Admin/class-smart-menu-meta-box.php:30
-#: includes/Admin/class-smart-menu-metabox.php:30
 msgid "Nút Tài khoản Thông minh (Header)"
 msgstr ""
 
@@ -3048,7 +3053,7 @@ msgstr ""
 msgid "Nút đăng nhập bằng Google không xuất hiện"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:350
+#: templates/ecommerce/thankyou-page.php:358
 msgid "Nếu bạn có bất kỳ câu hỏi nào về hóa đơn này, xin vui lòng liên hệ bộ phận chăm sóc khách hàng."
 msgstr ""
 
@@ -3065,7 +3070,7 @@ msgstr ""
 msgid "Nội dung"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:141
+#: templates/ecommerce/thankyou-page.php:149
 msgid "Nội dung chuyển khoản (Memo):"
 msgstr ""
 
@@ -3194,7 +3199,7 @@ msgid "Phát triển"
 msgstr ""
 
 #: templates/account-hub/order-modal.php:111
-#: templates/ecommerce/thankyou-page.php:337
+#: templates/ecommerce/thankyou-page.php:345
 msgid "Phí vận chuyển:"
 msgstr ""
 
@@ -3206,7 +3211,7 @@ msgstr ""
 msgid "Phương thức"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:262
+#: templates/ecommerce/thankyou-page.php:270
 msgid "Phương thức thanh toán & Vận chuyển"
 msgstr ""
 
@@ -3233,15 +3238,20 @@ msgstr ""
 msgid "Phường/Xã không thuộc Tỉnh/Thành phố đã chọn. Vui lòng chọn lại."
 msgstr ""
 
+#: includes/Admin/class-readiness.php:677
+#: includes/Admin/class-readiness.php:686
+msgid "Phần mở rộng mbstring"
+msgstr ""
+
 #: includes/class-field-registry.php:1252
 msgid "Popup xác nhận thông tin nhận hàng trước khi Đặt hàng"
 msgstr ""
 
-#: includes/Admin/class-readiness.php:379
-#: includes/Admin/class-readiness.php:394
-#: includes/Admin/class-readiness.php:418
-#: includes/Admin/class-readiness.php:431
-#: includes/Admin/class-readiness.php:444
+#: includes/Admin/class-readiness.php:407
+#: includes/Admin/class-readiness.php:422
+#: includes/Admin/class-readiness.php:446
+#: includes/Admin/class-readiness.php:459
+#: includes/Admin/class-readiness.php:472
 #: includes/class-field-registry.php:138
 msgid "Proxy và địa chỉ IP"
 msgstr ""
@@ -3276,7 +3286,7 @@ msgstr ""
 msgid "Quyền hiển thị OmniWP"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:128
+#: templates/ecommerce/thankyou-page.php:136
 msgid "Quét mã chuyển khoản nhanh"
 msgstr ""
 
@@ -3300,11 +3310,11 @@ msgstr ""
 msgid "Quản lý và áp dụng các mã ưu đãi dành riêng cho tài khoản của bạn."
 msgstr ""
 
-#: includes/Admin/class-readiness.php:421
+#: includes/Admin/class-readiness.php:449
 msgid "Request này đến qua Cloudflare nhưng plugin đang bỏ qua header proxy, nên mọi khách bị tính chung một địa chỉ. Đang có giới hạn theo IP đang bật, nghĩa là chúng sẽ khoá nhầm khách thật trước khi chạm được kẻ tấn công."
 msgstr ""
 
-#: includes/Admin/class-readiness.php:422
+#: includes/Admin/class-readiness.php:450
 msgid "Request này đến qua Cloudflare nhưng plugin đang bỏ qua header proxy, nên nhật ký ghi địa chỉ của CDN thay vì của khách."
 msgstr ""
 
@@ -3317,7 +3327,7 @@ msgid "Rút gọn còn 1 ô Họ và tên, tự động bỏ Zipcode, Quốc gia
 msgstr ""
 
 #. translators: %d: product quantity
-#: templates/ecommerce/thankyou-page.php:309
+#: templates/ecommerce/thankyou-page.php:317
 msgid "SL: %d"
 msgstr ""
 
@@ -3363,7 +3373,6 @@ msgid "Secret trùng với ID ứng dụng nên không được lưu. Hãy dán 
 msgstr ""
 
 #: includes/Admin/class-smart-menu-meta-box.php:135
-#: includes/Admin/class-smart-menu-metabox.php:135
 msgid "Select All"
 msgstr ""
 
@@ -3401,7 +3410,6 @@ msgid "Smart Login: cài đặt <code>delivery.route_phone</code> đang trỏ t�
 msgstr ""
 
 #: includes/Admin/class-smart-menu-meta-box.php:90
-#: includes/Admin/class-smart-menu-metabox.php:90
 msgid "Smart Menu"
 msgstr ""
 
@@ -3532,11 +3540,11 @@ msgstr ""
 msgid "Số phút tạm dừng gửi"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:137
+#: templates/ecommerce/thankyou-page.php:145
 msgid "Số tiền cần chuyển:"
 msgstr ""
 
-#: includes/Admin/class-readiness.php:162
+#: includes/Admin/class-readiness.php:190
 #: includes/Auth/class-profile-completion-service.php:134
 #: includes/Auth/class-register-handler.php:505
 #: includes/Ecommerce/class-checkout-service.php:245
@@ -3562,7 +3570,7 @@ msgstr ""
 msgid "Số điện thoại hoặc Email"
 msgstr ""
 
-#: includes/Admin/class-readiness.php:108
+#: includes/Admin/class-readiness.php:136
 msgid "Số điện thoại hoặc email"
 msgstr ""
 
@@ -3601,7 +3609,7 @@ msgid "Sửa các mục trong menu tài khoản, kể cả hai mục do plugin g
 msgstr ""
 
 #. translators: %s: the offending CIDR.
-#: includes/Admin/class-readiness.php:402
+#: includes/Admin/class-readiness.php:430
 msgid "Sửa dải IP"
 msgstr ""
 
@@ -3659,7 +3667,7 @@ msgstr ""
 
 #: templates/account-hub/order-modal.php:84
 #: templates/ecommerce/order-confirmation-modal.php:70
-#: templates/ecommerce/thankyou-page.php:267
+#: templates/ecommerce/thankyou-page.php:275
 msgid "Thanh toán:"
 msgstr ""
 
@@ -3728,7 +3736,7 @@ msgid "Thiếu thông tin định danh."
 msgstr ""
 
 #. translators: %s: comma-separated table names.
-#: includes/Admin/class-readiness.php:630
+#: includes/Admin/class-readiness.php:658
 msgid "Thiếu: %s. Hãy tắt rồi bật lại plugin."
 msgstr ""
 
@@ -3828,7 +3836,6 @@ msgid "Thông tin"
 msgstr ""
 
 #: includes/Admin/class-smart-menu-meta-box.php:62
-#: includes/Admin/class-smart-menu-metabox.php:62
 #: includes/Frontend/class-account-form.php:114
 #: includes/Frontend/class-account-hub.php:83
 #: includes/Frontend/class-account-menu.php:84
@@ -3841,7 +3848,7 @@ msgstr ""
 msgid "Thông tin giao hàng"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:241
+#: templates/ecommerce/thankyou-page.php:249
 msgid "Thông tin khách hàng & Giao hàng"
 msgstr ""
 
@@ -3919,7 +3926,7 @@ msgid "Timeout (giây)"
 msgstr ""
 
 #. translators: %d: number of trusted ranges.
-#: includes/Admin/class-readiness.php:435
+#: includes/Admin/class-readiness.php:463
 msgid "Tin header proxy từ %d dải đã khai."
 msgid_plural "Tin header proxy từ %d dải đã khai."
 msgstr[0] ""
@@ -3939,7 +3946,7 @@ msgid "Tiếp tục"
 msgstr ""
 
 #: templates/ecommerce/cart-page.php:186
-#: templates/ecommerce/thankyou-page.php:359
+#: templates/ecommerce/thankyou-page.php:367
 msgid "Tiếp tục mua sắm"
 msgstr ""
 
@@ -4060,11 +4067,11 @@ msgid "Trường hồ sơ"
 msgstr ""
 
 #. translators: %s: Order number
-#: templates/ecommerce/thankyou-page.php:82
+#: templates/ecommerce/thankyou-page.php:90
 msgid "Trạng thái xử lý đơn hàng"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:174
+#: templates/ecommerce/thankyou-page.php:182
 msgid "Trạng thái:"
 msgstr ""
 
@@ -4072,10 +4079,10 @@ msgstr ""
 msgid "Trả lời nhanh chóng"
 msgstr ""
 
-#: includes/Admin/class-readiness.php:288
-#: includes/Admin/class-readiness.php:306
-#: includes/Admin/class-readiness.php:346
-#: includes/Admin/class-readiness.php:356
+#: includes/Admin/class-readiness.php:316
+#: includes/Admin/class-readiness.php:334
+#: includes/Admin/class-readiness.php:374
+#: includes/Admin/class-readiness.php:384
 #: includes/class-field-registry.php:135
 msgid "Trần gửi toàn site"
 msgstr ""
@@ -4105,7 +4112,6 @@ msgid "Tài khoản của bạn đang đăng nhập bằng Google và chưa có 
 msgstr ""
 
 #: includes/Admin/class-smart-menu-meta-box.php:56
-#: includes/Admin/class-smart-menu-metabox.php:56
 msgid "Tài khoản của tôi (Tổng quan)"
 msgstr ""
 
@@ -4269,7 +4275,7 @@ msgstr ""
 msgid "Tạm tính tiền hàng:"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:327
+#: templates/ecommerce/thankyou-page.php:335
 msgid "Tạm tính:"
 msgstr ""
 
@@ -4308,7 +4314,7 @@ msgstr ""
 msgid "Tắt hẳn hộp đăng nhập nổi trên toàn site."
 msgstr ""
 
-#: includes/Admin/class-readiness.php:648
+#: includes/Admin/class-readiness.php:705
 msgid "Tắt ngay"
 msgstr ""
 
@@ -4351,7 +4357,7 @@ msgstr ""
 msgid "Tổng quan"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:341
+#: templates/ecommerce/thankyou-page.php:349
 msgid "Tổng số tiền thanh toán:"
 msgstr ""
 
@@ -4452,7 +4458,7 @@ msgstr ""
 msgid "Vui lòng chọn địa chỉ."
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:146
+#: templates/ecommerce/thankyou-page.php:154
 msgid "Vui lòng giữ nguyên nội dung chuyển khoản để hệ thống tự động xác nhận đơn hàng."
 msgstr ""
 
@@ -4638,7 +4644,7 @@ msgstr ""
 msgid "Vận chuyển"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:272
+#: templates/ecommerce/thankyou-page.php:280
 msgid "Vận chuyển:"
 msgstr ""
 
@@ -4680,7 +4686,7 @@ msgid "Xem chi tiết điều kiện"
 msgstr ""
 
 #. translators: 1: identity mode, 2: number of country codes.
-#: includes/Admin/class-readiness.php:127
+#: includes/Admin/class-readiness.php:155
 msgid "Xem danh sách"
 msgstr ""
 
@@ -4688,7 +4694,8 @@ msgstr ""
 msgid "Xem giá trị đang áp dụng"
 msgstr ""
 
-#: includes/Admin/class-readiness.php:530
+#: includes/Admin/class-readiness.php:558
+#: includes/Admin/class-readiness.php:690
 msgid "Xem hướng dẫn"
 msgstr ""
 
@@ -4701,12 +4708,12 @@ msgstr ""
 msgid "Xem request sẽ được gửi"
 msgstr ""
 
-#: includes/Admin/class-readiness.php:296
-#: includes/Admin/class-readiness.php:350
+#: includes/Admin/class-readiness.php:324
+#: includes/Admin/class-readiness.php:378
 msgid "Xem trần"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:367
+#: templates/ecommerce/thankyou-page.php:375
 msgid "Xem đơn hàng của tôi"
 msgstr ""
 
@@ -4884,8 +4891,8 @@ msgid "hôm nay"
 msgstr ""
 
 #. translators: 1: codes sent this hour, 2: hourly ceiling, 3: daily ceiling.
-#: includes/Admin/class-readiness.php:329
-#: includes/Admin/class-readiness.php:330
+#: includes/Admin/class-readiness.php:357
+#: includes/Admin/class-readiness.php:358
 msgid "không giới hạn"
 msgstr ""
 
@@ -4938,7 +4945,7 @@ msgstr ""
 msgid "Ít nhất %d ký tự. Bấm vào biểu tượng con mắt để kiểm tra lại."
 msgstr ""
 
-#: includes/Admin/class-readiness.php:381
+#: includes/Admin/class-readiness.php:409
 msgid "Đang bật tin proxy nhưng chưa khai dải IP nào, nên plugin không tin header của ai cả. Khai dải IP của proxy để giới hạn theo IP hoạt động đúng."
 msgstr ""
 
@@ -4976,7 +4983,7 @@ msgstr ""
 #: includes/Frontend/class-rest-controller.php:820
 #: includes/Frontend/class-rest-controller.php:1245
 #: templates/account-hub/tab-orders.php:20
-#: templates/ecommerce/thankyou-page.php:106
+#: templates/ecommerce/thankyou-page.php:114
 msgid "Đang giao hàng"
 msgstr ""
 
@@ -5001,11 +5008,11 @@ msgstr ""
 msgid "Đang hoạt động"
 msgstr ""
 
-#: includes/Admin/class-readiness.php:348
+#: includes/Admin/class-readiness.php:376
 msgid "Đang sát trần — hoặc site đang bị lạm dụng, hoặc trần đặt thấp hơn nhu cầu thật."
 msgstr ""
 
-#: includes/Admin/class-readiness.php:457
+#: includes/Admin/class-readiness.php:485
 msgid "Đang thay form My Account của WooCommerce."
 msgstr ""
 
@@ -5024,7 +5031,7 @@ msgstr ""
 msgid "Đang tải…"
 msgstr ""
 
-#: includes/Admin/class-readiness.php:639
+#: includes/Admin/class-readiness.php:696
 msgid "Đang tắt."
 msgstr ""
 
@@ -5072,6 +5079,10 @@ msgstr ""
 msgid "Đã bật · thiếu credentials"
 msgstr ""
 
+#: includes/Admin/class-readiness.php:679
+msgid "Đã bật."
+msgstr ""
+
 #: includes/Ecommerce/class-checkout-service.php:578
 msgid "Đã bỏ chọn tất cả mã giảm giá."
 msgstr ""
@@ -5094,12 +5105,12 @@ msgid "Đã chạm trần gửi toàn site nên plugin tự tạm dừng. Đây 
 msgstr ""
 
 #. translators: %d: minutes remaining.
-#: includes/Admin/class-readiness.php:292
+#: includes/Admin/class-readiness.php:320
 msgid "Đã chạm trần, đang tạm dừng gửi mã. Tự mở lại sau %d phút."
 msgstr ""
 
 #. translators: %d: province count.
-#: includes/Admin/class-readiness.php:540
+#: includes/Admin/class-readiness.php:568
 msgid "Đã cài %d tỉnh/thành."
 msgstr ""
 
@@ -5189,7 +5200,7 @@ msgstr ""
 msgid "Đã mở lại việc gửi mã."
 msgstr ""
 
-#: includes/Admin/class-readiness.php:204
+#: includes/Admin/class-readiness.php:232
 msgid "Đã sẵn sàng cho mọi hình thức định danh đang bật."
 msgstr ""
 
@@ -5205,7 +5216,7 @@ msgstr ""
 msgid "Đã thêm sản phẩm vào giỏ hàng."
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:88
+#: templates/ecommerce/thankyou-page.php:96
 msgid "Đã tiếp nhận"
 msgstr ""
 
@@ -5231,7 +5242,7 @@ msgid "Đã áp dụng thành công %d mã giảm giá!"
 msgstr ""
 
 #: includes/Frontend/class-rest-controller.php:815
-#: templates/ecommerce/thankyou-page.php:97
+#: templates/ecommerce/thankyou-page.php:105
 msgid "Đã đóng gói"
 msgstr ""
 
@@ -5244,7 +5255,7 @@ msgstr ""
 msgid "Đã đặt làm địa chỉ mặc định!"
 msgstr ""
 
-#: includes/Admin/class-readiness.php:467
+#: includes/Admin/class-readiness.php:495
 msgid "Đã đặt shortcode trên một trang."
 msgstr ""
 
@@ -5283,7 +5294,6 @@ msgid "Đăng nhập"
 msgstr ""
 
 #: includes/Admin/class-smart-menu-meta-box.php:80
-#: includes/Admin/class-smart-menu-metabox.php:80
 #: includes/Frontend/class-account-hub.php:107
 #: includes/Frontend/class-account-menu.php:124
 #: includes/class-field-registry.php:931
@@ -5301,7 +5311,6 @@ msgid "Đăng nhập & Đăng ký"
 msgstr ""
 
 #: includes/Admin/class-smart-menu-meta-box.php:42
-#: includes/Admin/class-smart-menu-metabox.php:42
 msgid "Đăng nhập / Tên người dùng (Tự động đổi)"
 msgstr ""
 
@@ -5310,7 +5319,6 @@ msgid "Đăng nhập / Đăng ký"
 msgstr ""
 
 #: includes/Admin/class-smart-menu-meta-box.php:36
-#: includes/Admin/class-smart-menu-metabox.php:36
 msgid "Đăng nhập / Đăng ký (Mở Popup)"
 msgstr ""
 
@@ -5339,9 +5347,9 @@ msgstr ""
 msgid "Đăng nhập ngay"
 msgstr ""
 
-#: includes/Admin/class-readiness.php:553
-#: includes/Admin/class-readiness.php:583
-#: includes/Admin/class-readiness.php:596
+#: includes/Admin/class-readiness.php:581
+#: includes/Admin/class-readiness.php:611
+#: includes/Admin/class-readiness.php:624
 #: includes/class-field-registry.php:46
 msgid "Đăng nhập nhanh"
 msgstr ""
@@ -5359,7 +5367,6 @@ msgid "Đăng nhập qua nhà cung cấp đã bị hủy."
 msgstr ""
 
 #: includes/Admin/class-smart-menu-meta-box.php:48
-#: includes/Admin/class-smart-menu-metabox.php:48
 #: includes/Frontend/class-account-hub.php:113
 #: includes/Frontend/class-account-menu.php:140
 #: includes/Frontend/class-icon-set.php:245
@@ -5386,7 +5393,7 @@ msgstr ""
 msgid "Đơn giá"
 msgstr ""
 
-#: templates/ecommerce/thankyou-page.php:304
+#: templates/ecommerce/thankyou-page.php:312
 msgid "Đơn giá:"
 msgstr ""
 
@@ -5429,7 +5436,7 @@ msgstr ""
 msgid "Đạt"
 msgstr ""
 
-#: includes/Admin/class-readiness.php:621
+#: includes/Admin/class-readiness.php:649
 msgid "Đầy đủ."
 msgstr ""
 
@@ -5479,7 +5486,7 @@ msgstr ""
 msgid "Đặt shortcode lên một trang, hoặc bật thay form My Account."
 msgstr ""
 
-#: includes/Admin/class-readiness.php:310
+#: includes/Admin/class-readiness.php:338
 msgid "Đặt trần"
 msgstr ""
 
@@ -5590,7 +5597,6 @@ msgid "Địa chỉ mặc định"
 msgstr ""
 
 #: includes/Admin/class-smart-menu-meta-box.php:74
-#: includes/Admin/class-smart-menu-metabox.php:74
 #: includes/Auth/class-profile-completion-service.php:164
 #: includes/Frontend/class-account-form.php:122
 #: includes/Frontend/class-account-hub.php:101
@@ -5616,8 +5622,8 @@ msgid "Địa chỉ:"
 msgstr ""
 
 #: includes/Admin/Screens/class-audit-screen.php:43
-#: includes/Admin/class-readiness.php:118
-#: includes/Admin/class-readiness.php:133
+#: includes/Admin/class-readiness.php:146
+#: includes/Admin/class-readiness.php:161
 #: includes/class-field-registry.php:105
 msgid "Định danh"
 msgstr ""
@@ -5713,10 +5719,6 @@ msgstr ""
 
 #: templates/ecommerce/voucher-module.php:162
 msgid "✓ Đã dùng"
-msgstr ""
-
-#: includes/Ecommerce/class-cart-service.php:448
-msgid "Bạn đã đủ điều kiện Miễn phí vận chuyển!"
 msgstr ""
 
 #: includes/Frontend/class-woo-integration.php:587
