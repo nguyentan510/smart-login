@@ -70,7 +70,6 @@
 .sl-form-row {
 	display: flex;
 	gap: 16px;
-	margin-bottom: 16px;
 }
 
 .sl-form-row--split>* {
@@ -459,15 +458,15 @@
 	line-height: 1.35;
 }
 
-/* Mini Stepper Under Name with Tactile Micro-Interactions */
+/* Mini Stepper with Tactile Micro-Interactions */
 .sl-qty-stepper {
 	display: inline-flex;
 	align-items: center;
 	border: 1px solid #e2e8f0;
-	border-radius: 6px;
+	border-radius: 4px;
 	background: #ffffff;
 	overflow: hidden;
-	height: 28px;
+	height: 24px;
 	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
 	transition: border-color var(--ow-dur-fast, 150ms) var(--ow-ease-smooth);
 }
@@ -478,12 +477,12 @@
 }
 
 .sl-qty-btn {
-	width: 26px !important;
+	width: 22px !important;
 	height: 100% !important;
 	background: #ffffff !important;
 	border: none !important;
 	cursor: pointer !important;
-	font-size: 13px !important;
+	font-size: 12px !important;
 	font-weight: 700 !important;
 	color: #64748b !important;
 	display: flex !important;
@@ -509,19 +508,19 @@
 }
 
 .sl-qty-input {
-	width: 32px !important;
+	width: 28px !important;
 	height: 100% !important;
 	min-height: 0 !important;
 	max-height: 100% !important;
 	border: none !important;
 	text-align: center !important;
-	font-size: 13px !important;
+	font-size: 12px !important;
 	font-weight: 600 !important;
 	color: #0f172a !important;
 	background: #ffffff !important;
 	padding: 0 !important;
 	margin: 0 !important;
-	line-height: 26px !important;
+	line-height: 22px !important;
 	box-shadow: none !important;
 	outline: none !important;
 	-moz-appearance: textfield;
@@ -4021,26 +4020,27 @@ form.checkout.sl-co-form,
 .sl-co-address-details {
 	display: flex;
 	flex-direction: column;
-	gap: 4px;
+	gap: 6px;
 	font-size: 14px;
 	line-height: 1.5;
 }
 
 .sl-co-address-detail-item {
 	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
-	gap: 6px;
+	align-items: flex-start;
+	flex-wrap: nowrap;
+	gap: 8px;
 }
 
 .sl-co-address-icon {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	color: #94a3b8;
+	color: var(--ow-brand, #e30613);
 	flex-shrink: 0;
 	width: 18px;
 	height: 18px;
+	margin-top: 2px;
 }
 
 .sl-co-address-icon svg {
@@ -4051,11 +4051,15 @@ form.checkout.sl-co-form,
 
 .sl-co-address-value {
 	color: #1e293b;
+	flex: 1;
+	min-width: 0;
+	word-break: break-word;
 }
 
 strong.sl-co-address-value {
 	font-weight: 700;
 	color: #0f172a;
+	flex: 0 1 auto;
 }
 
 .sl-btn-change-address {
@@ -5122,7 +5126,6 @@ div.woocommerce-checkout-payment div.form-row.place-order,
 	.sl-form-row--split {
 		flex-direction: column !important;
 		gap: 12px !important;
-		margin-bottom: 12px !important;
 	}
 
 	.sl-address-modal__dialog {
@@ -8115,10 +8118,12 @@ div.woocommerce-checkout-payment .woocommerce-privacy-policy-text p {
 
 .sl-co-address-detail-item {
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
+	flex-wrap: nowrap;
 	gap: 8px;
 	font-size: var(--ow-fs-sm, 14px);
 	color: var(--ow-text-secondary, #475569);
+	line-height: 1.5;
 }
 
 .sl-co-address-icon {
@@ -8127,6 +8132,9 @@ div.woocommerce-checkout-payment .woocommerce-privacy-policy-text p {
 	justify-content: center;
 	color: var(--ow-brand, #e30613);
 	flex-shrink: 0;
+	width: 18px;
+	height: 18px;
+	margin-top: 2px;
 }
 
 .sl-co-address-icon svg {
@@ -8137,6 +8145,14 @@ div.woocommerce-checkout-payment .woocommerce-privacy-policy-text p {
 
 .sl-co-address-value {
 	color: var(--ow-text-primary, #0f172a);
+	flex: 1;
+	min-width: 0;
+	word-break: break-word;
+}
+
+strong.sl-co-address-value {
+	font-weight: 700;
+	flex: 0 1 auto;
 }
 
 .sl-address-default-badge {
