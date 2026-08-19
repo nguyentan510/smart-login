@@ -23,6 +23,25 @@ class SlideCart {
 		add_action( 'wp_footer', array( $this, 'render_drawer' ), 30 );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_assets' ), 25 );
 
+		/*
+		 * We own the cart, so we own the sentence that says it changed.
+		 *
+		 * ShopKit's Quick View can add an item — through WooCommerce's endpoint,
+		 * never through `WC()->cart`, so the boundary in docs/ecommerce.md holds —
+		 * and then fires `added_to_cart`, which is what opens this drawer. It also
+		 * used to raise a toast of its own, so one click produced two messages:
+		 * its toast in the bottom-right corner, on top of our floating cart
+		 * bubble, and this drawer sliding open behind it.
+		 *
+		 * `shopkit_cart_feedback` is the filter ShopKit publishes for a cart owner
+		 * to take that job over. It silences the success toast only; an error
+		 * inside its modal — a variation the customer never chose — stays with the
+		 * modal, because no drawer knows about it. Registered here rather than at
+		 * boot so the claim cannot outlive the drawer: with the slide cart off,
+		 * this method has already returned and ShopKit keeps speaking.
+		 */
+		add_filter( 'shopkit_cart_feedback', '__return_false' );
+
 		// AJAX endpoints.
 		add_action( 'wp_ajax_omniwp_get_cart', array( $this, 'ajax_get_cart' ) );
 		add_action( 'wp_ajax_nopriv_omniwp_get_cart', array( $this, 'ajax_get_cart' ) );

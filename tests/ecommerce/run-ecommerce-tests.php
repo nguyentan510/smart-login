@@ -213,4 +213,40 @@ ow_assert(
 	'A zero remaining with is_reached false would print "Mua thêm 0₫ để được Freeship".'
 );
 
+ow_section( 'Rule 8 — the drawer owns the sentence that says the cart changed' );
+
+/*
+ * The catalogue plugin can put an item in this cart: ShopKit's Quick View posts
+ * to WooCommerce's own `add_to_cart` endpoint and then fires `added_to_cart`,
+ * which is the event `SlideCart` opens on. That handoff is fine — the PHP
+ * boundary holds, because ShopKit never touches `WC()->cart` itself.
+ *
+ * What was not fine is that both plugins then reported it: ShopKit's toast in
+ * the bottom-right corner, over this module's floating cart bubble, while the
+ * drawer slid open saying the same thing. The cart is ours, so the confirmation
+ * is ours. ShopKit publishes `shopkit_cart_feedback` for an owner to say so, and
+ * claiming it is one line — which is exactly why it needs a rule: a line that
+ * short disappears in a refactor without anyone noticing until a customer sees
+ * two messages again.
+ *
+ * Registered next to the drawer rather than at plugin boot, so the claim cannot
+ * outlive the thing that honours it: with the slide cart switched off,
+ * `register()` returns before this line and ShopKit keeps its toast.
+ */
+$ow_slide_cart_src = ow_source( 'includes/Ecommerce/class-slide-cart.php' );
+$ow_register_body  = ow_method_body( $ow_slide_cart_src, 'register' );
+
+ow_assert(
+	'the drawer claims cart feedback from ShopKit',
+	false !== strpos( $ow_register_body, "add_filter( 'shopkit_cart_feedback', '__return_false' )" ),
+	'Without the claim, an add from Quick View produces a toast and a drawer for one click.'
+);
+
+ow_assert(
+	'and claims it only when the drawer is actually registered',
+	false !== strpos( $ow_slide_cart_src, "Settings::is_on( 'ecommerce.slide_cart_enabled', true )" )
+		&& strpos( $ow_register_body, "add_filter( 'shopkit_cart_feedback'" ) > strpos( $ow_register_body, "Settings::is_on( 'ecommerce.slide_cart_enabled'" ),
+	'A claim made above the enabled check silences ShopKit on a store that has no drawer to replace it.'
+);
+
 ow_summary( 'E-Commerce Suite' );

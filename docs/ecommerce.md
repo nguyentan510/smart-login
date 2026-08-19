@@ -34,6 +34,23 @@ module as the reason. So the cart and checkout live here, and the catalogue
 lives there. Neither rule is a preference: ShopKit's HPOS compatibility
 declaration is only honest while it holds.
 
+### The one place the boundary is crossed, and how
+
+ShopKit's Quick View can put an item in this cart. It does it the only way its
+own rules allow — a browser POST to WooCommerce's `add_to_cart` endpoint, never
+a `WC()->cart` call in PHP — and then fires jQuery `added_to_cart` on
+`document.body`, which is the event `SlideCart` binds to
+(`assets/js/omniwp-slide-cart.js:131`). That event is the entire contract
+between the two plugins, and it is WooCommerce's, not ours: any plugin that adds
+to the cart the standard way already fires it.
+
+What the contract does **not** include is the sentence that says the cart
+changed. That is ours, because the cart is. ShopKit publishes
+`shopkit_cart_feedback` for a cart owner to claim it, and `SlideCart::register()`
+returns `false` from it — next to the drawer's own registration, so a store with
+the slide cart switched off keeps ShopKit's toast rather than losing both.
+`tests/ecommerce/run-ecommerce-tests.php` rule 8 holds that line in place.
+
 ## The write surface is `wp_ajax_*`, and that is the whole of it
 
 Twenty-three registrations across `CheckoutService` and `SlideCart`. There is no
