@@ -255,12 +255,18 @@ $suites = array(
 		// because the navigation model does not exist yet; that is the 10.0
 		// precedent.
 		//
-		// Promoted the moment it goes green, which is 25.6 at the latest and
-		// earlier if the rules turn sooner. 15.4 recorded what it costs to hold
-		// a green suite non-blocking for four phases.
+		// `required` since 25.3, not 25.6 as the plan had it. The last red rule
+		// turned when the panel's script replaced the JS breakpoint, and the
+		// working agreement promotes the moment that happens -- 15.4 found that
+		// rule being ignored for four phases, and a green suite that cannot
+		// block only hides the next regression.
+		//
+		// Sixteen assertions still report PENDING: three dead settings (25.7),
+		// three cart reads in cacheable HTML (25.8) and ten asset files nothing
+		// loads (25.9). A PENDING does not block, and does not stop saying so.
 		'name' => 'Navigation',
 		'file' => 'navigation/run-navigation-tests.php',
-		'kind' => 'spec',
+		'kind' => 'required',
 	),
 );
 

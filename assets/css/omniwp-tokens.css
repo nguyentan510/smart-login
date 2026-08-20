@@ -7,6 +7,17 @@
 
 :root {
 	/* ==========================================================================
+	   0. Layout mode
+	   ==========================================================================
+	   The one place the breakpoint is written. Scripts read this instead of
+	   comparing window.innerWidth to a number of their own: two copies of a
+	   breakpoint are two copies that will disagree, and nothing notices when they
+	   do. Ask getComputedStyle( document.documentElement ) for --ow-layout.
+	   Enforced by rule 3 in tests/navigation/run-navigation-tests.php.
+	   ========================================================================== */
+	--ow-layout: wide;
+
+	/* ==========================================================================
 	   1. Brand & Accent Color System
 	   ========================================================================== */
 	--ow-brand: #e30613;
@@ -291,5 +302,11 @@
 		--ow-dur-slow: 0ms;
 		--ow-transition-base: none;
 		--ow-transition-spring: none;
+	}
+}
+
+@media (max-width: 768px) {
+	:root {
+		--ow-layout: narrow;
 	}
 }

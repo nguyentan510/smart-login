@@ -6,6 +6,26 @@
 
 ### Thêm mới
 
+- **Mega Menu: bảng danh mục đổ xuống, chung một bản dựng cho cả máy tính và điện
+  thoại.** Trong **Giao diện → Menu**, mở một mục menu cấp 1 và chọn
+  `Bảng danh mục đổ xuống`: nguồn có thể là danh mục sản phẩm, thương hiệu, thẻ,
+  hoặc một menu WordPress khác. Muốn chỉ lấy một nhánh thì điền mã mục vào ô
+  `Chỉ lấy nhánh`.
+
+  Trên máy tính nó là bảng đổ xuống có cột danh mục bên trái và nội dung bên phải.
+  Trên điện thoại **cùng bản dựng đó** trở thành màn hình chọn danh mục 2 khung —
+  cột trái giữ nhóm lớn, khung phải là lưới danh mục con có ảnh. Không phải hai
+  giao diện, mà là một bản dựng CSS đổi hình.
+
+  Link của mục menu **vẫn là link**: không có JavaScript thì bấm vào nó vẫn đi tới
+  trang danh mục như trước. Nút mở bảng là một nút riêng bên cạnh.
+
+- **Chọn thiết bị cho từng mục menu.** Mỗi mục có thêm ô `Hiển thị trên thiết bị`:
+  mọi màn hình / chỉ máy tính / chỉ điện thoại. Đây là cách lược giản header trên
+  mobile mà **không** phá bộ nhớ đệm: mục vẫn được tạo ra trong trang, màn hình
+  nào không hợp thì CSS ẩn. Nếu làm bằng cách nhận diện thiết bị ở máy chủ, trang
+  đã cache cho điện thoại sẽ được trả về cho máy tính.
+
 - **Thanh điều hướng đáy màn hình trên mobile.** Tab **Điều hướng & Mobile** →
   bật `Thanh điều hướng đáy màn hình`, chọn tối đa 5 mục trong
   `home, categories, search, cart, account`. **Mặc định tắt**: một bản cập nhật
@@ -18,6 +38,9 @@
   Thanh này công bố `--ow-dock-height`. Bubble giỏ hàng nổi, hai thanh sticky của
   giỏ/thanh toán, toast thông báo và thanh mua hàng của ShopKit đều xếp chồng lên
   nó thay vì đè nhau. Tắt thanh đi thì mọi thứ về đúng như trước.
+
+  Tab `Danh mục` mở đúng màn hình chọn danh mục ở trên khi trang có bảng danh mục;
+  không có thì nó dẫn tới trang cửa hàng.
 
 ### Đã gỡ
 

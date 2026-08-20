@@ -23,7 +23,6 @@
 namespace OmniWP\Navigation;
 
 use OmniWP\Frontend\AccountForm;
-use OmniWP\Frontend\Assets;
 use OmniWP\Frontend\IconSet;
 use OmniWP\Frontend\TemplateLoader;
 use OmniWP\Settings;
@@ -31,8 +30,6 @@ use OmniWP\Settings;
 defined( 'ABSPATH' ) || exit;
 
 final class Dock {
-
-	const HANDLE = 'omniwp-navigation';
 
 	/** Five is the cap every reference store settled on, and the cap a thumb settles on. */
 	const MAX_SLOTS = 5;
@@ -47,7 +44,6 @@ final class Dock {
 	const BADGE_SELECTOR = '.ow-dock__badge';
 
 	public function register(): void {
-		add_action( 'wp_enqueue_scripts', array( $this, 'register_assets' ) );
 		add_action( 'wp_footer', array( $this, 'render' ), 20 );
 		add_filter( 'woocommerce_add_to_cart_fragments', array( $this, 'cart_fragment' ) );
 	}
@@ -157,15 +153,6 @@ final class Dock {
 		return array_values( $chosen );
 	}
 
-	public function register_assets(): void {
-		wp_register_style(
-			self::HANDLE,
-			OMNIWP_URL . 'assets/css/omniwp-navigation.css',
-			array( Assets::TOKENS_HANDLE ),
-			OMNIWP_VERSION
-		);
-	}
-
 	/**
 	 * Print the dock.
 	 *
@@ -188,7 +175,7 @@ final class Dock {
 			return;
 		}
 
-		wp_enqueue_style( self::HANDLE );
+		Assets::enqueue();
 
 		/*
 		 * WooCommerce's own fragment refresh, which is what fills the badge. It

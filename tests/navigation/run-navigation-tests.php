@@ -13,8 +13,15 @@
  * passes for want of a subject states the opposite of the truth (the 10.0
  * precedent). 25.1 built the model and turned all five into assertions.
  *
- * Rules 1, 3, 4 and 5 are still red on purpose. They describe defects 25.3 and
- * 25.4 are scheduled to fix, and each names the file and line it is waiting on.
+ * 25.4 turned rules 1 and 4 by deleting two dead settings and giving the bottom
+ * edge one owner; 25.3 turned rule 3 by moving the breakpoint into
+ * `--ow-layout`, where the stylesheet publishes it and scripts read it.
+ *
+ * What remains is PENDING, not red, and each one names the sub-phase that owes
+ * it: three dead settings that belong to other modules (25.7), three cart reads
+ * that predate this phase (25.8), and ten asset files nothing loads (25.9).
+ * PENDING because an allowlist entry would say "this is fine", and none of them
+ * are.
  *
  * Run with:  php tests/navigation/run-navigation-tests.php
  *
@@ -27,6 +34,8 @@ require __DIR__ . '/../harness.php';
 
 use OmniWP\FieldRegistry;
 use OmniWP\Settings;
+use OmniWP\Admin\SmartMenuFields;
+use OmniWP\Navigation\MegaPanel;
 use OmniWP\Navigation\Catalog;
 use OmniWP\Navigation\Dock;
 use OmniWP\Navigation\Node;
@@ -307,9 +316,37 @@ ow_section( 'Rule 3 — the breakpoint lives in CSS, not in JS' );
  * breakpoint are two copies that will disagree, and nothing notices when they
  * do.
  */
+/**
+ * The assets some PHP file actually asks WordPress to load.
+ *
+ * Rule 3 reads only these, and the reason is a finding rather than a
+ * convenience: five `smart-*.js` files are referenced by nothing at all — the
+ * whole legacy set from the Smart Login rename — so a breakpoint written in one
+ * of them cannot disagree with a stylesheet, because no browser ever sees it.
+ * Reporting those as offenders would have buried two real ones in four.
+ *
+ * They are not silently ignored either. The dead-asset check below names them
+ * every run.
+ *
+ * @return array<string,string>
+ */
+function ow_nav_enqueued_assets( string $extension ): array {
+	$php      = implode( "
+", ow_plugin_sources() );
+	$enqueued = array();
+
+	foreach ( ow_nav_assets( $extension ) as $relative => $contents ) {
+		if ( false !== strpos( $php, basename( $relative ) ) ) {
+			$enqueued[ $relative ] = $contents;
+		}
+	}
+
+	return $enqueued;
+}
+
 $ow_js_breakpoints = array();
 
-foreach ( ow_nav_assets( 'js' ) as $ow_relative => $ow_contents ) {
+foreach ( ow_nav_enqueued_assets( 'js' ) as $ow_relative => $ow_contents ) {
 	if ( ! preg_match_all( '/(innerWidth|outerWidth|clientWidth)\s*[<>]=?\s*\d{3,}|matchMedia\s*\(\s*[\'"][^\'"]*\d{3,}px/', $ow_contents, $ow_matches, PREG_OFFSET_CAPTURE ) ) {
 		continue;
 	}
@@ -325,6 +362,32 @@ ow_nav_offenders(
 	$ow_js_breakpoints,
 	'Ask getComputedStyle() what the layout is. The number belongs to the stylesheet that draws it.'
 );
+
+$ow_tokens_css = ow_nav_assets( 'css' )['assets/css/omniwp-tokens.css'] ?? '';
+
+ow_assert( 'The stylesheet publishes the layout mode scripts read', false !== strpos( $ow_tokens_css, '--ow-layout' ) );
+ow_assert( 'And it is the tokens file, which every other stylesheet depends on', false !== strpos( $ow_tokens_css, '--ow-layout: narrow' ) );
+
+/*
+ * Assets nothing loads. Found while scoping rule 3: the entire pre-rename
+ * `smart-*` set is unreferenced. Deleting them is a rename cleanup, not a
+ * navigation change, so this reports rather than acts — but it reports every
+ * run, which a comment would not.
+ */
+$ow_dead_assets = array();
+
+foreach ( array( 'js', 'css' ) as $ow_ext ) {
+	$ow_dead_assets = array_merge(
+		$ow_dead_assets,
+		array_diff( array_keys( ow_nav_assets( $ow_ext ) ), array_keys( ow_nav_enqueued_assets( $ow_ext ) ) )
+	);
+}
+
+sort( $ow_dead_assets );
+
+foreach ( $ow_dead_assets as $ow_dead_asset ) {
+	ow_pending( 'Nothing in this plugin loads ' . $ow_dead_asset, '25.9, the pre-rename assets' );
+}
 
 // =====================================================================
 ow_section( 'Rule 4 — the bottom edge of the viewport has one owner' );
@@ -896,6 +959,135 @@ ow_nav_offenders(
 	'Neither half of the dock that was built twice survives',
 	$ow_ghost_dock,
 	'A switch nothing read and a stylesheet nothing emitted: docs/navigation.md §1.1.'
+);
+
+// =====================================================================
+ow_section( 'Rule 8 — the mega panel, and the sheet that is the same markup' );
+// =====================================================================
+
+$GLOBALS['ow_post_meta'] = array();
+
+$ow_mega = new MegaPanel();
+
+// --- A menu saved before Phase 25 is untouched -------------------------------
+
+ow_assert( 'An item with no panel meta has no panel', null === MegaPanel::panel_for( 501 ) );
+ow_check(
+	'And its markup comes back byte for byte',
+	'<a href="/x">X</a>',
+	$ow_mega->append_panel( '<a href="/x">X</a>', (object) array( 'ID' => 501, 'title' => 'X' ), 0 )
+);
+ow_check(
+	'Nothing is added to its classes either',
+	array( 'menu-item' ),
+	$ow_mega->item_classes( array( 'menu-item' ), (object) array( 'ID' => 501 ) )
+);
+
+// --- A provider that was registered and then withdrawn -----------------------
+
+$GLOBALS['ow_post_meta'][502] = array( SmartMenuFields::META_PANEL => 'a_plugin_that_left' );
+
+ow_assert(
+	'A panel naming a provider nobody registers is no panel',
+	null === MegaPanel::panel_for( 502 ),
+	'The saved value outlives the plugin that made it meaningful; the catalog is the authority.'
+);
+
+// --- The real thing ----------------------------------------------------------
+
+$GLOBALS['ow_post_meta'][503] = array( SmartMenuFields::META_PANEL => 'product_cat' );
+
+ow_check( 'A panel item names its provider', 'product_cat', MegaPanel::panel_for( 503 )['provider'] );
+ow_assert(
+	'The <li> is marked so CSS can hang the panel off it',
+	in_array( 'ow-has-mega', $ow_mega->item_classes( array( 'menu-item' ), (object) array( 'ID' => 503 ) ), true )
+);
+
+$ow_panel_tree = MegaPanel::tree_for( 503 );
+
+ow_check( 'It shows the whole tree when no branch is named', 2, count( $ow_panel_tree->roots() ) );
+
+$GLOBALS['ow_post_meta'][504] = array(
+	SmartMenuFields::META_PANEL      => 'product_cat',
+	SmartMenuFields::META_PANEL_ROOT => 'product_cat-10',
+);
+
+$ow_branch = MegaPanel::tree_for( 504 );
+
+ow_check( 'A named branch narrows the panel to that branch', 2, count( $ow_branch->roots() ) );
+ow_assert( 'And the branch node itself is not repeated inside it', null === $ow_branch->find( 'product_cat-10' ) );
+
+$GLOBALS['ow_post_meta'][505] = array(
+	SmartMenuFields::META_PANEL      => 'product_cat',
+	SmartMenuFields::META_PANEL_ROOT => 'product_cat-99999',
+);
+
+ow_check(
+	'A branch id that no longer resolves falls back to the whole tree',
+	2,
+	count( MegaPanel::tree_for( 505 )->roots() )
+);
+ow_note( 'Term ids move when a store reorganises. Showing too much is easier to notice than showing nothing.' );
+
+// --- One render, two shapes --------------------------------------------------
+
+$ow_panel_html = $ow_mega->append_panel( '<a href="/danh-muc/">Danh mục</a>', (object) array( 'ID' => 503, 'title' => 'Danh mục' ), 0 );
+
+ow_assert( 'The link the theme rendered is still there, and still first', 0 === strpos( $ow_panel_html, '<a href="/danh-muc/">' ) );
+ow_assert( 'The toggle is a button of its own, not the link', false !== strpos( $ow_panel_html, 'data-ow-mega-toggle="ow-mega-503"' ) );
+ow_assert( 'The toggle says what it controls', false !== strpos( $ow_panel_html, 'aria-controls="ow-mega-503"' ) );
+ow_assert( 'The panel starts closed', false !== strpos( $ow_panel_html, 'aria-expanded="false"' ) );
+
+ow_check( 'Exactly one rail is rendered', 1, substr_count( $ow_panel_html, 'ow-mega__rail"' ) );
+ow_check( 'Exactly one set of panes is rendered', 1, substr_count( $ow_panel_html, 'ow-mega__panes"' ) );
+ow_note( 'The desktop panel and the mobile sheet are this one render. CSS decides which shape it takes.' );
+
+ow_check( 'One rail button per F1', 2, substr_count( $ow_panel_html, 'data-ow-mega-rail=' ) );
+ow_assert( 'Every branch offers a way past the panel', false !== strpos( $ow_panel_html, 'ow-mega__all' ) );
+
+/*
+ * The device axis reaches the markup as a class and nothing else. A node marked
+ * mobile-only is rendered on every request; the media query hides it.
+ */
+ow_assert( 'Every node in the tree reaches the markup', false !== strpos( $ow_panel_html, 'Bỉm tã' ) );
+
+$ow_mobile_link = MegaPanel::link(
+	Node::make(
+		array(
+			'id'      => 'x',
+			'type'    => 'term',
+			'label'   => 'Chỉ điện thoại',
+			'url'     => 'https://example.test/x/',
+			'devices' => 'mobile',
+		)
+	),
+	'f2'
+);
+
+ow_assert( 'A mobile-only node is rendered, not dropped', false !== strpos( $ow_mobile_link, 'Chỉ điện thoại' ) );
+ow_assert( 'It carries the class the stylesheet hides it by', false !== strpos( $ow_mobile_link, 'ow-nav--only-mobile' ) );
+ow_note( 'Resolved in CSS, never on the server: the same HTML is correct on a phone and on a desktop, so a cache can hold it.' );
+
+// --- Depth, and what does not get a panel ------------------------------------
+
+ow_check(
+	'A sub-item never grows a panel of its own',
+	'<a href="/x">X</a>',
+	$ow_mega->append_panel( '<a href="/x">X</a>', (object) array( 'ID' => 503, 'title' => 'X' ), 1 )
+);
+
+/*
+ * How much of the page this costs. docs/navigation.md §4 says the threshold is
+ * measured rather than guessed, and this is the measurement: the tree above is
+ * five nodes, and the number below is what five nodes weigh in every page that
+ * carries the menu.
+ */
+ow_note( sprintf( 'Panel weight for a 5-node tree: %d bytes of HTML.', strlen( $ow_panel_html ) ) );
+
+ow_assert(
+	'The panel markup is proportionate to the tree, not to the catalog',
+	strlen( $ow_panel_html ) < 4000,
+	'A whole catalog rendered into every page is what §4 exists to prevent.'
 );
 
 ow_summary( 'Navigation' );

@@ -2849,8 +2849,16 @@ two of them overlapping today, and a breakpoint duplicated into JS. They are in
       `omniwp_navigation_providers` and is never named in the model. Nothing in
       production calls it yet, by design — so it is correct against stubs, not
       yet proven on a real WordPress. That proof is 25.6.
-- [ ] **25.2** Desktop projection: mega panel — [brief](navigation/25.2-mega-panel-desktop.md).
-- [ ] **25.3** Mobile projection: two-pane sheet — [brief](navigation/25.3-mobile-sheet.md).
+- [x] **25.2** Desktop projection: mega panel — [brief](navigation/25.2-mega-panel-desktop.md).
+- [x] **25.3** Mobile projection: two-pane sheet — [brief](navigation/25.3-mobile-sheet.md).
+      **Shipped together, and the brief explains why that is a conclusion rather
+      than a shortcut**: the F1 rail beside an F2 pane is the same structure on
+      both screens, so two renders would be two lists that must agree. Rule 3
+      went green by giving the breakpoint one home, `--ow-layout` in the tokens
+      file, which scripts read instead of comparing pixel widths. The suite is
+      **`required`** from here. Measured: a five-node panel is 3,160 bytes, so
+      ~630 per node — the lazy-load threshold in `navigation.md` §4 is now a
+      number rather than a guess.
 - [x] **25.4** Floating bottom bar, and the bottom edge gets one owner — [brief](navigation/25.4-bottom-bar-dock.md).
       Rules 4 and 7 green. `--ow-dock-height` now carries the bottom edge and
       five elements plus ShopKit's sticky bar stack on it, each reading it with a
@@ -2859,13 +2867,17 @@ two of them overlapping today, and a breakpoint duplicated into JS. They are in
       Both halves of the dock that was built twice are deleted. Rule 1 went green
       only for navigation's own two rows; the rest is 25.7.
 - [ ] **25.5** Mobile chrome trimming — [brief](navigation/25.5-mobile-chrome.md).
+      **Half of it landed early, in 25.3**: the device axis has its control, its
+      class and its media queries, so a menu item can already be told not to
+      appear on a phone. What is left is the harder half — the one declared
+      selector that hides a theme's own header, which the plugin does not own.
 - [ ] **25.6** Verification, documentation, promotion — [brief](navigation/25.6-verification-and-promotion.md).
 
-### Two debts this phase found, sized, and did not take
+### Three debts this phase found, sized, and did not take
 
-Both are recorded as PENDING in `tests/navigation/run-navigation-tests.php`, so
-every run keeps naming them, and both are checked in the other direction too — a
-deferral that has quietly been fixed fails.
+All three are recorded as PENDING in `tests/navigation/run-navigation-tests.php`,
+so every run keeps naming them, and the first two are checked in the other
+direction too — a deferral that has quietly been fixed fails.
 
 - [ ] **25.7** Dead settings outside navigation. `ecommerce.address_book_checkout`
       switches an address book that CheckoutService runs unconditionally.
@@ -2883,6 +2895,10 @@ deferral that has quietly been fixed fails.
       a replaceable body, in the module Phase 24 recorded as behaviourally
       unproven. **`tests/integration/run-ecommerce-gate.php` is this sub-phase's
       first task**, which is the same gate Phase 24 left open.
+- [ ] **25.9** The pre-rename assets. Five `smart-*.js` and five `smart-*.css`
+      files are referenced by nothing at all — the whole set left behind by the
+      Smart Login → OmniWP rename. Found while scoping rule 3, which reports them
+      every run. Deleting them is that rename's cleanup, not navigation's.
 
 **Ordering is dependency, not priority.** 25.4 is the one the store owner asks
 for first and 25.1 is the one nobody sees, but a projection built on the wrong

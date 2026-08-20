@@ -67,6 +67,18 @@
 			return null;
 		}
 
+
+		/**
+		 * Is the page in its narrow layout right now?
+		 *
+		 * Asks the stylesheet rather than re-deciding what 768 means. See
+		 * assets/css/omniwp-tokens.css --ow-layout.
+		 */
+		function owIsNarrowLayout() {
+			return 'narrow' === window.getComputedStyle( document.documentElement )
+				.getPropertyValue( '--ow-layout' ).trim();
+		}
+
 		// -----------------------------------------------------------------
 		// Tab Switching Logic & Auto-Center Active Tab
 		// -----------------------------------------------------------------
@@ -79,7 +91,7 @@
 				var key = item.getAttribute( 'data-sl-hub-tab' );
 				if ( key === targetKey ) {
 					item.classList.add( 'is-active' );
-					if ( typeof item.scrollIntoView === 'function' && window.innerWidth < 768 ) {
+					if ( typeof item.scrollIntoView === 'function' && owIsNarrowLayout() ) {
 						item.scrollIntoView( { behavior: 'smooth', inline: 'center', block: 'nearest' } );
 					}
 				} else {
@@ -205,7 +217,7 @@
 		var settingsActionLinks = document.querySelectorAll( '[data-sl-settings-action]' );
 
 		function openSettingsSheet() {
-			if ( sheetBackdrop && window.innerWidth < 768 ) {
+			if ( sheetBackdrop && owIsNarrowLayout() ) {
 				sheetBackdrop.removeAttribute( 'hidden' );
 				sheetBackdrop.classList.add( 'is-open' );
 				sheetBackdrop.style.setProperty( 'display', 'flex', 'important' );
