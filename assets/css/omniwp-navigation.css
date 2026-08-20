@@ -1,0 +1,162 @@
+/**
+ * Navigation surfaces — Phase 25.
+ *
+ * The dock owns the bottom edge of a phone screen, and it says how much of it
+ * it owns through `--ow-dock-height`. Everything else this plugin anchors there
+ * stacks on that token, and so does ShopKit's sticky add-to-cart bar; before
+ * this file existed the bubble simply sat on top of it, over the buy button
+ * (docs/navigation.md §1.4).
+ *
+ * The breakpoint is written here and nowhere else. No script may re-decide what
+ * 768 means — that rule is enforced by tests/navigation/run-navigation-tests.php,
+ * and it is why the dock is hidden by a media query rather than by PHP asking
+ * the user agent what device this is.
+ */
+
+:root {
+	/*
+	 * Zero until the dock is on screen. Consumers read it as
+	 * `var(--ow-dock-height, 0px)` so a page without this stylesheet behaves
+	 * exactly as it did before Phase 25.
+	 */
+	--ow-dock-height: 0px;
+	--ow-dock-bg: var(--sl-surface, #ffffff);
+	--ow-dock-fg: var(--sl-text, #1f2430);
+	--ow-dock-accent: var(--sl-accent, #e30613);
+	--ow-dock-border: rgba(15, 23, 42, 0.08);
+}
+
+.ow-dock {
+	display: none;
+}
+
+@media (max-width: 768px) {
+	:root {
+		/*
+		 * The bar itself, plus whatever the phone reserves under it for the home
+		 * indicator. Both halves belong in the token: a consumer stacking on it
+		 * has to clear the notch too.
+		 */
+		--ow-dock-height: calc(56px + env(safe-area-inset-bottom, 0px));
+	}
+
+	.ow-dock {
+		position: fixed;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 99991;
+		display: block;
+		height: var(--ow-dock-height);
+		padding-bottom: env(safe-area-inset-bottom, 0px);
+		background: var(--ow-dock-bg);
+		border-top: 1px solid var(--ow-dock-border);
+		box-shadow: 0 -2px 12px rgba(15, 23, 42, 0.06);
+		box-sizing: border-box;
+	}
+
+	/*
+	 * Give the document back the strip the bar is standing on. Without this the
+	 * footer is unreachable — which is the state ShopKit's sticky bar has been
+	 * in since it shipped, and the reason this rule is here rather than left to
+	 * whoever notices.
+	 */
+	body:has(.ow-dock) {
+		padding-bottom: var(--ow-dock-height);
+	}
+
+	.ow-dock__list {
+		display: flex;
+		align-items: stretch;
+		margin: 0;
+		padding: 0;
+		height: 56px;
+		list-style: none;
+	}
+
+	.ow-dock__item {
+		flex: 1 1 0;
+		min-width: 0;
+		margin: 0;
+	}
+
+	.ow-dock__link {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 2px;
+		height: 100%;
+		padding: 6px 2px;
+		color: var(--ow-dock-fg);
+		text-decoration: none;
+		box-sizing: border-box;
+	}
+
+	.ow-dock__link:focus-visible {
+		outline: 2px solid var(--ow-dock-accent);
+		outline-offset: -2px;
+	}
+
+	.ow-dock__link.is-active {
+		color: var(--ow-dock-accent);
+	}
+
+	.ow-dock__icon {
+		position: relative;
+		display: inline-flex;
+		line-height: 0;
+	}
+
+	.ow-dock__label {
+		font-size: 11px;
+		line-height: 1.2;
+		max-width: 100%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.ow-dock__badge {
+		position: absolute;
+		top: -6px;
+		left: 60%;
+		min-width: 16px;
+		height: 16px;
+		padding: 0 4px;
+		border-radius: 999px;
+		background: var(--ow-dock-accent);
+		color: #ffffff;
+		font-size: 10px;
+		line-height: 16px;
+		text-align: center;
+		box-sizing: border-box;
+	}
+
+	/*
+	 * `hidden` on an empty badge is what keeps a cached page from showing an
+	 * empty red dot until the fragment arrives.
+	 */
+	.ow-dock__badge[hidden] {
+		display: none;
+	}
+}
+
+/**
+ * The device axis, resolved.
+ *
+ * A node carrying devices=desktop or devices=mobile renders on every request
+ * and is hidden here. Nothing on the server looks at the user agent, so a cached
+ * page is correct on both kinds of device — docs/navigation.md §3.4.
+ */
+@media (max-width: 768px) {
+	.ow-nav--only-desktop {
+		display: none !important;
+	}
+}
+
+@media (min-width: 769px) {
+	.ow-nav--only-mobile {
+		display: none !important;
+	}
+}

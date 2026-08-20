@@ -1858,7 +1858,8 @@ button.sl-voucher-tab.is-active:hover {
    ========================================================================== */
 .sl-floating-cart {
 	position: fixed;
-	bottom: 28px;
+	/* Stacks on the dock when there is one; unchanged when there is not. */
+	bottom: calc(var(--ow-dock-height, 0px) + 28px);
 	right: 28px;
 	z-index: 99990;
 	display: flex;
@@ -3130,7 +3131,7 @@ button.sl-voucher-tab.is-active:hover {
    ═══════════════════════════════════════════════════ */
 .sl-sticky-checkout-bar {
 	position: fixed;
-	bottom: 0;
+	bottom: var(--ow-dock-height, 0px);
 	left: 0;
 	right: 0;
 	width: 100% !important;
@@ -4835,7 +4836,7 @@ strong.sl-co-address-value {
 /* ---- Sticky Footer Bar ---- */
 .sl-co-sticky-bar {
 	position: fixed;
-	bottom: 0;
+	bottom: var(--ow-dock-height, 0px);
 	left: 0;
 	right: 0;
 	background: #ffffff;
@@ -6228,7 +6229,7 @@ div.woocommerce-checkout-payment div.form-row.place-order,
 	}
 
 	.sl-floating-cart {
-		bottom: 16px;
+		bottom: calc(var(--ow-dock-height, 0px) + 16px);
 		right: 16px;
 	}
 }
@@ -7090,7 +7091,7 @@ div.woocommerce-checkout-payment div.form-row.place-order,
    ========================================================================== */
 .sl-toast-notification {
 	position: fixed;
-	bottom: 24px;
+	bottom: calc(var(--ow-dock-height, 0px) + 24px);
 	left: 50%;
 	transform: translateX(-50%) translateY(20px);
 	z-index: 1000000;
@@ -7490,20 +7491,13 @@ a.sl-stepper-item.is-completed:hover .sl-stepper-icon {
 	}
 }
 
-/* Mobile Bottom Floating Dock */
-@media (max-width: 768px) {
-	.sl-mobile-bottom-dock {
-		position: fixed;
-		bottom: 0;
-		left: 0;
-		right: 0;
-		z-index: 9999;
-		background: #ffffff;
-		border-top: 1px solid var(--sl-border, #d9dde5);
-		box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.08);
-		padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
-	}
-}
+/*
+ * `.sl-mobile-bottom-dock` used to be styled here. Nothing in PHP, in a template
+ * or in a script ever emitted that class, and `ecommerce.mobile_dock_enabled`,
+ * which appeared to switch it, was read by nothing either — the two halves of a
+ * dock that was built twice and never met (docs/navigation.md §1.1). The real one
+ * is `.ow-dock`, in omniwp-navigation.css.
+ */
 
 /* Interactive Stepper Links */
 a.sl-stepper-link {

@@ -138,6 +138,12 @@ final class IconSet {
 				'attrs' => 'viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"',
 				'body'  => '<polyline points="20 6 9 17 4 12"/>',
 			),
+			// Not in names(): get() serves any glyph, pickable or not, and the
+			// dock's Danh muc slot needs one that names() has no reason to offer.
+			'grid'          => array(
+				'attrs' => self::OUTLINE,
+				'body'  => '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+			),
 			'home'          => array(
 				'attrs' => 'viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"',
 				'body'  => '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',

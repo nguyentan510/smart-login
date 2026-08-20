@@ -339,6 +339,15 @@ return array(
 	'ecommerce/floating-cart'        => array(
 		'cart' => \OmniWP\Ecommerce\CartService::get_cart_data(),
 	),
+	/*
+	 * The dock, with its slots taken from the catalog rather than hand-written.
+	 * A literal array here would have described a slot shape the template never
+	 * receives: three of the five `url` entries are callables, and the template
+	 * calls them.
+	 */
+	'navigation/dock'                => array(
+		'slots' => \OmniWP\Navigation\Dock::slots(),
+	),
 	'ecommerce/cart-page'            => array(),
 	'ecommerce/checkout-page'        => array(),
 	'ecommerce/review-order'         => array(),

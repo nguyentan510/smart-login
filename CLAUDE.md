@@ -133,7 +133,9 @@ tags, which the lowercase rename below cleared in one pass, and one was
 `Generic.Classes.DuplicateClassName` on a Smart Menu metabox the autoloader
 could never reach.
 
-The ratchet now stands at **42 errors / 40 warnings**, and the remainder is not
+The ratchet now stands at **42 errors / 30 warnings** — the warning half came
+down ten in Phase 25, when `phpcbf` realigned a registry array whose longest key
+had been deleted — and the remainder is not
 cosmetic: `WordPress.DB.PreparedSQL.InterpolatedNotPrepared` (2),
 `WordPress.Security.ValidatedSanitizedInput.InputNotSanitized` (2) and
 `WordPress.Security.NonceVerification.Recommended` (1) are still open. Phase 7

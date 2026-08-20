@@ -4,6 +4,29 @@
 
 ## [1.1.0] — chưa phát hành
 
+### Thêm mới
+
+- **Thanh điều hướng đáy màn hình trên mobile.** Tab **Điều hướng & Mobile** →
+  bật `Thanh điều hướng đáy màn hình`, chọn tối đa 5 mục trong
+  `home, categories, search, cart, account`. **Mặc định tắt**: một bản cập nhật
+  không được tự mọc thêm một thanh cố định lên site đang chạy.
+
+  Badge giỏ hàng render rỗng rồi được WooCommerce điền qua cơ chế fragment có
+  sẵn, nên nó đúng cả khi trang được cache toàn phần — và khi script fragment
+  không có, badge **rỗng** chứ không hiện số của người khác.
+
+  Thanh này công bố `--ow-dock-height`. Bubble giỏ hàng nổi, hai thanh sticky của
+  giỏ/thanh toán, toast thông báo và thanh mua hàng của ShopKit đều xếp chồng lên
+  nó thay vì đè nhau. Tắt thanh đi thì mọi thứ về đúng như trước.
+
+### Đã gỡ
+
+- `Hiển thị Widget Giỏ hàng Nổi` (tab Giao diện) và
+  `Bật Thanh Đặt hàng dính cố định đáy Mobile` (tab Bán hàng). Cả hai đều **chưa
+  bao giờ điều khiển thứ gì** — bubble giỏ hàng vẫn luôn đọc công tắc bên tab Bán
+  hàng, còn thanh dock kia thì không có mã nào vẽ ra. Tick hay bỏ tick chúng
+  không đổi gì trên site của bạn, cả trước lẫn sau bản này.
+
 ### Thay đổi hành vi cần biết trước khi cập nhật
 
 - **Zalo Login đã được gỡ khỏi plugin.** Nút "Tiếp tục với Zalo", hàng "Liên kết"

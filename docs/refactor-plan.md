@@ -2851,9 +2851,38 @@ two of them overlapping today, and a breakpoint duplicated into JS. They are in
       yet proven on a real WordPress. That proof is 25.6.
 - [ ] **25.2** Desktop projection: mega panel — [brief](navigation/25.2-mega-panel-desktop.md).
 - [ ] **25.3** Mobile projection: two-pane sheet — [brief](navigation/25.3-mobile-sheet.md).
-- [ ] **25.4** Floating bottom bar, and the bottom edge gets one owner — [brief](navigation/25.4-bottom-bar-dock.md).
+- [x] **25.4** Floating bottom bar, and the bottom edge gets one owner — [brief](navigation/25.4-bottom-bar-dock.md).
+      Rules 4 and 7 green. `--ow-dock-height` now carries the bottom edge and
+      five elements plus ShopKit's sticky bar stack on it, each reading it with a
+      `0px` fallback so neither plugin requires the other. The badge goes through
+      `woocommerce_add_to_cart_fragments`, so no new endpoint and no new nonce.
+      Both halves of the dock that was built twice are deleted. Rule 1 went green
+      only for navigation's own two rows; the rest is 25.7.
 - [ ] **25.5** Mobile chrome trimming — [brief](navigation/25.5-mobile-chrome.md).
 - [ ] **25.6** Verification, documentation, promotion — [brief](navigation/25.6-verification-and-promotion.md).
+
+### Two debts this phase found, sized, and did not take
+
+Both are recorded as PENDING in `tests/navigation/run-navigation-tests.php`, so
+every run keeps naming them, and both are checked in the other direction too — a
+deferral that has quietly been fixed fails.
+
+- [ ] **25.7** Dead settings outside navigation. `ecommerce.address_book_checkout`
+      switches an address book that CheckoutService runs unconditionally.
+      `automation.success_path` and `automation.success_value` describe a success
+      test the automation bus **cannot** run: `EventBus` posts with
+      `blocking = false` (`class-event-bus.php:132`), and a fire-and-forget
+      request has no body to inspect. The `sms.*` twins of those two are read,
+      which is what made the omission look like an oversight rather than a limit.
+      Each row either gains a reader or goes.
+- [ ] **25.8** Cart state out of cacheable HTML. `SlideCart::render_drawer()`,
+      `Shortcodes::render_cart_button()` and `templates/ecommerce/voucher-module.php`
+      write one visitor's cart into a page the next visitor may be served. 25.4
+      proved the fix on new code — an empty element plus a WooCommerce fragment —
+      but applying it here means splitting the slide-cart drawer into a shell and
+      a replaceable body, in the module Phase 24 recorded as behaviourally
+      unproven. **`tests/integration/run-ecommerce-gate.php` is this sub-phase's
+      first task**, which is the same gate Phase 24 left open.
 
 **Ordering is dependency, not priority.** 25.4 is the one the store owner asks
 for first and 25.1 is the one nobody sees, but a projection built on the wrong

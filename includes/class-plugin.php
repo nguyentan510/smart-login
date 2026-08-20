@@ -25,6 +25,7 @@ use OmniWP\Frontend\Shortcodes;
 use OmniWP\Frontend\SmartMenuRenderer;
 use OmniWP\Frontend\WooIntegration;
 use OmniWP\Identity\IdentityRepository;
+use OmniWP\Navigation\Dock;
 use OmniWP\Security\AuditLog;
 
 defined( 'ABSPATH' ) || exit;
@@ -65,6 +66,7 @@ final class Plugin {
 		$this->services['dialog']              = new LoginDialog();
 		$this->services['nav_item']            = new NavMenuItem();
 		$this->services['smart_menu_renderer'] = new SmartMenuRenderer();
+		$this->services['dock']                = new Dock();
 
 		if ( Settings::is_on( 'address.enabled' ) ) {
 			$this->services['address_rest'] = new AddressRest();

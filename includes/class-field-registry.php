@@ -53,6 +53,7 @@ final class FieldRegistry {
 			'integrations'       => __( 'Thông báo & Tích hợp', 'omniwp' ),
 			'profile'            => __( 'Hồ sơ & Địa chỉ', 'omniwp' ),
 			'menu'               => __( 'Menu tài khoản', 'omniwp' ),
+			'navigation'         => __( 'Điều hướng & Mobile', 'omniwp' ),
 			'appearance'         => __( 'Giao diện & Branding', 'omniwp' ),
 			'security'           => __( 'Chống lạm dụng', 'omniwp' ),
 			'advanced'           => __( 'Nâng cao', 'omniwp' ),
@@ -128,6 +129,7 @@ final class FieldRegistry {
 			'account_menu_presets' => __( 'Mục mặc định hệ thống (Bật / Tắt)', 'omniwp' ),
 			'account_menu_custom'  => __( 'Mục tùy chỉnh bổ sung', 'omniwp' ),
 			'account_menu_button'  => __( 'Cấu hình nút tài khoản (Header)', 'omniwp' ),
+			'navigation_dock'      => __( 'Thanh điều hướng đáy màn hình (Mobile)', 'omniwp' ),
 			'colors'               => __( 'Bảng màu thương hiệu', 'omniwp' ),
 			'shape'                => __( 'Kiểu dáng & Bo góc', 'omniwp' ),
 			'widgets'              => __( 'Widget giao diện', 'omniwp' ),
@@ -169,15 +171,58 @@ final class FieldRegistry {
 			\OmniWP\Mail\MailRegistry::fields(),
 			self::profile_fields(),
 			self::appearance_fields(),
+			self::navigation_fields(),
 			self::security_fields(),
 			self::advanced_fields(),
 			self::programmatic_fields()
 		);
 	}
 
+	/**
+	 * The mobile dock.
+	 *
+	 * Its own tab rather than a section of Bán hàng, because the dock is site
+	 * navigation that happens to carry a cart tab, not a cart feature that
+	 * happens to navigate. 25.5 adds header/footer trimming beside it.
+	 *
+	 * `ecommerce.mobile_dock_enabled` used to sit on the Bán hàng tab and was
+	 * read by nothing (docs/navigation.md §1.1). It is gone rather than reused:
+	 * its label promised a checkout order bar with a total and a Đặt hàng button,
+	 * which is not this, and quietly changing what a stored 1 means is how a
+	 * store owner ends up with a bar they never asked for.
+	 */
+	private static function navigation_fields(): array {
+		return array(
+			'navigation.dock_enabled' => array(
+				'type'    => 'checkbox',
+
+				/*
+				 * Off. Every other e-commerce default in this registry is 1, and
+				 * those shipped with the feature they switch. This one would
+				 * grow a new fixed bar across the bottom of every existing
+				 * install on an update, over whatever that theme already puts
+				 * there — an opt-in is the only honest default for that.
+				 */
+				'default' => 0,
+				'tab'     => 'navigation',
+				'section' => 'navigation_dock',
+				'label'   => __( 'Bật thanh điều hướng đáy màn hình trên mobile', 'omniwp' ),
+				'help'    => __( 'Thanh nổi cố định ở đáy màn hình điện thoại, tối đa 5 mục. Chỉ hiện trên màn hình hẹp; máy tính không thấy.', 'omniwp' ),
+			),
+			'navigation.dock_slots'   => array(
+				'type'    => 'text',
+				'default' => 'home,categories,search,cart,account',
+				'tab'     => 'navigation',
+				'section' => 'navigation_dock',
+				'label'   => __( 'Các mục trên thanh, theo thứ tự', 'omniwp' ),
+				'help'    => __( 'Ngăn cách bằng dấu phẩy. Nhận: <code>home</code>, <code>categories</code>, <code>search</code>, <code>cart</code>, <code>account</code>. Tên lạ bị bỏ qua; quá 5 mục thì chỉ lấy 5 mục đầu.', 'omniwp' ),
+			),
+		);
+	}
+
 	private static function appearance_fields(): array {
 		return array(
-			'branding.primary_color'      => array(
+			'branding.primary_color' => array(
 				'type'    => 'color',
 				'default' => '#e30613',
 				'tab'     => 'appearance',
@@ -185,7 +230,7 @@ final class FieldRegistry {
 				'label'   => __( 'Màu chủ đạo (Accent Color)', 'omniwp' ),
 				'help'    => __( 'Màu sắc thương hiệu cho nút bấm chính, tab active, badge nổi bật.', 'omniwp' ),
 			),
-			'branding.primary_hover'      => array(
+			'branding.primary_hover' => array(
 				'type'    => 'color',
 				'default' => '#c00410',
 				'tab'     => 'appearance',
@@ -193,7 +238,7 @@ final class FieldRegistry {
 				'label'   => __( 'Màu Accent khi Hover', 'omniwp' ),
 				'help'    => __( 'Màu nền của nút bấm chính khi di chuột vào.', 'omniwp' ),
 			),
-			'branding.text_color'         => array(
+			'branding.text_color'    => array(
 				'type'    => 'color',
 				'default' => '#1f2430',
 				'tab'     => 'appearance',
@@ -201,7 +246,7 @@ final class FieldRegistry {
 				'label'   => __( 'Màu chữ chính', 'omniwp' ),
 				'help'    => __( 'Màu chữ tiêu đề và văn bản chung trên các giao diện OmniWP.', 'omniwp' ),
 			),
-			'branding.bg_color'           => array(
+			'branding.bg_color'      => array(
 				'type'    => 'color',
 				'default' => '#ffffff',
 				'tab'     => 'appearance',
@@ -209,21 +254,13 @@ final class FieldRegistry {
 				'label'   => __( 'Màu nền ô chứa (Surface)', 'omniwp' ),
 				'help'    => __( 'Màu nền cho các ô card, modal popup dialog, drawer giỏ hàng.', 'omniwp' ),
 			),
-			'branding.border_radius'      => array(
+			'branding.border_radius' => array(
 				'type'    => 'text',
 				'default' => '5px',
 				'tab'     => 'appearance',
 				'section' => 'shape',
 				'label'   => __( 'Độ bo góc (Border Radius)', 'omniwp' ),
 				'help'    => __( 'Nhập giá trị độ bo góc cho nút bấm, ô nhập liệu và card (ví dụ: 5px, 8px, 0px).', 'omniwp' ),
-			),
-			'branding.show_floating_cart' => array(
-				'type'    => 'toggle',
-				'default' => 1,
-				'tab'     => 'appearance',
-				'section' => 'widgets',
-				'label'   => __( 'Hiển thị Widget Giỏ hàng Nổi', 'omniwp' ),
-				'help'    => __( 'Bật/Tắt nút giỏ hàng nổi góc dưới màn hình.', 'omniwp' ),
 			),
 		);
 	}
@@ -1162,7 +1199,7 @@ final class FieldRegistry {
 
 	private static function ecommerce_fields(): array {
 		return array(
-			'ecommerce.slide_cart_enabled'         => array(
+			'ecommerce.slide_cart_enabled'                => array(
 				'type'    => 'checkbox',
 				'default' => 1,
 				'tab'     => 'ecommerce',
@@ -1170,7 +1207,7 @@ final class FieldRegistry {
 				'label'   => __( 'Bật Drawer Slide Cart trượt', 'omniwp' ),
 				'help'    => __( 'Hiển thị giỏ hàng trượt từ cạnh phải màn hình thay vì chuyển trang.', 'omniwp' ),
 			),
-			'ecommerce.auto_open_slide_cart'       => array(
+			'ecommerce.auto_open_slide_cart'              => array(
 				'type'    => 'checkbox',
 				'default' => 1,
 				'tab'     => 'ecommerce',
@@ -1178,7 +1215,7 @@ final class FieldRegistry {
 				'label'   => __( 'Tự động mở khi thêm vào giỏ', 'omniwp' ),
 				'help'    => __( 'Tự động trượt mở Slide Cart ngay khi khách bấm Thêm vào giỏ hàng.', 'omniwp' ),
 			),
-			'ecommerce.floating_cart_enabled'      => array(
+			'ecommerce.floating_cart_enabled'             => array(
 				'type'    => 'checkbox',
 				'default' => 1,
 				'tab'     => 'ecommerce',
@@ -1186,7 +1223,7 @@ final class FieldRegistry {
 				'label'   => __( 'Bật Nút giỏ hàng nổi (Floating Bubble)', 'omniwp' ),
 				'help'    => __( 'Hiển thị nút bong bóng giỏ hàng ở góc màn hình kèm số lượng và tổng tiền.', 'omniwp' ),
 			),
-			'ecommerce.stepper_enabled'            => array(
+			'ecommerce.stepper_enabled'                   => array(
 				'type'    => 'checkbox',
 				'default' => 1,
 				'tab'     => 'ecommerce',
@@ -1194,15 +1231,7 @@ final class FieldRegistry {
 				'label'   => __( 'Bật Thanh tiến trình mua hàng 3 bước (Stepper)', 'omniwp' ),
 				'help'    => __( 'Hiển thị thanh tiến trình 3 bước Giỏ hàng ➔ Thanh toán ➔ Hoàn tất.', 'omniwp' ),
 			),
-			'ecommerce.mobile_dock_enabled'        => array(
-				'type'    => 'checkbox',
-				'default' => 1,
-				'tab'     => 'ecommerce',
-				'section' => 'ecommerce_cart',
-				'label'   => __( 'Bật Thanh Đặt hàng dính cố định đáy Mobile (Mobile Bottom Dock)', 'omniwp' ),
-				'help'    => __( 'Hiển thị tổng tiền và nút Đặt hàng dính đáy màn hình điện thoại.', 'omniwp' ),
-			),
-			'ecommerce.freeship_threshold'         => array(
+			'ecommerce.freeship_threshold'                => array(
 				'type'    => 'number',
 				'default' => 500000,
 				'min'     => 0,
@@ -1212,7 +1241,7 @@ final class FieldRegistry {
 				'label'   => __( 'Mức tiền đạt Miễn phí vận chuyển (VNĐ)', 'omniwp' ),
 				'help'    => __( 'Tổng tiền giỏ hàng tối thiểu để hiển thị thanh chúc mừng Freeship (đặt 0 để tắt).', 'omniwp' ),
 			),
-			'ecommerce.override_cart_template'     => array(
+			'ecommerce.override_cart_template'            => array(
 				'type'    => 'checkbox',
 				'default' => 0,
 				'tab'     => 'ecommerce',
@@ -1220,7 +1249,7 @@ final class FieldRegistry {
 				'label'   => __( 'Thay thế trang /cart/ của WooCommerce', 'omniwp' ),
 				'help'    => __( 'Ghi đè trang giỏ hàng mặc định bằng giao diện OmniWP 2 cột chuẩn hiện đại.', 'omniwp' ),
 			),
-			'ecommerce.clean_checkout_enabled'     => array(
+			'ecommerce.clean_checkout_enabled'            => array(
 				'type'    => 'checkbox',
 				'default' => 1,
 				'tab'     => 'ecommerce-checkout',
@@ -1228,7 +1257,7 @@ final class FieldRegistry {
 				'label'   => __( 'Form thanh toán tối ưu chuẩn Việt', 'omniwp' ),
 				'help'    => __( 'Rút gọn còn 1 ô Họ và tên, tự động bỏ Zipcode, Quốc gia, Tên công ty không cần thiết.', 'omniwp' ),
 			),
-			'ecommerce.address_book_checkout'      => array(
+			'ecommerce.address_book_checkout'             => array(
 				'type'    => 'checkbox',
 				'default' => 1,
 				'tab'     => 'ecommerce-checkout',
@@ -1244,7 +1273,7 @@ final class FieldRegistry {
 				'label'   => __( 'Thay thế trang /checkout/ của WooCommerce', 'omniwp' ),
 				'help'    => __( 'Ghi đè trang thanh toán mặc định bằng template OmniWP Clean Checkout 2 cột.', 'omniwp' ),
 			),
-			'ecommerce.order_confirmation_modal_enabled' => array(
+			'ecommerce.order_confirmation_modal_enabled'  => array(
 				'type'    => 'checkbox',
 				'default' => 1,
 				'tab'     => 'ecommerce-checkout',

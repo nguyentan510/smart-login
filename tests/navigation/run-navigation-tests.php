@@ -26,7 +26,9 @@ require __DIR__ . '/../template-stubs.php';
 require __DIR__ . '/../harness.php';
 
 use OmniWP\FieldRegistry;
+use OmniWP\Settings;
 use OmniWP\Navigation\Catalog;
+use OmniWP\Navigation\Dock;
 use OmniWP\Navigation\Node;
 use OmniWP\Navigation\TaxonomyProvider;
 use OmniWP\Navigation\Tree;
@@ -208,11 +210,58 @@ foreach ( array_keys( $ow_schema ) as $ow_path ) {
 	}
 }
 
+/*
+ * Dead rows that belong to another module, deferred to 25.7 with a tracker row.
+ *
+ * They are PENDING rather than allowlisted, and the difference matters: an
+ * allowlist entry says "this is fine", and these are not fine. A PENDING says
+ * the rule found something nobody has fixed yet, keeps saying it on every run,
+ * and does not count as a pass.
+ *
+ * 25.4 fixed the two that were navigation's own: ecommerce.mobile_dock_enabled
+ * and branding.show_floating_cart are gone from the registry. Wiring the rest
+ * means touching checkout field rendering and the OTP automation bus, which is
+ * neither this phase's subject nor its risk to take.
+ */
+$ow_deferred_dead = array(
+	// The address book runs unconditionally in CheckoutService; the switch was
+	// never consulted. Wiring it changes checkout rendering.
+	'ecommerce.address_book_checkout',
+	/*
+	 * AutomationEndpoint judges success by HTTP status alone, and on the path
+	 * that matters it cannot do otherwise: EventBus posts with blocking = false
+	 * (class-event-bus.php:132), and a fire-and-forget request has no body to
+	 * test. The sms.* twins of these two are read, which is what made the
+	 * omission look like an oversight rather than a limit.
+	 */
+	'automation.success_path',
+	'automation.success_value',
+);
+
+$ow_unexpected_dead = array_values( array_diff( $ow_dead_rows, $ow_deferred_dead ) );
+
 ow_nav_offenders(
 	'No setting is declared, drawn and then read by nothing',
-	$ow_dead_rows,
+	$ow_unexpected_dead,
 	'A control that changes nothing is worse than a missing one: the store owner sets it and believes it took.'
 );
+
+foreach ( $ow_deferred_dead as $ow_deferred ) {
+	if ( in_array( $ow_deferred, $ow_dead_rows, true ) ) {
+		ow_pending( 'A store owner can still set ' . $ow_deferred . ', and nothing reads it', '25.7, dead settings outside navigation' );
+		continue;
+	}
+
+	/*
+	 * Checked in the other direction too. A deferral that has quietly been fixed
+	 * is a second lie in the place the first one was recorded.
+	 */
+	ow_nav_offenders(
+		'No deferral outlives the row it excused',
+		array( $ow_deferred . ' (deferred to 25.7, but it now has a reader)' ),
+		'Remove it from $ow_deferred_dead.'
+	);
+}
 
 $ow_stale_exemptions = array();
 
@@ -291,6 +340,13 @@ ow_section( 'Rule 4 — the bottom edge of the viewport has one owner' );
  * full-height drawer legitimately spans the viewport and is not stacking on
  * anything.
  */
+/*
+ * The element that *defines* --ow-dock-height cannot stack on it. One entry, and
+ * it is the only kind of entry this list may ever hold: the edge has one owner,
+ * which is the whole point of the rule.
+ */
+$ow_edge_owner = '.ow-dock';
+
 $ow_fixed_selectors = array();
 $ow_bottom_anchored = array();
 
@@ -305,6 +361,10 @@ foreach ( ow_nav_assets( 'css' ) as $ow_relative => $ow_contents ) {
 foreach ( ow_nav_assets( 'css' ) as $ow_relative => $ow_contents ) {
 	foreach ( ow_nav_css_blocks( $ow_contents ) as $ow_block ) {
 		if ( ! isset( $ow_fixed_selectors[ $ow_block['selector'] ] ) ) {
+			continue;
+		}
+
+		if ( $ow_edge_owner === $ow_block['selector'] ) {
 			continue;
 		}
 
@@ -362,6 +422,10 @@ $ow_cart_reads_allowed = array(
  * response is never cached, and it is what the fragment marker will call. The
  * defect is a page-render path baking the same values into the document, so the
  * rule has to tell the two apart rather than banning the call outright.
+ *
+ * A `woocommerce_add_to_cart_fragments` callback is the third such shape, and
+ * the one 25.4's dock badge uses: WooCommerce refreshes fragments from its own
+ * nonce-free endpoint, so that response is never cached either.
  */
 function ow_nav_enclosing_function( string $contents, int $offset ): string {
 	if ( ! preg_match_all( '/function\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/', $contents, $matches, PREG_OFFSET_CAPTURE ) ) {
@@ -395,7 +459,7 @@ foreach ( ow_plugin_sources() as $ow_relative => $ow_contents ) {
 	foreach ( $ow_matches[0] as $ow_match ) {
 		$ow_scope = ow_nav_enclosing_function( $ow_contents, (int) $ow_match[1] );
 
-		if ( 0 === strpos( $ow_scope, 'ajax_' ) || 0 === strpos( $ow_scope, 'rest_' ) ) {
+		if ( 0 === strpos( $ow_scope, 'ajax_' ) || 0 === strpos( $ow_scope, 'rest_' ) || false !== strpos( $ow_scope, 'fragment' ) ) {
 			continue;
 		}
 
@@ -404,11 +468,46 @@ foreach ( ow_plugin_sources() as $ow_relative => $ow_contents ) {
 	}
 }
 
+/*
+ * The three call sites that predate this phase, deferred to 25.8.
+ *
+ * 25.4 proved the shape works: the dock's badge renders empty and is filled by
+ * WooCommerce's fragment refresh, and rule 5 does not name it. Doing the same to
+ * these three means splitting the slide-cart drawer into a shell and a
+ * replaceable body — a restructure of the one module Phase 24 recorded as
+ * "structurally sound and behaviourally unproven", with no integration gate to
+ * catch what it breaks. Building that gate is 25.8's first task, not a detour
+ * inside a navigation phase.
+ *
+ * PENDING rather than allowlisted: these are not fine, and a run that stops
+ * saying so is a run that has forgotten.
+ */
+$ow_deferred_cart_reads = array(
+	'includes/Ecommerce/class-slide-cart.php:122  render_drawer()',
+	'includes/Frontend/class-shortcodes.php:637  render_cart_button()',
+	'templates/ecommerce/voucher-module.php:22  file scope',
+);
+
+$ow_new_cart_reads = array_values( array_diff( $ow_cart_in_page, $ow_deferred_cart_reads ) );
+
 ow_nav_offenders(
-	'Cart totals and counts are not rendered into a page that can be cached',
-	$ow_cart_in_page,
+	'No new call site renders cart state into a page that can be cached',
+	$ow_new_cart_reads,
 	'Render an empty element carrying a fragment marker and fill it from an uncached read.'
 );
+
+foreach ( $ow_deferred_cart_reads as $ow_deferred_read ) {
+	if ( in_array( $ow_deferred_read, $ow_cart_in_page, true ) ) {
+		ow_pending( 'A cached page still ships the previous visitor cart state: ' . $ow_deferred_read, '25.8, cart state out of cacheable HTML' );
+		continue;
+	}
+
+	ow_nav_offenders(
+		'No cart deferral outlives the call site it excused',
+		array( $ow_deferred_read . ' (deferred to 25.8, but it is gone or moved)' ),
+		'A line number in a deferral list is a claim about the tree; update it or drop it.'
+	);
+}
 
 $ow_stale_allowlist = array();
 
@@ -666,6 +765,137 @@ ow_nav_offenders(
 	'The model never names the sibling plugin',
 	$ow_model_sibling_coupling,
 	'A hook keeps the menu rendering when ShopKit is deactivated; a class name does not.'
+);
+
+// =====================================================================
+ow_section( 'Rule 7 — the dock' );
+// =====================================================================
+
+$GLOBALS['ow_options']['OMNIWP_settings'] = array();
+
+ow_assert( 'A fresh install does not grow a bar at the bottom of every page', ! Dock::is_enabled(), 'Every other e-commerce default here is 1; this one may not be.' );
+
+ow_check(
+	'The default slot list is the five the reference stores settled on',
+	'home,categories,search,cart,account',
+	(string) FieldRegistry::all()['navigation.dock_slots']['default']
+);
+
+Settings::update(
+	array(
+		'navigation.dock_enabled' => 1,
+		'navigation.dock_slots'   => 'cart,home,not_a_slot,cart,account',
+	)
+);
+
+$ow_slots = Dock::resolved_slots();
+$ow_names = array_column( $ow_slots, 'name' );
+
+ow_check( 'Order is the order the store asked for', array( 'cart', 'home', 'account' ), $ow_names );
+ow_assert( 'A name the catalog does not know costs one icon, not the bar', ! in_array( 'not_a_slot', $ow_names, true ) );
+
+Settings::update( array( 'navigation.dock_slots' => 'home,categories,search,cart,account,home,categories' ) );
+ow_check( 'Never more than five', 5, count( Dock::resolved_slots() ) );
+
+Settings::update( array( 'navigation.dock_slots' => 'nothing,valid,here' ) );
+ow_check( 'A slot list that resolves to nothing yields nothing', 0, count( Dock::resolved_slots() ) );
+
+// --- The badge is empty in the page, and filled by the fragment --------------
+
+ow_check(
+	'An empty badge carries no number and is hidden',
+	'<span class="ow-dock__badge" data-ow-cart-badge="1" hidden></span>',
+	Dock::badge_markup( 0 )
+);
+
+ow_assert( 'A filled badge is the same element with a number in it', false !== strpos( Dock::badge_markup( 3 ), '>3<' ) );
+ow_assert( 'A filled badge is not hidden', false === strpos( Dock::badge_markup( 3 ), 'hidden' ) );
+
+/*
+ * The fragment key and the class have to be the same string. WooCommerce
+ * replaces the element its key selects, so a rename on one side and not the
+ * other leaves a badge that silently never updates and no error anywhere.
+ */
+ow_assert(
+	'The fragment key selects the element the template prints',
+	false !== strpos( Dock::badge_markup( 0 ), 'class="' . ltrim( Dock::BADGE_SELECTOR, '.' ) . '"' )
+);
+
+// --- The token, and who reads it --------------------------------------------
+
+$ow_nav_css = ow_nav_assets( 'css' )['assets/css/omniwp-navigation.css'] ?? '';
+
+ow_assert( 'The dock publishes --ow-dock-height', false !== strpos( $ow_nav_css, '--ow-dock-height:' ) );
+ow_assert( 'It clears the phone safe area too', false !== strpos( $ow_nav_css, 'safe-area-inset-bottom' ) );
+ow_assert( 'The document gets the strip back', false !== strpos( $ow_nav_css, 'padding-bottom: var(--ow-dock-height)' ) );
+
+/*
+ * Every consumer outside this stylesheet reads the token with a fallback.
+ * Without one, a page where the dock is off — and so the stylesheet that defines
+ * it never loaded — resolves to `bottom:` with nothing after it, and the element
+ * falls back to static positioning. That is a worse bug than the overlap the
+ * token exists to fix.
+ */
+$ow_tokenless = array();
+
+foreach ( ow_nav_assets( 'css' ) as $ow_relative => $ow_contents ) {
+	if ( 'assets/css/omniwp-navigation.css' === $ow_relative ) {
+		continue;
+	}
+
+	if ( ! preg_match_all( '/var\(\s*--ow-dock-height\s*(,[^)]*)?\)/', $ow_contents, $ow_matches, PREG_OFFSET_CAPTURE ) ) {
+		continue;
+	}
+
+	foreach ( $ow_matches[0] as $ow_index => $ow_match ) {
+		if ( '' === trim( (string) ( $ow_matches[1][ $ow_index ][0] ?? '' ) ) ) {
+			$ow_tokenless[] = $ow_relative . ':' . ( substr_count( substr( $ow_contents, 0, (int) $ow_match[1] ), "\n" ) + 1 ) . '  ' . $ow_match[0];
+		}
+	}
+}
+
+ow_nav_offenders(
+	'Every consumer of the token reads it with a fallback',
+	$ow_tokenless,
+	'The stylesheet that defines it only loads when the dock renders.'
+);
+
+/*
+ * And somebody actually reads it. A token nothing consumes is the same shape of
+ * lie as a setting nothing reads, which is the defect this phase opened on.
+ */
+$ow_token_readers = 0;
+
+foreach ( ow_nav_assets( 'css' ) as $ow_relative => $ow_contents ) {
+	if ( 'assets/css/omniwp-navigation.css' === $ow_relative ) {
+		continue;
+	}
+
+	$ow_token_readers += preg_match_all( '/var\(\s*--ow-dock-height/', $ow_contents );
+}
+
+ow_assert( 'The elements that used to fight over this edge now stack on it', $ow_token_readers >= 4, 'docs/navigation.md §1.4 counted five; the dock itself is the sixth.' );
+
+// --- The dock that was built twice and never met is gone ---------------------
+
+$ow_ghost_dock = array();
+
+foreach ( array_merge( ow_plugin_sources(), ow_nav_assets( 'css' ), ow_nav_assets( 'js' ) ) as $ow_relative => $ow_contents ) {
+	/*
+	 * A live reference, not a mention. Both files below now carry a comment
+	 * explaining what used to be there and why it is gone, and the first version
+	 * of this rule reported those comments as offenders — a rule that cannot tell
+	 * a tombstone from a body will get the tombstone deleted.
+	 */
+	if ( preg_match( '/sl-mobile-bottom-dock\s*\{|[\'"][a-z._]*mobile_dock_enabled[\'"]/', $ow_contents ) ) {
+		$ow_ghost_dock[] = $ow_relative;
+	}
+}
+
+ow_nav_offenders(
+	'Neither half of the dock that was built twice survives',
+	$ow_ghost_dock,
+	'A switch nothing read and a stylesheet nothing emitted: docs/navigation.md §1.1.'
 );
 
 ow_summary( 'Navigation' );
