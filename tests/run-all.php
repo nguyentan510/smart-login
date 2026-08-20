@@ -241,6 +241,27 @@ $suites = array(
 		'file' => 'ecommerce/run-ecommerce-tests.php',
 		'kind' => 'required',
 	),
+	array(
+		// Phase 25, landed red at 25.0 before any production file moved.
+		//
+		// `spec` for the reason every guard-rail suite before it was: rules that
+		// are meant to fail cannot live in a suite that blocks, and every
+		// neighbouring suite here has been `required` for phases.
+		//
+		// Four of its six rules name offenders that shipped — five dead settings,
+		// a breakpoint written into JS four times, five elements competing for
+		// the bottom edge of a phone screen, and cart state baked into every
+		// cached page. Five assertions report PENDING rather than passing,
+		// because the navigation model does not exist yet; that is the 10.0
+		// precedent.
+		//
+		// Promoted the moment it goes green, which is 25.6 at the latest and
+		// earlier if the rules turn sooner. 15.4 recorded what it costs to hold
+		// a green suite non-blocking for four phases.
+		'name' => 'Navigation',
+		'file' => 'navigation/run-navigation-tests.php',
+		'kind' => 'spec',
+	),
 );
 
 

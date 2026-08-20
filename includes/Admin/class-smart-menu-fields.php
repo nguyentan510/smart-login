@@ -14,6 +14,21 @@ final class SmartMenuFields {
 	const META_VISIBILITY = '_ow_smart_menu_visibility';
 	const META_MODE       = '_ow_smart_menu_mode';
 
+	/**
+	 * The device axis: 'all', 'desktop' or 'mobile'.
+	 *
+	 * Declared here with its siblings, and read by Navigation\MenuProvider, but
+	 * the control that writes it does not land until 25.5. An absent value means
+	 * `all`, so an item saved before that field exists behaves as it always did.
+	 *
+	 * It is *not* resolved the way META_VISIBILITY is. That one drops the item on
+	 * the server, because a page cache varies on the auth cookie; this one is
+	 * rendered as a class and hidden by a media query, because no cache varies on
+	 * viewport width. docs/navigation.md §3.4 has the argument in full — the two
+	 * axes look alike and unifying them re-opens it.
+	 */
+	const META_DEVICES = '_ow_smart_menu_devices';
+
 	public function register(): void {
 		add_action( 'wp_nav_menu_item_custom_fields', array( $this, 'render_fields' ), 10, 2 );
 		add_action( 'wp_update_nav_menu_item', array( $this, 'save_fields' ), 10, 2 );

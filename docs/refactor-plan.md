@@ -2820,3 +2820,43 @@ coverage. All need a real WooCommerce cart, so they need
 the next piece of work on this module, and until it lands the module is
 structurally sound and behaviourally unproven — which is a different sentence
 from the one a green suite implies.
+
+---
+
+## Phase 25 — Navigation and mobile chrome
+
+Spec: [`navigation.md`](navigation.md). Briefs in [`navigation/`](navigation/).
+
+Requested 2026-08-20: mega menu responsive, floating mobile bottom bar, and
+header/footer trimming on small screens. The spec opens by refusing the framing:
+those are one tree with three projections, and building them as three features
+would recreate the defect class `FieldRegistry` exists to prevent.
+
+Five things were measured before anything was designed, and four of them are
+defects already shipped — five dead settings, cart state written into every
+cacheable page, six elements competing for the bottom edge of a phone screen with
+two of them overlapping today, and a breakpoint duplicated into JS. They are in
+[`navigation.md`](navigation.md) §1 with file and line.
+
+- [x] **25.0** Guard rails, landed red — [brief](navigation/25.0-guard-rails.md).
+      `Navigation: 3 passed, 4 failed, 5 pending`. Four rules name shipped
+      offenders; two of the four counts in the brief were guesses read off the
+      code and both were low. The suite also found a mobile dock already
+      half-built twice — a switch nothing reads and a stylesheet nothing emits.
+- [x] **25.1** Navigation model: one tree, N providers — [brief](navigation/25.1-navigation-model.md).
+      Rule 6 went from five PENDINGs to 28 green assertions. `Node`, `Tree`,
+      `Catalog` and two providers; the sibling plugin joins through
+      `omniwp_navigation_providers` and is never named in the model. Nothing in
+      production calls it yet, by design — so it is correct against stubs, not
+      yet proven on a real WordPress. That proof is 25.6.
+- [ ] **25.2** Desktop projection: mega panel — [brief](navigation/25.2-mega-panel-desktop.md).
+- [ ] **25.3** Mobile projection: two-pane sheet — [brief](navigation/25.3-mobile-sheet.md).
+- [ ] **25.4** Floating bottom bar, and the bottom edge gets one owner — [brief](navigation/25.4-bottom-bar-dock.md).
+- [ ] **25.5** Mobile chrome trimming — [brief](navigation/25.5-mobile-chrome.md).
+- [ ] **25.6** Verification, documentation, promotion — [brief](navigation/25.6-verification-and-promotion.md).
+
+**Ordering is dependency, not priority.** 25.4 is the one the store owner asks
+for first and 25.1 is the one nobody sees, but a projection built on the wrong
+model is a projection that gets rewritten. 25.4 may ship ahead of 25.2/25.3 with
+its `Danh mục` tab pointing at the shop archive, and nothing else may move ahead
+of 25.1.
