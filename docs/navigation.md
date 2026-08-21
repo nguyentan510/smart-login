@@ -1,3 +1,13 @@
+> **Historical.** This specification described a navigation module that lived
+> in OmniWP through Phase 25. Phase 26 moved it into **NaviKit**, a plugin
+> that runs on sites with neither OmniWP nor ShopKit installed; its API is
+> documented in that plugin's `docs/contract.md`.
+>
+> The file is kept because §1 is a set of measurements taken on a real tree,
+> and four of them were defects this plugin had shipped. What OmniWP still
+> does here is `Frontend\NaviKitBridge` — see
+> [`refactor-plan.md`](refactor-plan.md) Phase 26.
+
 # Navigation and mobile chrome
 
 Normative spec for Phase 25. Status lives in

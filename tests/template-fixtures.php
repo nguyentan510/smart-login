@@ -339,62 +339,6 @@ return array(
 	'ecommerce/floating-cart'        => array(
 		'cart' => \OmniWP\Ecommerce\CartService::get_cart_data(),
 	),
-	/*
-	 * The dock, with its slots taken from the catalog rather than hand-written.
-	 * A literal array here would have described a slot shape the template never
-	 * receives: three of the five `url` entries are callables, and the template
-	 * calls them.
-	 */
-	'navigation/dock'                => array(
-		'slots' => \OmniWP\Navigation\Dock::slots(),
-	),
-	/*
-	 * A tree built here rather than pulled from a provider: this suite must be
-	 * able to render the panel without a taxonomy, and the shape it needs is the
-	 * shape Tree::of() guarantees anyway.
-	 */
-	'navigation/mega-panel'          => array(
-		'tree'     => \OmniWP\Navigation\Tree::of(
-			array(
-				array(
-					'id'       => 'product_cat-1',
-					'type'     => 'term',
-					'label'    => 'Sữa bột cao cấp',
-					'url'      => 'https://example.test/danh-muc/sua-bot/',
-					'children' => array(
-						array(
-							'id'       => 'product_cat-2',
-							'type'     => 'term',
-							'label'    => 'Sữa Mỹ',
-							'url'      => 'https://example.test/danh-muc/sua-my/',
-							'children' => array(
-								array(
-									'id'    => 'product_cat-3',
-									'type'  => 'term',
-									'label' => '0-1 tuổi',
-									'url'   => 'https://example.test/danh-muc/0-1-tuoi/',
-								),
-							),
-						),
-						array(
-							'id'    => 'group-brands',
-							'type'  => 'group',
-							'label' => 'Thương hiệu',
-						),
-					),
-				),
-				array(
-					'id'      => 'product_cat-9',
-					'type'    => 'term',
-					'label'   => 'Bỉm tã khuyến mãi',
-					'url'     => 'https://example.test/danh-muc/bim-ta/',
-					'devices' => 'mobile',
-				),
-			)
-		),
-		'panel_id' => 'ow-mega-42',
-		'label'    => 'Danh mục',
-	),
 	'ecommerce/cart-page'            => array(),
 	'ecommerce/checkout-page'        => array(),
 	'ecommerce/review-order'         => array(),

@@ -2905,3 +2905,64 @@ for first and 25.1 is the one nobody sees, but a projection built on the wrong
 model is a projection that gets rewritten. 25.4 may ship ahead of 25.2/25.3 with
 its `Danh mục` tab pointing at the shop archive, and nothing else may move ahead
 of 25.1.
+
+---
+
+## Phase 26 — Navigation leaves, and OmniWP becomes a consumer
+
+Spec: [`navigation.md`](navigation.md), which is now a **history** of a module
+this plugin no longer contains. The code lives in NaviKit, a plugin built to run
+on sites that have neither this one nor ShopKit installed.
+
+    NaviKit bridge: 18 passed, 0 failed, 0 pending
+
+- [x] **26.1** The module is deleted, not dormant. `includes/Navigation/`,
+      `templates/navigation/`, both navigation assets and the whole Phase 25
+      suite. Code that is present and unreachable is the defect class this
+      project has already recorded under three other names: a stylesheet nothing
+      emits, a setting nothing reads, five scripts nothing loads.
+- [x] **26.2** The settings went with it. The `navigation` tab and its two rows
+      are gone from the registry, and a rule asserts that no `navigation.*` path
+      survives — a control for a feature that left is a control that lies to
+      whoever sets it.
+- [x] **26.3** `Frontend\NaviKitBridge` registers what OmniWP actually owns —
+      where a customer's account pages are — through
+      `navikit_navigation_providers`. It names a NaviKit class exactly twice, in
+      the guard and the call it guards, and offers plain arrays for everything
+      else.
+
+### What this phase was for
+
+**Being the first consumer of somebody else's public API, while that somebody is
+still us.** If OmniWP had to reach past NaviKit's contract to do anything useful,
+the contract would be wrong — and finding that here costs a commit, while finding
+it from a customer costs a release.
+
+It did not have to. The bridge is 130 lines and names one foreign class.
+
+### What it found
+
+**A provider must be cacheable, and two obvious things are not.** The logout link
+carries a nonce from `wp_logout_url()`; baked into a cached page it outlives the
+nonce and logs nobody out. The account button changes label and target with the
+visitor; in a cached page it shows one person's name to the next. Both stay on
+the Smart Menu path, which renders through the theme's own menu where they
+already live. NaviKit's contract §2 now says so in general terms, and its
+integration gate checks OmniWP's provider for nonces on every run.
+
+**`class-navikit-bridge.php` never loaded.** The autoloader turns every internal
+capital into a dash, so `NaviKitBridge` resolves to `navi-kit-bridge` — the file
+named the obvious way simply never loaded, presenting as "class not found" at the
+first page view rather than at boot. The suite caught it; nothing else in this
+repository would have.
+
+### What stayed, and why
+
+`--ow-layout` stays in the tokens file: the account hub's script reads it, and it
+was never navigation's. The `--ow-dock-height` consumers in the e-commerce
+stylesheet stay too — NaviKit publishes that name as a documented deprecated
+alias for its whole 1.x line, so a site running both keeps the layout it had.
+
+Nav-menu-item meta a site already stored is **left in the database**. It costs a
+row nobody reads, and deleting somebody's saved choices to tidy up after a
+decision they had no part in is the wrong trade.

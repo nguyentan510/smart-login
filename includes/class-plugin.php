@@ -19,15 +19,13 @@ use OmniWP\Auth\ProviderAuthController;
 use OmniWP\Frontend\Assets;
 use OmniWP\Frontend\FormController;
 use OmniWP\Frontend\LoginDialog;
+use OmniWP\Frontend\NaviKitBridge;
 use OmniWP\Frontend\NavMenuItem;
 use OmniWP\Frontend\RestController;
 use OmniWP\Frontend\Shortcodes;
 use OmniWP\Frontend\SmartMenuRenderer;
 use OmniWP\Frontend\WooIntegration;
 use OmniWP\Identity\IdentityRepository;
-use OmniWP\Navigation\Assets as NavigationAssets;
-use OmniWP\Navigation\Dock;
-use OmniWP\Navigation\MegaPanel;
 use OmniWP\Security\AuditLog;
 
 defined( 'ABSPATH' ) || exit;
@@ -68,9 +66,7 @@ final class Plugin {
 		$this->services['dialog']              = new LoginDialog();
 		$this->services['nav_item']            = new NavMenuItem();
 		$this->services['smart_menu_renderer'] = new SmartMenuRenderer();
-		$this->services['nav_assets']          = new NavigationAssets();
-		$this->services['dock']                = new Dock();
-		$this->services['mega_panel']          = new MegaPanel();
+		$this->services['navikit_bridge']      = new NaviKitBridge();
 
 		if ( Settings::is_on( 'address.enabled' ) ) {
 			$this->services['address_rest'] = new AddressRest();

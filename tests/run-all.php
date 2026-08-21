@@ -242,30 +242,12 @@ $suites = array(
 		'kind' => 'required',
 	),
 	array(
-		// Phase 25, landed red at 25.0 before any production file moved.
-		//
-		// `spec` for the reason every guard-rail suite before it was: rules that
-		// are meant to fail cannot live in a suite that blocks, and every
-		// neighbouring suite here has been `required` for phases.
-		//
-		// Four of its six rules name offenders that shipped — five dead settings,
-		// a breakpoint written into JS four times, five elements competing for
-		// the bottom edge of a phone screen, and cart state baked into every
-		// cached page. Five assertions report PENDING rather than passing,
-		// because the navigation model does not exist yet; that is the 10.0
-		// precedent.
-		//
-		// `required` since 25.3, not 25.6 as the plan had it. The last red rule
-		// turned when the panel's script replaced the JS breakpoint, and the
-		// working agreement promotes the moment that happens -- 15.4 found that
-		// rule being ignored for four phases, and a green suite that cannot
-		// block only hides the next regression.
-		//
-		// Sixteen assertions still report PENDING: three dead settings (25.7),
-		// three cart reads in cacheable HTML (25.8) and ten asset files nothing
-		// loads (25.9). A PENDING does not block, and does not stop saying so.
-		'name' => 'Navigation',
-		'file' => 'navigation/run-navigation-tests.php',
+		// Phase 26. Navigation left this plugin for NaviKit, and what is checked
+		// here is the half that stayed: the account destinations OmniWP offers
+		// through that plugin's documented filter, and the fact that this
+		// repository no longer contains a navigation module at all.
+		'name' => 'NaviKit bridge',
+		'file' => 'navigation/run-navikit-bridge-tests.php',
 		'kind' => 'required',
 	),
 );

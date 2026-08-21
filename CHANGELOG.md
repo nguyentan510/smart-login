@@ -4,6 +4,28 @@
 
 ## [1.1.0] — chưa phát hành
 
+### Đã chuyển sang plugin khác
+
+- **Toàn bộ phần điều hướng đã rời OmniWP sang plugin NaviKit.** Mega menu, màn
+  hình chọn danh mục trên điện thoại và thanh dock đáy màn hình giờ thuộc plugin
+  đó — nó chạy được trên site không cài OmniWP lẫn ShopKit.
+
+  **Nếu bạn đã bật thanh dock hoặc gắn bảng danh mục vào mục menu ở bản trước:**
+  cài NaviKit và dựng lại ở đó. Hai ô cấu hình cũ (tab *Điều hướng & Mobile*) và
+  ba ô trong trình sửa Menu đã được gỡ.
+
+  Dữ liệu bạn đã lưu trên từng mục menu **không bị xoá** — nó nằm yên trong cơ sở
+  dữ liệu, tốn một dòng không ai đọc. Xoá lựa chọn của bạn để dọn dẹp cho một
+  quyết định bạn không tham gia là việc plugin này không làm.
+
+  Bù lại, OmniWP **đóng góp ngược** cho NaviKit: các trang tài khoản (Hồ sơ, Đơn
+  hàng, Sổ địa chỉ, Bảo mật) xuất hiện thành một nguồn có thể chọn trong trình
+  dựng menu của plugin đó.
+
+  Link **Đăng xuất** và **nút Tài khoản** cố ý *không* đi theo: chúng mang nonce
+  và thay đổi theo từng người xem, nên nằm trong một trang được cache là hỏng.
+  Hai thứ đó ở lại Smart Menu như cũ.
+
 ### Thêm mới
 
 - **Mega Menu: bảng danh mục đổ xuống, chung một bản dựng cho cả máy tính và điện

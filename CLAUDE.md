@@ -96,6 +96,14 @@ section.
 - **Deferrals are written down where they are configured**, with the reason. A
   silent exception is a lie with a longer half-life.
 
+## Boundaries this plugin does not cross
+
+| Boundary | Why |
+| --- | --- |
+| No navigation module | Menus, mega panels and the mobile dock left in Phase 26 for NaviKit, which ships to sites running neither this plugin nor ShopKit. What stays is `Frontend\NaviKitBridge`, registering account destinations through that plugin's documented filter |
+| The bridge names a foreign class twice, and only there | The guard, and the call it guards. Anything past that pair is this plugin reaching into another one's insides, and it breaks the day those insides change |
+| Nothing per-visitor crosses into a navigation tree | A tree is structure, and a page cache keeps structure. A nonce in cached HTML outlives the nonce; a name in cached HTML is somebody else's name |
+
 ## Commands
 
 ```bash
