@@ -232,13 +232,8 @@ $suites = array(
 		'kind' => 'required',
 	),
 	array(
-		'name' => 'Smart Menu',
-		'file' => 'smart-menu/run-smart-menu-tests.php',
-		'kind' => 'required',
-	),
-	array(
-		'name' => 'E-Commerce Suite',
-		'file' => 'ecommerce/run-ecommerce-tests.php',
+		'name' => 'CartKit bridge',
+		'file' => 'ecommerce/run-cartkit-bridge-tests.php',
 		'kind' => 'required',
 	),
 	array(

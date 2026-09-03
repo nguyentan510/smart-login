@@ -10,8 +10,6 @@ namespace OmniWP;
 use OmniWP\Address\AddressRest;
 use OmniWP\Address\WooAddress;
 use OmniWP\Admin\SettingsPage;
-use OmniWP\Admin\SmartMenuFields;
-use OmniWP\Admin\SmartMenuMetaBox;
 use OmniWP\Admin\UsersColumn;
 use OmniWP\Admin\WebhookTester;
 use OmniWP\Auth\LoginHandler;
@@ -23,7 +21,6 @@ use OmniWP\Frontend\NaviKitBridge;
 use OmniWP\Frontend\NavMenuItem;
 use OmniWP\Frontend\RestController;
 use OmniWP\Frontend\Shortcodes;
-use OmniWP\Frontend\SmartMenuRenderer;
 use OmniWP\Frontend\WooIntegration;
 use OmniWP\Identity\IdentityRepository;
 use OmniWP\Security\AuditLog;
@@ -57,16 +54,15 @@ final class Plugin {
 		// fails leaves the identities where they were.
 		add_action( 'deleted_user', array( $this, 'release_identities' ), 10, 1 );
 
-		$this->services['login']               = new LoginHandler();
-		$this->services['providers']           = new ProviderAuthController();
-		$this->services['forms']               = new FormController();
-		$this->services['rest']                = new RestController();
-		$this->services['assets']              = new Assets();
-		$this->services['codes']               = new Shortcodes();
-		$this->services['dialog']              = new LoginDialog();
-		$this->services['nav_item']            = new NavMenuItem();
-		$this->services['smart_menu_renderer'] = new SmartMenuRenderer();
-		$this->services['navikit_bridge']      = new NaviKitBridge();
+		$this->services['login']          = new LoginHandler();
+		$this->services['providers']      = new ProviderAuthController();
+		$this->services['forms']          = new FormController();
+		$this->services['rest']           = new RestController();
+		$this->services['assets']         = new Assets();
+		$this->services['codes']          = new Shortcodes();
+		$this->services['dialog']         = new LoginDialog();
+		$this->services['nav_item']       = new NavMenuItem();
+		$this->services['navikit_bridge'] = new NaviKitBridge();
 
 		if ( Settings::is_on( 'address.enabled' ) ) {
 			$this->services['address_rest'] = new AddressRest();
@@ -99,12 +95,6 @@ final class Plugin {
 			// column and identity-aware search to stay usable.
 			$this->services['users_column'] = new UsersColumn();
 			$this->services['users_column']->register();
-
-			$this->services['smart_menu_metabox'] = new SmartMenuMetaBox();
-			$this->services['smart_menu_metabox']->register();
-
-			$this->services['smart_menu_fields'] = new SmartMenuFields();
-			$this->services['smart_menu_fields']->register();
 		}
 
 		add_action( 'wp_loaded', array( $this, 'maybe_flush_rewrite' ), 99 );
