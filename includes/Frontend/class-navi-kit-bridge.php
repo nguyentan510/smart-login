@@ -45,6 +45,25 @@ final class NaviKitBridge {
 
 	public function register(): void {
 		add_filter( 'navikit_navigation_providers', array( $this, 'add_provider' ) );
+		add_filter( 'menukit_navigation_providers', array( $this, 'add_provider' ) );
+		add_filter( 'menukit_default_account_url', array( $this, 'resolve_default_url' ), 10, 2 );
+	}
+
+	/**
+	 * Filter MenuKit default account URL to point to OmniWP.
+	 *
+	 * @param string $url Default URL.
+	 * @param string $which 'account' or 'login'.
+	 * @return string
+	 */
+	public function resolve_default_url( string $url, string $which ): string {
+		if ( 'account' === $which && class_exists( '\OmniWP\Frontend\AccountForm' ) ) {
+			return AccountForm::edit_url( 'profile' );
+		}
+		if ( 'login' === $which && class_exists( '\OmniWP\Frontend\Flow' ) ) {
+			return \OmniWP\Frontend\Flow::login_url();
+		}
+		return $url;
 	}
 
 	/**

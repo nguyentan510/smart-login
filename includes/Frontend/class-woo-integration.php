@@ -61,14 +61,8 @@ class WooIntegration {
 
 		add_action( 'init', array( $this, 'register_custom_order_statuses' ) );
 		add_filter( 'wc_order_statuses', array( $this, 'add_custom_order_statuses' ) );
-		add_action( 'woocommerce_before_checkout_billing_form', array( $this, 'render_checkout_address_picker' ) );
 
-		// Initialize OmniWP E-Commerce Suite
-		( new \OmniWP\Ecommerce\SlideCart() )->register();
-		( new \OmniWP\Ecommerce\CheckoutService() )->register();
-		( new \OmniWP\Ecommerce\ThankYouService() )->register();
-
-		// Initialize OmniWP Account Hub Router
+		// Initialize OmniWP Account Hub Router.
 		( new \OmniWP\Frontend\AccountRouter() )->register();
 	}
 
@@ -93,14 +87,6 @@ class WooIntegration {
 
 		if ( 'woo_override' === Settings::get( 'account.portal_mode', 'woo_override' ) ) {
 			$ours['myaccount/my-account.php'] = 'woocommerce/my-account.php';
-		}
-
-		if ( Settings::is_on( 'ecommerce.override_cart_template', false ) ) {
-			$ours['cart/cart.php'] = 'ecommerce/cart-page.php';
-		}
-
-		if ( Settings::is_on( 'ecommerce.override_checkout_template', false ) ) {
-			$ours['checkout/form-checkout.php'] = 'ecommerce/checkout-page.php';
 		}
 
 		if ( ! isset( $ours[ $template_name ] ) ) {
@@ -563,46 +549,5 @@ class WooIntegration {
 		}
 
 		return $new_statuses;
-	}
-
-	public function render_checkout_address_picker(): void {
-		if ( Settings::is_on( 'ecommerce.clean_checkout_enabled', true ) ) {
-			return;
-		}
-
-		if ( ! is_user_logged_in() ) {
-			return;
-		}
-
-		$user_id   = get_current_user_id();
-		$addresses = \OmniWP\Address\AddressBook::get_addresses( $user_id );
-
-		if ( empty( $addresses ) || count( $addresses ) <= 1 ) {
-			return;
-		}
-
-		?>
-		<div class="sl-checkout-address-picker" style="margin-bottom: 20px; padding: 14px 16px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px;">
-			<label style="font-weight:600; font-size:0.9rem; color:#0f172a; display:block; margin-bottom:6px;">
-				<?php esc_html_e( '📍 Chọn nhanh từ Sổ địa chỉ OmniWP:', 'omniwp' ); ?>
-			</label>
-			<select class="sl-select" id="sl-checkout-address-select" style="width:100%; padding:8px 12px; border-radius:6px; border:1px solid #cbd5e1;">
-				<?php foreach ( $addresses as $addr ) : ?>
-					<?php
-					$label = sprintf(
-						'%s (%s) — %s, %s',
-						$addr['tag'] ?? 'Địa chỉ',
-						$addr['phone'] ?? '',
-						$addr['address_1'] ?? '',
-						$addr['city'] ?? ''
-					);
-					?>
-					<option value="<?php echo esc_attr( (string) wp_json_encode( $addr ) ); ?>" <?php selected( ! empty( $addr['is_default'] ) ); ?>>
-						<?php echo esc_html( $label ); ?>
-					</option>
-				<?php endforeach; ?>
-			</select>
-		</div>
-		<?php
 	}
 }

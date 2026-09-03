@@ -127,36 +127,6 @@ class Shortcodes {
 				'collapse' => 'mobile',
 			),
 		),
-		'smart_cart'             => array(
-			'callback' => 'render_cart',
-			'atts'     => array(),
-		),
-		'omniwp_cart'            => array(
-			'callback' => 'render_cart',
-			'atts'     => array(),
-		),
-		'smart_checkout'         => array(
-			'callback' => 'render_checkout',
-			'atts'     => array(),
-		),
-		'omniwp_checkout'        => array(
-			'callback' => 'render_checkout',
-			'atts'     => array(),
-		),
-		'smart_cart_button'      => array(
-			'callback' => 'render_cart_button',
-			'atts'     => array(
-				'label' => '',
-				'class' => '',
-			),
-		),
-		'omniwp_cart_button'     => array(
-			'callback' => 'render_cart_button',
-			'atts'     => array(
-				'label' => '',
-				'class' => '',
-			),
-		),
 	);
 
 	public function register(): void {
@@ -563,88 +533,6 @@ class Shortcodes {
 				'synthetic' => UserManager::user_has_synthetic_email( $user_id ),
 				'welcome'   => ! empty( $_GET['OmniWP_welcome'] ), // phpcs:ignore WordPress.Security.NonceVerification
 			)
-		);
-	}
-
-	public function render_cart( $atts = array() ): string {
-		$atts = shortcode_atts( array(), (array) $atts, 'omniwp_cart' );
-		unset( $atts );
-
-		if ( is_admin() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
-			return '<div class="omniwp-cart-preview" style="padding:24px;text-align:center;border:1px dashed #cbd5e1;border-radius:8px;color:#64748b;"><strong>' . esc_html__( '[Giỏ hàng OmniWP Cart]', 'omniwp' ) . '</strong></div>';
-		}
-
-		return TemplateLoader::render( 'ecommerce/cart-page' );
-	}
-
-	public function render_checkout( $atts = array() ): string {
-		$atts = shortcode_atts( array(), (array) $atts, 'omniwp_checkout' );
-		unset( $atts );
-
-		if ( is_admin() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
-			return '<div class="omniwp-checkout-preview" style="padding:24px;text-align:center;border:1px dashed #cbd5e1;border-radius:8px;color:#64748b;"><strong>' . esc_html__( '[Trang thanh toán OmniWP Checkout]', 'omniwp' ) . '</strong></div>';
-		}
-
-		if ( function_exists( 'is_wc_endpoint_url' ) && is_wc_endpoint_url( 'order-received' ) ) {
-			return $this->render_thankyou();
-		}
-
-		return TemplateLoader::render( 'ecommerce/checkout-page' );
-	}
-
-	/**
-	 * Render Thank You / Order Received page content.
-	 */
-	public function render_thankyou(): string {
-		global $wp;
-
-		$order_id  = isset( $wp->query_vars['order-received'] ) ? absint( $wp->query_vars['order-received'] ) : 0;
-		$order_key = isset( $_GET['key'] ) ? wc_clean( wp_unslash( $_GET['key'] ) ) : ''; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-
-		if ( ! $order_id && isset( $_GET['order_id'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			$order_id = absint( $_GET['order_id'] );
-		}
-
-		$order = $order_id > 0 ? wc_get_order( $order_id ) : false;
-
-		if ( $order && $order_key && ! hash_equals( (string) $order->get_order_key(), $order_key ) ) {
-			$order = false;
-		}
-
-		if ( ! $order ) {
-			return '<div class="omniwp sl-thankyou-wrapper" style="padding:30px;text-align:center;"><p>' . esc_html__( 'Không tìm thấy thông tin đơn hàng.', 'omniwp' ) . '</p></div>';
-		}
-
-		ob_start();
-		do_action( 'woocommerce_before_thankyou', $order->get_id() );
-
-		if ( \OmniWP\Settings::is_on( 'ecommerce.thankyou_custom_enabled', true ) ) {
-			( new \OmniWP\Ecommerce\ThankYouService() )->render_custom_thankyou( $order->get_id() );
-		} else {
-			wc_get_template( 'checkout/thankyou.php', array( 'order' => $order ) );
-		}
-
-		return (string) ob_get_clean();
-	}
-
-	public function render_cart_button( $atts = array() ): string {
-		$atts = shortcode_atts(
-			self::CATALOG['omniwp_cart_button']['atts'],
-			(array) $atts,
-			'omniwp_cart_button'
-		);
-
-		$count = function_exists( 'WC' ) && WC()->cart ? (int) WC()->cart->get_cart_contents_count() : 0;
-		$label = ! empty( $atts['label'] ) ? esc_html( $atts['label'] ) : __( 'Giỏ hàng', 'omniwp' );
-		$class = ! empty( $atts['class'] ) ? ' ' . esc_attr( $atts['class'] ) : '';
-
-		return sprintf(
-			'<button type="button" class="sl-btn sl-btn--outline sl-cart-trigger%s" data-omniwp="cart">
-				🛒 %s <span class="sl-cart-badge">(%d)</span>
-			</button>',
-			$class,
-			$label,
-			$count
 		);
 	}
 }

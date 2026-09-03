@@ -2,11 +2,11 @@
 /**
  * Template for OmniWP Unified Kho Voucher Module.
  *
- * Reusable across Slide Cart Drawer, Inline Cart Page Modal, Checkout, and Account Hub.
+ * Reusable across Account Hub and Cart/Checkout.
  *
  * @package OmniWP
  * @var array  $available_coupons Array of available coupons.
- * @var string $ow_mode           Rendering mode: 'cart' or 'account'. Default 'cart'.
+ * @var string $ow_mode           Rendering mode: 'cart' or 'account'. Default 'account'.
  */
 
 use OmniWP\Frontend\IconSet;
@@ -14,31 +14,10 @@ use OmniWP\Frontend\IconSet;
 defined( 'ABSPATH' ) || exit;
 
 $coupons = $available_coupons ?? array();
-$ow_mode = isset( $ow_mode ) ? $ow_mode : ( isset( $mode ) ? $mode : 'cart' );
+$ow_mode = isset( $ow_mode ) ? $ow_mode : ( isset( $mode ) ? $mode : 'account' );
 ?>
 <div class="sl-voucher-module sl-voucher-module--<?php echo esc_attr( $ow_mode ); ?>">
 	
-	<?php
-	$freeship = $freeship ?? ( class_exists( '\OmniWP\Ecommerce\CartService' ) ? \OmniWP\Ecommerce\CartService::get_cart_data()['freeship'] ?? array() : array() );
-	if ( 'cart' === $ow_mode && ! empty( $freeship['enabled'] ) ) :
-		?>
-		<!-- Top Freeship Progress Banner inside Kho Voucher Module -->
-		<div class="sl-freeship-bar sl-freeship-bar--module <?php echo ! empty( $freeship['is_reached'] ) ? 'sl-freeship-bar--reached' : ''; ?>" id="sl-module-freeship-bar">
-			<div class="sl-freeship-bar__header">
-				<span class="sl-freeship-bar__icon">
-					<?php echo IconSet::get( 'truck' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-				</span>
-				<div class="sl-freeship-bar__text" id="sl-module-freeship-text">
-					<?php echo wp_kses_post( $freeship['message'] ?? '' ); ?>
-				</div>
-				<span class="sl-freeship-bar__percent" id="sl-module-freeship-percent"><?php echo esc_html( (string) ( $freeship['percentage'] ?? 0 ) ); ?>%</span>
-			</div>
-			<div class="sl-freeship-bar__track">
-				<div class="sl-freeship-bar__progress" id="sl-module-freeship-progress" style="width: <?php echo esc_attr( (string) ( $freeship['percentage'] ?? 0 ) ); ?>%;"></div>
-			</div>
-		</div>
-	<?php endif; ?>
-
 	<!-- 1-Touch Filter Tabs -->
 	<div class="sl-voucher-filter-tabs" role="tablist">
 		<button type="button" class="sl-voucher-tab is-active" data-filter="all" role="tab" aria-selected="true">

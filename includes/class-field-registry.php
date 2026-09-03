@@ -42,20 +42,18 @@ final class FieldRegistry {
 	 */
 	public static function tabs(): array {
 		return array(
-			'auth'               => __( 'Đăng nhập & Đăng ký', 'omniwp' ),
-			'providers'          => __( 'Đăng nhập nhanh', 'omniwp' ),
-			'delivery'           => __( 'Gửi mã', 'omniwp' ),
-			'delivery-sms'       => __( 'Kênh SMS', 'omniwp' ),
-			'delivery-email'     => __( 'Kênh Email', 'omniwp' ),
-			'delivery-mail'      => __( 'Nội dung email', 'omniwp' ),
-			'ecommerce'          => __( 'Bán hàng & Giỏ hàng', 'omniwp' ),
-			'ecommerce-checkout' => __( 'Thanh toán (Checkout)', 'omniwp' ),
-			'integrations'       => __( 'Thông báo & Tích hợp', 'omniwp' ),
-			'profile'            => __( 'Hồ sơ & Địa chỉ', 'omniwp' ),
-			'menu'               => __( 'Menu tài khoản', 'omniwp' ),
-			'appearance'         => __( 'Giao diện & Branding', 'omniwp' ),
-			'security'           => __( 'Chống lạm dụng', 'omniwp' ),
-			'advanced'           => __( 'Nâng cao', 'omniwp' ),
+			'auth'           => __( 'Đăng nhập & Đăng ký', 'omniwp' ),
+			'providers'      => __( 'Đăng nhập nhanh', 'omniwp' ),
+			'delivery'       => __( 'Gửi mã', 'omniwp' ),
+			'delivery-sms'   => __( 'Kênh SMS', 'omniwp' ),
+			'delivery-email' => __( 'Kênh Email', 'omniwp' ),
+			'delivery-mail'  => __( 'Nội dung email', 'omniwp' ),
+			'integrations'   => __( 'Thông báo & Tích hợp', 'omniwp' ),
+			'profile'        => __( 'Hồ sơ & Địa chỉ', 'omniwp' ),
+			'menu'           => __( 'Menu tài khoản', 'omniwp' ),
+			'appearance'     => __( 'Giao diện & Branding', 'omniwp' ),
+			'security'       => __( 'Chống lạm dụng', 'omniwp' ),
+			'advanced'       => __( 'Nâng cao', 'omniwp' ),
 		);
 	}
 
@@ -70,10 +68,9 @@ final class FieldRegistry {
 	 */
 	public static function tab_parents(): array {
 		return array(
-			'delivery-sms'       => 'delivery',
-			'delivery-email'     => 'delivery',
-			'delivery-mail'      => 'delivery',
-			'ecommerce-checkout' => 'ecommerce',
+			'delivery-sms'   => 'delivery',
+			'delivery-email' => 'delivery',
+			'delivery-mail'  => 'delivery',
 		);
 	}
 
@@ -93,9 +90,6 @@ final class FieldRegistry {
 		if ( 'delivery' === $tab ) {
 			return __( 'Chính sách mã', 'omniwp' );
 		}
-		if ( 'ecommerce' === $tab ) {
-			return __( 'Giỏ hàng & Slide Cart', 'omniwp' );
-		}
 		return self::tabs()[ $tab ] ?? $tab;
 	}
 
@@ -111,9 +105,6 @@ final class FieldRegistry {
 			'otp'                  => __( 'Mã xác thực', 'omniwp' ),
 			'sms'                  => __( 'Gửi qua SMS', 'omniwp' ),
 			'email'                => __( 'Gửi qua email', 'omniwp' ),
-			'ecommerce_cart'       => __( 'Giỏ hàng & Slide Cart', 'omniwp' ),
-			'ecommerce_checkout'   => __( 'Thanh toán (Checkout) chuẩn Việt', 'omniwp' ),
-			'ecommerce_thankyou'   => __( 'Trang Cảm ơn & Theo dõi đơn hàng', 'omniwp' ),
 			'automation'           => __( 'Endpoint nhận sự kiện', 'omniwp' ),
 			// The mail screen, in the order an administrator reads it: what every
 			// message falls back to, the messages themselves, the operational
@@ -162,7 +153,6 @@ final class FieldRegistry {
 			self::auth_fields(),
 			self::provider_fields(),
 			self::delivery_fields(),
-			self::ecommerce_fields(),
 			// Generated, not typed. One row in MailRegistry produces the subject
 			// and body pair for a message, so a message cannot be editable
 			// without being declared or declared without being editable.
@@ -1148,111 +1138,6 @@ final class FieldRegistry {
 				'section' => 'breaker',
 				'label'   => __( 'Ngắt trong (giây)', 'omniwp' ),
 				'help'    => __( 'Hết khoảng này, một lần gửi được cho đi thử. Thất bại thì ngắt lại ngay, không cần lỗi đủ số lần lần nữa.', 'omniwp' ),
-			),
-		);
-	}
-
-	private static function ecommerce_fields(): array {
-		return array(
-			'ecommerce.slide_cart_enabled'                => array(
-				'type'    => 'checkbox',
-				'default' => 1,
-				'tab'     => 'ecommerce',
-				'section' => 'ecommerce_cart',
-				'label'   => __( 'Bật Drawer Slide Cart trượt', 'omniwp' ),
-				'help'    => __( 'Hiển thị giỏ hàng trượt từ cạnh phải màn hình thay vì chuyển trang.', 'omniwp' ),
-			),
-			'ecommerce.auto_open_slide_cart'              => array(
-				'type'    => 'checkbox',
-				'default' => 1,
-				'tab'     => 'ecommerce',
-				'section' => 'ecommerce_cart',
-				'label'   => __( 'Tự động mở khi thêm vào giỏ', 'omniwp' ),
-				'help'    => __( 'Tự động trượt mở Slide Cart ngay khi khách bấm Thêm vào giỏ hàng.', 'omniwp' ),
-			),
-			'ecommerce.floating_cart_enabled'             => array(
-				'type'    => 'checkbox',
-				'default' => 1,
-				'tab'     => 'ecommerce',
-				'section' => 'ecommerce_cart',
-				'label'   => __( 'Bật Nút giỏ hàng nổi (Floating Bubble)', 'omniwp' ),
-				'help'    => __( 'Hiển thị nút bong bóng giỏ hàng ở góc màn hình kèm số lượng và tổng tiền.', 'omniwp' ),
-			),
-			'ecommerce.stepper_enabled'                   => array(
-				'type'    => 'checkbox',
-				'default' => 1,
-				'tab'     => 'ecommerce',
-				'section' => 'ecommerce_cart',
-				'label'   => __( 'Bật Thanh tiến trình mua hàng 3 bước (Stepper)', 'omniwp' ),
-				'help'    => __( 'Hiển thị thanh tiến trình 3 bước Giỏ hàng ➔ Thanh toán ➔ Hoàn tất.', 'omniwp' ),
-			),
-			'ecommerce.freeship_threshold'                => array(
-				'type'    => 'number',
-				'default' => 500000,
-				'min'     => 0,
-				'max'     => 100000000,
-				'tab'     => 'ecommerce',
-				'section' => 'ecommerce_cart',
-				'label'   => __( 'Mức tiền đạt Miễn phí vận chuyển (VNĐ)', 'omniwp' ),
-				'help'    => __( 'Tổng tiền giỏ hàng tối thiểu để hiển thị thanh chúc mừng Freeship (đặt 0 để tắt).', 'omniwp' ),
-			),
-			'ecommerce.override_cart_template'            => array(
-				'type'    => 'checkbox',
-				'default' => 0,
-				'tab'     => 'ecommerce',
-				'section' => 'ecommerce_cart',
-				'label'   => __( 'Thay thế trang /cart/ của WooCommerce', 'omniwp' ),
-				'help'    => __( 'Ghi đè trang giỏ hàng mặc định bằng giao diện OmniWP 2 cột chuẩn hiện đại.', 'omniwp' ),
-			),
-			'ecommerce.clean_checkout_enabled'            => array(
-				'type'    => 'checkbox',
-				'default' => 1,
-				'tab'     => 'ecommerce-checkout',
-				'section' => 'ecommerce_checkout',
-				'label'   => __( 'Form thanh toán tối ưu chuẩn Việt', 'omniwp' ),
-				'help'    => __( 'Rút gọn còn 1 ô Họ và tên, tự động bỏ Zipcode, Quốc gia, Tên công ty không cần thiết.', 'omniwp' ),
-			),
-			'ecommerce.address_book_checkout'             => array(
-				'type'    => 'checkbox',
-				'default' => 1,
-				'tab'     => 'ecommerce-checkout',
-				'section' => 'ecommerce_checkout',
-				'label'   => __( 'Sổ địa chỉ & Thêm địa chỉ nhanh tại Checkout', 'omniwp' ),
-				'help'    => __( 'Cho phép chọn thẻ địa chỉ có sẵn và bật popup thêm địa chỉ mới không cần tải lại trang.', 'omniwp' ),
-			),
-			'ecommerce.override_checkout_template'        => array(
-				'type'    => 'checkbox',
-				'default' => 0,
-				'tab'     => 'ecommerce-checkout',
-				'section' => 'ecommerce_checkout',
-				'label'   => __( 'Thay thế trang /checkout/ của WooCommerce', 'omniwp' ),
-				'help'    => __( 'Ghi đè trang thanh toán mặc định bằng template OmniWP Clean Checkout 2 cột.', 'omniwp' ),
-			),
-			'ecommerce.order_confirmation_modal_enabled'  => array(
-				'type'    => 'checkbox',
-				'default' => 1,
-				'tab'     => 'ecommerce-checkout',
-				'section' => 'ecommerce_checkout',
-				'label'   => __( 'Popup xác nhận thông tin nhận hàng trước khi Đặt hàng', 'omniwp' ),
-				'help'    => __( 'Hiển thị bảng tóm tắt người nhận, địa chỉ và thanh toán để khách hàng kiểm tra trước khi tạo đơn, hạn chế tối đa giao sai địa chỉ cũ.', 'omniwp' ),
-			),
-			'ecommerce.order_confirmation_days_threshold' => array(
-				'type'    => 'number',
-				'default' => 0,
-				'min'     => 0,
-				'max'     => 365,
-				'tab'     => 'ecommerce-checkout',
-				'section' => 'ecommerce_checkout',
-				'label'   => __( 'Ngưỡng số ngày kích hoạt xác nhận lại (ngày)', 'omniwp' ),
-				'help'    => __( '0 = luôn xác nhận đối với địa chỉ đã lưu; đặt số ngày (ví dụ: 30) để chỉ hỏi lại các khách hàng đã lâu chưa mua đơn mới.', 'omniwp' ),
-			),
-			'ecommerce.thankyou_custom_enabled'           => array(
-				'type'    => 'checkbox',
-				'default' => 1,
-				'tab'     => 'ecommerce-checkout',
-				'section' => 'ecommerce_thankyou',
-				'label'   => __( 'Bật Thanh tiến trình đơn hàng & Mã VietQR', 'omniwp' ),
-				'help'    => __( 'Hiển thị Order Status Tracker 4 bước và tạo mã VietQR tự động khi chuyển khoản ngân hàng.', 'omniwp' ),
 			),
 		);
 	}

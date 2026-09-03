@@ -51,6 +51,6 @@ $site_name = get_bloginfo( 'name' ) ?: 'SHOP';
 	<?php
 	$available_coupons = $vouchers;
 	$ow_mode           = 'account';
-	require dirname( __DIR__ ) . '/ecommerce/voucher-module.php';
+	require __DIR__ . '/voucher-module.php';
 	?>
 </div>

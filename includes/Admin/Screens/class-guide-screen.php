@@ -193,48 +193,6 @@ final class GuideScreen {
 					'collapse' => __( '<code>mobile</code>: dưới 782px chỉ còn biểu tượng. <code>none</code>: luôn hiện chữ.', 'omniwp' ),
 				),
 			),
-			'smart_cart'             => array(
-				'label'   => __( 'Trang giỏ hàng cố định', 'omniwp' ),
-				'summary' => __( 'Hiển thị giao diện giỏ hàng 2 cột chuẩn OmniWP kèm tính năng áp mã và cập nhật số lượng.', 'omniwp' ),
-				'where'   => __( 'Trang giỏ hàng (/cart/).', 'omniwp' ),
-				'atts'    => array(),
-			),
-			'omniwp_cart'            => array(
-				'label'   => __( 'Trang giỏ hàng cố định (OmniWP)', 'omniwp' ),
-				'summary' => __( 'Tương đương [smart_cart].', 'omniwp' ),
-				'where'   => __( 'Trang giỏ hàng (/cart/).', 'omniwp' ),
-				'atts'    => array(),
-			),
-			'smart_checkout'         => array(
-				'label'   => __( 'Trang thanh toán chuẩn Việt', 'omniwp' ),
-				'summary' => __( 'Form thanh toán tối ưu chuẩn Việt Nam, tích hợp Sổ địa chỉ và Cổng thanh toán tiện lợi.', 'omniwp' ),
-				'where'   => __( 'Trang thanh toán (/checkout/).', 'omniwp' ),
-				'atts'    => array(),
-			),
-			'omniwp_checkout'        => array(
-				'label'   => __( 'Trang thanh toán chuẩn Việt (OmniWP)', 'omniwp' ),
-				'summary' => __( 'Tương đương [smart_checkout].', 'omniwp' ),
-				'where'   => __( 'Trang thanh toán (/checkout/).', 'omniwp' ),
-				'atts'    => array(),
-			),
-			'smart_cart_button'      => array(
-				'label'   => __( 'Nút mở giỏ hàng trượt', 'omniwp' ),
-				'summary' => __( 'Nút bấm mở Slide Cart Drawer kèm số lượng sản phẩm trong giỏ.', 'omniwp' ),
-				'where'   => __( 'Header hoặc bất kỳ vị trí nào trên website.', 'omniwp' ),
-				'atts'    => array(
-					'label' => __( 'Nhãn văn bản trên nút. Mặc định là “Giỏ hàng”.', 'omniwp' ),
-					'class' => __( 'Thêm class CSS của bạn.', 'omniwp' ),
-				),
-			),
-			'omniwp_cart_button'     => array(
-				'label'   => __( 'Nút mở giỏ hàng trượt (OmniWP)', 'omniwp' ),
-				'summary' => __( 'Tương đương [smart_cart_button].', 'omniwp' ),
-				'where'   => __( 'Header hoặc thanh điều hướng.', 'omniwp' ),
-				'atts'    => array(
-					'label' => __( 'Nhãn văn bản trên nút. Mặc định là “Giỏ hàng”.', 'omniwp' ),
-					'class' => __( 'Thêm class CSS của bạn.', 'omniwp' ),
-				),
-			),
 		);
 	}
 
