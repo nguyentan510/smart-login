@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Smart Login\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/omniwp\n"
-"POT-Creation-Date: 2026-09-03 14:07+0000\n"
+"POT-Creation-Date: 2026-09-06 04:32+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -98,6 +98,11 @@ msgstr ""
 
 #: includes/Frontend/class-voucher-service.php:169
 msgid "(tối đa %s)"
+msgstr ""
+
+#. translators: %d: additional items count.
+#: includes/Frontend/class-rest-controller.php:938
+msgid "+%d sản phẩm khác"
 msgstr ""
 
 #: templates/account-hub/address-modal.php:76
@@ -194,7 +199,7 @@ msgstr ""
 msgid "Bước mở ra khi bấm."
 msgstr ""
 
-#: templates/account-hub/tab-orders.php:100
+#: templates/account-hub/tab-orders.php:105
 msgid "Bạn chưa có đơn hàng nào"
 msgstr ""
 
@@ -415,6 +420,7 @@ msgid "Campuchia (+855)"
 msgstr ""
 
 #: includes/Admin/Screens/class-audit-screen.php:45
+#: templates/account-hub/voucher-module.php:192
 msgid "Chi tiết"
 msgstr ""
 
@@ -538,7 +544,7 @@ msgstr ""
 msgid "Chưa có trang nào chứa [smart_auth], và tích hợp trang My Account của WooCommerce đang tắt."
 msgstr ""
 
-#: templates/account-hub/tab-orders.php:114
+#: templates/account-hub/tab-orders.php:119
 msgid "Chưa có đơn hàng nào"
 msgstr ""
 
@@ -570,6 +576,10 @@ msgstr ""
 
 #: includes/Auth/class-register-handler.php:289
 msgid "Chưa đủ thông tin để tạo tài khoản."
+msgstr ""
+
+#: templates/account-hub/voucher-module.php:166
+msgid "Chưa đủ ĐK"
 msgstr ""
 
 #: includes/class-field-registry.php:991
@@ -717,7 +727,6 @@ msgid "Chờ giữa 2 lần gửi (giây)"
 msgstr ""
 
 #: includes/Frontend/class-rest-controller.php:795
-#: templates/account-hub/tab-orders.php:18
 msgid "Chờ thanh toán"
 msgstr ""
 
@@ -769,7 +778,7 @@ msgstr ""
 msgid "Các thẻ dùng được trong mẫu này"
 msgstr ""
 
-#: templates/account-hub/tab-orders.php:101
+#: templates/account-hub/tab-orders.php:106
 msgid "Các đơn hàng bạn đã mua sẽ xuất hiện tại đây để bạn tiện theo dõi trạng thái giao hàng."
 msgstr ""
 
@@ -903,7 +912,7 @@ msgstr ""
 msgid "Dùng chung bộ placeholder với phần Gửi qua SMS."
 msgstr ""
 
-#: templates/account-hub/voucher-module.php:148
+#: templates/account-hub/voucher-module.php:196
 msgid "Dùng mã"
 msgstr ""
 
@@ -1046,7 +1055,7 @@ msgstr ""
 msgid "Envelope ký HMAC (chuẩn OmniWP)"
 msgstr ""
 
-#: templates/account-hub/voucher-module.php:91
+#: templates/account-hub/voucher-module.php:115
 msgid "FREESHIP"
 msgstr ""
 
@@ -1064,7 +1073,7 @@ msgstr ""
 msgid "Freeship đơn hàng"
 msgstr ""
 
-#: templates/account-hub/voucher-module.php:91
+#: templates/account-hub/voucher-module.php:115
 msgid "GIẢM GIÁ"
 msgstr ""
 
@@ -1109,6 +1118,10 @@ msgstr ""
 msgid "Giao diện hiện tại không khai báo vị trí menu nào, nên chỉ có thể đặt nút bằng shortcode <code>[OMNIWP_button]</code>."
 msgstr ""
 
+#: includes/Frontend/class-rest-controller.php:873
+msgid "Giao hàng tận nơi"
+msgstr ""
+
 #: includes/class-field-registry.php:1063
 msgid "Giá mỗi mã gửi tới số điện thoại (VNĐ)"
 msgstr ""
@@ -1127,7 +1140,7 @@ msgid "Giá trị triển khai đang được ưu tiên; các ô trên là cấu
 msgstr ""
 
 #. translators: %s: Maximum spend
-#: includes/Frontend/class-voucher-service.php:316
+#: includes/Frontend/class-voucher-service.php:321
 msgid "Giá trị đơn vượt quá %s"
 msgstr ""
 
@@ -1225,7 +1238,7 @@ msgstr ""
 msgid "Gợi ý hoàn thiện:"
 msgstr ""
 
-#: templates/account-hub/voucher-module.php:150
+#: templates/account-hub/voucher-module.php:199
 msgid "Gợi ý mua kèm"
 msgstr ""
 
@@ -1311,7 +1324,7 @@ msgid "HOÁ ĐƠN ĐƠN HÀNG"
 msgstr ""
 
 #. translators: %s: expiry date string.
-#: templates/account-hub/voucher-module.php:136
+#: templates/account-hub/voucher-module.php:154
 msgid "HSD: %s"
 msgstr ""
 
@@ -1414,9 +1427,7 @@ msgstr ""
 msgid "Hoa Kỳ / Canada (+1)"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:825
-#: includes/Frontend/class-rest-controller.php:1252
-#: templates/account-hub/tab-orders.php:21
+#: includes/Frontend/class-rest-controller.php:1390
 msgid "Hoàn thành"
 msgstr ""
 
@@ -1460,10 +1471,12 @@ msgid "Hướng dẫn"
 msgstr ""
 
 #: includes/Frontend/class-voucher-service.php:184
+#: templates/account-hub/voucher-module.php:83
 msgid "Hạn sử dụng"
 msgstr ""
 
 #: includes/Frontend/class-voucher-service.php:127
+#: templates/account-hub/voucher-module.php:164
 msgid "Hết hạn"
 msgstr ""
 
@@ -1475,11 +1488,11 @@ msgstr ""
 msgid "Hết lượt"
 msgstr ""
 
-#: includes/Frontend/class-voucher-service.php:438
+#: includes/Frontend/class-voucher-service.php:443
 msgid "Hệ thống bán hàng WooCommerce chưa được kích hoạt."
 msgstr ""
 
-#: templates/account-hub/tab-orders.php:115
+#: templates/account-hub/tab-orders.php:120
 msgid "Hệ thống chưa ghi nhận đơn hàng nào cho tài khoản này."
 msgstr ""
 
@@ -1645,7 +1658,7 @@ msgstr ""
 msgid "Khách đăng nhập bằng số điện thoại, bằng email, hay cả hai."
 msgstr ""
 
-#: templates/account-hub/tab-orders.php:104
+#: templates/account-hub/tab-orders.php:109
 msgid "Khám phá sản phẩm ngay"
 msgstr ""
 
@@ -1677,8 +1690,16 @@ msgstr ""
 msgid "Không có màn hình đăng ký riêng: người dùng hiếm khi biết mình thuộc nhánh nào, nên bước đầu tự quyết định. Shortcode này chỉ đổi tiêu đề."
 msgstr ""
 
+#: templates/account-hub/voucher-module.php:213
+msgid "Không có mã ưu đãi nào trong mục này."
+msgstr ""
+
 #: includes/Admin/class-readiness.php:336
 msgid "Không có trần nào. Mọi giới hạn còn lại đều tính theo một số điện thoại hoặc một IP, nên không có gì chặn được kẻ tấn công đổi cả hai."
+msgstr ""
+
+#: includes/Frontend/class-rest-controller.php:1151
+msgid "Không có đơn hàng nào khớp với bộ lọc hoặc từ khóa tìm kiếm của bạn."
 msgstr ""
 
 #: includes/Admin/Screens/class-guide-screen.php:246
@@ -1732,7 +1753,7 @@ msgstr ""
 msgid "Không thể cập nhật thông tin liên hệ."
 msgstr ""
 
-#: includes/Frontend/class-voucher-service.php:449
+#: includes/Frontend/class-voucher-service.php:454
 msgid "Không thể khởi tạo giỏ hàng WooCommerce."
 msgstr ""
 
@@ -1764,7 +1785,7 @@ msgstr ""
 msgid "Không thể tự động liên kết tài khoản hiện có."
 msgstr ""
 
-#: includes/Frontend/class-voucher-service.php:503
+#: includes/Frontend/class-voucher-service.php:508
 msgid "Không thể áp dụng mã giảm giá này cho giỏ hàng hiện tại."
 msgstr ""
 
@@ -1773,7 +1794,7 @@ msgid "Không thể đăng ký với thông tin này."
 msgstr ""
 
 #. translators: %s: expiry date string.
-#: templates/account-hub/voucher-module.php:136
+#: templates/account-hub/voucher-module.php:154
 msgid "Không thời hạn"
 msgstr ""
 
@@ -1795,12 +1816,12 @@ msgstr ""
 msgid "Không tìm thấy tài khoản."
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:1039
+#: includes/Frontend/class-rest-controller.php:1177
 msgid "Không tìm thấy đơn hàng hoặc bạn không có quyền truy cập."
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:1015
-msgid "Không tìm thấy đơn hàng nào phù hợp."
+#: includes/Frontend/class-rest-controller.php:1150
+msgid "Không tìm thấy đơn hàng nào"
 msgstr ""
 
 #: includes/OTP/class-otp-service.php:127
@@ -1816,6 +1837,7 @@ msgid "Không áp dụng chung với sản phẩm đang sale"
 msgstr ""
 
 #: includes/Frontend/class-voucher-service.php:133
+#: templates/account-hub/voucher-module.php:168
 msgid "Khả dụng"
 msgstr ""
 
@@ -2008,7 +2030,6 @@ msgstr ""
 #: includes/Frontend/class-account-hub.php:89
 #: includes/Frontend/class-account-menu.php:94
 #: includes/class-field-registry.php:889
-#: templates/account-hub/tab-orders.php:37
 msgid "Lịch sử đơn hàng"
 msgstr ""
 
@@ -2028,17 +2049,17 @@ msgstr ""
 msgid "Module địa chỉ đang bật nhưng dữ liệu hành chính chưa được sinh ra."
 msgstr ""
 
+#: includes/Frontend/class-rest-controller.php:963
 #: templates/account-hub/order-modal.php:134
 msgid "Mua lại"
 msgstr ""
 
-#: templates/account-hub/voucher-module.php:150
-msgid "Mua thêm"
+#: includes/Frontend/class-rest-controller.php:962
+msgid "Mua lại đơn hàng này"
 msgstr ""
 
-#. translators: %s: shortage amount needed.
-#: templates/account-hub/voucher-module.php:126
-msgid "Mua thêm %s để mở khóa"
+#: templates/account-hub/voucher-module.php:200
+msgid "Mua thêm"
 msgstr ""
 
 #. translators: %s: the data attribute that opts a link out.
@@ -2111,7 +2132,7 @@ msgstr ""
 msgid "Máy chủ đọc được, nên gửi trong email/SMS hay dùng làm đích chuyển hướng đều được, và trang vẫn hiện form khi JavaScript không chạy."
 msgstr ""
 
-#: includes/Frontend/class-voucher-service.php:464
+#: includes/Frontend/class-voucher-service.php:469
 msgid "Mã \"%s\" đã có sẵn trong giỏ hàng."
 msgstr ""
 
@@ -2149,7 +2170,7 @@ msgstr ""
 msgid "Mã giảm giá"
 msgstr ""
 
-#: includes/Frontend/class-voucher-service.php:430
+#: includes/Frontend/class-voucher-service.php:435
 msgid "Mã giảm giá không hợp lệ."
 msgstr ""
 
@@ -2212,6 +2233,7 @@ msgid "Mã đăng nhập"
 msgstr ""
 
 #: includes/Frontend/class-voucher-service.php:180
+#: templates/account-hub/voucher-module.php:80
 msgid "Mã ưu đãi"
 msgstr ""
 
@@ -2265,6 +2287,11 @@ msgstr ""
 
 #: includes/class-field-registry.php:418
 msgid "Mặc định 300 giây (5 phút)."
+msgstr ""
+
+#. translators: %s: minimum spend amount.
+#: templates/account-hub/voucher-module.php:137
+msgid "Mọi đơn hàng"
 msgstr ""
 
 #: includes/class-field-registry.php:574
@@ -2347,6 +2374,7 @@ msgid "Mức bảo mật"
 msgstr ""
 
 #: includes/Frontend/class-voucher-service.php:188
+#: templates/account-hub/voucher-module.php:81
 msgid "Mức giảm"
 msgstr ""
 
@@ -2416,6 +2444,10 @@ msgstr ""
 
 #: includes/Admin/Screens/class-guide-screen.php:417
 msgid "Nhận số điện thoại thì phải có kênh SMS: không có nhà cung cấp nào thì không mã nào tới được một số điện thoại."
+msgstr ""
+
+#: includes/Frontend/class-rest-controller.php:873
+msgid "Nhận tại cửa hàng"
 msgstr ""
 
 #: includes/Admin/Screens/class-guide-screen.php:112
@@ -2759,7 +2791,7 @@ msgid "Request này đến qua Cloudflare nhưng plugin đang bỏ qua header pr
 msgstr ""
 
 #: templates/account-hub/voucher-modal.php:43
-#: templates/account-hub/voucher-module.php:145
+#: templates/account-hub/voucher-module.php:183
 msgid "Sao chép"
 msgstr ""
 
@@ -2769,6 +2801,11 @@ msgstr ""
 
 #: includes/Admin/class-provider-cards.php:196
 msgid "Sao chép chính xác URL này sang cấu hình ứng dụng của provider."
+msgstr ""
+
+#: templates/account-hub/voucher-module.php:111
+#: templates/account-hub/voucher-module.php:181
+msgid "Sao chép mã"
 msgstr ""
 
 #: includes/Admin/Screens/class-audit-screen.php:69
@@ -2844,7 +2881,7 @@ msgstr ""
 msgid "SẢN PHẨM / ĐƠN GIÁ"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:915
+#: includes/Frontend/class-rest-controller.php:927
 msgid "Sản phẩm"
 msgstr ""
 
@@ -3015,6 +3052,7 @@ msgid "Thanh toán:"
 msgstr ""
 
 #: includes/Admin/class-field-renderer.php:541
+#: templates/account-hub/voucher-module.php:85
 msgid "Thao tác"
 msgstr ""
 
@@ -3065,6 +3103,10 @@ msgstr ""
 
 #: includes/Frontend/class-icon-set.php:249
 msgid "Thuốc"
+msgstr ""
+
+#: includes/Frontend/class-rest-controller.php:959
+msgid "Thành tiền:"
 msgstr ""
 
 #: templates/account-hub/sidebar.php:47
@@ -3319,6 +3361,15 @@ msgstr ""
 msgid "Trường hồ sơ"
 msgstr ""
 
+#: templates/account-hub/voucher-module.php:84
+msgid "Trạng thái"
+msgstr ""
+
+#: includes/Frontend/class-rest-controller.php:835
+#: templates/account-hub/tab-orders.php:22
+msgid "Trả hàng"
+msgstr ""
+
 #: includes/Admin/class-readiness.php:316
 #: includes/Admin/class-readiness.php:334
 #: includes/Admin/class-readiness.php:374
@@ -3548,18 +3599,10 @@ msgstr ""
 msgid "TỔNG CỘNG THANH TOÁN:"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:928
-msgid "Tổng %d sản phẩm"
-msgstr ""
-
 #. translators: %s: link to the overview screen.
 #: includes/Admin/Screens/class-guide-screen.php:441
 #: includes/Admin/class-settings-page.php:244
 msgid "Tổng quan"
-msgstr ""
-
-#: includes/Frontend/class-rest-controller.php:935
-msgid "Tổng thanh toán:"
 msgstr ""
 
 #: templates/partials/account/password.php:55
@@ -3681,7 +3724,7 @@ msgstr ""
 msgid "Vui lòng đăng nhập để hưởng những đặc quyền dành cho thành viên."
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:1353
+#: includes/Frontend/class-rest-controller.php:1491
 msgid "Vui lòng đăng nhập."
 msgstr ""
 
@@ -3774,7 +3817,7 @@ msgstr ""
 msgid "WooCommerce"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:1376
+#: includes/Frontend/class-rest-controller.php:1514
 msgid "WooCommerce chưa được kích hoạt."
 msgstr ""
 
@@ -3782,8 +3825,12 @@ msgstr ""
 msgid "Xem"
 msgstr ""
 
-#: templates/account-hub/voucher-module.php:103
-msgid "Xem chi tiết điều kiện"
+#: includes/Frontend/class-rest-controller.php:954
+msgid "Xem chi tiết"
+msgstr ""
+
+#: templates/account-hub/voucher-module.php:190
+msgid "Xem chi tiết thể lệ"
 msgstr ""
 
 #. translators: 1: identity mode, 2: number of country codes.
@@ -3802,6 +3849,10 @@ msgstr ""
 
 #: includes/Admin/Screens/class-settings-screen.php:198
 msgid "Xem request sẽ được gửi"
+msgstr ""
+
+#: templates/account-hub/tab-orders.php:97
+msgid "Xem thêm đơn hàng"
 msgstr ""
 
 #: includes/Admin/class-readiness.php:324
@@ -3979,7 +4030,7 @@ msgstr ""
 msgid "Áp dụng cho mọi nhà cung cấp bên dưới"
 msgstr ""
 
-#: includes/Frontend/class-voucher-service.php:496
+#: includes/Frontend/class-voucher-service.php:501
 msgid "Áp dụng mã \"%s\" thành công!"
 msgstr ""
 
@@ -3992,17 +4043,12 @@ msgstr ""
 msgid "Đang bật tin proxy nhưng chưa khai dải IP nào, nên plugin không tin header của ai cả. Khai dải IP của proxy để giới hạn theo IP hoạt động đúng."
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:1420
+#: includes/Frontend/class-rest-controller.php:1558
 msgid "Đang chuyển đến giỏ hàng..."
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:1238
+#: includes/Frontend/class-rest-controller.php:1376
 msgid "Đang chuẩn bị"
-msgstr ""
-
-#: includes/Frontend/class-rest-controller.php:810
-#: templates/account-hub/tab-orders.php:19
-msgid "Đang chuẩn bị hàng"
 msgstr ""
 
 #: includes/Admin/Screens/class-overview-screen.php:164
@@ -4024,8 +4070,11 @@ msgid "Đang dùng mẫu chung"
 msgstr ""
 
 #: includes/Frontend/class-rest-controller.php:820
-#: includes/Frontend/class-rest-controller.php:1245
-#: templates/account-hub/tab-orders.php:20
+#: templates/account-hub/tab-orders.php:19
+msgid "Đang giao"
+msgstr ""
+
+#: includes/Frontend/class-rest-controller.php:1383
 msgid "Đang giao hàng"
 msgstr ""
 
@@ -4077,6 +4126,11 @@ msgstr ""
 msgid "Đang tắt."
 msgstr ""
 
+#: includes/Frontend/class-rest-controller.php:810
+#: templates/account-hub/tab-orders.php:18
+msgid "Đang xử lý"
+msgstr ""
+
 #: includes/Frontend/class-assets.php:201
 msgid "Đang xử lý…"
 msgstr ""
@@ -4090,11 +4144,8 @@ msgid "Điền sẵn <code>billing_phone</code> từ số điện thoại đã x
 msgstr ""
 
 #: templates/account-hub/voucher-modal.php:58
+#: templates/account-hub/voucher-module.php:82
 msgid "Điều kiện áp dụng"
-msgstr ""
-
-#: templates/account-hub/voucher-module.php:106
-msgid "Điều kiện áp dụng:"
 msgstr ""
 
 #: templates/account-hub/tab-address.php:127
@@ -4153,6 +4204,11 @@ msgstr ""
 msgid "Đã dùng / Hết hạn"
 msgstr ""
 
+#: includes/Frontend/class-rest-controller.php:825
+#: templates/account-hub/tab-orders.php:20
+msgid "Đã giao"
+msgstr ""
+
 #: includes/Auth/class-flow-engine.php:649
 msgid "Đã gửi lại mã xác thực."
 msgstr ""
@@ -4162,12 +4218,8 @@ msgstr ""
 msgid "Đã hoàn thiện %1$d/%2$d thông tin"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:835
-msgid "Đã hoàn tiền"
-msgstr ""
-
 #: includes/Frontend/class-rest-controller.php:830
-#: templates/account-hub/tab-orders.php:22
+#: templates/account-hub/tab-orders.php:21
 msgid "Đã hủy"
 msgstr ""
 
@@ -4181,7 +4233,7 @@ msgstr ""
 msgid "Đã liên kết %s"
 msgstr ""
 
-#: includes/Frontend/class-voucher-service.php:482
+#: includes/Frontend/class-voucher-service.php:487
 msgid "Đã lưu mã \"%s\" vào giỏ hàng! Đang chuyển đến cửa hàng để chọn sản phẩm..."
 msgstr ""
 
@@ -4210,7 +4262,7 @@ msgstr ""
 msgid "Đã sử dụng"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:1463
+#: includes/Frontend/class-rest-controller.php:1601
 msgid "Đã thêm %d sản phẩm vào giỏ hàng."
 msgstr ""
 
@@ -4222,8 +4274,8 @@ msgstr ""
 msgid "Đã đóng gói"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:1213
-#: includes/Frontend/class-rest-controller.php:1231
+#: includes/Frontend/class-rest-controller.php:1351
+#: includes/Frontend/class-rest-controller.php:1369
 msgid "Đã đặt hàng"
 msgstr ""
 
@@ -4319,12 +4371,17 @@ msgstr ""
 msgid "Đơn hàng"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:893
-msgid "Đơn hàng #%s"
+#. translators: %s: order date.
+#: includes/Frontend/class-rest-controller.php:905
+msgid "Đơn hàng %s"
 msgstr ""
 
-#: includes/Frontend/class-rest-controller.php:1034
-#: includes/Frontend/class-rest-controller.php:1366
+#: templates/account-hub/tab-orders.php:37
+msgid "Đơn hàng của tôi"
+msgstr ""
+
+#: includes/Frontend/class-rest-controller.php:1172
+#: includes/Frontend/class-rest-controller.php:1504
 msgid "Đơn hàng không hợp lệ."
 msgstr ""
 
@@ -4333,8 +4390,13 @@ msgid "Đơn tối thiểu"
 msgstr ""
 
 #. translators: 1: Minimum spend, 2: Shortfall amount
-#: includes/Frontend/class-voucher-service.php:308
+#: includes/Frontend/class-voucher-service.php:313
 msgid "Đơn tối thiểu %1$s (còn thiếu %2$s)"
+msgstr ""
+
+#. translators: %s: minimum spend amount.
+#: templates/account-hub/voucher-module.php:135
+msgid "Đơn tối thiểu %s"
 msgstr ""
 
 #: includes/Admin/class-field-renderer.php:540
@@ -4587,6 +4649,6 @@ msgstr ""
 msgid "— chưa có —"
 msgstr ""
 
-#: templates/account-hub/voucher-module.php:141
+#: templates/account-hub/voucher-module.php:162
 msgid "✓ Đã dùng"
 msgstr ""

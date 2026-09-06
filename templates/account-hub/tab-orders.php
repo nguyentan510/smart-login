@@ -15,11 +15,11 @@ defined( 'ABSPATH' ) || exit;
 
 $pipeline_tabs = array(
 	'all'           => __( 'Tất cả', 'omniwp' ),
-	'wc-pending'    => __( 'Chờ thanh toán', 'omniwp' ),
-	'wc-processing' => __( 'Đang chuẩn bị hàng', 'omniwp' ),
-	'wc-shipping'   => __( 'Đang giao hàng', 'omniwp' ),
-	'wc-completed'  => __( 'Hoàn thành', 'omniwp' ),
+	'wc-processing' => __( 'Đang xử lý', 'omniwp' ),
+	'wc-shipping'   => __( 'Đang giao', 'omniwp' ),
+	'wc-completed'  => __( 'Đã giao', 'omniwp' ),
 	'wc-cancelled'  => __( 'Đã hủy', 'omniwp' ),
+	'wc-refunded'   => __( 'Trả hàng', 'omniwp' ),
 );
 
 /**
@@ -34,7 +34,7 @@ $pipeline_tabs = (array) apply_filters( 'omniwp_order_pipeline_statuses', $pipel
 	<div class="sl-hub-header__meta">
 		<h2 class="sl-hub-title">
 			<span class="sl-hub-title__icon"><?php echo IconSet::get( 'box' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
-			<span><?php esc_html_e( 'Lịch sử đơn hàng', 'omniwp' ); ?></span>
+			<span><?php esc_html_e( 'Đơn hàng của tôi', 'omniwp' ); ?></span>
 		</h2>
 		<p class="sl-hub-subtitle"><?php esc_html_e( 'Theo dõi trạng thái và tra cứu các đơn hàng đã đặt.', 'omniwp' ); ?></p>
 	</div>
@@ -76,13 +76,13 @@ $pipeline_tabs = (array) apply_filters( 'omniwp_order_pipeline_statuses', $pipel
 		$customer_orders = wc_get_orders(
 			array(
 				'customer_id' => $user->ID,
-				'limit'       => 20,
+				'limit'       => 10,
 			)
 		);
 		?>
 
 		<?php if ( ! empty( $customer_orders ) && is_array( $customer_orders ) ) : ?>
-			<div class="sl-hub-orders-list">
+			<div class="sl-order-table-list" data-sl-orders-list data-sl-orders-body>
 				<?php foreach ( $customer_orders as $wc_order ) : ?>
 					<?php
 					if ( ! $wc_order instanceof \WC_Order ) {
@@ -91,6 +91,11 @@ $pipeline_tabs = (array) apply_filters( 'omniwp_order_pipeline_statuses', $pipel
 					echo RestController::render_order_card( $wc_order ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 					?>
 				<?php endforeach; ?>
+			</div>
+			<div class="sl-orders-loadmore-wrap" data-sl-orders-loadmore-wrap style="<?php echo count( $customer_orders ) >= 10 ? '' : 'display:none;'; ?>">
+				<button type="button" class="sl-btn sl-btn--outline sl-orders-loadmore-btn" data-sl-orders-loadmore>
+					<span class="sl-orders-loadmore-text"><?php esc_html_e( 'Xem thêm đơn hàng', 'omniwp' ); ?></span>
+				</button>
 			</div>
 		<?php else : ?>
 			<div class="ow-empty-state">

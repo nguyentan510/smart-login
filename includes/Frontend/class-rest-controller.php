@@ -803,11 +803,11 @@ class RestController {
 			),
 			'on-hold'    => array(
 				'name'  => __( 'Chờ xác nhận', 'omniwp' ),
-				'class' => 'processing',
+				'class' => 'pending',
 				'group' => 'wc-processing',
 			),
 			'processing' => array(
-				'name'  => __( 'Đang chuẩn bị hàng', 'omniwp' ),
+				'name'  => __( 'Đang xử lý', 'omniwp' ),
 				'class' => 'processing',
 				'group' => 'wc-processing',
 			),
@@ -817,12 +817,12 @@ class RestController {
 				'group' => 'wc-processing',
 			),
 			'shipping'   => array(
-				'name'  => __( 'Đang giao hàng', 'omniwp' ),
+				'name'  => __( 'Đang giao', 'omniwp' ),
 				'class' => 'shipping',
 				'group' => 'wc-shipping',
 			),
 			'completed'  => array(
-				'name'  => __( 'Hoàn thành', 'omniwp' ),
+				'name'  => __( 'Đã giao', 'omniwp' ),
 				'class' => 'completed',
 				'group' => 'wc-completed',
 			),
@@ -832,9 +832,9 @@ class RestController {
 				'group' => 'wc-cancelled',
 			),
 			'refunded'   => array(
-				'name'  => __( 'Đã hoàn tiền', 'omniwp' ),
-				'class' => 'cancelled',
-				'group' => 'wc-cancelled',
+				'name'  => __( 'Trả hàng', 'omniwp' ),
+				'class' => 'refunded',
+				'group' => 'wc-refunded',
 			),
 		);
 
@@ -852,93 +852,116 @@ class RestController {
 	}
 
 	public static function render_order_card( \WC_Order $order ): string {
-		$order_id      = $order->get_id();
-		$order_number  = $order->get_order_number();
-		$order_date    = wc_format_datetime( $order->get_date_created() );
-		$status_slug   = $order->get_status();
-		$status_info   = self::get_status_display_info( $status_slug );
-		$status_name   = $status_info['name'];
-		$status_class  = $status_info['class'];
-		$order_total   = $order->get_formatted_order_total();
-		$item_count    = $order->get_item_count();
-		$payment_title = $order->get_payment_method_title();
+		$order_id     = $order->get_id();
+		$order_number = $order->get_order_number();
+		$date_created = $order->get_date_created();
+		$order_date   = $date_created ? wc_format_datetime( $date_created, 'd/m/Y' ) : '';
+		$status_slug  = $order->get_status();
+		$status_info  = self::get_status_display_info( $status_slug );
+		$status_name  = $status_info['name'];
+		$status_class = $status_info['class'];
+		$order_total  = $order->get_formatted_order_total();
+		$item_count   = $order->get_item_count();
 
-		$items           = $order->get_items();
-		$item_thumbs     = array();
-		$first_item_name = '';
-		$first_item_qty  = 1;
-
-		foreach ( $items as $item ) {
-			if ( empty( $first_item_name ) ) {
-				$first_item_name = $item->get_name();
-				$first_item_qty  = $item->get_quantity();
-			}
-			$product       = $item->get_product();
-			$image_id      = $product ? $product->get_image_id() : 0;
-			$img_url       = $image_id ? wp_get_attachment_image_url( $image_id, 'thumbnail' ) : ( function_exists( 'wc_placeholder_img_src' ) ? wc_placeholder_img_src() : '' );
-			$item_thumbs[] = array(
-				'url'  => $img_url,
-				'name' => $item->get_name(),
-			);
+		$shipping_methods = $order->get_shipping_methods();
+		$shipping_title   = '';
+		if ( ! empty( $shipping_methods ) ) {
+			$first_shipping = reset( $shipping_methods );
+			$shipping_title = $first_shipping->get_name();
 		}
+		if ( empty( $shipping_title ) || false !== stripos( $shipping_title, 'cửa hàng' ) || false !== stripos( $shipping_title, 'pickup' ) ) {
+			$shipping_title = __( 'Giao hàng tận nơi', 'omniwp' );
+		}
+
+		$items      = $order->get_items();
+		$first_item = null;
+		foreach ( $items as $item ) {
+			$first_item = $item;
+			break;
+		}
+
+		$first_item_name = $first_item ? $first_item->get_name() : '';
+		$first_item_qty  = $first_item ? $first_item->get_quantity() : 1;
+		$product         = $first_item ? $first_item->get_product() : null;
+		$image_id        = $product ? $product->get_image_id() : 0;
+		$img_url         = $image_id ? wp_get_attachment_image_url( $image_id, 'thumbnail' ) : ( function_exists( 'wc_placeholder_img_src' ) ? wc_placeholder_img_src() : '' );
+
+		$first_item_price = '';
+		if ( $first_item ) {
+			$first_item_price = wc_price( $order->get_item_subtotal( $first_item, false, true ) );
+		}
+
+		$extra_items_count = $item_count - $first_item_qty;
 
 		ob_start();
 		?>
-		<div class="sl-hub-order-card" data-sl-order-id="<?php echo esc_attr( (string) $order_id ); ?>" data-sl-order-detail="<?php echo esc_attr( (string) $order_id ); ?>">
-			<!-- Dòng 1: Mã đơn, ngày đặt và trạng thái -->
-			<div class="sl-hub-order-header">
-				<div class="sl-hub-order-meta">
-					<span class="sl-hub-order-number">
-						<span class="sl-hub-order-icon"><?php echo IconSet::get( 'box' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
-						<strong><?php printf( esc_html__( 'Đơn hàng #%s', 'omniwp' ), esc_html( (string) $order_number ) ); ?></strong>
+		<div class="sl-order-item" data-sl-order-id="<?php echo esc_attr( (string) $order_id ); ?>">
+			<?php // Header: Đơn hàng dd/mm/yyyy · Phương thức · #Mã đơn <-> Trạng thái ?>
+			<div class="sl-order-item__header">
+				<div class="sl-order-item__meta">
+					<strong class="sl-order-item__date-title">
+						<?php
+						/* translators: %s: order date. */
+						printf( esc_html__( 'Đơn hàng %s', 'omniwp' ), esc_html( $order_date ) );
+						?>
+					</strong>
+					<span class="sl-order-item__separator">·</span>
+					<span class="sl-order-item__shipping"><?php echo esc_html( $shipping_title ); ?></span>
+					<span class="sl-order-item__separator">·</span>
+					<span class="sl-order-item__code" data-sl-order-detail="<?php echo esc_attr( (string) $order_id ); ?>" role="button" tabindex="0">
+						#<?php echo esc_html( (string) $order_number ); ?>
 					</span>
-					<span class="sl-hub-order-dot">•</span>
-					<span class="sl-hub-order-date"><?php echo esc_html( $order_date ); ?></span>
 				</div>
-				<span class="sl-hub-status-badge sl-hub-status-badge--<?php echo esc_attr( $status_class ); ?>">
-					<?php echo esc_html( $status_name ); ?>
-				</span>
+				<div class="sl-order-item__status">
+					<span class="sl-order-status-dot sl-order-status-dot--<?php echo esc_attr( $status_class ); ?>">●</span>
+					<span class="sl-order-status-text sl-order-status-text--<?php echo esc_attr( $status_class ); ?>">
+						<?php echo esc_html( $status_name ); ?>
+					</span>
+				</div>
 			</div>
 
-			<!-- Dòng 2: Ảnh xếp lớp + Tổng số lượng + Tổng tiền (Hiển thị ngang) -->
-			<div class="sl-hub-order-row2">
-				<div class="sl-hub-order-row2__left">
-					<div class="sl-order-thumbs-stack">
-						<?php
-						$max_display  = 3;
-						$shown_thumbs = array_slice( $item_thumbs, 0, $max_display );
-						$extra_count  = count( $item_thumbs ) - $max_display;
-						?>
-						<?php foreach ( $shown_thumbs as $idx => $thumb ) : ?>
-							<div class="sl-order-thumb" style="z-index: <?php echo esc_attr( (string) ( 10 - $idx ) ); ?>;">
-								<?php if ( ! empty( $thumb['url'] ) ) : ?>
-									<img src="<?php echo esc_url( $thumb['url'] ); ?>" alt="<?php esc_attr_e( 'Sản phẩm', 'omniwp' ); ?>" loading="lazy" />
-								<?php else : ?>
-									<div class="sl-order-thumb__placeholder"><?php echo IconSet::get( 'box' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
-								<?php endif; ?>
-							</div>
-						<?php endforeach; ?>
-						<?php if ( $extra_count > 0 ) : ?>
-							<div class="sl-order-thumb sl-order-thumb--extra" style="z-index: 5;">
-								+<?php echo esc_html( (string) $extra_count ); ?>
-							</div>
-						<?php endif; ?>
-					</div>
-					<span class="sl-order-items-total-badge">
-						<?php printf( esc_html__( 'Tổng %d sản phẩm', 'omniwp' ), (int) $item_count ); ?>
-					</span>
+			<?php // Body: Ảnh sản phẩm + Tên (+ sản phẩm khác) <-> Đơn giá x Số lượng ?>
+			<div class="sl-order-item__body" data-sl-order-detail="<?php echo esc_attr( (string) $order_id ); ?>" role="button" tabindex="0">
+				<div class="sl-order-item__product-thumb">
+					<?php if ( ! empty( $img_url ) ) : ?>
+						<img src="<?php echo esc_url( $img_url ); ?>" alt="<?php esc_attr_e( 'Sản phẩm', 'omniwp' ); ?>" loading="lazy" />
+					<?php else : ?>
+						<div class="sl-order-item__placeholder"><?php echo IconSet::get( 'box' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></div>
+					<?php endif; ?>
 				</div>
+				<div class="sl-order-item__product-info">
+					<h4 class="sl-order-item__product-name"><?php echo esc_html( $first_item_name ); ?></h4>
+					<?php if ( $extra_items_count > 0 ) : ?>
+						<span class="sl-order-item__extra-count">
+							<?php
+							/* translators: %d: additional items count. */
+							printf( esc_html__( '+%d sản phẩm khác', 'omniwp' ), (int) $extra_items_count );
+							?>
+						</span>
+					<?php endif; ?>
+				</div>
+				<div class="sl-order-item__product-pricing">
+					<?php if ( ! empty( $first_item_price ) ) : ?>
+						<span class="sl-order-item__unit-price"><?php echo wp_kses_post( $first_item_price ); ?></span>
+					<?php endif; ?>
+					<span class="sl-order-item__unit-qty">x<?php echo esc_html( (string) $first_item_qty ); ?></span>
+				</div>
+			</div>
 
-				<div class="sl-hub-order-row2__right">
-					<div class="sl-hub-order-price-wrap">
-						<div class="sl-hub-order-total">
-							<span class="sl-hub-order-total-label"><?php esc_html_e( 'Tổng thanh toán:', 'omniwp' ); ?></span>
-							<span class="sl-hub-order-total-amount"><?php echo wp_kses_post( $order_total ); ?></span>
-						</div>
-						<?php if ( $payment_title ) : ?>
-							<span class="sl-hub-order-payment"><?php echo esc_html( $payment_title ); ?></span>
-						<?php endif; ?>
+			<?php // Footer: Xem chi tiết › <-> Thành tiền: xxxđ & [Mua lại] ?>
+			<div class="sl-order-item__footer">
+				<button type="button" class="sl-order-item__detail-link" data-sl-order-detail="<?php echo esc_attr( (string) $order_id ); ?>">
+					<span><?php esc_html_e( 'Xem chi tiết', 'omniwp' ); ?></span>
+					<span class="sl-order-item__chevron">›</span>
+				</button>
+				<div class="sl-order-item__action-wrap">
+					<div class="sl-order-item__total">
+						<span class="sl-order-item__total-label"><?php esc_html_e( 'Thành tiền:', 'omniwp' ); ?></span>
+						<strong class="sl-order-item__total-val"><?php echo wp_kses_post( $order_total ); ?></strong>
 					</div>
+					<button type="button" class="sl-btn sl-order-reorder-btn" data-sl-row-reorder="<?php echo esc_attr( (string) $order_id ); ?>" title="<?php esc_attr_e( 'Mua lại đơn hàng này', 'omniwp' ); ?>">
+						<span><?php esc_html_e( 'Mua lại', 'omniwp' ); ?></span>
+					</button>
 				</div>
 			</div>
 		</div>
@@ -946,16 +969,102 @@ class RestController {
 		return (string) ob_get_clean();
 	}
 
+	/**
+	 * Get grouped order status counts efficiently.
+	 *
+	 * @param int   $user_id  Customer ID.
+	 * @param array $statuses Status map.
+	 * @return array<string, int>
+	 */
+	protected static function get_user_order_status_counts( int $user_id, array $statuses ): array {
+		global $wpdb;
+
+		$raw_counts = array();
+		if ( class_exists( 'Automattic\WooCommerce\Utilities\OrderUtil' ) && \Automattic\WooCommerce\Utilities\OrderUtil::custom_orders_table_usage_is_enabled() ) {
+			$orders_table = $wpdb->prefix . 'wc_orders';
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$results = $wpdb->get_results(
+				$wpdb->prepare(
+					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					"SELECT status, COUNT(*) as qty FROM {$orders_table} WHERE customer_id = %d GROUP BY status",
+					$user_id
+				)
+			);
+			if ( ! empty( $results ) ) {
+				foreach ( $results as $row ) {
+					$raw_counts[ $row->status ] = (int) $row->qty;
+				}
+			}
+		} else {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$results = $wpdb->get_results(
+				$wpdb->prepare(
+					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					"SELECT post_status, COUNT(*) as qty FROM {$wpdb->posts} WHERE post_type = 'shop_order' AND post_author = %d GROUP BY post_status",
+					$user_id
+				)
+			);
+			if ( ! empty( $results ) ) {
+				foreach ( $results as $row ) {
+					$status_key                = str_replace( 'wc-', '', $row->post_status );
+					$raw_counts[ $status_key ] = (int) $row->qty;
+				}
+			}
+		}
+
+		if ( empty( $raw_counts ) ) {
+			$counts = array( 'all' => 0 );
+			foreach ( $statuses as $key => $wc_status_group ) {
+				$args = array(
+					'customer_id' => $user_id,
+					'return'      => 'ids',
+					'limit'       => -1,
+				);
+				if ( ! empty( $wc_status_group ) ) {
+					$args['status'] = $wc_status_group;
+				}
+				$order_ids      = wc_get_orders( $args );
+				$counts[ $key ] = is_array( $order_ids ) ? count( $order_ids ) : 0;
+			}
+			return $counts;
+		}
+
+		$counts = array( 'all' => array_sum( $raw_counts ) );
+		foreach ( $statuses as $key => $wc_status_group ) {
+			if ( 'all' === $key ) {
+				continue;
+			}
+			$subtotal = 0;
+			foreach ( $wc_status_group as $st ) {
+				$clean_st = str_replace( 'wc-', '', $st );
+				if ( isset( $raw_counts[ $clean_st ] ) ) {
+					$subtotal += $raw_counts[ $clean_st ];
+				} elseif ( isset( $raw_counts[ 'wc-' . $clean_st ] ) ) {
+					$subtotal += $raw_counts[ 'wc-' . $clean_st ];
+				}
+			}
+			$counts[ $key ] = $subtotal;
+		}
+
+		return $counts;
+	}
+
 	public function handle_orders( WP_REST_Request $request ): WP_REST_Response {
+		global $wpdb;
+
 		$user_id = get_current_user_id();
 		$status  = sanitize_text_field( (string) ( $request->get_param( 'status' ) ?: 'all' ) );
 		$search  = sanitize_text_field( (string) ( $request->get_param( 'search' ) ?: '' ) );
+		$paged   = max( 1, absint( $request->get_param( 'paged' ) ?: 1 ) );
+		$limit   = 10;
 
 		if ( ! class_exists( 'WooCommerce' ) || ! function_exists( 'wc_get_orders' ) ) {
 			return new WP_REST_Response(
 				array(
-					'counts' => array( 'all' => 0 ),
-					'html'   => '<div style="text-align:center; padding: 48px 16px; color:#64748b;"><p>WooCommerce chưa được kích hoạt.</p></div>',
+					'counts'   => array( 'all' => 0 ),
+					'html'     => '<div style="text-align:center; padding: 48px 16px; color:#64748b;"><p>WooCommerce chưa được kích hoạt.</p></div>',
+					'has_more' => false,
+					'paged'    => 1,
 				),
 				200
 			);
@@ -970,23 +1079,12 @@ class RestController {
 			'wc-cancelled'  => array( 'cancelled', 'refunded' ),
 		);
 
-		$counts = array();
-		foreach ( $statuses as $key => $wc_status_group ) {
-			$args = array(
-				'customer_id' => $user_id,
-				'return'      => 'ids',
-				'limit'       => -1,
-			);
-			if ( ! empty( $wc_status_group ) ) {
-				$args['status'] = $wc_status_group;
-			}
-			$order_ids      = wc_get_orders( $args );
-			$counts[ $key ] = is_array( $order_ids ) ? count( $order_ids ) : 0;
-		}
+		$counts = self::get_user_order_status_counts( $user_id, $statuses );
 
 		$query_args = array(
 			'customer_id' => $user_id,
-			'limit'       => 20,
+			'limit'       => $limit + 1,
+			'page'        => $paged,
 		);
 
 		if ( isset( $statuses[ $status ] ) && ! empty( $statuses[ $status ] ) ) {
@@ -994,33 +1092,73 @@ class RestController {
 		}
 
 		if ( '' !== $search ) {
-			$query_args['s'] = $search;
+			$clean_search = ltrim( trim( $search ), '#' );
+			$matching_ids = array();
+
+			if ( is_numeric( $clean_search ) ) {
+				$matching_ids[] = absint( $clean_search );
+			}
+
+			// Search products by name inside user's orders.
+			$items_table = $wpdb->prefix . 'woocommerce_order_items';
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			$item_order_ids = $wpdb->get_col(
+				$wpdb->prepare(
+					// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					"SELECT DISTINCT order_id FROM {$items_table} WHERE order_item_name LIKE %s AND order_item_type = 'line_item' LIMIT 50",
+					'%' . $wpdb->esc_like( $search ) . '%'
+				)
+			);
+
+			if ( ! empty( $item_order_ids ) ) {
+				$matching_ids = array_unique( array_merge( $matching_ids, array_map( 'absint', $item_order_ids ) ) );
+			}
+
+			if ( ! empty( $matching_ids ) ) {
+				$query_args['post__in'] = $matching_ids;
+			} else {
+				$query_args['s'] = $search;
+			}
 		}
 
-		$orders = wc_get_orders( $query_args );
+		$raw_orders = wc_get_orders( $query_args );
+		$orders     = is_array( $raw_orders ) ? $raw_orders : array();
+		$has_more   = count( $orders ) > $limit;
+		if ( $has_more ) {
+			$orders = array_slice( $orders, 0, $limit );
+		}
 
 		ob_start();
-		if ( ! empty( $orders ) && is_array( $orders ) ) {
-			echo '<div class="sl-hub-orders-list">';
+		if ( ! empty( $orders ) ) {
+			if ( 1 === $paged ) {
+				echo '<div class="sl-order-table-list" data-sl-orders-list data-sl-orders-body>';
+			}
+
 			foreach ( $orders as $order ) {
 				if ( ! $order instanceof \WC_Order ) {
 					continue;
 				}
 				echo self::render_order_card( $order ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			}
-			echo '</div>';
-		} else {
-			echo '<div style="text-align:center; padding: 48px 16px; color:#64748b;">';
-			echo '<div style="margin-bottom:12px;">' . IconSet::get( 'box' ) . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-			echo '<p style="margin:0; font-weight:500;">' . esc_html__( 'Không tìm thấy đơn hàng nào phù hợp.', 'omniwp' ) . '</p>';
+
+			if ( 1 === $paged ) {
+				echo '</div>'; // sl-order-table-list.
+			}
+		} elseif ( 1 === $paged ) {
+			echo '<div class="ow-empty-state">';
+			echo '<div class="ow-empty-state__icon-wrap">' . IconSet::get( 'box' ) . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			echo '<h4 class="ow-empty-state__title">' . esc_html__( 'Không tìm thấy đơn hàng nào', 'omniwp' ) . '</h4>';
+			echo '<p class="ow-empty-state__desc">' . esc_html__( 'Không có đơn hàng nào khớp với bộ lọc hoặc từ khóa tìm kiếm của bạn.', 'omniwp' ) . '</p>';
 			echo '</div>';
 		}
 		$html = (string) ob_get_clean();
 
 		return new WP_REST_Response(
 			array(
-				'counts' => $counts,
-				'html'   => $html,
+				'counts'   => $counts,
+				'html'     => $html,
+				'has_more' => $has_more,
+				'paged'    => $paged,
 			),
 			200
 		);
@@ -1270,7 +1408,7 @@ class RestController {
 			'customer_email'   => $customer_email,
 			'shipping_address' => $shipping_address,
 			'customer_note'    => $order->get_customer_note(),
-			'payment_method'   => $order->get_payment_method_title(),
+			'payment_method'   => wp_strip_all_tags( $order->get_payment_method_title() ),
 			'items'            => $items_data,
 			'subtotal'         => wc_price( $order->get_subtotal(), array( 'currency' => $order->get_currency() ) ),
 			'shipping_total'   => wc_price( $order->get_shipping_total(), array( 'currency' => $order->get_currency() ) ),

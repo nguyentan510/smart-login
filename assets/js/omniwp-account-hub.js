@@ -41,23 +41,20 @@
 
 			var clean = hash.replace( /^#+/, '' ).split( '?' )[0];
 
-			if ( clean === 'sl-section-contact' || clean === 'contact' ) {
-				return 'security';
-			}
-			if ( clean === 'sl-section-profile' || clean === 'profile' ) {
-				return 'profile';
-			}
-			if ( clean === 'sl-section-address' || clean === 'address' ) {
-				return 'address';
-			}
-			if ( clean === 'sl-section-password' || clean === 'security' || clean === 'password' ) {
-				return 'security';
-			}
 			if ( clean === 'orders' ) {
 				return 'orders';
 			}
 			if ( clean === 'vouchers' || clean === 'sl-section-vouchers' || clean === 'coupons' ) {
 				return 'vouchers';
+			}
+			if ( clean === 'sl-section-address' || clean === 'address' ) {
+				return 'address';
+			}
+			if ( clean === 'profile' || clean === 'sl-section-profile' || clean === 'account' ) {
+				return 'profile';
+			}
+			if ( clean === 'security' || clean === 'password' || clean === 'contact' || clean === 'sl-section-contact' || clean === 'sl-section-password' ) {
+				return 'security';
 			}
 
 			if ( hub.querySelector( '[data-sl-hub-panel="' + clean + '"]' ) ) {
@@ -280,23 +277,38 @@
 		} );
 
 		// -----------------------------------------------------------------
-		// Order Pipeline & Live Search
+		// Order Pipeline & Live Search with Pagination
 		// -----------------------------------------------------------------
 		var pipelineItems = hub.querySelectorAll( '[data-sl-order-status]' );
 		var searchInput = hub.querySelector( '[data-sl-orders-search]' );
 		var ordersContainer = hub.querySelector( '[data-sl-orders-container]' );
 		var currentStatus = 'all';
 		var searchTimer = null;
+		var ordersCurrentPage = 1;
+		var ordersHasMore = true;
+		var ordersIsLoading = false;
 
-		function fetchOrders() {
-			if ( ! ordersContainer ) {
+		function fetchOrders( isAppend ) {
+			if ( ! ordersContainer || ordersIsLoading ) {
 				return;
 			}
 
-			var searchVal = searchInput ? searchInput.value.trim() : '';
-			var url = restBase + 'orders?status=' + encodeURIComponent( currentStatus ) + '&search=' + encodeURIComponent( searchVal );
+			ordersIsLoading = true;
+			var loadMoreBtn = hub.querySelector( '[data-sl-orders-loadmore]' );
+			var loadMoreWrap = hub.querySelector( '[data-sl-orders-loadmore-wrap]' );
 
-			ordersContainer.style.opacity = '0.5';
+			if ( loadMoreBtn ) {
+				loadMoreBtn.classList.add( 'is-loading' );
+				loadMoreBtn.disabled = true;
+			}
+
+			if ( ! isAppend ) {
+				ordersContainer.style.opacity = '0.5';
+				ordersCurrentPage = 1;
+			}
+
+			var searchVal = searchInput ? searchInput.value.trim() : '';
+			var url = restBase + 'orders?status=' + encodeURIComponent( currentStatus ) + '&search=' + encodeURIComponent( searchVal ) + '&paged=' + encodeURIComponent( ordersCurrentPage );
 
 			fetch( url, {
 				headers: {
@@ -305,31 +317,111 @@
 			} )
 			.then( function ( res ) { return res.json(); } )
 			.then( function ( data ) {
+				ordersIsLoading = false;
 				ordersContainer.style.opacity = '1';
-
-				if ( data && data.html !== undefined ) {
-					ordersContainer.innerHTML = data.html;
+				if ( loadMoreBtn ) {
+					loadMoreBtn.classList.remove( 'is-loading' );
+					loadMoreBtn.disabled = false;
 				}
 
-				if ( data && data.counts ) {
-					Object.keys( data.counts ).forEach( function ( key ) {
-						var badge = hub.querySelector( '[data-sl-order-badge="' + key + '"]' );
-						if ( badge ) {
-							var count = parseInt( data.counts[ key ], 10 ) || 0;
-							if ( count > 0 ) {
-								badge.textContent = count;
-								badge.style.display = 'inline-block';
-							} else {
-								badge.style.display = 'none';
+				if ( data ) {
+					ordersHasMore = !! data.has_more;
+
+					var ordersBody = ordersContainer.querySelector( '[data-sl-orders-body]' );
+					if ( isAppend && ordersBody && data.html ) {
+						ordersBody.insertAdjacentHTML( 'beforeend', data.html );
+					} else if ( data.html !== undefined ) {
+						ordersContainer.innerHTML = data.html;
+					}
+
+					loadMoreWrap = hub.querySelector( '[data-sl-orders-loadmore-wrap]' );
+					if ( loadMoreWrap ) {
+						loadMoreWrap.style.display = ordersHasMore ? 'block' : 'none';
+					}
+
+					if ( data.counts ) {
+						Object.keys( data.counts ).forEach( function ( key ) {
+							var badge = hub.querySelector( '[data-sl-order-badge="' + key + '"]' );
+							if ( badge ) {
+								var count = parseInt( data.counts[ key ], 10 ) || 0;
+								if ( count > 0 ) {
+									badge.textContent = count;
+									badge.style.display = 'inline-block';
+								} else {
+									badge.style.display = 'none';
+								}
 							}
-						}
-					} );
+						} );
+					}
 				}
 			} )
 			.catch( function () {
+				ordersIsLoading = false;
 				ordersContainer.style.opacity = '1';
+				var retryBtn = hub.querySelector( '[data-sl-orders-loadmore]' );
+				if ( retryBtn ) {
+					retryBtn.classList.remove( 'is-loading' );
+					retryBtn.disabled = false;
+				}
 			} );
 		}
+
+		// Delegate Click for Load More button
+		document.addEventListener( 'click', function ( e ) {
+			var loadBtn = e.target.closest( '[data-sl-orders-loadmore]' );
+			if ( loadBtn ) {
+				e.preventDefault();
+				if ( ordersIsLoading || ! ordersHasMore ) {
+					return;
+				}
+				ordersCurrentPage++;
+				fetchOrders( true );
+			}
+		} );
+
+		// Delegate Click for Quick Row Reorder
+		document.addEventListener( 'click', function ( e ) {
+			var rowReorderBtn = e.target.closest( '[data-sl-row-reorder]' );
+			if ( ! rowReorderBtn ) {
+				return;
+			}
+			e.preventDefault();
+			var orderId = rowReorderBtn.getAttribute( 'data-sl-row-reorder' );
+			if ( ! orderId || rowReorderBtn.classList.contains( 'is-loading' ) ) {
+				return;
+			}
+
+			rowReorderBtn.classList.add( 'is-loading' );
+			rowReorderBtn.disabled = true;
+			var originalText = rowReorderBtn.textContent;
+			rowReorderBtn.textContent = '...';
+
+			fetch( restBase + 'reorder/' + encodeURIComponent( orderId ), {
+				method: 'POST',
+				headers: {
+					'X-WP-Nonce': restNonce,
+					'Content-Type': 'application/json'
+				}
+			} )
+			.then( function ( res ) { return res.json(); } )
+			.then( function ( data ) {
+				if ( data && data.success && data.cart_url ) {
+					rowReorderBtn.textContent = '✓';
+					window.location.href = data.cart_url;
+				} else {
+					rowReorderBtn.classList.remove( 'is-loading' );
+					rowReorderBtn.disabled = false;
+					rowReorderBtn.textContent = originalText;
+					alert( ( data && data.message ) ? data.message : 'Không thể tạo lại giỏ hàng. Vui lòng thử lại.' );
+				}
+			} )
+			.catch( function () {
+				rowReorderBtn.classList.remove( 'is-loading' );
+				rowReorderBtn.disabled = false;
+				rowReorderBtn.textContent = originalText;
+				alert( 'Lỗi kết nối khi mua lại đơn hàng.' );
+			} );
+		} );
 
 		pipelineItems.forEach( function ( item ) {
 			item.addEventListener( 'click', function ( e ) {
@@ -343,7 +435,7 @@
 				}
 
 				currentStatus = item.getAttribute( 'data-sl-order-status' ) || 'all';
-				fetchOrders();
+				fetchOrders( false );
 			} );
 		} );
 
@@ -353,13 +445,9 @@
 					clearTimeout( searchTimer );
 				}
 				searchTimer = setTimeout( function () {
-					fetchOrders();
+					fetchOrders( false );
 				}, 300 );
 			} );
-		}
-
-		if ( ordersContainer ) {
-			fetchOrders();
 		}
 
 		// -----------------------------------------------------------------
@@ -1019,12 +1107,72 @@
 			document.body.removeChild( textArea );
 		}
 
+		// -----------------------------------------------------------------
+		// 1-Touch Filter Tabs for Voucher Module (Client-side Instant Filter)
+		// -----------------------------------------------------------------
+		document.addEventListener( 'click', function ( e ) {
+			var tabBtn = e.target.closest( '.sl-voucher-tab' );
+			if ( ! tabBtn ) {
+				return;
+			}
+			e.preventDefault();
+
+			var moduleEl = tabBtn.closest( '.sl-voucher-module' );
+			if ( ! moduleEl ) {
+				return;
+			}
+
+			var filter = tabBtn.getAttribute( 'data-filter' ) || 'all';
+			var tabs = moduleEl.querySelectorAll( '.sl-voucher-tab' );
+			tabs.forEach( function ( t ) {
+				t.classList.remove( 'is-active' );
+				t.setAttribute( 'aria-selected', 'false' );
+			} );
+			tabBtn.classList.add( 'is-active' );
+			tabBtn.setAttribute( 'aria-selected', 'true' );
+
+			var tickets = moduleEl.querySelectorAll( '.sl-voucher-tr, .sl-coupon-ticket' );
+			var visibleCount = 0;
+
+			tickets.forEach( function ( ticket ) {
+				var status = ticket.getAttribute( 'data-status' ) || 'active';
+				var isMine = ticket.getAttribute( 'data-is-mine' ) === '1';
+				var type = ticket.getAttribute( 'data-type' ) || '';
+				var isApplied = ticket.classList.contains( 'is-applied' );
+				var show = false;
+
+				if ( filter === 'all' ) {
+					show = true;
+				} else if ( filter === 'mine' ) {
+					show = isMine || isApplied || ( status === 'active' && ! ticket.classList.contains( 'is-disabled' ) );
+				} else if ( filter === 'expired' ) {
+					show = ( status === 'expired' || status === 'used' || ticket.classList.contains( 'is-expired' ) );
+				} else if ( filter === 'freeship' ) {
+					show = ( type === 'freeship' || ticket.classList.contains( 'sl-coupon-ticket--freeship' ) );
+				} else if ( filter === 'discount' ) {
+					show = ( type === 'discount' && ! ticket.classList.contains( 'sl-coupon-ticket--freeship' ) );
+				}
+
+				if ( show ) {
+					ticket.style.display = '';
+					visibleCount++;
+				} else {
+					ticket.style.display = 'none';
+				}
+			} );
+
+			var emptyNotice = moduleEl.querySelector( '[data-sl-voucher-filter-empty]' );
+			if ( emptyNotice ) {
+				emptyNotice.style.display = visibleCount === 0 ? 'block' : 'none';
+			}
+		} );
+
 		// Event Delegation for Voucher Copy Buttons
 		document.addEventListener( 'click', function ( e ) {
-			var copyBtn = e.target.closest( '[data-sl-voucher-copy]' );
+			var copyBtn = e.target.closest( '[data-sl-voucher-copy], .sl-voucher-copy-btn, [data-sl-copy-voucher]' );
 			if ( copyBtn ) {
 				e.preventDefault();
-				var code = copyBtn.getAttribute( 'data-code' );
+				var code = copyBtn.getAttribute( 'data-code' ) || copyBtn.getAttribute( 'data-sl-copy-voucher' );
 				copyToClipboard( code, copyBtn );
 			}
 		} );

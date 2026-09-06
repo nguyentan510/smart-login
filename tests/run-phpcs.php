@@ -35,7 +35,7 @@
  * not a ratchet; the *excluded* documentation sniffs in `phpcs.xml` are still a
  * written deferral and that has not changed.
  */
-const ow_PHPCS_BASELINE_ERRORS   = 32;
+const ow_PHPCS_BASELINE_ERRORS   = 30;
 const ow_PHPCS_BASELINE_WARNINGS = 18;
 
 $root   = dirname( __DIR__ );

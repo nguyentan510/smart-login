@@ -45,7 +45,11 @@ final class AccountHub {
 			}
 		}
 
-		if ( 'contact' === $active_tab ) {
+		if ( 'account' === $active_tab ) {
+			$active_tab = 'profile';
+		}
+
+		if ( 'contact' === $active_tab || 'password' === $active_tab ) {
 			$active_tab = 'security';
 		}
 
@@ -78,12 +82,6 @@ final class AccountHub {
 	 */
 	public static function get_tabs(): array {
 		$tabs = array(
-			'profile'  => array(
-				'key'      => 'profile',
-				'label'    => __( 'Thông tin cá nhân', 'omniwp' ),
-				'icon'     => 'user',
-				'template' => 'account-hub/tab-profile',
-			),
 			'orders'   => array(
 				'key'      => 'orders',
 				'label'    => __( 'Lịch sử đơn hàng', 'omniwp' ),
@@ -101,6 +99,12 @@ final class AccountHub {
 				'label'    => __( 'Địa chỉ nhận hàng', 'omniwp' ),
 				'icon'     => 'map-pin',
 				'template' => 'account-hub/tab-address',
+			),
+			'profile'  => array(
+				'key'      => 'profile',
+				'label'    => __( 'Thông tin cá nhân', 'omniwp' ),
+				'icon'     => 'user',
+				'template' => 'account-hub/tab-profile',
 			),
 			'security' => array(
 				'key'      => 'security',
@@ -132,18 +136,24 @@ final class AccountHub {
 		Assets::enqueue();
 		Assets::enqueue_address();
 
+		$css_file = defined( 'OMNIWP_DIR' ) ? OMNIWP_DIR . 'assets/css/omniwp-account-hub.css' : '';
+		$css_ver  = ( ! empty( $css_file ) && file_exists( $css_file ) ) ? (string) filemtime( $css_file ) : OMNIWP_VERSION;
+
 		wp_enqueue_style(
 			Assets::HUB_HANDLE,
 			OMNIWP_URL . 'assets/css/omniwp-account-hub.css',
 			array( Assets::TOKENS_HANDLE, Assets::HANDLE ),
-			OMNIWP_VERSION
+			$css_ver
 		);
+
+		$js_file = defined( 'OMNIWP_DIR' ) ? OMNIWP_DIR . 'assets/js/omniwp-account-hub.js' : '';
+		$js_ver  = ( ! empty( $js_file ) && file_exists( $js_file ) ) ? (string) filemtime( $js_file ) : OMNIWP_VERSION;
 
 		wp_enqueue_script(
 			Assets::HUB_HANDLE,
 			OMNIWP_URL . 'assets/js/omniwp-account-hub.js',
 			array( Assets::HANDLE ),
-			OMNIWP_VERSION,
+			$js_ver,
 			true
 		);
 

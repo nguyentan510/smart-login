@@ -30,7 +30,7 @@ $provinces = AddressRepository::provinces();
 		<p class="sl-hub-subtitle"><?php esc_html_e( 'Quản lý danh sách địa chỉ nhận hàng của bạn.', 'omniwp' ); ?></p>
 	</div>
 
-	<button type="button" class="sl-btn sl-btn--primary sl-btn-add-address" id="sl-btn-open-address-modal">
+	<button type="button" class="sl-btn sl-btn--primary sl-btn-add-address" id="sl-btn-open-address-modal" data-sl-address-modal-open>
 		<?php echo IconSet::get( 'edit' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 		<span><?php esc_html_e( 'Thêm địa chỉ mới', 'omniwp' ); ?></span>
 	</button>
@@ -133,15 +133,15 @@ $provinces = AddressRepository::provinces();
 
 				<div class="sl-address-card__actions">
 					<?php if ( ! $is_default ) : ?>
-						<button type="button" class="sl-btn sl-btn--ghost sl-btn--sm sl-btn-set-default" data-address-id="<?php echo esc_attr( $addr_id ); ?>">
+						<button type="button" class="sl-btn sl-btn--ghost sl-btn--sm sl-btn-set-default" data-sl-address-set-default="<?php echo esc_attr( $addr_id ); ?>">
 							<?php esc_html_e( 'Đặt mặc định', 'omniwp' ); ?>
 						</button>
 					<?php endif; ?>
-					<button type="button" class="sl-btn sl-btn--ghost sl-btn--sm sl-btn-edit-address" data-address="<?php echo esc_attr( (string) wp_json_encode( $addr_data ) ); ?>">
+					<button type="button" class="sl-btn sl-btn--ghost sl-btn--sm sl-btn-edit-address" data-sl-address-edit="<?php echo esc_attr( (string) wp_json_encode( $addr_data ) ); ?>">
 						<?php esc_html_e( 'Chỉnh sửa', 'omniwp' ); ?>
 					</button>
 					<?php if ( ! $is_default ) : ?>
-						<button type="button" class="sl-btn sl-btn--ghost sl-btn--sm sl-btn-delete-address" style="color:#dc2626;" data-address-id="<?php echo esc_attr( $addr_id ); ?>">
+						<button type="button" class="sl-btn sl-btn--ghost sl-btn--sm sl-btn-delete-address" style="color:#dc2626;" data-sl-address-delete="<?php echo esc_attr( $addr_id ); ?>">
 							<?php esc_html_e( 'Xóa', 'omniwp' ); ?>
 						</button>
 					<?php endif; ?>

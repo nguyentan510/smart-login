@@ -1,6 +1,6 @@
 <?php
 /**
- * Personal Info Tab (Thông tin cá nhân).
+ * Personal Profile Tab (Thông tin cá nhân).
  *
  * Uses OmniWP's native AccountForm section: 'profile'.
  *
@@ -17,13 +17,13 @@ use OmniWP\Frontend\IconSet;
 defined( 'ABSPATH' ) || exit;
 ?>
 
-<div class="sl-hub-header">
+<div class="sl-hub-header sl-hub-header--profile">
 	<div class="sl-hub-header__meta">
 		<h2 class="sl-hub-title">
 			<span class="sl-hub-title__icon"><?php echo IconSet::get( 'user' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
 			<span><?php esc_html_e( 'Thông tin cá nhân', 'omniwp' ); ?></span>
 		</h2>
-		<p class="sl-hub-subtitle"><?php esc_html_e( 'Quản lý thông tin hồ sơ và ngày sinh của bạn.', 'omniwp' ); ?></p>
+		<p class="sl-hub-subtitle"><?php esc_html_e( 'Quản lý thông tin hồ sơ, tên hiển thị và ngày sinh của bạn.', 'omniwp' ); ?></p>
 	</div>
 </div>
 

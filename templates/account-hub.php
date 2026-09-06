@@ -45,9 +45,6 @@ if ( ! $ow_form->user() ) {
 	<main class="sl-hub-content">
 		<?php TemplateLoader::output( 'partials/notices', array( 'notices' => $notices ) ); ?>
 
-		<!-- Progress / Completion Nudge Banner (Hoàn thiện 1/4) -->
-		<?php $ow_form->output_status(); ?>
-
 		<!-- Account Panels -->
 		<?php foreach ( $tabs as $tab_key => $hub_tab ) : ?>
 			<?php if ( empty( $hub_tab['is_logout'] ) ) : ?>
@@ -79,13 +76,13 @@ if ( ! $ow_form->user() ) {
 	<!-- Order Detail Modal Popup -->
 	<?php TemplateLoader::output( 'account-hub/order-modal', array( 'user' => $user ) ); ?>
 
+	<!-- Address Form Modal Popup -->
+	<?php TemplateLoader::output( 'account-hub/address-modal', array( 'user' => $user ) ); ?>
+
 	<!-- Voucher Detail Modal Popup -->
 	<?php TemplateLoader::output( 'account-hub/voucher-modal', array( 'user' => $user ) ); ?>
 
 	<!-- Logout Confirmation Modal -->
 	<?php TemplateLoader::output( 'account-hub/logout-modal', array( 'user' => $user ) ); ?>
-
-	<!-- Settings Bottom Sheet (Mobile) -->
-	<?php TemplateLoader::output( 'account-hub/settings-sheet', array( 'user' => $user ) ); ?>
 
 </div>

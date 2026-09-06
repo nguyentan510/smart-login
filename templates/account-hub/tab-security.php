@@ -17,7 +17,7 @@ use OmniWP\Frontend\IconSet;
 defined( 'ABSPATH' ) || exit;
 ?>
 
-<div class="sl-hub-header">
+<div class="sl-hub-header sl-hub-header--security">
 	<div class="sl-hub-header__meta">
 		<h2 class="sl-hub-title">
 			<span class="sl-hub-title__icon"><?php echo IconSet::get( 'shield' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?></span>
@@ -41,4 +41,3 @@ defined( 'ABSPATH' ) || exit;
 		</div>
 	</div>
 </form>
-

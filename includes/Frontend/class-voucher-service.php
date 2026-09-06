@@ -223,7 +223,11 @@ final class VoucherService {
 				'headline'         => $headline,
 				'value_display'    => $value_display,
 				'amount_formatted' => $amount_formatted,
+				'badge'            => $amount_formatted,
+				'discount_label'   => $value_display,
 				'badge_type'       => $badge_type,
+				'free_shipping'    => $free_shipping,
+				'discount_type'    => $discount_type,
 				'expiry_text'      => $expiry_text,
 				'expires_ts'       => $expires_ts,
 				'is_expiring_soon' => $is_expiring_soon,
@@ -233,6 +237,7 @@ final class VoucherService {
 				'status'           => $status,
 				'status_label'     => $status_label,
 				'can_apply'        => ( 'active' === $status ),
+				'is_mine'          => ! empty( $email_restrictions ),
 				'terms'            => $terms,
 			);
 
